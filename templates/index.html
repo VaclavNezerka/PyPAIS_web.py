@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Processing with Histogram and Entropy</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
+</head>
+<body>
+    <div class="container">
+        <!-- First Row: Image Upload -->
+        <div class="row">
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+        <div class="row">
+            <div class="column">
+                <div class="slider-container">
+
+                    <div class="slider-group">
+                        Image blurring: <input type="range" id="blurSlider" min="0" max="50" value="0">
+                        <input type="text" id="blurValue" value="0" size="2">
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+
+            </div>
+        </div>
+
+        <!-- Second Row: Intensity Image and Controls -->
+        <div class="row">
+            <div class="column">
+                <img id="defaultImage" src="/static/logo.png" alt="Default Image">
+                <div class="img-magnifier-container">
+                    <img id="uploadedImage" style="display:none;">
+                </div>
+            </div>
+            <div class="column">
+                <canvas id="histogramCanvas"></canvas>
+                <div class="slider-container">
+                    Brightness:<br> &nbsp;
+                    <div class="slider-group">
+                        Min: <input type="range" id="minThresholdSlider" min="0" max="255" value="120">
+                        <input type="text" id="minThresholdValue" value="120" size="3">
+                    </div>
+                    <div class="slider-group">
+                        Max: <input type="range" id="maxThresholdSlider" min="0" max="255" value="210">
+                        <input type="text" id="maxThresholdValue" value="210" size="3">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Third Row: Entropy Image and Controls -->
+        <div class="row">
+            <div class="column">
+                <canvas id="entropyCanvas"></canvas>
+            </div>
+            <div class="column">
+                <canvas id="entropyHistogramCanvas"></canvas>
+                <div class="slider-container">
+                    Texture roughness:<br> &nbsp;
+                    <div class="slider-group">
+                        Min: <input type="range" id="entropyMinThresholdSlider" min="0" max="255" value="80">
+                        <input type="text" id="entropyMinThresholdValue" value="80" size="3">
+                    </div>
+                    <div class="slider-group">
+                        Max: <input type="range" id="entropyMaxThresholdSlider" min="0" max="255" value="160">
+                        <input type="text" id="entropyMaxThresholdValue" value="160" size="3">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
