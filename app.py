@@ -7,6 +7,7 @@ from skimage.morphology import disk
 from skimage import img_as_ubyte
 import cv2
 import time
+from rembg import remove
 
 app = Flask(__name__)
 
@@ -22,6 +23,7 @@ def get_grayscale_data():
     file = request.files['file']
     if file:
         image = Image.open(file.stream)
+        image = remove_picture_backround(image)
         gray_image = image.convert('L')
         np_gray = np.array(gray_image)
         current_images['gray'] = np_gray
@@ -38,6 +40,9 @@ def get_grayscale_data():
         img_byte_arr = img_byte_arr.getvalue()
         return img_byte_arr, 200, {'Content-Type': 'image/png'}
 
+def remove_picture_backround(image):
+    image_with_rembg=remove(image)
+    return image_with_rembg
 
 @app.route('/entropy', methods=['POST'])
 def calculate_entropy():
@@ -134,6 +139,7 @@ def apply_red_overlay(masked_img, intensity_img, entropy_img, min_threshold, max
 @app.route('/static/<path:path>')
 def send_static(path):
     return send_from_directory('static', path)
+
 
 
 if __name__ == "__main__":
