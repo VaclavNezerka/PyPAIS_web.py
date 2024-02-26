@@ -11,19 +11,25 @@ from rembg import remove
 
 app = Flask(__name__)
 
-current_images = {'gray': [], 'entropy': {}, 'gray_original': {}, 'entropy_original': {}}
+current_images = {'gray': [], 'entropy': {}, 'gray_original': {}, 
+                  'entropy_original': {}, 'suggested_mask_threshold': {}, 'suggested_mask_blur': {},
+                  'suggested_mask': [], 'manual_mask_adjustments': []}
+# 'suggested_mask_blur'- an initial blur set by user for automatic mask suggestion 
+# 'suggested_mask_threshold'- a threshold set by user for automatic mask suggestion 
+# 'suggested_mask' - a mask suggested to a user by actual algorithm (based on the U-NET rembg model)
+# 'manual_mask_adjustments' - changes manually made by the user (a sparse numpy boolean matrix), 
+# ... so the final mask can expressed as 
 
 @app.route('/')
 def index():
     return render_template('index.html')
-
 
 @app.route('/grayscale-data', methods=['POST'])
 def get_grayscale_data():
     file = request.files['file']
     if file:
         image = Image.open(file.stream)
-        image = remove_picture_backround(image)
+        # image = remove_picture_backround(image)
         gray_image = image.convert('L')
         np_gray = np.array(gray_image)
         current_images['gray'] = np_gray
@@ -40,9 +46,30 @@ def get_grayscale_data():
         img_byte_arr = img_byte_arr.getvalue()
         return img_byte_arr, 200, {'Content-Type': 'image/png'}
 
-def remove_picture_backround(image):
-    image_with_rembg=remove(image)
-    return image_with_rembg
+@app.route('/suggest-mask',methods=['POST'])
+def remove_picture_background():
+    # this function returns a suggested mask, i.e. boolean matrix  
+    # denoting wether a pixel should (T) or should not (F) be taken into
+    # account during the other computations
+    # adjust the mask by setting a manual threshold 
+    image=np.ndarray(request.form.get('image'))
+    blur_value=request.form.get('blurValue')
+    if blur_value<=0:
+        pass
+    elif blur_value%2==0:
+        blur_value-=1   
+        blured_image= cv2.GaussianBlur(image, (blur_value, blur_value), 0)
+    else:
+        blured_image= cv2.GaussianBlur(image, (blur_value, blur_value), 0)
+    threshold=request.form.get('threshold')
+    # suggest that the cropping is a vector of coordinates of the left bottom corner 
+    # ... followed by the coordinates of the right upper corner 
+    cr=request.form.get('cropping')
+    tr_mask=remove(blured_image[cr[0]:cr[0]+cr[2],cr[1]:cr[1]+cr[3]])[:,:,1]
+    tr_mask=np.array(tr_mask>=threshold)
+    mask=np.zeros((image.shape[0],image.shape[1]),dtype=np.bool_)
+    mask[cr[0]:cr[0]+cr[2],cr[1]:cr[1]+cr[3]]=tr_mask
+    return mask
 
 @app.route('/entropy', methods=['POST'])
 def calculate_entropy():
@@ -68,25 +95,29 @@ def calculate_entropy():
 
 
 @app.route('/blur', methods=['POST'])
-def blur_image():
+def blur_caller():
     blur_value = int(request.form.get('blurValue', 0))
-    if blur_value <= 0:
-        blur_value = 0
-        current_images['gray'] = current_images['gray_original']
-        current_images['entropy'] = current_images['entropy_original']
-    elif blur_value % 2 == 0:
-        blur_value -= 1  # Make it odd by adding 1 if it's even
-        current_images['gray'] = cv2.GaussianBlur(current_images['gray_original'], (blur_value, blur_value), 0)
-        current_images['entropy'] = cv2.GaussianBlur(current_images['entropy_original'], (blur_value, blur_value), 0)
-    else:
-        current_images['gray'] = cv2.GaussianBlur(current_images['gray_original'], (blur_value, blur_value), 0)
-        current_images['entropy'] = cv2.GaussianBlur(current_images['entropy_original'], (blur_value, blur_value), 0)
-    print('Image blurred, blur kernel size %d.' % blur_value)
+    # calls twice the function for the blur_image for the gray image and image entropy
+    current_images['gray']=blur_image(blur_value,image=current_images['gray'])
+    current_images['entropy']=blur_image(blur_value,image=current_images['entropy'])
+
     new_blur_image = Image.fromarray(current_images['gray'])
     img_byte_arr = io.BytesIO()
     new_blur_image.save(img_byte_arr, format='PNG')
     img_byte_arr = img_byte_arr.getvalue()
     return img_byte_arr, 200, {'Content-Type': 'image/png'}
+
+def blur_image(blur_value,image):
+    if blur_value <= 0:
+        blur_value = 0
+        pass
+    elif blur_value % 2 == 0:
+        blur_value -= 1  # Make it odd by adding 1 if it's even
+        image = cv2.GaussianBlur(image, (blur_value, blur_value), 0)
+    else:
+        image = cv2.GaussianBlur(image, (blur_value, blur_value), 0)
+    print('Image blurred, blur kernel size %d.' % blur_value)
+    return image
 
 
 @app.route('/apply-mask', methods=['POST'])
