@@ -105,7 +105,7 @@ def encode_to_png(image):
     # creates a byte stream ('buffer') for binary operations
     image_io=io.BytesIO()
     img.save(image_io,'PNG') #saves the img as PNG to the byte stream ('buffer')
-    return image_io
+    return image_io.getvalue()
 
 @app.route('/blur', methods=['POST'])
 def blur_caller():
@@ -154,9 +154,10 @@ def apply_mask():
         overlay_image = apply_red_overlay(np_entropy, np_gray, np_entropy, min_threshold, max_threshold,
                                           entropy_min_threshold, entropy_max_threshold)
 
-    img_byte_arr = io.BytesIO()
-    overlay_image.save(img_byte_arr, format='PNG')
-    img_byte_arr = img_byte_arr.getvalue()
+    img_byte_arr=encode_to_png(overlay_image)
+    # img_byte_arr = io.BytesIO()
+    # overlay_image.save(img_byte_arr, format='PNG')
+    # img_byte_arr = img_byte_arr.getvalue()
     return img_byte_arr, 200, {'Content-Type': 'image/png'}
 
 
