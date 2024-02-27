@@ -52,16 +52,13 @@ def remove_picture_background():
     # denoting wether a pixel should (T) or should not (F) be taken into
     # account during the other computations
     # adjust the mask by setting a manual threshold 
-    image=np.ndarray(request.form.get('image'))
-    blur_value=request.form.get('blurValue')
-    if blur_value<=0:
-        pass
-    elif blur_value%2==0:
-        blur_value-=1   
-        blured_image= cv2.GaussianBlur(image, (blur_value, blur_value), 0)
-    else:
-        blured_image= cv2.GaussianBlur(image, (blur_value, blur_value), 0)
+    
+    # read the necessary properties
+    image=np.array(request.form.get('image'),dtype=np.int8)
+    blur_value=int(request.form.get('blurValue', 0))
     threshold=request.form.get('threshold')
+    #
+    blured_image=blur_image(blur_value,image=image)
     # suggest that the cropping is a vector of coordinates of the left bottom corner 
     # ... followed by the coordinates of the right upper corner 
     cr=request.form.get('cropping')
@@ -69,7 +66,17 @@ def remove_picture_background():
     tr_mask=np.array(tr_mask>=threshold)
     mask=np.zeros((image.shape[0],image.shape[1]),dtype=np.bool_)
     mask[cr[0]:cr[0]+cr[2],cr[1]:cr[1]+cr[3]]=tr_mask
-    return mask
+    
+    # save the requested variables (in future this should be different function, doing everything at once and more 
+    # importantly, at the end, when the user is satisfied with the result so we won't be constantly overwriting the DB)
+    current_images['suggested_mask']=mask
+    current_images['suggested_mask_blur']=blur_value
+    current_images['suggested_mask_threshold']=threshold
+    
+    img_byte_arr = io.BytesIO()
+    Image.fromarray(np_entropy).save(img_byte_arr, format='PNG')
+    img_byte_arr = img_byte_arr.getvalue()
+    return mask, 200, {'Content-Type': 'image/png'}
 
 @app.route('/entropy', methods=['POST'])
 def calculate_entropy():
@@ -93,6 +100,12 @@ def calculate_entropy():
     img_byte_arr = img_byte_arr.getvalue()
     return img_byte_arr, 200, {'Content-Type': 'image/png'}
 
+def encode_to_png(image):
+    img=Image.fromarray(image.astype(np.uint8)*255)
+    # creates a byte stream ('buffer') for binary operations
+    image_io=io.BytesIO()
+    img.save(image_io,'PNG') #saves the img as PNG to the byte stream ('buffer')
+    return image_io
 
 @app.route('/blur', methods=['POST'])
 def blur_caller():

@@ -263,6 +263,19 @@ function processEntropyImage() {
     });
 }
 
+function suggestMask(blurValue,cropping,threshold){
+    // DS 
+    // sends the data to the BE server and receive the suggested mask.
+    var formData = new FormData();
+    formData.append('blurValue',blurValue)
+    formData.append('cropping',cropping)
+    formData.threshold('threshold',threshold)
+    const uniqueQuery = '?nocache=' + new Date().getTime();
+    fetch('/suggest-mask'+uniqueQuery, {method: 'POST', body: formData})
+    
+
+}
+
 function blurImage(blurValue) {
     var formData = new FormData();
     formData.append('blurValue', blurValue);
