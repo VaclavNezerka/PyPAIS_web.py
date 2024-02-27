@@ -29,7 +29,6 @@ def get_grayscale_data():
     file = request.files['file']
     if file:
         image = Image.open(file.stream)
-        # image = remove_picture_backround(image)
         gray_image = image.convert('L')
         np_gray = np.array(gray_image)
         current_images['gray'] = np_gray
@@ -73,10 +72,8 @@ def remove_picture_background():
     current_images['suggested_mask_blur']=blur_value
     current_images['suggested_mask_threshold']=threshold
     
-    img_byte_arr = io.BytesIO()
-    Image.fromarray(np_entropy).save(img_byte_arr, format='PNG')
-    img_byte_arr = img_byte_arr.getvalue()
-    return mask, 200, {'Content-Type': 'image/png'}
+    image_byte_arr=encode_to_png(mask)
+    return image_byte_arr, 200, {'Content-Type': 'image/png'}
 
 @app.route('/entropy', methods=['POST'])
 def calculate_entropy():
@@ -105,6 +102,7 @@ def encode_to_png(image):
     # creates a byte stream ('buffer') for binary operations
     image_io=io.BytesIO()
     img.save(image_io,'PNG') #saves the img as PNG to the byte stream ('buffer')
+    image_io.seek(0)
     return image_io.getvalue()
 
 @app.route('/blur', methods=['POST'])
@@ -154,7 +152,7 @@ def apply_mask():
         overlay_image = apply_red_overlay(np_entropy, np_gray, np_entropy, min_threshold, max_threshold,
                                           entropy_min_threshold, entropy_max_threshold)
 
-    img_byte_arr=encode_to_png(overlay_image)
+    img_byte_arr=encode_to_png(overlay_image) #should be equivalent to the 3 rows bellow
     # img_byte_arr = io.BytesIO()
     # overlay_image.save(img_byte_arr, format='PNG')
     # img_byte_arr = img_byte_arr.getvalue()
