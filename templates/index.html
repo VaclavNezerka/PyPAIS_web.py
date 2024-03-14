@@ -1,20 +1,23 @@
 <!DOCTYPE html>
+{% extends "base.html" %}
+{% block content %}
+
 <html>
-<head>
-    <title>Image Processing with Histogram and Entropy</title>
-    <link rel="stylesheet" href="/static/styles.css">
-    <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
-</head>
-<body>
-    <div class="container">
-        <!-- First Row: Image Upload -->
-        <div class="row">
-            <input type="file" id="fileInput" accept="image/*">
+    <head>
+        <title>Image Processing with Histogram and Entropy</title>
+        <link rel="stylesheet" href="/static/styles.css">
+        <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
+    </head>
+    <body>
+        <div class="container">
+            <!-- First Row: Image Upload -->
+            <div class="row">
+                <input type="file" id="fileInput" accept="image/*">
         </div>
         <div class="row">
             <div class="column">
                 <div class="slider-container">
-
+                    
                     <div class="slider-group">
                         Image blurring: <input type="range" id="blurSlider" min="0" max="50" value="0">
                         <input type="text" id="blurValue" value="0" size="2">
@@ -25,7 +28,7 @@
 
             </div>
         </div>
-
+        
         <!-- Second Row: Intensity Image and Controls -->
         <div class="row">
             <div class="column">
@@ -71,7 +74,9 @@
             </div>
         </div>
     </div>
-
+    
     <script src="/static/script.js"></script>
 </body>
 </html>
+
+{% endblock content %}

@@ -25,5 +25,3 @@ def return_table_users(**args):
     conn.close()
         
 return_table_users()
-    
-    

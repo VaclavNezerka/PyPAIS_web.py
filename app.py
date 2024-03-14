@@ -24,6 +24,10 @@ current_images = {'gray': [], 'entropy': {}, 'gray_original': {},
 def index():
     return render_template('index.html')
 
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
 @app.route('/grayscale-data', methods=['POST'])
 def get_grayscale_data():
     file = request.files['file']
