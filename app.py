@@ -71,9 +71,8 @@ def remove_picture_background():
     current_images['suggested_mask']=mask
     current_images['suggested_mask_blur']=blur_value
     current_images['suggested_mask_threshold']=threshold
-    
-    image_byte_arr=encode_to_png(mask)
-    return image_byte_arr, 200, {'Content-Type': 'image/png'}
+    print('Background removal suggested')
+    return encode_to_png(mask), 200, {'Content-Type': 'image/png'}
 
 @app.route('/entropy', methods=['POST'])
 def calculate_entropy():
@@ -98,10 +97,9 @@ def calculate_entropy():
     return img_byte_arr, 200, {'Content-Type': 'image/png'}
 
 def encode_to_png(image):
-    img=Image.fromarray(image.astype(np.uint8)*255)
     # creates a byte stream ('buffer') for binary operations
     image_io=io.BytesIO()
-    img.save(image_io,'PNG') #saves the img as PNG to the byte stream ('buffer')
+    image.save(image_io,'PNG') #saves the img as PNG to the byte stream ('buffer')
     image_io.seek(0)
     return image_io.getvalue()
 

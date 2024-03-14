@@ -3,6 +3,7 @@ import os
 import psycopg2 as psql
 
 def open_db_connection() -> object:
+    print(os.environ['pypais'])
     connection=psql.connect(
         host='localhost',
         database="pypais",
@@ -22,8 +23,7 @@ def return_table_users(**args):
     print(users)
     cur.close()
     conn.close()
-    
-    
+        
 return_table_users()
     
     

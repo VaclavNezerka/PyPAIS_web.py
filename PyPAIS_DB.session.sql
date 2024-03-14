@@ -2,7 +2,6 @@
 -- KEEP IN MIND that this commands affects the live database, so you 
 -- usually want to run this script only when creating DB SCHEMA 
 
-
 CREATE TABLE companies(
     id SERIAL PRIMARY KEY,
     company_name varchar(50),
@@ -31,4 +30,18 @@ CREATE TABLE experiments(
     info TEXT
 );
 
-SELECT * FROM experiments;
+CREATE VIEW public_users AS SELECT id, first_name, last_name, company FROM users;
+
+INSERT INTO 
+companies (company_name, company_address) 
+VALUES 
+('RSD', 'rsd@fmail.com'),
+('CTU', 'ctu@fmail.com');
+
+INSERT INTO 
+users (first_name, last_name, username, e_mail, company) 
+VALUES 
+('Adam', 'Malik', 'amal', 'amal@fmail.com', 1),
+('Bdam', 'Nalik', 'bmal', 'bmal@fmail.com', 1),
+('Cdam', 'Halik', 'cmal', 'cmal@fmail.com', 2),
+('Ddam', 'Lalik', 'dmal', 'dmal@fmail.com', 1);

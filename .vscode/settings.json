@@ -1,0 +1,26 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "conn_lite",
+            "database": "pypais.db"
+        },
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "connLite",
+            "database": "pypais.db"
+        },
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "PyPAIS_DB",
+            "database": "pypais",
+            "username": "postgres"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}

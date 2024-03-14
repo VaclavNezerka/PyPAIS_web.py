@@ -81,8 +81,8 @@ input[type="text"] {
     border: 2px solid #0A0;
     border-radius: 50%;
     cursor: none;
-    width: 140px; /* Adjust based on your preference */
-    height: 140px;
+    width: 200px; /* Adjust based on your preference */
+    height: 200px;
     visibility: hidden; /* Initially hidden, shown on hover */
     pointer-events: none; /* Ignore mouse events */
     z-index: 100; /* Ensure it's above the image */

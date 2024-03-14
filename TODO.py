@@ -26,4 +26,7 @@ Create UI for managing the old requests [No DB employed yet]
 1] maybe it would be useful to have a feature that automatically fills all convex gabs smaller than a given parameter 
 (as a number in pixels or graphically), this might save a lot of time to a user during the manual annotation of stones/asphalt 
 
+2) store original picture (3 chanel based)
+3) manual adjustments are unnecessary (or unwanted)
+4) progress bar 
 """
