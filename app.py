@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, send_from_directory, g, make_response, send_file
+# Packages
+from flask import Flask, render_template, request, send_from_directory, flash, redirect, g, make_response, send_file
 from PIL import Image
 import numpy as np
 import io
@@ -7,9 +8,21 @@ from skimage.morphology import disk
 from skimage import img_as_ubyte
 import cv2
 import time
+import secrets
+import string
+import os
 from rembg import remove
 
+# Apps
+import forms 
+
 app = Flask(__name__)
+
+def generate_rnd_string(length):
+    possible_chars=string.ascii_letters+string.digits+string.punctuation
+    return ''.join(secrets.choice(possible_chars) for _ in range(int(length))) 
+
+app.secret_key=generate_rnd_string(os.environ['SECRET_KEY_LENGTH'])
 
 current_images = {'gray': [], 'entropy': {}, 'gray_original': {}, 
                   'entropy_original': {}, 'suggested_mask_threshold': {}, 'suggested_mask_blur': {},
@@ -23,6 +36,28 @@ current_images = {'gray': [], 'entropy': {}, 'gray_original': {},
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('404.html'), 404
+
+@app.route('/register',methods=['GET','POST'])
+def register():
+    raise NotImplementedError()
+    if request.method=='GET':
+        form=forms.RegistrationFormUser()
+        return render_template('register.html',form=form)
+    elif request.method=='POST':
+        form=forms.RegistrationFormUser()
+        if form.validate_on_submit():
+            print(form.username)
+            print(form.username.data)
+        else:
+            return render_template('register.html',form=form)
+        time.sleep(2)
+        return redirect('/')
+    else:
+        return redirect('/')
 
 @app.route('/login')
 def login():
