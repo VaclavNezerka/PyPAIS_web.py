@@ -30,3 +30,11 @@ Create UI for managing the old requests [No DB employed yet]
 3) manual adjustments are unnecessary (or unwanted)
 4) progress bar 
 """
+
+
+# NEXT SESSION
+# 1) set new environment variable 
+# **conda env config vars set SECRET_KEY_LENGTH=XX
+# 2) set new privileges to DB_USERNAME: 
+# **GRANT INSERT ON users TO DB_USERNAME;
+# **GRANT USAGE, SELECT ON SEQUENCE users_id_seq TO DB_USERNAME;

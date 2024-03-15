@@ -4,7 +4,7 @@
 
 CREATE TABLE companies(
     id SERIAL PRIMARY KEY,
-    company_name varchar(50),
+    company_name varchar(50) NOT NULL UNIQUE,
     company_address varchar(50)
 );
 
@@ -12,8 +12,8 @@ CREATE TABLE users(
     id SERIAL PRIMARY KEY,
     first_name varchar(50) NOT NULL,
     last_name varchar(50) NOT NULL,
-    username varchar(50) NOT NULL,
-    e_mail varchar(200) NOT NULL,
+    username varchar(50) NOT NULL UNIQUE,
+    e_mail varchar(200) NOT NULL UNIQUE,
     company INT REFERENCES companies(id),
     pwd TEXT
 );
@@ -45,3 +45,5 @@ VALUES
 ('Bdam', 'Nalik', 'bmal', 'bmal@fmail.com', 1),
 ('Cdam', 'Halik', 'cmal', 'cmal@fmail.com', 2),
 ('Ddam', 'Lalik', 'dmal', 'dmal@fmail.com', 1);
+
+SELECT * FROM users;

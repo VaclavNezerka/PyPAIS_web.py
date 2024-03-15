@@ -23,24 +23,27 @@ def db_connection(func):
     def wrapper(*args,**kwargs):
         conn, cur = open_db_connection()
         try:
-            result=func(cur,*args,**kwargs)
+            result=func(cur,conn,*args,**kwargs)
         finally:
             close_all(conn,cur)
         return result
     return wrapper
 
 @db_connection
-def save_new_user_db(cur, values):
-    cur.execute('INSERT INTO users (username, e_mail, first_name, last_name, pwd) VALUES (%,%,%,%,%)',
-                values)
+def save_new_user_db(cur, conn , values):
+    try:
+        cur.execute('INSERT INTO users (username, e_mail, first_name, last_name, company, pwd) '
+                    'VALUES (%s,%s,%s,%s,%s,%s)',
+                    values)
+        conn.commit()
+        response=None
+    except Exception as exception:
+        response=exception
+    finally:
+        return response
 
 @db_connection
-def return_table_users(cur):
-    # conn, cur = open_db_connection()
+def return_table_users(cur,conn):
     cur.execute('SELECT * FROM public_users;')
     users=cur.fetchall()
     print(users)
-    # cur.close()
-    # conn.close()
-        
-return_table_users()

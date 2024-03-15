@@ -1,5 +1,7 @@
 # Packages
 from flask import Flask, render_template, request, send_from_directory, flash, redirect, g, make_response, send_file
+# from flask_login import login_manager, UserMixin, login_required,
+import werkzeug.security as ws
 from PIL import Image
 import numpy as np
 import io
@@ -12,6 +14,7 @@ import secrets
 import string
 import os
 from rembg import remove
+from db_api import *
 
 # Apps
 import forms 
@@ -43,18 +46,24 @@ def page_not_found(error):
 
 @app.route('/register',methods=['GET','POST'])
 def register():
-    raise NotImplementedError()
     if request.method=='GET':
         form=forms.RegistrationFormUser()
         return render_template('register.html',form=form)
     elif request.method=='POST':
         form=forms.RegistrationFormUser()
         if form.validate_on_submit():
-            print(form.username)
-            print(form.username.data)
+            form.password.data=ws.generate_password_hash(form.password.data,method=os.environ['HASH_METHOD'],salt_length=int(os.environ['SALT_LENGTH']))
+            try:
+                # TODO - implement the search in DB for a company ID 
+                form.company.data=int(form.company.data)
+                save_new_user_db(values=[field.data for field in form][:6])
+                flash(message='Registration was successful.',category='success')
+            except:
+                flash(message='The data were not provided in a requested format.',category='error')
+                return render_template('register.html',form=form)    
+            return render_template('register.html',form=form)    
         else:
             return render_template('register.html',form=form)
-        time.sleep(2)
         return redirect('/')
     else:
         return redirect('/')

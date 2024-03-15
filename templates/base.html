@@ -16,7 +16,14 @@
   <div>
     {% include 'navbar.html' %}
   </div>
-  
+    {% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+    <script>
+      let message="{{ message }}";
+      alert(message)
+    </script>  
+    {% endfor %}
+    {% endwith %}
 
   <div class="content">
     {% block content %}
@@ -24,8 +31,11 @@
   </div>
 
   <footer>
-    PyPAIS 
-  </footer>
-
+    <div class="container">
+          <p>&copy; 2024 Václav Nežerka. All rights reserved.</p>
+    </div>
+</footer>
 </body>
+
+
 </html>

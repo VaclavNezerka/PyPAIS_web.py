@@ -1,0 +1,36 @@
+<!-- login.html -->
+
+{%  extends "base.html" %}
+
+{% block content %}
+<html>
+    <!-- <head>Registration Form</head> -->
+    <body>
+        <h1>Register new user</h1>
+        <form method="post">
+            {{ form.hidden_tag() }} 
+            <!-- Include the CSRF token field -->
+            {% for field in form %}
+                {% if field.type != 'CSRFTokenField' %}
+                    {% if field.type == 'SubmitField'  %}
+                            <div>
+                                <button type="submit">submit</button>                                
+                            </div>
+                            {% for error in field.errors %}
+                                <p style="color: darkred;">{{error}}</p>
+                            {% endfor %}
+                        {% elif field.type != 'HiddenField'  %}
+                            <div>{{field.label}}{{field}}</div>
+                            {% for error in field.errors %}
+                                <p style="color: darkred;">{{error}}</p>
+                            {% endfor %}
+                        {% endif %}
+                    {% endif %}
+            {% endfor %}
+        </form>
+    </body>
+</html>
+{% endblock content %}
+
+
+

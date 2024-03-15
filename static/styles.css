@@ -34,10 +34,46 @@ body {
 }
 
 input[type="file"] {
+    display: none;
+}
+
+/* Style for the custom file input button */
+.custom-file-input {
     margin: 20px 0;
-    display: block;
     margin-left: auto;
-    margin-right: auto;
+    margin-right: auto; 
+    width: 20%;
+    padding: 10px;
+    background-color: #007bff;
+    border: none;
+    border-radius: 3px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: inline-block;
+    text-align: center;
+    line-height: 40px; 
+}
+
+/* Style for the file input label (to mimic button appearance) */
+.custom-file-label {
+    margin: 20px 0;
+    margin-left: auto;
+    margin-right: auto; 
+    width: 20%;
+    padding: 10px;
+    background-color: #007bff;
+    border: none;
+    border-radius: 3px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+/* Change button background color on hover */
+.custom-file-label:hover {
+    background-color: #0056b3;
 }
 
 #defaultImage, #uploadedImage, #entropyCanvas {
@@ -127,4 +163,74 @@ nav ul li a:hover {
     nav ul li {
         float: none;
     }
+}
+
+/* Style for form */
+form {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Style for form header */
+form h1 {
+    margin-bottom: 20px;
+    text-align: center;
+    color: #333;
+}
+
+/* Style for form field labels */
+form label {
+    display: block;
+    margin-bottom: 8px;
+    color: #666;
+}
+
+/* Style for form input fields */
+form input[type="text"],
+form input[type="email"],
+form input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 16px;
+    box-sizing: border-box; /* Ensure padding and border are included in width */
+}
+
+/* Style for form submit button */
+form button[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    border: none;
+    border-radius: 3px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+form button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+
+/* footer style */
+
+footer {
+    /* background-color: #333; */
+    color: #fff;
+    padding: 50px 0;
+}
+
+footer .container {
+    background-color: #333;
+    width: 100%;
+    margin: 0 auto;
 }
