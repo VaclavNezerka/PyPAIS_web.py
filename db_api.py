@@ -35,12 +35,20 @@ def save_new_user_db(cur, conn , values):
         cur.execute('INSERT INTO users (username, e_mail, first_name, last_name, company, pwd) '
                     'VALUES (%s,%s,%s,%s,%s,%s)',
                     values)
-        conn.commit()
+        b=conn.commit()
+        print(b)
         response=None
     except Exception as exception:
         response=exception
     finally:
+        print(response)
         return response
+
+@db_connection
+def execute_query(cur,conn,query,values):
+    cur.execute(query,values)
+    response=cur.fetchall()
+    return response
 
 @db_connection
 def return_table_users(cur,conn):

@@ -55,16 +55,16 @@ def register():
             form.password.data=ws.generate_password_hash(form.password.data,method=os.environ['HASH_METHOD'],salt_length=int(os.environ['SALT_LENGTH']))
             try:
                 # TODO - implement the search in DB for a company ID 
-                form.company.data=int(form.company.data)
-                save_new_user_db(values=[field.data for field in form][:6])
+                form.company_id.data=int(form.company_id.data)
+                # form.company.data=int(form.company.data)
+                r=save_new_user_db(values=[field.data for field in form][:6])
                 flash(message='Registration was successful.',category='success')
             except:
-                flash(message='The data were not provided in a requested format.',category='error')
+                flash(message='The data was not provided in the requested format.',category='error')
                 return render_template('register.html',form=form)    
             return render_template('register.html',form=form)    
         else:
             return render_template('register.html',form=form)
-        return redirect('/')
     else:
         return redirect('/')
 

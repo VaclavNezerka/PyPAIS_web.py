@@ -46,4 +46,13 @@ VALUES
 ('Cdam', 'Halik', 'cmal', 'cmal@fmail.com', 2),
 ('Ddam', 'Lalik', 'dmal', 'dmal@fmail.com', 1);
 
-SELECT * FROM users;
+SELECT pwd FROM users;
+SELECT * FROM public_users;
+
+-- 21. 3. UPDATE PRIVILEGES
+CREATE OR REPLACE VIEW public_users AS SELECT id, first_name, last_name, company, username,e_mail FROM users;
+ALTER TABLE companies RENAME COLUMN id TO company_id;
+CREATE VIEW public_companies AS SELECT company_id, company_name FROM companies;
+GRANT SELECT ON public_companies TO pypais_small;
+
+SELECT company_id FROM public_companies WHERE company_id=1 LIMIT 1;

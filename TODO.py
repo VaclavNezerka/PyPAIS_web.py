@@ -1,3 +1,7 @@
+# TODO FIX BUGS
+"""
+Image blur can not be alleviated 
+"""
 # TODO List
 # Feasible tasks
 """
@@ -38,3 +42,7 @@ Create UI for managing the old requests [No DB employed yet]
 # 2) set new privileges to DB_USERNAME: 
 # **GRANT INSERT ON users TO DB_USERNAME;
 # **GRANT USAGE, SELECT ON SEQUENCE users_id_seq TO DB_USERNAME;
+# CREATE OR REPLACE VIEW public_users AS SELECT id, first_name, last_name, company, username,e_mail FROM users;
+# ALTER TABLE companies RENAME COLUMN id TO company_id;
+# CREATE VIEW public_companies AS SELECT company_id, company_name FROM companies;
+# GRANT SELECT ON public_companies TO DB_USERNAME;
