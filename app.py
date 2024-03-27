@@ -44,6 +44,23 @@ def index():
 def page_not_found(error):
     return render_template('404.html'), 404
 
+
+"""_summary_
+
+
+
+
+Returns:
+    _type_: _description_
+"""
+@app.route('/queue',methods=['GET','POST'])
+def queue():
+    return render_template('queue.html')
+
+@app.route('/experiments',methods=['GET','POST'])
+def experiments():
+    return render_template('experiments.html')
+
 @app.route('/register',methods=['GET','POST'])
 def register():
     if request.method=='GET':
