@@ -1,5 +1,5 @@
 # Packages
-from flask import Flask, render_template, request, send_from_directory, flash, redirect, g, make_response, send_file
+from flask import Flask, render_template, request, send_from_directory, flash, redirect, session, url_for, g, make_response, send_file
 # from flask_login import login_manager, UserMixin, login_required,
 import werkzeug.security as ws
 from PIL import Image
@@ -36,6 +36,26 @@ current_images = {'gray': [], 'entropy': {}, 'gray_original': {},
 # 'manual_mask_adjustments' - changes manually made by the user (a sparse numpy boolean matrix), 
 # ... so the final mask can expressed as 
 
+# TODO delete before production DANGEROUS FUNCTION
+@app.route('/pr')
+def print_session():
+    print(session)
+    return redirect('/'), 200
+
+def check_authentication(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+            print(session['authenticated'])
+            if session['authenticated'] is True:
+                func(*args, **kwargs)
+            else:
+                return redirect(url_for('login'))
+        # except:
+        #     return redirect(url_for('login'))
+    return wrapper
+
+
+@check_authentication
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -44,19 +64,47 @@ def index():
 def page_not_found(error):
     return render_template('404.html'), 404
 
-
-"""_summary_
-
-
-
-
-Returns:
-    _type_: _description_
 """
+"""
+
+@app.route('/logout')
+def logout():
+    session.pop('username',None)
+    session.pop('authenticated',None)
+    return redirect(url_for('login'))
+
+@app.route('/login',methods=['GET','POST'])
+def login():
+    if request.method=='GET':
+        form=forms.LoginForm()
+        return render_template('form.html',form=form)
+    elif request.method=='POST':
+        form=forms.LoginForm()
+        if form.validate_on_submit():
+            query='SELECT pwd FROM public_users WHERE username=%s OR e_mail=%s'
+            values=(form.usernameXe_mail.data,form.usernameXe_mail.data)
+            pwd_hash=execute_query(query=query,values=values)[0][0]
+            authenticated=ws.check_password_hash(pwhash=pwd_hash,password=form.password.data)
+            if authenticated:
+                query='SELECT e_mail FROM public_users WHERE username=%s OR e_mail=%s'
+                mail=execute_query(query=query,values=values)[0][0]
+                session['authenticated']='authenticated'
+                session['username']=mail
+                return redirect('/')   
+            else:
+                flash('The password or username/email is incorrect.')
+                return render_template('form.html',form=form)
+        else:
+            return render_template('form.html',form=form)
+    else:
+        return redirect('/')
+
+@check_authentication
 @app.route('/queue',methods=['GET','POST'])
 def queue():
     return render_template('queue.html')
 
+@check_authentication
 @app.route('/experiments',methods=['GET','POST'])
 def experiments():
     return render_template('experiments.html')
@@ -65,29 +113,24 @@ def experiments():
 def register():
     if request.method=='GET':
         form=forms.RegistrationFormUser()
-        return render_template('register.html',form=form)
+        return render_template('form.html',form=form)
     elif request.method=='POST':
         form=forms.RegistrationFormUser()
         if form.validate_on_submit():
             form.password.data=ws.generate_password_hash(form.password.data,method=os.environ['HASH_METHOD'],salt_length=int(os.environ['SALT_LENGTH']))
             try:
-                # TODO - implement the search in DB for a company ID 
                 form.company_id.data=int(form.company_id.data)
-                # form.company.data=int(form.company.data)
-                r=save_new_user_db(values=[field.data for field in form][:6])
+                save_new_user_db(values=[field.data for field in form][:6])
                 flash(message='Registration was successful.',category='success')
             except:
                 flash(message='The data was not provided in the requested format.',category='error')
-                return render_template('register.html',form=form)    
-            return render_template('register.html',form=form)    
+                return render_template('form.html',form=form)    
+            return render_template('form.html',form=form)    
         else:
-            return render_template('register.html',form=form)
+            return render_template('form.html',form=form)
     else:
         return redirect('/')
 
-@app.route('/login')
-def login():
-    return render_template('login.html')
 
 @app.route('/grayscale-data', methods=['POST'])
 def get_grayscale_data():
@@ -168,11 +211,12 @@ def encode_to_png(image):
     image_io.seek(0)
     return image_io.getvalue()
 
+# TODO repair the image blur - err: when a value of blur is set 
 @app.route('/blur', methods=['POST'])
 def blur_caller():
     blur_value = int(request.form.get('blurValue', 0))
     # calls twice the function for the blur_image for the gray image and image entropy
-    current_images['gray']=blur_image(blur_value,image=current_images['gray'])
+    current_images['gray']=blur_image(blur_value,image=current_images['gray_original'])
     current_images['entropy']=blur_image(blur_value,image=current_images['entropy'])
 
     new_blur_image = Image.fromarray(current_images['gray'])
