@@ -2,6 +2,7 @@
 # from typing import Any, Mapping
 # from flask_wtf.form import _Auto
 from flask_wtf import FlaskForm
+from flask import flash
 from wtforms import StringField, PasswordField, SubmitField,ValidationError,IntegerField
 from wtforms.validators import DataRequired, Email, EqualTo
 import db_api 
@@ -25,6 +26,19 @@ def Exists(tablename):
             raise ValidationError(f'No record {field.name} with value "{field.data}" exists. Contact your admin to get your credentials (or register your company).')
     return exists
 
+def ExistsAny(tablename):
+    def something_exists(form,field):
+        record_found=False
+        for name in field.name.split('X'):
+            query=f'SELECT {name} FROM {tablename} WHERE {name}=%s LIMIT %s;'
+            response=db_api.execute_query(query=query,values=(field.data,1))
+            if 1==len(response):
+                record_found=True
+        if not record_found:
+            flash('The password or username/email is incorrect.')
+            raise ValidationError()
+    return something_exists
+
 def RequiredLength(min=1,max=50):
     def exists(form,field):
         if min:
@@ -37,7 +51,6 @@ def RequiredLength(min=1,max=50):
 
 # def IsNumeric():
 #     def is_numeric(form,field):
-    
 #         if ~len(response):
 #             message=f'No record {field.name} with value "{field.data}" exists. Contact your admin to get your credentials (or register your company).'
 #             return ValidationError(message=message)
@@ -55,6 +68,11 @@ class RegistrationFormUser(FlaskForm):
     password = PasswordField('Password',validators=[DataRequired(),RequiredLength(min=8)])
     confirm_password = PasswordField('Confirm password',validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Submit')
+
+class LoginForm(FlaskForm):
+    usernameXe_mail = StringField('Username/Email',validators=[DataRequired(),ExistsAny(tablename='public_users')])
+    password = PasswordField('Password',validators=[DataRequired()])
+    login=SubmitField('Login')
     
 
 # class RegistrationFormCompany(FlaskForm):
@@ -62,8 +80,3 @@ class RegistrationFormUser(FlaskForm):
 #     company_name = StringField('Company name',validators=[DataRequired()])
 #     company_address = PasswordField('Company address',validators=[DataRequired()])
 #     submit = SubmitField('Submit')
-
-# class LoginForm(FlaskForm):
-#     username_email = StringField('Username/Email',validators=[DataRequired()])
-#     password = PasswordField('Password',validators=[DataRequired()])
-#     submit=SubmitField('Login')

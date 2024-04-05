@@ -10,16 +10,21 @@ from skimage.morphology import disk
 from skimage import img_as_ubyte
 import cv2
 import time
+from datetime import timedelta
 import secrets
 import string
 import os
 from rembg import remove
 from db_api import *
 
+
+
 # Apps
 import forms 
 
 app = Flask(__name__)
+
+# app.permanent_session_lifetime=timedelta(days=5)
 
 def generate_rnd_string(length):
     possible_chars=string.ascii_letters+string.digits+string.punctuation
@@ -36,29 +41,27 @@ current_images = {'gray': [], 'entropy': {}, 'gray_original': {},
 # 'manual_mask_adjustments' - changes manually made by the user (a sparse numpy boolean matrix), 
 # ... so the final mask can expressed as 
 
-# TODO delete before production DANGEROUS FUNCTION
-@app.route('/pr')
-def print_session():
-    print(session)
-    return redirect('/'), 200
-
 def check_authentication(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-            print(session['authenticated'])
-            if session['authenticated'] is True:
-                func(*args, **kwargs)
+        try:
+            if 'authenticated' in session and session['authenticated']:
+                return func(*args, **kwargs)
             else:
+                flash('You must be logged in to access this page.','error')
                 return redirect(url_for('login'))
-        # except:
-        #     return redirect(url_for('login'))
+        except:
+            return redirect(url_for('login'))
     return wrapper
 
 
-@check_authentication
 @app.route('/')
+@check_authentication
 def index():
-    return render_template('index.html')
+    print('\n\nINDEX\n\n')
+    p=render_template('index.html')
+    print(p)
+    return render_template('index.html'), 200
 
 @app.errorhandler(404)
 def page_not_found(error):
@@ -77,8 +80,11 @@ def logout():
 def login():
     if request.method=='GET':
         form=forms.LoginForm()
-        return render_template('form.html',form=form)
+        return render_template('form.html',dynamic_content='Login ',form=form)
     elif request.method=='POST':
+        if 'username' in session:   
+            # TODO - do not allow user to go to the login page if they are authenticated/logged in 
+            return redirect('/')
         form=forms.LoginForm()
         if form.validate_on_submit():
             query='SELECT pwd FROM public_users WHERE username=%s OR e_mail=%s'
@@ -88,24 +94,25 @@ def login():
             if authenticated:
                 query='SELECT e_mail FROM public_users WHERE username=%s OR e_mail=%s'
                 mail=execute_query(query=query,values=values)[0][0]
-                session['authenticated']='authenticated'
+                session['authenticated']=True
                 session['username']=mail
+                # session.permanent=True 
                 return redirect('/')   
             else:
                 flash('The password or username/email is incorrect.')
-                return render_template('form.html',form=form)
+                return render_template('form.html',dynamic_content='Login ',form=form)
         else:
-            return render_template('form.html',form=form)
+            return render_template('form.html',dynamic_content='Login ',form=form)
     else:
         return redirect('/')
 
-@check_authentication
 @app.route('/queue',methods=['GET','POST'])
+@check_authentication
 def queue():
     return render_template('queue.html')
 
-@check_authentication
 @app.route('/experiments',methods=['GET','POST'])
+@check_authentication
 def experiments():
     return render_template('experiments.html')
 
@@ -113,7 +120,7 @@ def experiments():
 def register():
     if request.method=='GET':
         form=forms.RegistrationFormUser()
-        return render_template('form.html',form=form)
+        return render_template('form.html',dynamic_content='Register new user',form=form)
     elif request.method=='POST':
         form=forms.RegistrationFormUser()
         if form.validate_on_submit():
@@ -124,10 +131,10 @@ def register():
                 flash(message='Registration was successful.',category='success')
             except:
                 flash(message='The data was not provided in the requested format.',category='error')
-                return render_template('form.html',form=form)    
-            return render_template('form.html',form=form)    
+                return render_template('form.html',dynamic_content='Register new user',form=form)    
+            return render_template('form.html',dynamic_content='Register new user',form=form)    
         else:
-            return render_template('form.html',form=form)
+            return render_template('form.html',dynamic_content='Register new user',form=form)
     else:
         return redirect('/')
 
