@@ -6,16 +6,25 @@
     <link rel="stylesheet" href="/static/styles.css">
     <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
     <title>Navbar</title>
-</head>
-<body>
-
+  </head>
+  <body>
+    
 <nav>
-    <ul>
-      <li><a href="/">Current Experiment</a></li>
-      <li><a href="/experiments">Experiments</a></li>
-      <li><a href="/queue">Queue</a></li>
-      <li><a href="/contact">Contact</a></li>
-    </ul>
+  {% if session.authenticated %}
+  <ul>
+    <li><a href="/">Current Experiment</a></li>
+    <li><a href="/experiments">Experiments</a></li>
+    <li><a href="/queue">Queue</a></li>
+    <li><a href="/contact">Contact</a></li>
+    <li><a href="/logout">Logout</a></li>
+  </ul>
+  {% else %}
+  <ul>
+    <li><a href="/home">About</a></li>
+    <li><a href="/login">Login</a></li>
+    <li><a href="/register">Register</a></li>
+  </ul>
+  {% endif %}
 </nav>
 
 </body>

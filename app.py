@@ -54,18 +54,15 @@ def check_authentication(func):
             return redirect(url_for('login'))
     return wrapper
 
-
 @app.route('/')
 @check_authentication
 def index():
     print('\n\nINDEX\n\n')
-    p=render_template('index.html')
-    print(p)
-    return render_template('index.html'), 200
+    return render_template('index.html', session=session), 200
 
 @app.errorhandler(404)
 def page_not_found(error):
-    return render_template('404.html'), 404
+    return render_template('404.html', session=session), 404
 
 """
 """
@@ -80,7 +77,7 @@ def logout():
 def login():
     if request.method=='GET':
         form=forms.LoginForm()
-        return render_template('form.html',dynamic_content='Login ',form=form)
+        return render_template('form.html',dynamic_content='Login ',form=form, session=session)
     elif request.method=='POST':
         if 'username' in session:   
             # TODO - do not allow user to go to the login page if they are authenticated/logged in 
