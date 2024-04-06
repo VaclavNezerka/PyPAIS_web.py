@@ -41,6 +41,8 @@ current_images = {'gray': [], 'entropy': {}, 'gray_original': {},
 # 'manual_mask_adjustments' - changes manually made by the user (a sparse numpy boolean matrix), 
 # ... so the final mask can expressed as 
 
+
+
 def check_authentication(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -94,32 +96,33 @@ def login():
                 mail=execute_query(query=query,values=values)[0][0]
                 session['authenticated']=True
                 session['username']=mail
+                session['img']=current_images
                 # session.permanent=True 
                 return redirect('/')   
             else:
                 flash('The password or username/email is incorrect.')
-                return render_template('form.html',dynamic_content='Login ',form=form)
+                return render_template('form.html',dynamic_content='Login ',form=form,session=session)
         else:
-            return render_template('form.html',dynamic_content='Login ',form=form)
+            return render_template('form.html',dynamic_content='Login ',form=form,session=session)
     else:
         return redirect('/')
 
 @app.route('/queue',methods=['GET','POST'])
 @check_authentication
 def queue():
-    return render_template('queue.html')
+    return render_template('queue.html',session=session)
 
 @app.route('/experiments',methods=['GET','POST'])
 @check_authentication
 def experiments():
-    return render_template('experiments.html')
+    return render_template('experiments.html',session=session)
 
 @app.route('/register',methods=['GET','POST'])
 def register():
     logout()
     if request.method=='GET':
         form=forms.RegistrationFormUser()
-        return render_template('form.html',dynamic_content='Register new user',form=form)
+        return render_template('form.html',dynamic_content='Register new user',form=form,session=session)
     elif request.method=='POST':
         form=forms.RegistrationFormUser()
         if form.validate_on_submit():
@@ -130,10 +133,10 @@ def register():
                 flash(message='Registration was successful.',category='success')
             except:
                 flash(message='The data was not provided in the requested format.',category='error')
-                return render_template('form.html',dynamic_content='Register new user',form=form)    
-            return render_template('form.html',dynamic_content='Register new user',form=form)    
+                return render_template('form.html',dynamic_content='Register new user',form=form,session=session)    
+            return render_template('form.html',dynamic_content='Register new user',form=form,session=session)    
         else:
-            return render_template('form.html',dynamic_content='Register new user',form=form)
+            return render_template('form.html',dynamic_content='Register new user',form=form,session=session)
     else:
         return redirect('/')
 
@@ -158,6 +161,12 @@ def get_grayscale_data():
         Image.fromarray(np_gray).save(img_byte_arr, format='PNG')
         img_byte_arr = img_byte_arr.getvalue()
         return img_byte_arr, 200, {'Content-Type': 'image/png'}
+
+@app.route('/rembg',methods=['GET'])
+@check_authentication
+def rembg():
+    return render_template('rembg.html')
+
 
 @app.route('/suggest-mask',methods=['POST'])
 def remove_picture_background():

@@ -266,14 +266,37 @@ function processEntropyImage() {
 function suggestMask(blurValue,cropping,threshold){
     // DS 
     // sends the data to the BE server and receive the suggested mask.
-    var formData = new FormData();
-    formData.append('blurValue',blurValue)
-    formData.append('cropping',cropping)
-    formData.threshold('threshold',threshold)
-    const uniqueQuery = '?nocache=' + new Date().getTime();
-    fetch('/suggest-mask'+uniqueQuery, {method: 'POST', body: formData})
     
+    return new Promise((resolve, reject)=>{
+        var formData = new FormData();
+        formData.append('blurValue',blurValue)
+        formData.append('cropping',cropping)
+        formData.threshold('threshold',threshold)
+        formData.threshold('threshold',threshold)
+        
+        alert('suggestMask called')
 
+        const uniqueQuery = '?nocache=' + new Date().getTime();
+        fetch('/suggest-mask'+uniqueQuery, {method: 'POST', body: formData})
+        .then(response=>response.blob())
+        .then(blob =>{
+            var url = URL.createObjectURL(blob);
+            var canvas = document.getElementById('backgroundCanvas');
+            var ctx = canvas.getContext('2d');
+            var img = new Image();
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                mask_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                resolve(); // Resolve the promise after the histogram is drawn
+            };
+            img.onerror = reject; // Reject the promise on error
+            img.src = url;
+        })
+        
+    })
+    
 }
 
 function blurImage(blurValue) {

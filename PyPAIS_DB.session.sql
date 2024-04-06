@@ -27,8 +27,10 @@ CREATE TABLE experiments(
     img_mask_aggregate BYTEA,
     expert_guess decimal(5,2),
     fake_deleted BOOLEAN DEFAULT FALSE,
+    finished BOOLEAN DEFAULT FALSE,
     info TEXT
 );
+
 
 CREATE VIEW public_users AS SELECT id, first_name, last_name, company FROM users;
 
@@ -49,11 +51,15 @@ VALUES
 SELECT pwd FROM users;
 SELECT * FROM public_users;
 
+DATABASE pypais;
+
 -- 21. 3. UPDATE PRIVILEGES
 CREATE OR REPLACE VIEW public_users AS SELECT id, first_name, last_name, company, username, e_mail, pwd FROM users;
 ALTER TABLE companies RENAME COLUMN id TO company_id;
 CREATE VIEW public_companies AS SELECT company_id, company_name FROM companies;
 GRANT SELECT ON public_companies TO pypais_small;
-
+ALTER TABLE experiments add COLUMN finished BOOLEAN DEFAULT FALSE;
 
 SELECT company_id FROM public_companies WHERE company_id=1 LIMIT 1;
+
+SELECT experiment FROM experiments WHERE added_by_user=1 LIMIT 1;
