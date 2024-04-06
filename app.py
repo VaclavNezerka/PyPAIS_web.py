@@ -75,6 +75,7 @@ def logout():
 
 @app.route('/login',methods=['GET','POST'])
 def login():
+    logout()
     if request.method=='GET':
         form=forms.LoginForm()
         return render_template('form.html',dynamic_content='Login ',form=form, session=session)
@@ -115,6 +116,7 @@ def experiments():
 
 @app.route('/register',methods=['GET','POST'])
 def register():
+    logout()
     if request.method=='GET':
         form=forms.RegistrationFormUser()
         return render_template('form.html',dynamic_content='Register new user',form=form)
