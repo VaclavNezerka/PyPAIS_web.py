@@ -26,11 +26,24 @@ CREATE TABLE experiments(
     img_mask_asphalt BYTEA,
     img_mask_aggregate BYTEA,
     expert_guess decimal(5,2),
+    current_state varchar(10) DEFAULT 'pending' CHECK (current_state IN ('pending', 'processing', 'prepared', 'started' , 'finished')
     fake_deleted BOOLEAN DEFAULT FALSE,
     finished BOOLEAN DEFAULT FALSE,
     info TEXT
 );
 
+ALTER TABLE experiments add COLUMN current_state varchar(10) DEFAULT 'pending' CHECK (current_state IN ('pending', 'processing', 'prepared', 'started' , 'finished'));
+
+SELECT * FROM experiments;
+
+INSERT INTO experiments (added_by_user, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state) 
+VALUES 
+(31, 'img1', 'mask1', 'mask2', 0.5, 'info1', 'prepared'),
+(31, 'img2', 'mask3', 'mask4', 0.6, 'info2', 'finished'),
+(31, 'img3', 'mask5', 'mask6', 0.7, 'info3', 'pending'),
+(31, 'img4', 'mask7', 'mask8', 0.8, 'info4', 'pending'),
+(31, 'img4', 'mask7', 'mask8', 0.8, 'info4', 'processing'),
+(31, 'img4', 'mask7', 'mask8', 0.8, 'info4', 'started');
 
 CREATE VIEW public_users AS SELECT id, first_name, last_name, company FROM users;
 
@@ -48,6 +61,9 @@ VALUES
 ('Cdam', 'Halik', 'cmal', 'cmal@fmail.com', 2),
 ('Ddam', 'Lalik', 'dmal', 'dmal@fmail.com', 1);
 
+SELECT id, time_stamp, expert_guess FROM experiments where added_by_user=31 AND current_state='finished';
+
+
 SELECT pwd FROM users;
 SELECT * FROM public_users;
 
@@ -63,3 +79,5 @@ ALTER TABLE experiments add COLUMN finished BOOLEAN DEFAULT FALSE;
 SELECT company_id FROM public_companies WHERE company_id=1 LIMIT 1;
 
 SELECT experiment FROM experiments WHERE added_by_user=1 LIMIT 1;
+
+GRANT SELECT ON experiments TO pypais_small;

@@ -46,21 +46,22 @@ current_images = {'gray': [], 'entropy': {}, 'gray_original': {},
 def check_authentication(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        try:
-            if 'authenticated' in session and session['authenticated']:
-                return func(*args, **kwargs)
-            else:
-                flash('You must be logged in to access this page.','error')
-                return redirect(url_for('login'))
-        except:
+        # try:
+        if 'authenticated' in session and session['authenticated']:
+            return func(*args, **kwargs)
+        else:
+            flash('You must be logged in to access this page.','error')
             return redirect(url_for('login'))
+        # except:
+        #     return redirect(url_for('login'))
     return wrapper
 
 @app.route('/')
 @check_authentication
 def index():
-    print('\n\nINDEX\n\n')
     return render_template('index.html', session=session), 200
+
+
 
 @app.errorhandler(404)
 def page_not_found(error):
@@ -96,8 +97,14 @@ def login():
                 mail=execute_query(query=query,values=values)[0][0]
                 session['authenticated']=True
                 session['username']=mail
-                session['img']=current_images
-                # session.permanent=True 
+                session['user_id']=execute_query('SELECT id FROM public_users WHERE e_mail=%s',(mail,))[0][0]
+                id=session['user_id']
+                flash(f'You {id}','success')
+                current_images = {'gray': [], 'entropy': {}, 'gray_original': {}, 
+                  'entropy_original': {}, 'suggested_mask_threshold': {}, 'suggested_mask_blur': {},
+                  'suggested_mask': [], 'manual_mask_adjustments': []}
+                current_images=current_images
+                # session.permanent=True
                 return redirect('/')   
             else:
                 flash('The password or username/email is incorrect.')
@@ -107,15 +114,23 @@ def login():
     else:
         return redirect('/')
 
+
 @app.route('/queue',methods=['GET','POST'])
 @check_authentication
 def queue():
-    return render_template('queue.html',session=session)
+    records=[('id','time_stamp','current_state')]
+    columnames=['id','date','state','actions']
+    actions=['Edit','Cancel']
+    records.append(execute_query("SELECT id, time_stamp, current_state FROM experiments where added_by_user=%s AND current_state!='finished' ",(session['user_id'],)))
+    return render_template('queue.html',records=records,session=session,dynamic_content='Experiment Queue',columnames=columnames, actions = actions)
 
 @app.route('/experiments',methods=['GET','POST'])
 @check_authentication
 def experiments():
-    return render_template('experiments.html',session=session)
+    records=[('id','time_stamp','expert_guess')]
+    records.append(execute_query("SELECT id, time_stamp, expert_guess FROM experiments where added_by_user=%s AND current_state='finished' ",(session['user_id'],)))
+    print(records)
+    return render_template('experiments.html',records=records,session=session,dynamic_content='Experiments')
 
 @app.route('/register',methods=['GET','POST'])
 def register():
@@ -139,7 +154,6 @@ def register():
             return render_template('form.html',dynamic_content='Register new user',form=form,session=session)
     else:
         return redirect('/')
-
 
 @app.route('/grayscale-data', methods=['POST'])
 def get_grayscale_data():
@@ -200,8 +214,8 @@ def remove_picture_background():
 @app.route('/entropy', methods=['POST'])
 def calculate_entropy():
     # np_gray = cv2.imread('temp/gray_temp.jpg', cv2.IMREAD_GRAYSCALE)
+    # print(current_images)
     np_gray = current_images['gray']
-
     # Calculate local entropy
     entropy_image = entropy(img_as_ubyte(np_gray), disk(5))
 
@@ -262,6 +276,8 @@ def apply_mask():
     entropy_min_threshold = int(request.form.get('entropyMinThreshold', 0))
     entropy_max_threshold = int(request.form.get('entropyMaxThreshold', 255))
 
+    # qqq -session current images
+    
     print('Mask applied')
     # np_gray = cv2.imread('temp/gray_temp.jpg', cv2.IMREAD_GRAYSCALE)
     # np_entropy = cv2.imread('temp/entropy_temp.jpg', cv2.IMREAD_GRAYSCALE)

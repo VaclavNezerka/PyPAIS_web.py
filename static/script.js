@@ -205,8 +205,8 @@ function processImage() {
         formData.append('entropyMaxThreshold', document.getElementById('entropyMaxThresholdSlider').value);
         formData.append('imageId', 'gray');
 
-        const uniqueQuery = '?nocache=' + new Date().getTime();
-        fetch('/apply-mask' + uniqueQuery, { method: 'POST', body: formData })
+        // const uniqueQuery = '?nocache=' + new Date().getTime();
+        fetch('/apply-mask', { method: 'POST', body: formData })
         .then(response => response.blob())
         .then(imageBlob => {
             var imageUrl = URL.createObjectURL(imageBlob);

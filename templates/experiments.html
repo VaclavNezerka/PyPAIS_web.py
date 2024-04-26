@@ -6,9 +6,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Experiment Records</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment Records</title>
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -63,8 +63,8 @@
 </style>
 </head>
 <body>
-<div class="container">
-    <h2>Experiment Records</h2>
+    <div class="container">
+    <h2>{{dynamic_content}}</h2>
     <table>
         <thead>
             <tr>
@@ -75,33 +75,25 @@
             </tr>
         </thead>
         <tbody>
+            {% if records %}            
+            {% for record in records[1:] %}
+            {% for field in record %}
             <tr>
-                <td>1</td>
-                <td>2024-03-25</td>
-                <td>75%</td>
-                <td>
+                {% for column in field %}
+                <td>{{column}}</td>
+                {% endfor %}  
+                  <td>
+                  
                     <button class="btn-details">Details</button>
                     <button class="btn-export">Export</button>
                 </td>
             </tr>
-            <tr>
-                <td>2</td>
-                <td>2024-03-26</td>
-                <td>80%</td>
-                <td>
-                    <button class="btn-details">Details</button>
-                    <button class="btn-export">Export</button>
-                </td>
-            </tr>
-            <tr>
-                <td>3</td>
-                <td>2024-03-27</td>
-                <td>70%</td>
-                <td>
-                    <button class="btn-details">Details</button>
-                    <button class="btn-export">Export</button>
-                </td>
-            </tr>
+                  {% endfor %}
+                  {% endfor %}
+        {% else %}
+        <p>No records found</p>
+        {% endif %}
+        
         </tbody>
     </table>
 </div>
@@ -109,6 +101,4 @@
 </html>
 
 {% endblock content %}
-
-
 

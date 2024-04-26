@@ -72,68 +72,55 @@
     }
 </style>
 </head>
-<body>
 <div class="container">
-    <h2>Experiment Queue</h2>
+    <h2>{{dynamic_content}}</h2>
     <table>
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Picture state</th>
-                <th>Actions</th>
+                {% for column_name in columnames %}
+                <th>{{column_name}}</th>
+                {% endfor %}
             </tr>
         </thead>
         <tbody>
+            {% if records %}            
+            {% for record in records[1:] %}
+            {% for field in record %}
             <tr>
-                <td>2024-03-28</td>
-                <td>Prepared</td>
+                {% for column in field %}
+                <td>{{column}}</td>
+                {% endfor %}  
                 <td>
+                    {% if field[-1]== 'prepared' %}
                     <button class="btn-details">Continue</button>
-                </td>
-            </tr>
-            <tr>
-                <td>2024-03-29</td>
-                <td>Prepared</td>
-                <td>
+                    {% elif field[-1]== 'started' %}
                     <button class="btn-details">Continue</button>
-                </td>
-            </tr>
-            <tr>
-                <td>2024-03-29</td>
-                <td>Processing...</td>
-                <td>
+                    {% endif %}
                     <button class="btn-cancel">Cancel</button>
                 </td>
             </tr>
-            <td>2024-03-29</td>
-            <td>Pending...</td>
-            <td>
-                <button class="btn-cancel">Cancel</button>
-            </td>
-        </tr>
-        <td>2024-03-29</td>
-        <td>Pending...</td>
-        <td>
-                    <button class="btn-cancel">Cancel</button>
-                </td>
-            </tr>
+                  {% endfor %}
+                  {% endfor %}
+        {% else %}
+        <p>No records found</p>
+        {% endif %}
+        
         </tbody>
     </table>
-    <div>        
-        <h2>Add new task to Queue</h2>
-        <div>        
-            <button class="btn-details">Choose file</button>
-        </div>
-        <h6></h6>
-        <div>        
-            <button class="btn-details">Use device camera</button>
-        </div>
-    </div>
-</div>
 
 </body>
-</html>
+    
 
+<h2>Add to queue</h2>
+<div class="row">
+    <input type="file" id="fileInput" accept="image/*" class="custom-file-input">
+    <label for="fileInput"  class="custom-file-label">Choose File</label>
+</div>
+<div class="row">
+    <input type="file" id="fileInput" accept="image/*" class="custom-file-input">
+    <label for="fileInput"  class="custom-file-label">Use device camera</label>
+</div>
+</html>
 {% endblock content %}
 
 
