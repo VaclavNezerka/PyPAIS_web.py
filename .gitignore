@@ -2,3 +2,6 @@ testscript.py
 unittests
 pypais.yml
 table.html
+_*
+*.png
+*.heic

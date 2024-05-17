@@ -98,12 +98,16 @@ def login():
                 session['authenticated']=True
                 session['username']=mail
                 session['user_id']=execute_query('SELECT id FROM public_users WHERE e_mail=%s',(mail,))[0][0]
-                id=session['user_id']
-                flash(f'You {id}','success')
-                current_images = {'gray': [], 'entropy': {}, 'gray_original': {}, 
-                  'entropy_original': {}, 'suggested_mask_threshold': {}, 'suggested_mask_blur': {},
-                  'suggested_mask': [], 'manual_mask_adjustments': []}
-                current_images=current_images
+                # current_images= {'gray': [], 'entropy': {}, 'gray_original': {}, 
+                #   'entropy_original': {}, 'suggested_mask_threshold': {}, 'suggested_mask_blur': {},
+                #   'suggested_mask': [], 'manual_mask_adjustments': []}
+                
+                # id=session['user_id']
+                # flash(f'You {id}','success')
+                # current_images = {'gray': [], 'entropy': {}, 'gray_original': {}, 
+                #   'entropy_original': {}, 'suggested_mask_threshold': {}, 'suggested_mask_blur': {},
+                #   'suggested_mask': [], 'manual_mask_adjustments': []}
+                # current_images=current_images
                 # session.permanent=True
                 return redirect('/')   
             else:
@@ -129,7 +133,6 @@ def queue():
 def experiments():
     records=[('id','time_stamp','expert_guess')]
     records.append(execute_query("SELECT id, time_stamp, expert_guess FROM experiments where added_by_user=%s AND current_state='finished' ",(session['user_id'],)))
-    print(records)
     return render_template('experiments.html',records=records,session=session,dynamic_content='Experiments')
 
 @app.route('/register',methods=['GET','POST'])
@@ -160,10 +163,19 @@ def get_grayscale_data():
     file = request.files['file']
     if file:
         image = Image.open(file.stream)
+        # TODO: remove this line after the mask is implemented (REMOVE BACKGROUND)
+        # provisory solution for the mask 
+        
         gray_image = image.convert('L')
         np_gray = np.array(gray_image)
         current_images['gray'] = np_gray
         current_images['gray_original'] = np_gray
+        current_images['uploaded_image'] = True
+
+        # TODO: remove this line after the mask is implemented (REMOVE BACKGROUND)
+        # provisory solution for the mask 
+        current_images['suggested_mask'] = np.ones_like(np_gray, dtype=bool)
+        
         # cv2.imwrite('temp/gray_temp.jpg', np_gray)
         print('Image loaded.')
 
@@ -182,39 +194,70 @@ def rembg():
     return render_template('rembg.html')
 
 
-@app.route('/suggest-mask',methods=['POST'])
+@app.route('/remove-background',methods=['POST'])
 def remove_picture_background():
     # this function returns a suggested mask, i.e. boolean matrix  
     # denoting wether a pixel should (T) or should not (F) be taken into
     # account during the other computations
     # adjust the mask by setting a manual threshold 
     
-    # read the necessary properties
-    image=np.array(request.form.get('image'),dtype=np.int8)
-    blur_value=int(request.form.get('blurValue', 0))
-    threshold=request.form.get('threshold')
-    #
-    blured_image=blur_image(blur_value,image=image)
-    # suggest that the cropping is a vector of coordinates of the left bottom corner 
-    # ... followed by the coordinates of the right upper corner 
-    cr=request.form.get('cropping')
-    tr_mask=remove(blured_image[cr[0]:cr[0]+cr[2],cr[1]:cr[1]+cr[3]])[:,:,1]
-    tr_mask=np.array(tr_mask>=threshold)
-    mask=np.zeros((image.shape[0],image.shape[1]),dtype=np.bool_)
-    mask[cr[0]:cr[0]+cr[2],cr[1]:cr[1]+cr[3]]=tr_mask
     
+    # read the necessary properties
+    file = request.files['file']
+    # check wether the file is .heic and if so, convert it to .png
+    if file.filename[-len('.HEIC'):].upper() == '.HEIC':
+        print('HEIC file detected.')
+        image = Image.open(file.stream)
+        image.save('temp/temp.png')
+        image = Image.open('temp/temp.png')
+    else:
+        image = Image.open(file.stream)
+    # image = request.form.get('image')
+    # image=np.array(request.form.get('image'),dtype=np.int8)
+    
+    
+    threshold=128 #consider changing this to a value from the form that user can set # threshold=request.form.get('threshold')
+
+    
+    original_omage_shape = image.size 
+
+    # remove the background
+    image = np.array(remove(image))
+    # if file.filename[-len('.HEIC'):].upper() == '.HEIC':
+    #     print('HEIC file detected. TRANSPOSE')
+    #     image = image.transpose((1,0,2))
+        
+
+    # sharpen the mask
+    mask = image[:, :, 3]
+    mask[mask > threshold] = 255
+    mask[mask <= threshold] = 0
+    # assign the sharpen mask to the alpha channel
+    image[:, :, 3] = mask
     # save the requested variables (in future this should be different function, doing everything at once and more 
     # importantly, at the end, when the user is satisfied with the result so we won't be constantly overwriting the DB)
-    current_images['suggested_mask']=mask
-    current_images['suggested_mask_blur']=blur_value
+    current_images['suggested_mask']=np.array(mask, dtype=bool)
     current_images['suggested_mask_threshold']=threshold
-    print('Background removal suggested')
-    return encode_to_png(mask), 200, {'Content-Type': 'image/png'}
+    current_images['suggested_mask_blur']=0
+    current_images['uploaded_image'] = True
+    # return the mask
+    print('Background removed')
+    encoded_image = encode_to_png(image)
+    return encoded_image, 200, {'Content-Type': 'image/png'}
+    # img_byte_arr = io.BytesIO()
+    # image.save(img_byte_arr, format='PNG')
+    # img_byte_arr.seek(0)  # Rewind the buffer to the beginning
+    # img_byte_arr = io.BytesIO()
+    # Image.fromarray(image).save(img_byte_arr, format='PNG')
+    # img_byte_arr = img_byte_arr.getvalue()
+    # return img_byte_arr, 200, {'Content-Type': 'image/png'}
+
+
 
 @app.route('/entropy', methods=['POST'])
 def calculate_entropy():
     # np_gray = cv2.imread('temp/gray_temp.jpg', cv2.IMREAD_GRAYSCALE)
-    # print(current_images)
+    print(current_images)
     np_gray = current_images['gray']
     # Calculate local entropy
     entropy_image = entropy(img_as_ubyte(np_gray), disk(5))
@@ -236,7 +279,8 @@ def calculate_entropy():
 def encode_to_png(image):
     # creates a byte stream ('buffer') for binary operations
     image_io=io.BytesIO()
-    image.save(image_io,'PNG') #saves the img as PNG to the byte stream ('buffer')
+    Image.fromarray(np.uint8(image)).save(image_io, format='PNG') #saves the img as PNG to the byte stream ('buffer')
+    # image.save(image_io, format='PNG') #saves the img as PNG to the byte stream ('buffer')
     image_io.seek(0)
     return image_io.getvalue()
 
@@ -275,8 +319,6 @@ def apply_mask():
     max_threshold = int(request.form.get('maxThreshold', 255))
     entropy_min_threshold = int(request.form.get('entropyMinThreshold', 0))
     entropy_max_threshold = int(request.form.get('entropyMaxThreshold', 255))
-
-    # qqq -session current images
     
     print('Mask applied')
     # np_gray = cv2.imread('temp/gray_temp.jpg', cv2.IMREAD_GRAYSCALE)
@@ -301,7 +343,28 @@ def apply_red_overlay(masked_img, intensity_img, entropy_img, min_threshold, max
                       entropy_max_threshold):
     intensity_mask = (intensity_img >= min_threshold) & (intensity_img <= max_threshold)
     entropy_mask = (entropy_img >= entropy_min_threshold) & (entropy_img <= entropy_max_threshold)
+    # combined_mask = intensity_mask & entropy_mask 
+
     combined_mask = intensity_mask & entropy_mask
+    combined_mask*=current_images['suggested_mask'].astype(bool)
+    
+    # combined_mask = intensity_mask & entropy_mask
+    # combined_mask *= current_images['suggested_mask']
+    print(combined_mask.shape)
+    print(current_images['suggested_mask'])
+    
+    # check if thre are false values in the mask
+    # if not, return the original image
+    if not np.any(combined_mask):
+        print('No mask applied.')
+        print('No mask applied.')
+        print('No mask applied.')
+    # count the false values in the mask
+    n_false_values = np.count_nonzero(~current_images['suggested_mask'])
+    print(f'Number of false values in the mask: {n_false_values}')
+    print(f'Number of false values in the mask: {n_false_values}')
+    print(f'Number of false values in the mask: {n_false_values}')
+    
 
     # Create an RGBA version of the processed data
     rgba_image = np.dstack([masked_img] * 3 + [np.full(masked_img.shape, 255, dtype=np.uint8)])
@@ -313,7 +376,7 @@ def apply_red_overlay(masked_img, intensity_img, entropy_img, min_threshold, max
 
     # Combine the original image with the overlay
     overlay_image = Image.alpha_composite(Image.fromarray(rgba_image), Image.fromarray(red_overlay))
-
+    print('Overlay applied.')
     return overlay_image
 
 

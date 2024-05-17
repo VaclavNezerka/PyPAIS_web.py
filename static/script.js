@@ -1,3 +1,9 @@
+// 
+// global variables
+let uploadedImageURL_color = null;
+let uploadedImageURL_gray = null;
+let uploadedImageURL_nobg = null;
+
 disableControls(); // Disable controls on page load
 
 function enableControls() {
@@ -124,6 +130,7 @@ document.getElementById('blurSlider').addEventListener('change', function() {
 });
 
 function uploadImage() {
+    console.log('upload image')
     document.getElementById('blurSlider').value = 0;
     document.getElementById('blurValue').value = 0;
     const fileInput = document.getElementById('fileInput');
@@ -133,15 +140,81 @@ function uploadImage() {
     var formData = new FormData();
     formData.append('file', file);
 
-    const uniqueQuery = '?nocache=' + new Date().getTime();
+    // display the uploaded image
+    // var uploadedImage = document.getElementById('uploadedImage');
+    // uploadedImage.src = URL.createObjectURL(file);
+    // uploadedImage.style.display = 'block';
+    // magnify("uploadedImage", 15);
 
-    // Fetch grayscale data and wait for it to complete
-    fetch('/grayscale-data' + uniqueQuery, { method: 'POST', body: formData })
-    .then(response => response.blob())
-    .then(blob => {
-        var url = URL.createObjectURL(blob);
-        var img = new Image();
+    // remove picture baqckground
+    // console.log('remove background')
+    const uniqueQuery = '?nocache=' + new Date().getTime();
+    uploadedImageURL_color = URL.createObjectURL(file);
+    // Fetch grayscale data and wait for it to complet
+
+    function removeBackground(formData) {
+        console.log('remove background')
         return new Promise((resolve, reject) => {
+            const uniqueQuery = '?nocache=' + new Date().getTime();
+            fetch('/remove-background' + uniqueQuery, { method: 'POST', body: formData })
+            .then(response => response.blob())
+            .then(blob => {
+                var url = URL.createObjectURL(blob);
+                uploadedImageURL_nobg = url;
+                resolve();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                reject(error);
+            });
+        });
+    }
+
+    // removeBackground(formData)
+    fetch('/remove-background' + uniqueQuery, { method: 'POST', body: formData })
+
+    // fetchGrayscaleData(formData)
+    // .then(() => fetchOriginalEntropyData())
+    // .then(() => processImage())
+    // .then(() => processEntropyImage())
+    // .then(() => {enableControls(); }) // Enable controls after everything is loaded
+
+    fetch('/grayscale-data' + uniqueQuery, { method: 'POST', body: formData })
+        .then(response => response.blob())
+        .then(blob => {
+            var url = URL.createObjectURL(blob);
+            var img = new Image();
+            console.log('fetch grayscale data')
+            return new Promise((resolve, reject) => {
+                img.onload = function() {
+                    var canvas = document.createElement('canvas');
+                    var ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+    
+                    grayscaleImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    drawIntensityHistogram(); // Draw the histogram using the fetched grayscale data
+                    resolve();
+                };
+                img.onerror = reject;
+                img.src = url;
+            });
+        })
+        .then(() => fetchOriginalEntropyData())
+        .then(() => processImage())
+        .then(() => processEntropyImage())
+        .then(() => {enableControls(); })// Enable controls after everything is loaded
+}
+
+function fetchGrayscaleData(formData) {
+    return new Promise((resolve, reject) => {
+        const uniqueQuery = '?nocache=' + new Date().getTime();
+        fetch('/grayscale-data' + uniqueQuery, { method: 'POST', body: formData })
+        .then(response => response.blob())
+        .then(blob => {
+            var url = URL.createObjectURL(blob);
+            var img = new Image();
             img.onload = function() {
                 var canvas = document.createElement('canvas');
                 var ctx = canvas.getContext('2d');
@@ -155,15 +228,14 @@ function uploadImage() {
             };
             img.onerror = reject;
             img.src = url;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            reject(error);
         });
-    })
-    .then(() => fetchOriginalEntropyData())
-    .then(() => processImage())
-    .then(() => processEntropyImage())
-    .then(() => {
-        enableControls(); // Enable controls after everything is loaded
     });
 }
+
 
 function fetchOriginalEntropyData() {
     return new Promise((resolve, reject) => {
@@ -214,11 +286,12 @@ function processImage() {
             uploadedImage.onload = function() {
                 document.getElementById('defaultImage').style.display = 'none';
                 uploadedImage.style.display = 'block';
-                magnify("uploadedImage", 3);
+                magnify("uploadedImage", 4);
                 resolve(); // Resolve the promise when the image is loaded
             };
             uploadedImage.onerror = reject; // Reject the promise on error
-            uploadedImage.src = imageUrl;
+            // uploadedImage.src = imageUrl; 
+            uploadedImage.src = uploadedImageURL_color
         })
         .catch(error => {
             console.error('Error:', error);
@@ -242,12 +315,14 @@ function processEntropyImage() {
         .then(blob => {
             var url = URL.createObjectURL(blob);
             var canvas = document.getElementById('entropyCanvas');
-            var ctx = canvas.getContext('2d');
+            var ctx = canvas.getContext('2d', { willReadFrequently: true });
             var img = new Image();
             img.onload = function() {
                 canvas.width = img.width;
                 canvas.height = img.height;
                 ctx.drawImage(img, 0, 0);
+                
+                // This is used to determine if the user is reading the histogram frequently
 
                 entropyImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 drawEntropyHistogram();
@@ -263,41 +338,6 @@ function processEntropyImage() {
     });
 }
 
-function suggestMask(blurValue,cropping,threshold){
-    // DS 
-    // sends the data to the BE server and receive the suggested mask.
-    
-    return new Promise((resolve, reject)=>{
-        var formData = new FormData();
-        formData.append('blurValue',blurValue)
-        formData.append('cropping',cropping)
-        formData.threshold('threshold',threshold)
-        formData.threshold('threshold',threshold)
-        
-        alert('suggestMask called')
-
-        const uniqueQuery = '?nocache=' + new Date().getTime();
-        fetch('/suggest-mask'+uniqueQuery, {method: 'POST', body: formData})
-        .then(response=>response.blob())
-        .then(blob =>{
-            var url = URL.createObjectURL(blob);
-            var canvas = document.getElementById('backgroundCanvas');
-            var ctx = canvas.getContext('2d');
-            var img = new Image();
-            img.onload = function() {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-                mask_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                resolve(); // Resolve the promise after the histogram is drawn
-            };
-            img.onerror = reject; // Reject the promise on error
-            img.src = url;
-        })
-        
-    })
-    
-}
 
 function blurImage(blurValue) {
     var formData = new FormData();
@@ -394,6 +434,8 @@ function drawHistogram(canvas, histogram, minThreshold, maxThreshold) {
         ctx.fill();
     }
 }
+
+
 
 function magnify(imgID, zoom) {
     var img, glass, w, h, bw;
