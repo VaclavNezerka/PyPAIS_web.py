@@ -16,6 +16,8 @@ import string
 import os
 from rembg import remove
 from db_api import *
+import json 
+import base64
 
 
 
@@ -32,7 +34,7 @@ def generate_rnd_string(length):
 
 app.secret_key=generate_rnd_string(os.environ['SECRET_KEY_LENGTH'])
 
-current_images = {'gray': [], 'entropy': {}, 'gray_original': {}, 
+current_images = {'color': [] , 'color_original': [], 'gray': [], 'entropy': {}, 'gray_original': {}, 
                   'entropy_original': {}, 'suggested_mask_threshold': {}, 'suggested_mask_blur': {},
                   'suggested_mask': [], 'manual_mask_adjustments': []}
 # 'suggested_mask_blur'- an initial blur set by user for automatic mask suggestion 
@@ -233,6 +235,8 @@ def remove_picture_background():
     current_images['suggested_mask']=np.array(mask, dtype=bool)
     current_images['suggested_mask_threshold']=threshold
     current_images['suggested_mask_blur']=0
+    current_images['color']=image
+    current_images['color_original']=image
     current_images['uploaded_image'] = True
     # return the mask
     print('Background removed')
@@ -276,14 +280,21 @@ def encode_to_png(image):
 def blur_caller():
     blur_value = int(request.form.get('blurValue', 0))
     # calls twice the function for the blur_image for the gray image and image entropy
+       
+    current_images['color']=blur_image(blur_value,image=current_images['color_original'])
     current_images['gray']=blur_image(blur_value,image=current_images['gray_original'])
     current_images['entropy']=blur_image(blur_value,image=current_images['entropy'])
 
-    new_blur_image = Image.fromarray(current_images['gray'])
-    img_byte_arr = io.BytesIO()
-    new_blur_image.save(img_byte_arr, format='PNG')
-    img_byte_arr = img_byte_arr.getvalue()
-    return img_byte_arr, 200, {'Content-Type': 'image/png'}
+    # new_blur_image = Image.fromarray(current_images['gray'])
+    # img_byte_arr = io.BytesIO()
+    # new_blur_image.save(img_byte_arr, format='PNG')
+    encoded_gray = encode_to_png(current_images['gray'])
+    encoded_color = encode_to_png(current_images['color'])
+    
+    encoded_gray = base64.b64encode(encoded_gray).decode('utf-8')
+    encoded_color = base64.b64encode(encoded_color).decode('utf-8')
+    
+    return json.dumps({'gray': encoded_gray, 'color': encoded_color}), 200, {'Content-Type': 'image/png'}
 
 def blur_image(blur_value,image):
     if blur_value <= 0:

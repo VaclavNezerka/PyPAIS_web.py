@@ -3,7 +3,13 @@
 let uploadedImageURL_color = null;
 let uploadedImageURL_gray = null;
 let uploadedImageURL_nobg = null;
+
+let uploadedImageURL_color_blur = null;
+let uploadedImageURL_gray_blur = null;
+let uploadedImageURL_nobg_blur = null;
+
 let requestedImage = null;
+let displayImageBlur = false; 
 
 disableControls(); // Disable controls on page load
 
@@ -125,14 +131,25 @@ document.getElementById('blurValue').addEventListener('change', function() {
     blurImage(this.value);
 });
 
-document.getElementById('blurSlider').addEventListener('change', function() {
+document.getElementById('blurSlider').addEventListener('change', async function() {
     document.getElementById('blurValue').value = this.value;
-    blurImage(this.value);
+    try {
+        document.getElementById('blurValue').value = this.value;
+        displayWorkingMessage();
+        await blurImage(this.value);
+    } catch (error) {
+        console.error('An error occurred:', error);
+    } finally {
+        removeWorkingMessage();
+    }
 });
 
 
 async function uploadImage() {
     console.log('upload image')
+
+    displayWorkingMessage(document.getElementById('uploadedImage'));
+
     document.getElementById('blurSlider').value = 0;
     document.getElementById('blurValue').value = 0;
     const fileInput = document.getElementById('fileInput');
@@ -142,17 +159,8 @@ async function uploadImage() {
     var formData = new FormData();
     formData.append('file', file);
 
-    // display the uploaded image
-    // var uploadedImage = document.getElementById('uploadedImage');
-    // uploadedImage.src = URL.createObjectURL(file);
-    // uploadedImage.style.display = 'block';
-    // magnify("uploadedImage", 15);
-
-    // remove picture baqckground
-    // console.log('remove background')
     const uniqueQuery = '?nocache=' + new Date().getTime();
     uploadedImageURL_color = URL.createObjectURL(file);
-    // Fetch grayscale data and wait for it to complet
 
     await removeBackground(formData)
     
@@ -161,6 +169,7 @@ async function uploadImage() {
     .then(() => processImage())
     .then(() => processEntropyImage())
     .then(() => {enableControls(); }) // Enable controls after everything is loaded
+    .then(() => {removeWorkingMessage(document.getElementById('uploadedImage'));});
 }
 
 function removeBackground(formData) {
@@ -242,6 +251,7 @@ function fetchOriginalEntropyData() {
     });
 }
 
+
 function processImage() {
     return new Promise((resolve, reject) => {
         var formData = new FormData();
@@ -264,10 +274,7 @@ function processImage() {
                 resolve(); // Resolve the promise when the image is loaded
             };
             uploadedImage.onerror = reject; // Reject the promise on error
-            // uploadedImage.src = imageUrl; 
-            // uploadedImage.src = uploadedImageURL_color
-            // uploadedImage.src = uploadedImageURL_nobg
-            uploadedImage.src = changeImageType()
+            uploadedImage.src = getImageType()
         })
         .catch(error => {
             console.error('Error:', error);
@@ -275,6 +282,20 @@ function processImage() {
         });
     });
 }
+
+
+function changeSharpness() {
+    console.log('change sharpness')
+    displayImageBlur = !displayImageBlur;
+    if (displayImageBlur) {
+        document.getElementById('uploadedImage').src = uploadedImageURL_color_blur;
+    }
+    else {
+        document.getElementById('uploadedImage').src = uploadedImageURL_color;
+    }
+
+}
+
 
 function processEntropyImage() {
     return new Promise((resolve, reject) => {
@@ -315,63 +336,95 @@ function processEntropyImage() {
 }
 
 
-function changeImageType() {
+function getImageType() {
     console.log('change image type')
+    console.log(displayImageBlur)
     var imageType = document.getElementById('imageType').value;
     var uploadedImage = document.getElementById('uploadedImage');
-    switch (imageType) {
-        case 'original':
-            uploadedImage.src = uploadedImageURL_color;
-            break;
-        case 'original_no_bg':
-            uploadedImage.src = uploadedImageURL_nobg;
-            break;
-        case 'bw':
-            uploadedImage.src = uploadedImageURL_gray;
-            break;
+    if (displayImageBlur) {
+        switch (imageType) {
+            case 'original':
+                uploadedImage.src = uploadedImageURL_color_blur;
+                break;
+            case 'original_no_bg':
+                uploadedImage.src = uploadedImageURL_nobg_blur;
+                break;
+            case 'bw':
+                uploadedImage.src = uploadedImageURL_gray_blur;
+                break;
+        }
+    } else {    
+        switch (imageType) {
+            case 'original':
+                uploadedImage.src = uploadedImageURL_color;
+                break;
+            case 'original_no_bg':
+                uploadedImage.src = uploadedImageURL_nobg;
+                break;
+            case 'bw':
+                uploadedImage.src = uploadedImageURL_gray;
+                break;
+        }
     }
     return uploadedImage.src;
 }
 
 
-function blurImage(blurValue) {
-    var formData = new FormData();
-    formData.append('blurValue', blurValue);
-    const uniqueQuery = '?nocache=' + new Date().getTime();
-    fetch('/blur' + uniqueQuery, { method: 'POST', body: formData })
-    .then(response => response.blob())
-    .then(blob => {
-        var url = URL.createObjectURL(blob);
-        var img = new Image();
-        return new Promise((resolve, reject) => {
-            img.onload = function() {
-                var canvas = document.createElement('canvas');
-                var ctx = canvas.getContext('2d');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-
-                grayscaleImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                drawIntensityHistogram(); // Draw the histogram using the fetched grayscale data
-                resolve();
-            };
-            img.onerror = reject;
-            img.src = url;
-        });
-    })
-    .then(() => fetchOriginalEntropyData())
-    .then(() => processImage())
-    .then(() => processEntropyImage())
-    .then(() => {
-        enableControls(); // Enable controls after everything is loaded
-    });
+// this function displays a "working" message on the page while the image is being processed
+function displayWorkingMessage() {
+    let workingMessage = document.getElementById('workingMessage');
+    workingMessage.style.display = 'block';
+}
+// this function removes the "working" message from the page
+function removeWorkingMessage() {
+    let workingMessage = document.getElementById('workingMessage');
+    workingMessage.style.display = 'none';
 }
 
-function validateAndUpdate() {
-    processImage();
-    processEntropyImage();
-    drawEntropyHistogram();
-    drawIntensityHistogram();
+
+function blurImage(blurValue) {
+    return new Promise((resolve, reject) => {
+        console.log('blur image')
+        var formData = new FormData();
+        formData.append('blurValue', blurValue);
+        const uniqueQuery = '?nocache=' + new Date().getTime();
+        fetch('/blur' + uniqueQuery, { method: 'POST', body: formData })
+        .then(response => {
+        // the response is in a JSON format
+        // the keys are color and gray and the values are the images
+            return response.json();})
+        .then(data => {
+            // the images are in a blob format
+            console.log('data');
+            console.log(data);
+            uploadedImageURL_color_blur = URL.createObjectURL(data.color);
+            uploadedImageURL_gray_blur = URL.createObjectURL(data.gray);
+            // uploadedImageURL_nobg_blur = URL.createObjectURL(data.nobg);
+        })
+        .catch(error => {
+            reject(error);
+            console.error('Error:', error);
+        })           
+        .then(() => fetchOriginalEntropyData())
+        .then(() => processImage())
+        .then(() => processEntropyImage())
+        .then(() => {
+            enableControls(); // Enable controls after everything is loaded
+        }).then(() => {
+            resolve();
+        })
+        ;
+    });
+}
+    
+
+async function validateAndUpdate() {
+    displayWorkingMessage();
+    await processImage();
+    await processEntropyImage();
+    await drawEntropyHistogram();
+    await drawIntensityHistogram();
+    removeWorkingMessage();
 }
 
 function drawIntensityHistogram() {
