@@ -171,10 +171,6 @@ def get_grayscale_data():
         current_images['gray'] = np_gray
         current_images['gray_original'] = np_gray
         current_images['uploaded_image'] = True
-
-        # TODO: remove this line after the mask is implemented (REMOVE BACKGROUND)
-        # provisory solution for the mask 
-        current_images['suggested_mask'] = np.ones_like(np_gray, dtype=bool)
         
         # cv2.imwrite('temp/gray_temp.jpg', np_gray)
         print('Image loaded.')
@@ -206,10 +202,11 @@ def remove_picture_background():
     file = request.files['file']
     # check wether the file is .heic and if so, convert it to .png
     if file.filename[-len('.HEIC'):].upper() == '.HEIC':
-        print('HEIC file detected.')
         image = Image.open(file.stream)
-        image.save('temp/temp.png')
-        image = Image.open('temp/temp.png')
+        unique_query = str(request.args.get('nocache')) + '_' + str(session['user_id'])
+        path = f'temp/temp_{unique_query}.png'
+        image.save(path)
+        image = Image.open(path)
     else:
         image = Image.open(file.stream)
     # image = request.form.get('image')
@@ -217,9 +214,6 @@ def remove_picture_background():
     
     
     threshold=128 #consider changing this to a value from the form that user can set # threshold=request.form.get('threshold')
-
-    
-    original_omage_shape = image.size 
 
     # remove the background
     image = np.array(remove(image))
@@ -242,22 +236,15 @@ def remove_picture_background():
     current_images['uploaded_image'] = True
     # return the mask
     print('Background removed')
-    encoded_image = encode_to_png(image)
-    return encoded_image, 200, {'Content-Type': 'image/png'}
-    # img_byte_arr = io.BytesIO()
-    # image.save(img_byte_arr, format='PNG')
-    # img_byte_arr.seek(0)  # Rewind the buffer to the beginning
-    # img_byte_arr = io.BytesIO()
-    # Image.fromarray(image).save(img_byte_arr, format='PNG')
-    # img_byte_arr = img_byte_arr.getvalue()
-    # return img_byte_arr, 200, {'Content-Type': 'image/png'}
-
+    if file.filename[-len('.HEIC'):].upper() == '.HEIC':
+        # delete the temporary file
+        os.remove(path)
+    return encode_to_png(image), 200, {'Content-Type': 'image/png'}
 
 
 @app.route('/entropy', methods=['POST'])
 def calculate_entropy():
     # np_gray = cv2.imread('temp/gray_temp.jpg', cv2.IMREAD_GRAYSCALE)
-    print(current_images)
     np_gray = current_images['gray']
     # Calculate local entropy
     entropy_image = entropy(img_as_ubyte(np_gray), disk(5))
@@ -346,26 +333,8 @@ def apply_red_overlay(masked_img, intensity_img, entropy_img, min_threshold, max
     # combined_mask = intensity_mask & entropy_mask 
 
     combined_mask = intensity_mask & entropy_mask
-    combined_mask*=current_images['suggested_mask'].astype(bool)
-    
-    # combined_mask = intensity_mask & entropy_mask
-    # combined_mask *= current_images['suggested_mask']
-    print(combined_mask.shape)
-    print(current_images['suggested_mask'])
-    
-    # check if thre are false values in the mask
-    # if not, return the original image
-    if not np.any(combined_mask):
-        print('No mask applied.')
-        print('No mask applied.')
-        print('No mask applied.')
-    # count the false values in the mask
-    n_false_values = np.count_nonzero(~current_images['suggested_mask'])
-    print(f'Number of false values in the mask: {n_false_values}')
-    print(f'Number of false values in the mask: {n_false_values}')
-    print(f'Number of false values in the mask: {n_false_values}')
-    
-
+    combined_mask*=current_images['suggested_mask'].astype(bool)  
+   
     # Create an RGBA version of the processed data
     rgba_image = np.dstack([masked_img] * 3 + [np.full(masked_img.shape, 255, dtype=np.uint8)])
 

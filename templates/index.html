@@ -15,8 +15,16 @@
             <div class="row">
                 <input type="file" id="fileInput" accept="image/*" class="custom-file-input">
                 <label for="fileInput"  class="custom-file-label">Choose File</label>
-        </div>
-        <div class="row">
+            </div>
+            <div class="row">
+            <!-- Add a droplist allowing the user to select ORIGINAL IMAGE, original with no bg, and BW -->
+                <div class="column" onchange="changeImageType()">
+                    <select id="imageType">
+                        <option value="original">Original Image</option>
+                        <option value="original_no_bg">Original Image with no background</option>
+                        <option value="bw">Black and White Image</option>
+                    </select>
+                </div>
             <div class="column">
                 <div class="slider-container">
                     
@@ -30,6 +38,8 @@
 
             </div>
         </div>
+        
+        
         
         <!-- Second Row: Intensity Image and Controls -->
         <div class="row">

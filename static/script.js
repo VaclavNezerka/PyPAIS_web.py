@@ -3,6 +3,7 @@
 let uploadedImageURL_color = null;
 let uploadedImageURL_gray = null;
 let uploadedImageURL_nobg = null;
+let requestedImage = null;
 
 disableControls(); // Disable controls on page load
 
@@ -129,7 +130,8 @@ document.getElementById('blurSlider').addEventListener('change', function() {
     blurImage(this.value);
 });
 
-function uploadImage() {
+
+async function uploadImage() {
     console.log('upload image')
     document.getElementById('blurSlider').value = 0;
     document.getElementById('blurValue').value = 0;
@@ -152,59 +154,30 @@ function uploadImage() {
     uploadedImageURL_color = URL.createObjectURL(file);
     // Fetch grayscale data and wait for it to complet
 
-    function removeBackground(formData) {
-        console.log('remove background')
-        return new Promise((resolve, reject) => {
-            const uniqueQuery = '?nocache=' + new Date().getTime();
-            fetch('/remove-background' + uniqueQuery, { method: 'POST', body: formData })
-            .then(response => response.blob())
-            .then(blob => {
-                var url = URL.createObjectURL(blob);
-                uploadedImageURL_nobg = url;
-                resolve();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                reject(error);
-            });
-        });
-    }
+    await removeBackground(formData)
+    
+    fetchGrayscaleData(formData)
+    .then(() => fetchOriginalEntropyData())
+    .then(() => processImage())
+    .then(() => processEntropyImage())
+    .then(() => {enableControls(); }) // Enable controls after everything is loaded
+}
 
-    // removeBackground(formData)
-    fetch('/remove-background' + uniqueQuery, { method: 'POST', body: formData })
-
-    // fetchGrayscaleData(formData)
-    // .then(() => fetchOriginalEntropyData())
-    // .then(() => processImage())
-    // .then(() => processEntropyImage())
-    // .then(() => {enableControls(); }) // Enable controls after everything is loaded
-
-    fetch('/grayscale-data' + uniqueQuery, { method: 'POST', body: formData })
+function removeBackground(formData) {
+    return new Promise((resolve, reject) => {
+        const uniqueQuery = '?nocache=' + new Date().getTime();
+        fetch('/remove-background' + uniqueQuery, { method: 'POST', body: formData })
         .then(response => response.blob())
         .then(blob => {
             var url = URL.createObjectURL(blob);
-            var img = new Image();
-            console.log('fetch grayscale data')
-            return new Promise((resolve, reject) => {
-                img.onload = function() {
-                    var canvas = document.createElement('canvas');
-                    var ctx = canvas.getContext('2d');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    ctx.drawImage(img, 0, 0);
-    
-                    grayscaleImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    drawIntensityHistogram(); // Draw the histogram using the fetched grayscale data
-                    resolve();
-                };
-                img.onerror = reject;
-                img.src = url;
-            });
+            uploadedImageURL_nobg = url;
+            resolve();
         })
-        .then(() => fetchOriginalEntropyData())
-        .then(() => processImage())
-        .then(() => processEntropyImage())
-        .then(() => {enableControls(); })// Enable controls after everything is loaded
+        .catch(error => {
+            console.error('Error:', error);
+            reject(error);
+        });
+    });
 }
 
 function fetchGrayscaleData(formData) {
@@ -215,6 +188,7 @@ function fetchGrayscaleData(formData) {
         .then(blob => {
             var url = URL.createObjectURL(blob);
             var img = new Image();
+            uploadedImageURL_gray = url;
             img.onload = function() {
                 var canvas = document.createElement('canvas');
                 var ctx = canvas.getContext('2d');
@@ -291,7 +265,9 @@ function processImage() {
             };
             uploadedImage.onerror = reject; // Reject the promise on error
             // uploadedImage.src = imageUrl; 
-            uploadedImage.src = uploadedImageURL_color
+            // uploadedImage.src = uploadedImageURL_color
+            // uploadedImage.src = uploadedImageURL_nobg
+            uploadedImage.src = changeImageType()
         })
         .catch(error => {
             console.error('Error:', error);
@@ -336,6 +312,25 @@ function processEntropyImage() {
             reject(error); // Reject the promise on fetch error
         });
     });
+}
+
+
+function changeImageType() {
+    console.log('change image type')
+    var imageType = document.getElementById('imageType').value;
+    var uploadedImage = document.getElementById('uploadedImage');
+    switch (imageType) {
+        case 'original':
+            uploadedImage.src = uploadedImageURL_color;
+            break;
+        case 'original_no_bg':
+            uploadedImage.src = uploadedImageURL_nobg;
+            break;
+        case 'bw':
+            uploadedImage.src = uploadedImageURL_gray;
+            break;
+    }
+    return uploadedImage.src;
 }
 
 
