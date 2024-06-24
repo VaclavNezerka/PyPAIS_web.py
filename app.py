@@ -216,7 +216,7 @@ def remove_picture_background():
     
     
     threshold=128 #consider changing this to a value from the form that user can set # threshold=request.form.get('threshold')
-
+    # save the image to the current_images dictionary
     # remove the background
     image = np.array(remove(image))
     # if file.filename[-len('.HEIC'):].upper() == '.HEIC':
@@ -281,20 +281,23 @@ def blur_caller():
     blur_value = int(request.form.get('blurValue', 0))
     # calls twice the function for the blur_image for the gray image and image entropy
        
-    current_images['color']=blur_image(blur_value,image=current_images['color_original'])
+    current_images['color']=blur_image(blur_value,image=current_images['color_original'][:,:,:3])
     current_images['gray']=blur_image(blur_value,image=current_images['gray_original'])
     current_images['entropy']=blur_image(blur_value,image=current_images['entropy'])
 
-    # new_blur_image = Image.fromarray(current_images['gray'])
-    # img_byte_arr = io.BytesIO()
-    # new_blur_image.save(img_byte_arr, format='PNG')
+    #  encode the images to PNG
     encoded_gray = encode_to_png(current_images['gray'])
     encoded_color = encode_to_png(current_images['color'])
+    print('ci shape',current_images['color'].shape)
+    print('mask shape',current_images['suggested_mask'].shape)
+    # encoded_no_bg = encode_to_png(np.concatenate([current_images['color'],current_images['suggested_mask'][:,:,None]],axis=2))
+    # encoded_nobg = encode_to_png(current_images['color_original'])
     
     encoded_gray = base64.b64encode(encoded_gray).decode('utf-8')
     encoded_color = base64.b64encode(encoded_color).decode('utf-8')
     
-    return json.dumps({'gray': encoded_gray, 'color': encoded_color}), 200, {'Content-Type': 'image/png'}
+    return json.dumps({'gray': encoded_gray, 'color': encoded_color}), 200, {'Content-Type': 'application/json'}
+    # return json.dumps({'gray': encoded_gray, 'color': encoded_color, 'nobg': encoded_no_bg}), 200, {'Content-Type': 'application/json'}
 
 def blur_image(blur_value,image):
     if blur_value <= 0:
@@ -344,7 +347,7 @@ def apply_red_overlay(masked_img, intensity_img, entropy_img, min_threshold, max
     # combined_mask = intensity_mask & entropy_mask 
 
     combined_mask = intensity_mask & entropy_mask
-    combined_mask*=current_images['suggested_mask'].astype(bool)  
+    combined_mask *= current_images['suggested_mask'].astype(bool)  
    
     # Create an RGBA version of the processed data
     rgba_image = np.dstack([masked_img] * 3 + [np.full(masked_img.shape, 255, dtype=np.uint8)])
@@ -359,6 +362,32 @@ def apply_red_overlay(masked_img, intensity_img, entropy_img, min_threshold, max
     print('Overlay applied.')
     return overlay_image
 
+
+# return red overlay
+# this function returns only the red overlay, not the whole image
+# @app.route('/red-overlay', methods=['POST'])
+# def red_overlay():
+#     # Assuming the image's ID or a unique identifier is sent as part of the form data for key lookup
+#     image_id = request.form.get('imageId')
+#     min_threshold = int(request.form.get('minThreshold', 0))
+#     max_threshold = int(request.form.get('maxThreshold', 255))
+#     entropy_min_threshold = int(request.form.get('entropyMinThreshold', 0))
+#     entropy_max_threshold = int(request.form.get('entropyMaxThreshold', 255))
+
+#     print('Red overlay applied')
+#     # np_gray = cv2.imread('temp/gray_temp.jpg', cv2.IMREAD_GRAYSCALE)
+#     # np_entropy = cv2.imread('temp/entropy_temp.jpg', cv2.IMREAD_GRAYSCALE)
+#     np_gray = current_images['gray']
+#     np_entropy = current_images['entropy']
+#     if image_id == 'gray':
+#         overlay_image = apply_red_overlay(np_gray, np_gray, np_entropy, min_threshold, max_threshold,
+#                                           entropy_min_threshold, entropy_max_threshold)
+#     else:
+#         overlay_image = apply_red_overlay(np_entropy, np_gray, np_entropy, min_threshold, max_threshold,
+#                                           entropy_min_threshold, entropy_max_threshold)
+
+#     img_byte_arr = encode_to_png(overlay_image[1])
+#     return img_byte_arr, 200, {'Content-Type': 'image/png'}
 
 @app.route('/static/<path:path>')
 def send_static(path):

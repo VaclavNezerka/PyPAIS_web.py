@@ -1,4 +1,3 @@
-// 
 // global variables
 let uploadedImageURL_color = null;
 let uploadedImageURL_gray = null;
@@ -160,8 +159,11 @@ async function uploadImage() {
     formData.append('file', file);
 
     const uniqueQuery = '?nocache=' + new Date().getTime();
-    uploadedImageURL_color = URL.createObjectURL(file);
-
+    const url = URL.createObjectURL(file);
+    uploadedImageURL_color = url;
+    if (uploadedImageURL_color_blur == null) {
+        uploadedImageURL_color_blur = url;
+    }
     await removeBackground(formData)
     
     fetchGrayscaleData(formData)
@@ -180,6 +182,9 @@ function removeBackground(formData) {
         .then(blob => {
             var url = URL.createObjectURL(blob);
             uploadedImageURL_nobg = url;
+            if (uploadedImageURL_nobg_blur == null) {
+                uploadedImageURL_nobg_blur = url;
+            }
             resolve();
         })
         .catch(error => {
@@ -198,6 +203,9 @@ function fetchGrayscaleData(formData) {
             var url = URL.createObjectURL(blob);
             var img = new Image();
             uploadedImageURL_gray = url;
+            if (uploadedImageURL_gray_blur == null) {
+                uploadedImageURL_gray_blur = url;
+            }
             img.onload = function() {
                 var canvas = document.createElement('canvas');
                 var ctx = canvas.getContext('2d');
@@ -261,8 +269,8 @@ function processImage() {
         formData.append('entropyMaxThreshold', document.getElementById('entropyMaxThresholdSlider').value);
         formData.append('imageId', 'gray');
 
-        // const uniqueQuery = '?nocache=' + new Date().getTime();
-        fetch('/apply-mask', { method: 'POST', body: formData })
+        const uniqueQuery = '?nocache=' + new Date().getTime();
+        fetch('/apply-mask'+uniqueQuery, { method: 'POST', body: formData })
         .then(response => response.blob())
         .then(imageBlob => {
             var imageUrl = URL.createObjectURL(imageBlob);
@@ -295,7 +303,6 @@ function changeSharpness() {
     }
 
 }
-
 
 function processEntropyImage() {
     return new Promise((resolve, reject) => {
@@ -381,6 +388,19 @@ function removeWorkingMessage() {
     workingMessage.style.display = 'none';
 }
 
+// this function converts a base64 string to a blob
+// the images are in a str64 format and it is decoded as a utf-8 string
+// we need to convert them to a blob
+function base64toBlob(base64, type) {
+    var byteString = atob(base64);
+    var ab = new ArrayBuffer(byteString.length);
+    var ia = new Uint8Array(ab);
+    for (var i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: type });
+}
+
 
 function blurImage(blurValue) {
     return new Promise((resolve, reject) => {
@@ -392,14 +412,31 @@ function blurImage(blurValue) {
         .then(response => {
         // the response is in a JSON format
         // the keys are color and gray and the values are the images
-            return response.json();})
-        .then(data => {
-            // the images are in a blob format
-            console.log('data');
-            console.log(data);
-            uploadedImageURL_color_blur = URL.createObjectURL(data.color);
-            uploadedImageURL_gray_blur = URL.createObjectURL(data.gray);
-            // uploadedImageURL_nobg_blur = URL.createObjectURL(data.nobg);
+            return response.json();
+        })
+        .then(data => {            
+            let color = data.color;
+            let gray = data.gray;
+            let nobg = data.nobg;
+            
+            try {
+                // the images are in a str64 format and it is decoded as a utf-8 string
+                // transfer it to blob
+                
+                // TODO // FIX THIS
+                // the BE is not returning the images in the correct format the color should not have a bg removed
+                // it should also return the image with the bg removed
+
+                let colorBlob = base64toBlob(color, 'image/png');
+                let grayBlob = base64toBlob(gray, 'image/png');
+                // let nobgBlob = base64toBlob(nobg, 'image/png');
+                uploadedImageURL_color_blur = URL.createObjectURL(colorBlob);
+                uploadedImageURL_gray_blur = URL.createObjectURL(grayBlob);
+                // uploadedImageURL_nobg_blur = URL.createObjectURL(nobgBlob);
+            } catch (error) {
+                console.error('An error occurred:', error);
+            }
+            
         })
         .catch(error => {
             reject(error);
