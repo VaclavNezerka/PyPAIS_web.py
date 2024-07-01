@@ -161,12 +161,12 @@ async function uploadImage() {
     const uniqueQuery = '?nocache=' + new Date().getTime();
     const url = URL.createObjectURL(file);
     uploadedImageURL_color = url;
-    if (uploadedImageURL_color_blur == null) {
+    if (uploadedImageURL_color_blur === null) {
         uploadedImageURL_color_blur = url;
     }
     await removeBackground(formData)
-    
     fetchGrayscaleData(formData)
+
     .then(() => fetchOriginalEntropyData())
     .then(() => processImage())
     .then(() => processEntropyImage())
@@ -180,7 +180,7 @@ function removeBackground(formData) {
         fetch('/remove-background' + uniqueQuery, { method: 'POST', body: formData })
         .then(response => response.blob())
         .then(blob => {
-            var url = URL.createObjectURL(blob);
+            const url = URL.createObjectURL(blob);
             uploadedImageURL_nobg = url;
             if (uploadedImageURL_nobg_blur == null) {
                 uploadedImageURL_nobg_blur = url;
@@ -293,14 +293,14 @@ function processImage() {
 
 
 function changeSharpness() {
-    console.log('change sharpness')
     displayImageBlur = !displayImageBlur;
-    if (displayImageBlur) {
-        document.getElementById('uploadedImage').src = uploadedImageURL_color_blur;
-    }
-    else {
-        document.getElementById('uploadedImage').src = uploadedImageURL_color;
-    }
+    document.getElementById('uploadedImage').src = getImageType();
+    // if (displayImageBlur) {
+    //     document.getElementById('uploadedImage').src = getImageType();
+    // }
+    // else {
+    //     document.getElementById('uploadedImage').src = uploadedImageURL_color;
+    // }
 
 }
 
@@ -344,10 +344,8 @@ function processEntropyImage() {
 
 
 function getImageType() {
-    console.log('change image type')
-    console.log(displayImageBlur)
-    var imageType = document.getElementById('imageType').value;
-    var uploadedImage = document.getElementById('uploadedImage');
+    let imageType = document.getElementById('imageType').value;
+    let uploadedImage = document.getElementById('uploadedImage');
     if (displayImageBlur) {
         switch (imageType) {
             case 'original':
@@ -404,7 +402,6 @@ function base64toBlob(base64, type) {
 
 function blurImage(blurValue) {
     return new Promise((resolve, reject) => {
-        console.log('blur image')
         var formData = new FormData();
         formData.append('blurValue', blurValue);
         const uniqueQuery = '?nocache=' + new Date().getTime();
@@ -429,10 +426,12 @@ function blurImage(blurValue) {
 
                 let colorBlob = base64toBlob(color, 'image/png');
                 let grayBlob = base64toBlob(gray, 'image/png');
+                let nobgBlob = base64toBlob(nobg, 'image/png');
                 // let nobgBlob = base64toBlob(nobg, 'image/png');
                 uploadedImageURL_color_blur = URL.createObjectURL(colorBlob);
                 uploadedImageURL_gray_blur = URL.createObjectURL(grayBlob);
-                // uploadedImageURL_nobg_blur = URL.createObjectURL(nobgBlob);
+                uploadedImageURL_nobg_blur = URL.createObjectURL(nobgBlob);
+
             } catch (error) {
                 console.error('An error occurred:', error);
             }

@@ -216,9 +216,13 @@ def remove_picture_background():
     
     
     threshold=128 #consider changing this to a value from the form that user can set # threshold=request.form.get('threshold')
-    # save the image to the current_images dictionary
+
+    # deepcopy the image
+    current_images['color_original'] = np.array(image)
+
     # remove the background
     image = np.array(remove(image))
+
     # if file.filename[-len('.HEIC'):].upper() == '.HEIC':
     #     print('HEIC file detected. TRANSPOSE')
     #     image = image.transpose((1,0,2))
@@ -230,14 +234,16 @@ def remove_picture_background():
     mask[mask <= threshold] = 0
     # assign the sharpen mask to the alpha channel
     image[:, :, 3] = mask
+        
     # save the requested variables (in future this should be different function, doing everything at once and more 
     # importantly, at the end, when the user is satisfied with the result so we won't be constantly overwriting the DB)
     current_images['suggested_mask']=np.array(mask, dtype=bool)
     current_images['suggested_mask_threshold']=threshold
-    current_images['suggested_mask_blur']=0
     current_images['color']=image
-    current_images['color_original']=image
     current_images['uploaded_image'] = True
+    
+    print(current_images['color'].shape)    
+    
     # return the mask
     print('Background removed')
     if file.filename[-len('.HEIC'):].upper() == '.HEIC':
@@ -281,23 +287,24 @@ def blur_caller():
     blur_value = int(request.form.get('blurValue', 0))
     # calls twice the function for the blur_image for the gray image and image entropy
        
-    current_images['color']=blur_image(blur_value,image=current_images['color_original'][:,:,:3])
+    current_images['color']=blur_image(blur_value,image=current_images['color_original'])
+    current_images['color_nobg']=current_images['color']*current_images['suggested_mask'][:,:,None]
     current_images['gray']=blur_image(blur_value,image=current_images['gray_original'])
     current_images['entropy']=blur_image(blur_value,image=current_images['entropy'])
+    current_images['suggested_mask_blur']=blur_value
 
     #  encode the images to PNG
     encoded_gray = encode_to_png(current_images['gray'])
     encoded_color = encode_to_png(current_images['color'])
+    encoded_no_bg = encode_to_png(current_images['color_nobg'])
     print('ci shape',current_images['color'].shape)
     print('mask shape',current_images['suggested_mask'].shape)
-    # encoded_no_bg = encode_to_png(np.concatenate([current_images['color'],current_images['suggested_mask'][:,:,None]],axis=2))
-    # encoded_nobg = encode_to_png(current_images['color_original'])
     
     encoded_gray = base64.b64encode(encoded_gray).decode('utf-8')
     encoded_color = base64.b64encode(encoded_color).decode('utf-8')
+    encoded_no_bg = base64.b64encode(encoded_no_bg).decode('utf-8')
     
-    return json.dumps({'gray': encoded_gray, 'color': encoded_color}), 200, {'Content-Type': 'application/json'}
-    # return json.dumps({'gray': encoded_gray, 'color': encoded_color, 'nobg': encoded_no_bg}), 200, {'Content-Type': 'application/json'}
+    return json.dumps({'gray': encoded_gray, 'color': encoded_color, 'nobg': encoded_no_bg}), 200, {'Content-Type': 'application/json'}
 
 def blur_image(blur_value,image):
     if blur_value <= 0:
