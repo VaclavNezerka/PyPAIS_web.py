@@ -7,8 +7,45 @@ let uploadedImageURL_color_blur = null;
 let uploadedImageURL_gray_blur = null;
 let uploadedImageURL_nobg_blur = null;
 
+let uploadedImageURL_redOverlay = null;
+let entropyURL = null;
+let uploadedImage = new Image();
+let uploadedImageOverlay = new Image();
+let uploadedEntropyImage = new Image();
+
+// IMAGE FUNCTIONS
+uploadedEntropyImage.onload = function() {
+    var canvas = document.getElementById('entropyCanvas');
+    var ctx = canvas.getContext('2d');
+    // clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    canvas.width = this.width;
+    canvas.height = this.height;
+    ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
+    if (displayRedOverlay) {
+        ctx.drawImage(uploadedImageOverlay, 0, 0, canvas.width, canvas.height);
+    }
+};
+uploadedEntropyImage.onerror = console.error;
+
+uploadedImage.onload = function() { 
+    var canvas = document.getElementById('imageCanvas');
+    var ctx = canvas.getContext('2d', { willReadFrequently: true });
+    // clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.width = this.width ;
+            canvas.height = this.height ;
+            ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
+            if (displayRedOverlay) {
+                ctx.drawImage(uploadedImageOverlay, 0, 0, canvas.width, canvas.height);
+            }            
+            magnify('imageCanvas', 4);
+        };
+uploadImage.onerror = console.error;
+
 let requestedImage = null;
 let displayImageBlur = false; 
+let displayRedOverlay = false; 
 
 disableControls(); // Disable controls on page load
 
@@ -122,32 +159,30 @@ document.getElementById('entropyMaxThresholdValue').addEventListener('change', f
     validateAndUpdate(); // Update the entropy image mask
 });
 
-document.getElementById('blurValue').addEventListener('change', function() {
+document.getElementById('blurValue').addEventListener('change', async function() {
+    displayWorkingMessage();
     let admissibleVal = Math.max(0, Math.min(50, parseInt(this.value)));
     this.value = admissibleVal; // Correct the value in case it was out of bounds
     document.getElementById('blurSlider').value = this.value;
     document.getElementById('blurValue').value = this.value;
-    blurImage(this.value);
+    await blurImage(this.value);
+    redrawCanvases();
+    removeWorkingMessage();
 });
 
 document.getElementById('blurSlider').addEventListener('change', async function() {
+    displayWorkingMessage();
     document.getElementById('blurValue').value = this.value;
-    try {
-        document.getElementById('blurValue').value = this.value;
-        displayWorkingMessage();
-        await blurImage(this.value);
-    } catch (error) {
-        console.error('An error occurred:', error);
-    } finally {
-        removeWorkingMessage();
-    }
+    document.getElementById('blurSlider').value = this.value;
+    await blurImage(this.value);
+    redrawCanvases();
+    removeWorkingMessage();
 });
 
 
-async function uploadImage() {
-    console.log('upload image')
 
-    displayWorkingMessage(document.getElementById('uploadedImage'));
+async function uploadImage() {
+    displayWorkingMessage();
 
     document.getElementById('blurSlider').value = 0;
     document.getElementById('blurValue').value = 0;
@@ -165,13 +200,15 @@ async function uploadImage() {
         uploadedImageURL_color_blur = url;
     }
     await removeBackground(formData)
-    fetchGrayscaleData(formData)
+    await fetchGrayscaleData(formData)
 
     .then(() => fetchOriginalEntropyData())
+    .then(() => {document.getElementById('defaultImage').style.display = 'none';})
     .then(() => processImage())
     .then(() => processEntropyImage())
+    .then(() => {getImageType();})
     .then(() => {enableControls(); }) // Enable controls after everything is loaded
-    .then(() => {removeWorkingMessage(document.getElementById('uploadedImage'));});
+    .then(() => {removeWorkingMessage();});
 }
 
 function removeBackground(formData) {
@@ -200,26 +237,28 @@ function fetchGrayscaleData(formData) {
         fetch('/grayscale-data' + uniqueQuery, { method: 'POST', body: formData })
         .then(response => response.blob())
         .then(blob => {
-            var url = URL.createObjectURL(blob);
-            var img = new Image();
+            let url = URL.createObjectURL(blob);
             uploadedImageURL_gray = url;
             if (uploadedImageURL_gray_blur == null) {
                 uploadedImageURL_gray_blur = url;
             }
+            
+            var img = new Image();
             img.onload = function() {
                 var canvas = document.createElement('canvas');
                 var ctx = canvas.getContext('2d');
                 canvas.width = img.width;
                 canvas.height = img.height;
                 ctx.drawImage(img, 0, 0);
-
+                
                 grayscaleImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 drawIntensityHistogram(); // Draw the histogram using the fetched grayscale data
                 resolve();
             };
             img.onerror = reject;
-            img.src = url;
+            img.src = uploadedImageURL_gray_blur;
         })
+        .then(() => { resolve(); })
         .catch(error => {
             console.error('Error:', error);
             reject(error);
@@ -237,7 +276,7 @@ function fetchOriginalEntropyData() {
         .then(response => response.blob())
         .then(blob => {
             var url = URL.createObjectURL(blob);
-            var img = new Image();
+            var img = new Image(); 
             img.onload = function() {
                 var canvas = document.createElement('canvas');
                 var ctx = canvas.getContext('2d');
@@ -271,37 +310,45 @@ function processImage() {
 
         const uniqueQuery = '?nocache=' + new Date().getTime();
         fetch('/apply-mask'+uniqueQuery, { method: 'POST', body: formData })
-        .then(response => response.blob())
-        .then(imageBlob => {
-            var imageUrl = URL.createObjectURL(imageBlob);
-            var uploadedImage = document.getElementById('uploadedImage');
-            uploadedImage.onload = function() {
-                document.getElementById('defaultImage').style.display = 'none';
-                uploadedImage.style.display = 'block';
-                magnify("uploadedImage", 4);
-                resolve(); // Resolve the promise when the image is loaded
-            };
-            uploadedImage.onerror = reject; // Reject the promise on error
-            uploadedImage.src = getImageType()
+        .then(response => response.json())  
+        .then(data => {
+                let overlayBlob = base64toBlob(data.overlay, 'image/png');
+                let entropyBlob = base64toBlob(data.entropy, 'image/png');
+                uploadedImageURL_redOverlay = URL.createObjectURL(overlayBlob);
+                uploadedImageOverlay.src = uploadedImageURL_redOverlay;
+                entropyURL = URL.createObjectURL(entropyBlob);
+                resolve();
         })
+        // .then( () => {getImageType()})
         .catch(error => {
             console.error('Error:', error);
-            reject(error); // Reject the promise on fetch error
+            reject(error);
         });
-    });
+});
 }
 
 
-function changeSharpness() {
-    displayImageBlur = !displayImageBlur;
-    document.getElementById('uploadedImage').src = getImageType();
-    // if (displayImageBlur) {
-    //     document.getElementById('uploadedImage').src = getImageType();
-    // }
-    // else {
-    //     document.getElementById('uploadedImage').src = uploadedImageURL_color;
-    // }
+function TF(a) {
+return new Promise((resolve, reject) => {
+    try {
+    a = !a;
+    resolve(a);
+    } catch (error) {  
+    reject(error);
+    }
+    }); 
+}
 
+async function changeSharpness() {
+    displayImageBlur = await TF(displayImageBlur);
+    redrawCanvases();
+    // console.log('displayImageBlur', displayImageBlur);
+}
+
+async function changeRedOverlay() {
+    displayRedOverlay = await TF(displayRedOverlay);
+    redrawCanvases();   
+    // console.log('displayRedOverlay', displayRedOverlay)
 }
 
 function processEntropyImage() {
@@ -315,63 +362,53 @@ function processEntropyImage() {
 
         const uniqueQuery = '?nocache=' + new Date().getTime();
         fetch('/apply-mask' + uniqueQuery, { method: 'POST', body: formData })
-        .then(response => response.blob())
-        .then(blob => {
-            var url = URL.createObjectURL(blob);
-            var canvas = document.getElementById('entropyCanvas');
-            var ctx = canvas.getContext('2d', { willReadFrequently: true });
-            var img = new Image();
-            img.onload = function() {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-                
-                // This is used to determine if the user is reading the histogram frequently
-
-                entropyImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                drawEntropyHistogram();
-                resolve(); // Resolve the promise after the histogram is drawn
-            };
-            img.onerror = reject; // Reject the promise on error
-            img.src = url;
+                .then(response => response.json())  
+        .then(data => {
+                let overlayBlob = base64toBlob(data.overlay, 'image/png');
+                let entropyBlob = base64toBlob(data.entropy, 'image/png');
+                uploadedImageURL_redOverlay = URL.createObjectURL(overlayBlob);
+                uploadedImageOverlay.src = uploadedImageURL_redOverlay;
+                entropyURL = URL.createObjectURL(entropyBlob);
+                uploadedEntropyImage.src = entropyURL;
+                resolve();
         })
         .catch(error => {
             console.error('Error:', error);
-            reject(error); // Reject the promise on fetch error
+            reject(error);
         });
     });
 }
 
 
+
 function getImageType() {
-    let imageType = document.getElementById('imageType').value;
-    let uploadedImage = document.getElementById('uploadedImage');
-    if (displayImageBlur) {
-        switch (imageType) {
-            case 'original':
-                uploadedImage.src = uploadedImageURL_color_blur;
-                break;
-            case 'original_no_bg':
-                uploadedImage.src = uploadedImageURL_nobg_blur;
-                break;
-            case 'bw':
-                uploadedImage.src = uploadedImageURL_gray_blur;
-                break;
-        }
-    } else {    
-        switch (imageType) {
-            case 'original':
-                uploadedImage.src = uploadedImageURL_color;
-                break;
-            case 'original_no_bg':
-                uploadedImage.src = uploadedImageURL_nobg;
-                break;
-            case 'bw':
-                uploadedImage.src = uploadedImageURL_gray;
-                break;
-        }
-    }
-    return uploadedImage.src;
+            let imageType = document.getElementById('imageType').value;
+            if (displayImageBlur) {
+                switch (imageType) {
+                    case 'original':
+                        // delete the previous image
+                        uploadedImage.src = uploadedImageURL_color_blur;
+                        break;
+                    case 'original_no_bg':
+                        uploadedImage.src = uploadedImageURL_nobg_blur;
+                        break;
+                    case 'bw':
+                        uploadedImage.src = uploadedImageURL_gray_blur;
+                        break;
+                }
+            } else {    
+                switch (imageType) {
+                    case 'original':
+                        uploadedImage.src = uploadedImageURL_color;
+                        break;
+                    case 'original_no_bg':
+                        uploadedImage.src = uploadedImageURL_nobg;
+                        break;
+                    case 'bw':
+                        uploadedImage.src = uploadedImageURL_gray;
+                        break;
+                }    
+            } 
 }
 
 
@@ -406,49 +443,35 @@ function blurImage(blurValue) {
         formData.append('blurValue', blurValue);
         const uniqueQuery = '?nocache=' + new Date().getTime();
         fetch('/blur' + uniqueQuery, { method: 'POST', body: formData })
-        .then(response => {
-        // the response is in a JSON format
-        // the keys are color and gray and the values are the images
-            return response.json();
-        })
-        .then(data => {            
-            let color = data.color;
-            let gray = data.gray;
-            let nobg = data.nobg;
-            
-            try {
-                // the images are in a str64 format and it is decoded as a utf-8 string
-                // transfer it to blob
-                
-                // TODO // FIX THIS
-                // the BE is not returning the images in the correct format the color should not have a bg removed
-                // it should also return the image with the bg removed
-
-                let colorBlob = base64toBlob(color, 'image/png');
-                let grayBlob = base64toBlob(gray, 'image/png');
-                let nobgBlob = base64toBlob(nobg, 'image/png');
-                // let nobgBlob = base64toBlob(nobg, 'image/png');
+        .then(response => {return response.json();})
+        .then(data => {                        
+            try {      
+                // transfer str64 format to blob
+                let colorBlob = base64toBlob(data.color, 'image/png');
+                let grayBlob = base64toBlob(data.gray, 'image/png');
+                let nobgBlob = base64toBlob(data.nobg, 'image/png');
+        
                 uploadedImageURL_color_blur = URL.createObjectURL(colorBlob);
                 uploadedImageURL_gray_blur = URL.createObjectURL(grayBlob);
                 uploadedImageURL_nobg_blur = URL.createObjectURL(nobgBlob);
-
             } catch (error) {
                 console.error('An error occurred:', error);
             }
             
         })
-        .catch(error => {
-            reject(error);
-            console.error('Error:', error);
-        })           
         .then(() => fetchOriginalEntropyData())
         .then(() => processImage())
         .then(() => processEntropyImage())
         .then(() => {
             enableControls(); // Enable controls after everything is loaded
-        }).then(() => {
+        })
+        .then(() => {
             resolve();
         })
+        .catch(error => {
+            reject(error);
+            console.error('Error:', error);
+        })           
         ;
     });
 }
@@ -460,12 +483,22 @@ async function validateAndUpdate() {
     await processEntropyImage();
     await drawEntropyHistogram();
     await drawIntensityHistogram();
+    redrawCanvases();
     removeWorkingMessage();
 }
 
 function drawIntensityHistogram() {
     // Assuming grayscaleImageData is already populated
-    if (!grayscaleImageData) return;
+    // if (!grayscaleImageData) {
+    //     // wait for the grayscale image data to be loaded
+    //     setTimeout(drawIntensityHistogram, 100);
+    //     if (!grayscaleImageData) {
+    //     return;
+    //     }
+    // }
+
+
+
 
     const canvas = document.getElementById('histogramCanvas');
     const ctx = canvas.getContext('2d');
@@ -527,15 +560,20 @@ function magnify(imgID, zoom) {
     glass = document.createElement("DIV");
     glass.setAttribute("class", "img-magnifier-glass");
     img.parentElement.insertBefore(glass, img);
-
+    
     // Setup the properties for the magnifying glass
-    glass.style.backgroundImage = "url('" + img.src + "')";
+    if (img.tagName === 'CANVAS') {
+        glass.style.backgroundImage = "url('" + img.toDataURL() + "')";        
+    } else {
+        // for image
+        glass.style.backgroundImage = "url('" + img.src + "')";
+    }
     glass.style.backgroundRepeat = "no-repeat";
-    glass.style.backgroundSize = (img.width * zoom) + "px " + (img.height * zoom) + "px";
+    glass.style.backgroundSize = (img.clientWidth * zoom) + "px " + (img.clientHeight * zoom) + "px";
     bw = 3;
     w = glass.offsetWidth / 2;
     h = glass.offsetHeight / 2;
-
+    
     // Function to move the magnifier glass with the mouse
     function moveMagnifier(e) {
         var pos, x, y;
@@ -550,20 +588,25 @@ function magnify(imgID, zoom) {
         // Set the background position of the magnifier glass
         glass.style.backgroundPosition = "-" + ((x * zoom) - w + bw) + "px -" + ((y * zoom) - h + bw) + "px";
     }
-
+    
     function getCursorPos(e) {
         var a, x = 0, y = 0;
         e = e || window.event;
         a = img.getBoundingClientRect();
         x = e.pageX - a.left - window.pageXOffset;
         y = e.pageY - a.top - window.pageYOffset;
+
+        // since the canvas adjust its size to the screen, we need to scale the cursor position
+
+
         return {x : x, y : y};
     }
-
+    
+    
     // Add event listeners for moving and hiding the magnifier glass
     img.addEventListener("mousemove", moveMagnifier);
     glass.addEventListener("mousemove", moveMagnifier);
-
+    
     // Improved handling for hiding the magnifying glass
     // Apply 'mouseleave' event to both image and glass
     img.addEventListener("mouseleave", function() {
@@ -585,3 +628,45 @@ function magnify(imgID, zoom) {
     img.addEventListener("mousemove", moveMagnifier);
 }
 
+function removeMagnifier(imgID) {
+    var img = document.getElementById(imgID);
+    var glass = img.parentElement.getElementsByClassName('img-magnifier-glass')[0];
+    if (glass) {
+        glass.remove();
+    }
+}
+
+function redrawCanvases() {
+    getImageType()
+    uploadedEntropyImage.src = uploadedEntropyImage.src;
+}
+
+// Global event listeners
+document.getElementById('sharpnessCheckbox').addEventListener('change', changeSharpness);  
+document.getElementById('redOverlayCheckbox').addEventListener('change', changeRedOverlay);
+document.getElementById('imageType').addEventListener('change', redrawCanvases); 
+// window.addEventListener('resize', function() { magnify('imageCanvas', 4); }); // this ensures the magnifying glass is redrawn when the window is resized
+window.addEventListener('resize', redrawCanvases ); // this ensures the magnifying glass is redrawn when the window is resized
+
+// keyboard shortcuts
+document.addEventListener('keydown', function(event) {
+    // lowercase the key
+    eventKey = event.key.toLowerCase();
+    // press 'a' to toggle red overlay
+    if (eventKey === 'a') {
+        document.getElementById('redOverlayCheckbox').checked = !document.getElementById('redOverlayCheckbox').checked;
+        changeRedOverlay();
+    }
+    // press 'b' to toggle sharpness
+    if (eventKey === 'b') {
+        document.getElementById('sharpnessCheckbox').checked = !document.getElementById('sharpnessCheckbox').checked;
+        changeSharpness();
+    }
+    // press 'c' to change the image type
+    if (eventKey === 'c') {
+        let imageType = document.getElementById('imageType');
+        imageType.selectedIndex = (imageType.selectedIndex + 1) % imageType.options.length;
+        redrawCanvases();
+    }
+
+});

@@ -341,10 +341,16 @@ def apply_mask():
                                           entropy_min_threshold, entropy_max_threshold)
 
     img_byte_arr=encode_to_png(overlay_image) #should be equivalent to the 3 rows bellow
+    entropy_byte_arr = encode_to_png(np_entropy)    
+    # stringify the image
+    img_byte_arr = base64.b64encode(img_byte_arr).decode('utf-8')
+    entropy_byte_arr = base64.b64encode(entropy_byte_arr).decode('utf-8')
+    return json.dumps({'overlay': img_byte_arr, 'entropy': entropy_byte_arr}), 200, {'Content-Type': 'application/json'}
+    
     # img_byte_arr = io.BytesIO()
     # overlay_image.save(img_byte_arr, format='PNG')
     # img_byte_arr = img_byte_arr.getvalue()
-    return img_byte_arr, 200, {'Content-Type': 'image/png'}
+    # return img_byte_arr, 200, {'Content-Type': 'image/png'}
 
 
 def apply_red_overlay(masked_img, intensity_img, entropy_img, min_threshold, max_threshold, entropy_min_threshold,
@@ -367,7 +373,8 @@ def apply_red_overlay(masked_img, intensity_img, entropy_img, min_threshold, max
     # Combine the original image with the overlay
     overlay_image = Image.alpha_composite(Image.fromarray(rgba_image), Image.fromarray(red_overlay))
     print('Overlay applied.')
-    return overlay_image
+    # return overlay_image
+    return red_overlay
 
 
 # return red overlay

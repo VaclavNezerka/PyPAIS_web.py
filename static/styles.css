@@ -76,7 +76,7 @@ input[type="file"] {
     background-color: #0056b3;
 }
 
-#defaultImage, #uploadedImage, #entropyCanvas {
+#defaultImage, #uploadedImage, #entropyCanvas, #imageCanvas  {
     max-width: 100%;
     height: auto;
     display: block;
@@ -118,6 +118,7 @@ input[type="text"] {
 
 .img-magnifier-glass {
     position: absolute;
+    /* position: relative; */
     border: 2px solid #0A0;
     border-radius: 50%;
     cursor: none;
@@ -256,3 +257,32 @@ select {
     font-size: 16px;
     box-sizing: border-box; /* Ensure padding and border are included in width */
 }
+
+/* image container */
+
+
+.image-container {
+    position: relative;
+    width: fit-content; 
+    height: fit-content;; 
+}
+
+.image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.image1 {
+    z-index: 1; /* The first image is below the second image */
+}
+
+.image2 {
+    z-index: 2; /* The second image is above the first image */
+    /* opacity: 0; Initially hidden */
+    /* transition: opacity 0.5s ease; Add a transition effect */
+}
+
+/* end of image container */
