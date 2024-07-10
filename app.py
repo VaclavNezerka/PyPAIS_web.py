@@ -44,7 +44,7 @@ current_images = {'color': [] , 'color_original': [], 'gray': [], 'entropy': {},
 # ... so the final mask can expressed as 
 
 
-
+# @app.before_request        
 def check_authentication(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -192,6 +192,43 @@ def rembg():
     return render_template('rembg.html')
 
 
+def evaluate_asphalt():
+    non_bg_pixels = np.sum(current_images['suggested_mask'])
+    asphalt_pixels = np.sum(current_images['asphalt_mask']) 
+    return asphalt_pixels / non_bg_pixels
+
+@app.route('/evaluate-asphalt',methods=['POST'])
+def evaluate_asphalt_caller():
+    evaluation = evaluate_asphalt()
+    # save_record('finished')
+    print('Asphalt evaluated.')
+    print(evaluation)
+    return json.dumps({'evaluation': evaluation}), 200, {'Content-Type': 'application/json'}
+
+@app.route('/save',methods=['POST'])
+def save_record(**kwargs):
+    if state in kwargs:
+        state = kwargs['state']
+    else:
+        state = 'in_progress'
+    if 'experiment_id' not in session:
+        query = 'INSERT INTO experiments (added_by_user, image, mask_asphalt, mask_aggregate, expert_guess, current_state) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id'
+        values = (session['user_id'], current_images['color'], current_images['asphalt_mask'], current_images['manual_mask_adjustments'], session['expert_guess'], 'in_progress')
+        current_images['experiment_id'] = execute_query(query, values)[0][0]
+    else:
+        query = 'UPDATE experiments SET image=%s, mask_asphalt=%s, mask_aggregate=%s, expert_guess=%s, current_state=%s WHERE id=%s'
+        values = (current_images['color'], current_images['asphalt_mask'], current_images['manual_mask_adjustments'], session['expert_guess'], 'in_progress', current_images['experiment_id'])
+        execute_query(query, values)
+        
+    if state == 'finished':
+        for key in current_images:
+            current_images.pop(key)
+
+    return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
+
+
+
+
 @app.route('/remove-background',methods=['POST'])
 def remove_picture_background():
     # this function returns a suggested mask, i.e. boolean matrix  
@@ -241,8 +278,7 @@ def remove_picture_background():
     current_images['suggested_mask_threshold']=threshold
     current_images['color']=image
     current_images['uploaded_image'] = True
-    
-    print(current_images['color'].shape)    
+ 
     
     # return the mask
     print('Background removed')
@@ -346,7 +382,6 @@ def apply_mask():
     img_byte_arr = base64.b64encode(img_byte_arr).decode('utf-8')
     entropy_byte_arr = base64.b64encode(entropy_byte_arr).decode('utf-8')
     return json.dumps({'overlay': img_byte_arr, 'entropy': entropy_byte_arr}), 200, {'Content-Type': 'application/json'}
-    
     # img_byte_arr = io.BytesIO()
     # overlay_image.save(img_byte_arr, format='PNG')
     # img_byte_arr = img_byte_arr.getvalue()
@@ -369,45 +404,16 @@ def apply_red_overlay(masked_img, intensity_img, entropy_img, min_threshold, max
     red_overlay = np.zeros_like(rgba_image, dtype=np.uint8)
     red_overlay[..., 0] = 255  # Red channel full intensity
     red_overlay[combined_mask] = [255, 0, 0, 128]  # Semi-transparent red overlay where mask is True
-
     # Combine the original image with the overlay
-    overlay_image = Image.alpha_composite(Image.fromarray(rgba_image), Image.fromarray(red_overlay))
+    # overlay_image = Image.alpha_composite(Image.fromarray(rgba_image), Image.fromarray(red_overlay))
+    current_images['asphalt_mask'] = (red_overlay[:,:,-1] == 128).astype(bool)
     print('Overlay applied.')
-    # return overlay_image
+
     return red_overlay
-
-
-# return red overlay
-# this function returns only the red overlay, not the whole image
-# @app.route('/red-overlay', methods=['POST'])
-# def red_overlay():
-#     # Assuming the image's ID or a unique identifier is sent as part of the form data for key lookup
-#     image_id = request.form.get('imageId')
-#     min_threshold = int(request.form.get('minThreshold', 0))
-#     max_threshold = int(request.form.get('maxThreshold', 255))
-#     entropy_min_threshold = int(request.form.get('entropyMinThreshold', 0))
-#     entropy_max_threshold = int(request.form.get('entropyMaxThreshold', 255))
-
-#     print('Red overlay applied')
-#     # np_gray = cv2.imread('temp/gray_temp.jpg', cv2.IMREAD_GRAYSCALE)
-#     # np_entropy = cv2.imread('temp/entropy_temp.jpg', cv2.IMREAD_GRAYSCALE)
-#     np_gray = current_images['gray']
-#     np_entropy = current_images['entropy']
-#     if image_id == 'gray':
-#         overlay_image = apply_red_overlay(np_gray, np_gray, np_entropy, min_threshold, max_threshold,
-#                                           entropy_min_threshold, entropy_max_threshold)
-#     else:
-#         overlay_image = apply_red_overlay(np_entropy, np_gray, np_entropy, min_threshold, max_threshold,
-#                                           entropy_min_threshold, entropy_max_threshold)
-
-#     img_byte_arr = encode_to_png(overlay_image[1])
-#     return img_byte_arr, 200, {'Content-Type': 'image/png'}
 
 @app.route('/static/<path:path>')
 def send_static(path):
     return send_from_directory('static', path)
-
-
 
 if __name__ == "__main__":
     app.run(debug=True)

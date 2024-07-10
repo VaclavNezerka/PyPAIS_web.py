@@ -645,6 +645,20 @@ function redrawCanvases() {
 document.getElementById('sharpnessCheckbox').addEventListener('change', changeSharpness);  
 document.getElementById('redOverlayCheckbox').addEventListener('change', changeRedOverlay);
 document.getElementById('imageType').addEventListener('change', redrawCanvases); 
+document.getElementById('index_evaluation').addEventListener('click', async function() { 
+    const uniqueQuery = '?nocache=' + new Date().getTime();
+    fetch('/evaluate-asphalt' + uniqueQuery, { method: 'POST' })
+    .then(response => response.json())
+    .then(response => {
+        displayNum = response.evaluation*100;
+        console.log('Evaluation results: ' + displayNum);
+        // display only 2 decimal places;
+        displayNum = displayNum.toFixed(2);
+        console.log('Evaluation results: ' + displayNum);
+            alert('Evaluation completed. Check the console for the results.' + '\n' + 'Evaluation results: ' + displayNum + '%');
+        }
+    );
+});
 // window.addEventListener('resize', function() { magnify('imageCanvas', 4); }); // this ensures the magnifying glass is redrawn when the window is resized
 window.addEventListener('resize', redrawCanvases ); // this ensures the magnifying glass is redrawn when the window is resized
 
@@ -668,5 +682,4 @@ document.addEventListener('keydown', function(event) {
         imageType.selectedIndex = (imageType.selectedIndex + 1) % imageType.options.length;
         redrawCanvases();
     }
-
 });

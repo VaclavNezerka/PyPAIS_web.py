@@ -32,7 +32,12 @@ CREATE TABLE experiments(
     info TEXT
 );
 
-ALTER TABLE experiments add COLUMN current_state varchar(10) DEFAULT 'pending' CHECK (current_state IN ('pending', 'processing', 'prepared', 'started' , 'finished'));
+ALTER TABLE experiments ALTER COLUMN current_state varchar(10) DEFAULT 'pending' CHECK (current_state IN ('pending', 'processing', 'prepared', 'started' , 'finished', 'current_experiment'));
+ALTER table experiments add column asphalt_ratio decimal(5,2) DEFAULT NULL;
+-- alter table experiments add column finished BOOLEAN DEFAULT FALSE;
+
+INSERT INTO experiments (added_by_user) VALUES (31) RETURNING id;
+
 
 SELECT * FROM experiments;
 
