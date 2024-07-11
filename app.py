@@ -34,15 +34,47 @@ def generate_rnd_string(length):
 
 app.secret_key=generate_rnd_string(os.environ['SECRET_KEY_LENGTH'])
 
-current_images = {'color': [] , 'color_original': [], 'gray': [], 'entropy': {}, 'gray_original': {}, 
-                  'entropy_original': {}, 'suggested_mask_threshold': {}, 'suggested_mask_blur': {},
-                  'suggested_mask': [], 'manual_mask_adjustments': []}
-# 'suggested_mask_blur'- an initial blur set by user for automatic mask suggestion 
-# 'suggested_mask_threshold'- a threshold set by user for automatic mask suggestion 
-# 'suggested_mask' - a mask suggested to a user by actual algorithm (based on the U-NET rembg model)
-# 'manual_mask_adjustments' - changes manually made by the user (a sparse numpy boolean matrix), 
-# ... so the final mask can expressed as 
+ts = {} # temporal storages for the users... ts[user_id] = UserTemporaryStorage()
 
+class UserValues:
+    def __init__(self):
+        self.blur = 0
+        self.threshold = 128
+        self.entropy_threshold = 128
+        
+
+class UserTemporaryStorage:
+    """
+    A class for storing temporary data for the user.
+    This ensures that the user can only access their own data.
+    This class replaces the need for a previous solution which was current_images dictionary.
+    PREVIOUS SOLUTION: (OUTDATED - OUT OF CLASS)
+    # current_images = {'color': [] , 'color_original': [], 'gray': [], 'entropy': {}, 'gray_original': {}, 
+    #                   'entropy_original': {}, 'suggested_mask_threshold': {}, 'suggested_mask_blur': {},
+    #                   'suggested_mask': [], 'manual_mask_adjustments': []}
+    # # 'suggested_mask_blur'- an initial blur set by user for automatic mask suggestion 
+    # # 'suggested_mask_threshold'- a threshold set by user for automatic mask suggestion 
+    # # 'suggested_mask' - a mask suggested to a user by actual algorithm (based on the U-NET rembg model)
+    # # 'manual_mask_adjustments' - changes manually made by the user (a sparse numpy boolean matrix), 
+    """
+    def __init__(self):
+        self.username = None
+        self.user_id = None
+        # values
+        self.values = UserValues()
+        # info
+        self.experiment_id = None
+        self.expert_guess = None        
+        # images
+        self.color_original = None
+        self.gray_original = None
+        self.color = None
+        self.gray = None        
+        # masks
+        self.aggregate_mask = None # [auto - rembg] all the pixels that are not background
+        self.asphalt_mask = None # [auto - sliders] all the pixels that are asphalt and not background
+        self.aggregate_mask_manual_adjustments = None # [manual] all the pixels that are not background or are background (defined by the user)
+        self.asphalt_mask_manual_adjustments = None # [manual] all the pixels that are asphalt and not background (defined by the user)        
 
 # @app.before_request        
 def check_authentication(func):
@@ -63,11 +95,14 @@ def check_authentication(func):
 def index():
     return render_template('index.html', session=session), 200
 
-
-
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template('404.html', session=session), 404
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    flash('An internal server error has occured.','error')
+    return redirect(url_for('index'))
 
 """
 """
@@ -100,17 +135,11 @@ def login():
                 session['authenticated']=True
                 session['username']=mail
                 session['user_id']=execute_query('SELECT id FROM public_users WHERE e_mail=%s',(mail,))[0][0]
-                # current_images= {'gray': [], 'entropy': {}, 'gray_original': {}, 
-                #   'entropy_original': {}, 'suggested_mask_threshold': {}, 'suggested_mask_blur': {},
-                #   'suggested_mask': [], 'manual_mask_adjustments': []}
                 
-                # id=session['user_id']
-                # flash(f'You {id}','success')
-                # current_images = {'gray': [], 'entropy': {}, 'gray_original': {}, 
-                #   'entropy_original': {}, 'suggested_mask_threshold': {}, 'suggested_mask_blur': {},
-                #   'suggested_mask': [], 'manual_mask_adjustments': []}
-                # current_images=current_images
-                # session.permanent=True
+                # create a new user temporary storage for the user
+                if session['user_id'] not in ts:
+                    ts[session['user_id']] = UserTemporaryStorage()
+                
                 return redirect('/')   
             else:
                 flash('The password or username/email is incorrect.')
@@ -170,9 +199,8 @@ def get_grayscale_data():
         
         gray_image = image.convert('L')
         np_gray = np.array(gray_image)
-        current_images['gray'] = np_gray
-        current_images['gray_original'] = np_gray
-        current_images['uploaded_image'] = True
+        ts[session['user_id']].gray = np_gray
+        ts[session['user_id']].gray_original = np_gray
         
         # cv2.imwrite('temp/gray_temp.jpg', np_gray)
         print('Image loaded.')
@@ -193,8 +221,8 @@ def rembg():
 
 
 def evaluate_asphalt():
-    non_bg_pixels = np.sum(current_images['suggested_mask'])
-    asphalt_pixels = np.sum(current_images['asphalt_mask']) 
+    non_bg_pixels = np.sum(ts[session['user_id']].aggregate_mask)
+    asphalt_pixels = np.sum(ts[session['user_id']].asphalt_mask) 
     return asphalt_pixels / non_bg_pixels
 
 @app.route('/evaluate-asphalt',methods=['POST'])
@@ -213,11 +241,11 @@ def save_record(**kwargs):
         state = 'in_progress'
     if 'experiment_id' not in session:
         query = 'INSERT INTO experiments (added_by_user, image, mask_asphalt, mask_aggregate, expert_guess, current_state) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id'
-        values = (session['user_id'], current_images['color'], current_images['asphalt_mask'], current_images['manual_mask_adjustments'], session['expert_guess'], 'in_progress')
-        current_images['experiment_id'] = execute_query(query, values)[0][0]
+        values = (session['user_id'], ts[session['user_id']].color, ts[session['user_id']].asphalt_mask, ts[session['user_id']].aggregate_mask, session['expert_guess'], 'in_progress')
+        ts[session['user_id']].experiment_id = execute_query(query, values)[0][0]
     else:
         query = 'UPDATE experiments SET image=%s, mask_asphalt=%s, mask_aggregate=%s, expert_guess=%s, current_state=%s WHERE id=%s'
-        values = (current_images['color'], current_images['asphalt_mask'], current_images['manual_mask_adjustments'], session['expert_guess'], 'in_progress', current_images['experiment_id'])
+        values = (ts[session['user_id']].color, ts[session['user_id']].asphalt_mask, ts[session['user_id']].aggregate_mask, session['expert_guess'], 'in_progress', ts[session['user_id']].experiment_id)
         execute_query(query, values)
         
     if state == 'finished':
@@ -255,7 +283,7 @@ def remove_picture_background():
     threshold=128 #consider changing this to a value from the form that user can set # threshold=request.form.get('threshold')
 
     # deepcopy the image
-    current_images['color_original'] = np.array(image)
+    ts[session['user_id']].color_original = np.array(image)
 
     # remove the background
     image = np.array(remove(image))
@@ -274,10 +302,9 @@ def remove_picture_background():
         
     # save the requested variables (in future this should be different function, doing everything at once and more 
     # importantly, at the end, when the user is satisfied with the result so we won't be constantly overwriting the DB)
-    current_images['suggested_mask']=np.array(mask, dtype=bool)
-    current_images['suggested_mask_threshold']=threshold
-    current_images['color']=image
-    current_images['uploaded_image'] = True
+    ts[session['user_id']].aggregate_mask=np.array(mask, dtype=bool)
+    ts[session['user_id']].values.threshold=threshold
+    ts[session['user_id']].color=image
  
     
     # return the mask
@@ -291,7 +318,7 @@ def remove_picture_background():
 @app.route('/entropy', methods=['POST'])
 def calculate_entropy():
     # np_gray = cv2.imread('temp/gray_temp.jpg', cv2.IMREAD_GRAYSCALE)
-    np_gray = current_images['gray']
+    np_gray = ts[session['user_id']].gray
     # Calculate local entropy
     entropy_image = entropy(img_as_ubyte(np_gray), disk(5))
 
@@ -299,8 +326,8 @@ def calculate_entropy():
     normalized_entropy = cv2.normalize(entropy_image, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
     np_entropy = np.uint8(normalized_entropy)
     # cv2.imwrite('temp/entropy_temp.jpg', np_entropy)
-    current_images['entropy'] = np_entropy
-    current_images['entropy_original'] = np_entropy
+    ts[session['user_id']].entropy = np_entropy
+    ts[session['user_id']].entropy_original = np_entropy
     print('Entropy calculated.')
 
     # Store entropy image for later use
@@ -321,20 +348,19 @@ def encode_to_png(image):
 @app.route('/blur', methods=['POST'])
 def blur_caller():
     blur_value = int(request.form.get('blurValue', 0))
+    ts[session['user_id']].values.blur = blur_value
     # calls twice the function for the blur_image for the gray image and image entropy
        
-    current_images['color']=blur_image(blur_value,image=current_images['color_original'])
-    current_images['color_nobg']=current_images['color']*current_images['suggested_mask'][:,:,None]
-    current_images['gray']=blur_image(blur_value,image=current_images['gray_original'])
-    current_images['entropy']=blur_image(blur_value,image=current_images['entropy'])
-    current_images['suggested_mask_blur']=blur_value
+    ts[session['user_id']].color=blur_image(blur_value,image=ts[session['user_id']].color_original)
+    ts[session['user_id']].gray=blur_image(blur_value,image=ts[session['user_id']].gray_original)
+    ts[session['user_id']].entropy=blur_image(blur_value,image=ts[session['user_id']].entropy_original)
 
     #  encode the images to PNG
-    encoded_gray = encode_to_png(current_images['gray'])
-    encoded_color = encode_to_png(current_images['color'])
-    encoded_no_bg = encode_to_png(current_images['color_nobg'])
-    print('ci shape',current_images['color'].shape)
-    print('mask shape',current_images['suggested_mask'].shape)
+    encoded_gray = encode_to_png(ts[session['user_id']].gray)
+    encoded_color = encode_to_png(ts[session['user_id']].color)
+    encoded_no_bg = encode_to_png(ts[session['user_id']].color*ts[session['user_id']].aggregate_mask[:,:,None])
+    print('ci shape',ts[session['user_id']].color.shape)
+    print('mask shape',ts[session['user_id']].aggregate_mask.shape)
     
     encoded_gray = base64.b64encode(encoded_gray).decode('utf-8')
     encoded_color = base64.b64encode(encoded_color).decode('utf-8')
@@ -367,8 +393,8 @@ def apply_mask():
     print('Mask applied')
     # np_gray = cv2.imread('temp/gray_temp.jpg', cv2.IMREAD_GRAYSCALE)
     # np_entropy = cv2.imread('temp/entropy_temp.jpg', cv2.IMREAD_GRAYSCALE)
-    np_gray = current_images['gray']
-    np_entropy = current_images['entropy']
+    np_gray = ts[session['user_id']].gray
+    np_entropy = ts[session['user_id']].entropy
     if image_id == 'gray':
         overlay_image = apply_red_overlay(np_gray, np_gray, np_entropy, min_threshold, max_threshold,
                                           entropy_min_threshold, entropy_max_threshold)
@@ -395,7 +421,7 @@ def apply_red_overlay(masked_img, intensity_img, entropy_img, min_threshold, max
     # combined_mask = intensity_mask & entropy_mask 
 
     combined_mask = intensity_mask & entropy_mask
-    combined_mask *= current_images['suggested_mask'].astype(bool)  
+    combined_mask *= ts[session['user_id']].aggregate_mask.astype(bool)  
    
     # Create an RGBA version of the processed data
     rgba_image = np.dstack([masked_img] * 3 + [np.full(masked_img.shape, 255, dtype=np.uint8)])
@@ -406,7 +432,7 @@ def apply_red_overlay(masked_img, intensity_img, entropy_img, min_threshold, max
     red_overlay[combined_mask] = [255, 0, 0, 128]  # Semi-transparent red overlay where mask is True
     # Combine the original image with the overlay
     # overlay_image = Image.alpha_composite(Image.fromarray(rgba_image), Image.fromarray(red_overlay))
-    current_images['asphalt_mask'] = (red_overlay[:,:,-1] == 128).astype(bool)
+    ts[session['user_id']].asphalt_mask = (red_overlay[:,:,-1] == 128).astype(bool)
     print('Overlay applied.')
 
     return red_overlay

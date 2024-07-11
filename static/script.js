@@ -651,11 +651,9 @@ document.getElementById('index_evaluation').addEventListener('click', async func
     .then(response => response.json())
     .then(response => {
         displayNum = response.evaluation*100;
-        console.log('Evaluation results: ' + displayNum);
         // display only 2 decimal places;
         displayNum = displayNum.toFixed(2);
-        console.log('Evaluation results: ' + displayNum);
-            alert('Evaluation completed. Check the console for the results.' + '\n' + 'Evaluation results: ' + displayNum + '%');
+        alert('Evaluation completed. Check the console for the results.' + '\n' + 'Evaluation results: ' + displayNum + '%');
         }
     );
 });
