@@ -47,7 +47,12 @@ def save_new_user_db(cur, conn , values):
 @db_connection
 def execute_query(cur,conn,query,values):
     cur.execute(query,values)
-    response=cur.fetchall()
+    try:
+        response=cur.fetchall()
+    except Exception as e:
+        response=e
+    finally:
+        conn.commit()
     return response
 
 @db_connection
@@ -55,3 +60,4 @@ def return_table_users(cur,conn):
     cur.execute('SELECT * FROM public_users;')
     users=cur.fetchall()
     print(users)
+

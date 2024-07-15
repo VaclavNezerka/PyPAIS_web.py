@@ -26,7 +26,7 @@ CREATE TABLE experiments(
     img_mask_asphalt BYTEA,
     img_mask_aggregate BYTEA,
     expert_guess decimal(5,2),
-    current_state varchar(10) DEFAULT 'pending' CHECK (current_state IN ('pending', 'processing', 'prepared', 'started' , 'finished')
+    current_state varchar(10) DEFAULT 'pending' CHECK (current_state IN ('pending', 'processing', 'prepared', 'started' , 'finished')),
     fake_deleted BOOLEAN DEFAULT FALSE,
     finished BOOLEAN DEFAULT FALSE,
     info TEXT
@@ -39,7 +39,14 @@ ALTER table experiments add column asphalt_ratio decimal(5,2) DEFAULT NULL;
 INSERT INTO experiments (added_by_user) VALUES (31) RETURNING id;
 
 
-SELECT * FROM experiments;
+
+SELECT id, added_by_user, asphalt_ratio FROM experiments ORDER BY id DESC;
+-- SELECT * FROM experiments filter out the last 5 rows;
+SELECT * FROM experiments LIMIT 5 OFFSET (SELECT COUNT(*) FROM experiments)-5;
+UPDATE experiments SET added_by_user=26, asphalt_ratio=0.5 WHERE id=91;
+-- delete from experiments where id=1;
+
+delete from experiments where id > 30;
 
 INSERT INTO experiments (added_by_user, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state) 
 VALUES 
@@ -86,3 +93,10 @@ SELECT company_id FROM public_companies WHERE company_id=1 LIMIT 1;
 SELECT experiment FROM experiments WHERE added_by_user=1 LIMIT 1;
 
 GRANT SELECT ON experiments TO pypais_small;
+
+GRANT INSERT ON experiments TO pypais_small;
+
+-- grant all privileges on all tables in schema public to pypais_small;
+GRANT ALL PRIVILEGES ON experiments TO pypais_small;
+
+GRANT USAGE, SELECT ON SEQUENCE experiments_id_seq TO pypais_small;

@@ -663,21 +663,28 @@ window.addEventListener('resize', redrawCanvases ); // this ensures the magnifyi
 // keyboard shortcuts
 document.addEventListener('keydown', function(event) {
     // lowercase the key
-    eventKey = event.key.toLowerCase();
     // press 'a' to toggle red overlay
-    if (eventKey === 'a') {
-        document.getElementById('redOverlayCheckbox').checked = !document.getElementById('redOverlayCheckbox').checked;
-        changeRedOverlay();
-    }
     // press 'b' to toggle sharpness
-    if (eventKey === 'b') {
-        document.getElementById('sharpnessCheckbox').checked = !document.getElementById('sharpnessCheckbox').checked;
-        changeSharpness();
-    }
-    // press 'c' to change the image type
-    if (eventKey === 'c') {
-        let imageType = document.getElementById('imageType');
-        imageType.selectedIndex = (imageType.selectedIndex + 1) % imageType.options.length;
-        redrawCanvases();
+    // press 'c' to change image type
+    // press 's' to save the image
+    eventKey = event.key.toLowerCase();
+    switch (eventKey) {
+        case 'a':
+            document.getElementById('redOverlayCheckbox').checked = !document.getElementById('redOverlayCheckbox').checked;
+            changeRedOverlay();
+            break;
+        case 'b':
+            document.getElementById('sharpnessCheckbox').checked = !document.getElementById('sharpnessCheckbox').checked;
+            changeSharpness();
+            break;
+        case 'c':
+            let imageType = document.getElementById('imageType');
+            imageType.selectedIndex = (imageType.selectedIndex + 1) % imageType.options.length;
+            redrawCanvases();
+            break;
+        case 's':
+            const uniqueQuery = '?nocache=' + new Date().getTime();
+            fetch('/save' + uniqueQuery, { method: 'POST' })
+            break;
     }
 });

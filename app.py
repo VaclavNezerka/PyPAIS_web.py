@@ -34,14 +34,14 @@ def generate_rnd_string(length):
 
 app.secret_key=generate_rnd_string(os.environ['SECRET_KEY_LENGTH'])
 
-ts = {} # temporal storages for the users... ts[user_id] = UserTemporaryStorage()
+ts = {} # temporary storages for the users... ts[user_id] = UserTemporaryStorage()
 
 class UserValues:
     def __init__(self):
         self.blur = 0
         self.threshold = 128
         self.entropy_threshold = 128
-        
+        self.info = 'No info available'
 
 class UserTemporaryStorage:
     """
@@ -64,7 +64,7 @@ class UserTemporaryStorage:
         self.values = UserValues()
         # info
         self.experiment_id = None
-        self.expert_guess = None        
+        self.expert_guess = 0.        
         # images
         self.color_original = None
         self.gray_original = None
@@ -193,10 +193,7 @@ def register():
 def get_grayscale_data():
     file = request.files['file']
     if file:
-        image = Image.open(file.stream)
-        # TODO: remove this line after the mask is implemented (REMOVE BACKGROUND)
-        # provisory solution for the mask 
-        
+        image = Image.open(file.stream)        
         gray_image = image.convert('L')
         np_gray = np.array(gray_image)
         ts[session['user_id']].gray = np_gray
@@ -223,35 +220,60 @@ def rembg():
 def evaluate_asphalt():
     non_bg_pixels = np.sum(ts[session['user_id']].aggregate_mask)
     asphalt_pixels = np.sum(ts[session['user_id']].asphalt_mask) 
+    print('Asphalt pixels:', asphalt_pixels)
+    print('Non-bg pixels:', non_bg_pixels)
+    print('Asphalt ratio:', asphalt_pixels / non_bg_pixels)
     return asphalt_pixels / non_bg_pixels
 
 @app.route('/evaluate-asphalt',methods=['POST'])
 def evaluate_asphalt_caller():
     evaluation = evaluate_asphalt()
-    # save_record('finished')
+    save_asphalt_record(state='finished')
     print('Asphalt evaluated.')
     print(evaluation)
     return json.dumps({'evaluation': evaluation}), 200, {'Content-Type': 'application/json'}
 
 @app.route('/save',methods=['POST'])
-def save_record(**kwargs):
-    if state in kwargs:
+def save_asphalt_record(**kwargs):
+    if 'state' in kwargs.keys():
         state = kwargs['state']
     else:
-        state = 'in_progress'
-    if 'experiment_id' not in session:
-        query = 'INSERT INTO experiments (added_by_user, image, mask_asphalt, mask_aggregate, expert_guess, current_state) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id'
-        values = (session['user_id'], ts[session['user_id']].color, ts[session['user_id']].asphalt_mask, ts[session['user_id']].aggregate_mask, session['expert_guess'], 'in_progress')
+        state = 'started'
+    print('Saving record.')
+    print('state:', state)  
+        
+    if ts[session['user_id']].experiment_id is None:
+        print('Inserting new record.')
+        query = 'INSERT INTO experiments (added_by_user, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state, asphalt_ratio) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
+        values = (session['user_id'], 
+                  ts[session['user_id']].color_original.tobytes(),
+                  ts[session['user_id']].asphalt_mask.tobytes(),
+                  ts[session['user_id']].aggregate_mask.tobytes(),
+                  ts[session['user_id']].expert_guess,
+                  ts[session['user_id']].values.info,
+                  state,
+                  evaluate_asphalt())
         ts[session['user_id']].experiment_id = execute_query(query, values)[0][0]
+        print(ts[session['user_id']].experiment_id)
     else:
-        query = 'UPDATE experiments SET image=%s, mask_asphalt=%s, mask_aggregate=%s, expert_guess=%s, current_state=%s WHERE id=%s'
-        values = (ts[session['user_id']].color, ts[session['user_id']].asphalt_mask, ts[session['user_id']].aggregate_mask, session['expert_guess'], 'in_progress', ts[session['user_id']].experiment_id)
+        print('Updating record.')
+        query = 'UPDATE experiments SET img=%s, img_mask_asphalt=%s, img_mask_aggregate=%s, expert_guess=%s, info=%s, current_state=%s, asphalt_ratio=%s WHERE id=%s'
+        values = (ts[session['user_id']].color_original.tobytes(),
+                    ts[session['user_id']].asphalt_mask.tobytes(),
+                    ts[session['user_id']].aggregate_mask.tobytes(),
+                    ts[session['user_id']].expert_guess,
+                    ts[session['user_id']].values.info,
+                    state,
+                    evaluate_asphalt(),
+                    ts[session['user_id']].experiment_id)
         execute_query(query, values)
         
     if state == 'finished':
-        for key in current_images:
-            current_images.pop(key)
-
+        # delete temporary storage and create a new one
+        print('Experiment finished.')
+        ts.pop(session['user_id'])
+        ts[session['user_id']] = UserTemporaryStorage()
+            
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
 
