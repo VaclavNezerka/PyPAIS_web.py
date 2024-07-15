@@ -162,8 +162,8 @@ def queue():
 @app.route('/experiments',methods=['GET','POST'])
 @check_authentication
 def experiments():
-    records=[('id','time_stamp','expert_guess')]
-    records.append(execute_query("SELECT id, time_stamp, expert_guess FROM experiments where added_by_user=%s AND current_state='finished' ",(session['user_id'],)))
+    records=[('id','time_stamp','expert_guess', 'asphalt_ratio')]
+    records.append(execute_query("SELECT id, time_stamp, expert_guess, asphalt_ratio FROM experiments where added_by_user=%s AND current_state='finished' ",(session['user_id'],)))
     return render_template('experiments.html',records=records,session=session,dynamic_content='Experiments')
 
 @app.route('/register',methods=['GET','POST'])
