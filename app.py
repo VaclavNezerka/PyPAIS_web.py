@@ -216,7 +216,13 @@ def get_grayscale_data():
 def rembg():
     return render_template('rembg.html')
 
-
+@app.route('/update-expert-guess',methods=['POST'])
+def update_expert_guess():
+    value = request.form.get('expertGuess')
+    ts[session['user_id']].expert_guess = value
+    return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
+   
+    
 def evaluate_asphalt():
     non_bg_pixels = np.sum(ts[session['user_id']].aggregate_mask)
     asphalt_pixels = np.sum(ts[session['user_id']].asphalt_mask) 
@@ -241,7 +247,8 @@ def save_asphalt_record(**kwargs):
         state = 'started'
     print('Saving record.')
     print('state:', state)  
-        
+    print('expert_guess:', ts[session['user_id']].expert_guess)
+    
     if ts[session['user_id']].experiment_id is None:
         print('Inserting new record.')
         query = 'INSERT INTO experiments (added_by_user, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state, asphalt_ratio) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'

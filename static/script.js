@@ -646,6 +646,10 @@ document.getElementById('sharpnessCheckbox').addEventListener('change', changeSh
 document.getElementById('redOverlayCheckbox').addEventListener('change', changeRedOverlay);
 document.getElementById('imageType').addEventListener('change', redrawCanvases); 
 document.getElementById('index_evaluation').addEventListener('click', async function() { 
+    if (document.getElementById('expertGuess').value === '') {
+            alert('Please fill the expert guess field before evaluating the experiment.');
+            return;
+    } else {
     const uniqueQuery = '?nocache=' + new Date().getTime();
     fetch('/evaluate-asphalt' + uniqueQuery, { method: 'POST' })
     .then(response => response.json())
@@ -656,9 +660,35 @@ document.getElementById('index_evaluation').addEventListener('click', async func
         alert('Evaluation completed. Check the console for the results.' + '\n' + 'Evaluation results: ' + displayNum + '%');
         }
     );
+    }
 });
 // window.addEventListener('resize', function() { magnify('imageCanvas', 4); }); // this ensures the magnifying glass is redrawn when the window is resized
 window.addEventListener('resize', redrawCanvases ); // this ensures the magnifying glass is redrawn when the window is resized
+
+
+// when the user leaves the expertGuess field and the value is not empty, the min and max values will be updated
+document.getElementById('expertGuess').addEventListener('change', function() {
+    let value = this.value;
+    if (value !== '') {
+        // convert to number
+        value = Number(value);
+        console.log(typeof value);
+        if (value<0) {
+            this.value = 0;
+        } else if (value>100) {
+            this.value =100;
+        }
+        value = this.value;
+        // send the value to the server
+        var  formData = new FormData();
+        formData.append('expertGuess', value/100);
+        const uniqueQuery = '?nocache=' + new Date().getTime();
+        fetch('/update-expert-guess' + uniqueQuery, { method: 'POST', body: formData })
+        .then(response => response.json())
+        .then(console.log('Expert guess updated to: ', value/100))
+    }
+});
+
 
 // keyboard shortcuts
 document.addEventListener('keydown', function(event) {
