@@ -342,13 +342,11 @@ return new Promise((resolve, reject) => {
 async function changeSharpness() {
     displayImageBlur = await TF(displayImageBlur);
     redrawCanvases();
-    // console.log('displayImageBlur', displayImageBlur);
 }
 
 async function changeRedOverlay() {
     displayRedOverlay = await TF(displayRedOverlay);
     redrawCanvases();   
-    // console.log('displayRedOverlay', displayRedOverlay)
 }
 
 function processEntropyImage() {
@@ -672,7 +670,6 @@ document.getElementById('expertGuess').addEventListener('change', function() {
     if (value !== '') {
         // convert to number
         value = Number(value);
-        console.log(typeof value);
         if (value<0) {
             this.value = 0;
         } else if (value>100) {
@@ -684,8 +681,6 @@ document.getElementById('expertGuess').addEventListener('change', function() {
         formData.append('expertGuess', value/100);
         const uniqueQuery = '?nocache=' + new Date().getTime();
         fetch('/update-expert-guess' + uniqueQuery, { method: 'POST', body: formData })
-        .then(response => response.json())
-        .then(console.log('Expert guess updated to: ', value/100))
     }
 });
 

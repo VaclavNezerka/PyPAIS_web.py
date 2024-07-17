@@ -38,10 +38,16 @@ ts = {} # temporary storages for the users... ts[user_id] = UserTemporaryStorage
 
 class UserValues:
     def __init__(self):
-        self.blur = 0
         self.threshold = 128
         self.entropy_threshold = 128
         self.info = 'No info available'
+        
+        # values currently accessible by the users
+        self.blur = 0
+        self.intensity_min_threshold = None
+        self.intensity_max_threshold = None
+        self.entropy_min_threshold = None
+        self.entropy_max_threshold = None
 
 class UserTemporaryStorage:
     """
@@ -217,6 +223,7 @@ def rembg():
     return render_template('rembg.html')
 
 @app.route('/update-expert-guess',methods=['POST'])
+@check_authentication
 def update_expert_guess():
     value = request.form.get('expertGuess')
     ts[session['user_id']].expert_guess = value
@@ -232,12 +239,38 @@ def evaluate_asphalt():
     return asphalt_pixels / non_bg_pixels
 
 @app.route('/evaluate-asphalt',methods=['POST'])
+@check_authentication
 def evaluate_asphalt_caller():
     evaluation = evaluate_asphalt()
     save_asphalt_record(state='finished')
     print('Asphalt evaluated.')
     print(evaluation)
     return json.dumps({'evaluation': evaluation}), 200, {'Content-Type': 'application/json'}
+
+@app.route('/load-experiment')
+@check_authentication
+def load_active_experiment():
+    try:
+        ts[session['user_id']].experiment_id = return_active_experiment_id(session['user_id'])
+        response = load_experiment(ts[session['user_id']].experiment_id)
+        ts[session['user_id']].color_original = np.frombuffer(response[0][1], dtype=np.uint8)
+        ts[session['user_id']].asphalt_mask = np.frombuffer(response[0][2], dtype=bool)
+        ts[session['user_id']].aggregate_mask = np.frombuffer(response[0][3], dtype=bool)
+        ts[session['user_id']].expert_guess = response[0][4]
+        ts[session['user_id']].values.info = response[0][5]
+        ts[session['user_id']].values.blur = response[0][12]
+        ts[session['user_id']].values.entropy_min_threshold = response[0][9]
+        ts[session['user_id']].values.entropy_max_threshold = response[0][10]
+        ts[session['user_id']].values.intensity_min_threshold = response[0][11]
+        ts[session['user_id']].values.intensity_max_threshold = response[0][12]
+
+        status = 'success'
+    except:
+        flash('No active experiment found.','error')
+        status = 'error'
+        
+    return json.dumps({'status': status}), 200, {'Content-Type': 'application/json'}
+    
 
 @app.route('/save',methods=['POST'])
 def save_asphalt_record(**kwargs):
@@ -249,39 +282,52 @@ def save_asphalt_record(**kwargs):
     print('state:', state)  
     print('expert_guess:', ts[session['user_id']].expert_guess)
     
-    if ts[session['user_id']].experiment_id is None:
-        print('Inserting new record.')
-        query = 'INSERT INTO experiments (added_by_user, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state, asphalt_ratio) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
-        values = (session['user_id'], 
-                  ts[session['user_id']].color_original.tobytes(),
-                  ts[session['user_id']].asphalt_mask.tobytes(),
-                  ts[session['user_id']].aggregate_mask.tobytes(),
-                  ts[session['user_id']].expert_guess,
-                  ts[session['user_id']].values.info,
-                  state,
-                  evaluate_asphalt())
-        ts[session['user_id']].experiment_id = execute_query(query, values)[0][0]
-        print(ts[session['user_id']].experiment_id)
-    else:
-        print('Updating record.')
-        query = 'UPDATE experiments SET img=%s, img_mask_asphalt=%s, img_mask_aggregate=%s, expert_guess=%s, info=%s, current_state=%s, asphalt_ratio=%s WHERE id=%s'
-        values = (ts[session['user_id']].color_original.tobytes(),
+    try:
+        if ts[session['user_id']].experiment_id is None:
+            print('Inserting new record.')
+            query = 'INSERT INTO experiments (added_by_user, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state, asphalt_ratio, entropy_min_threshold, entropy_max_threshold, intensity_min_threshold, intensity_max_threshold, blur) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
+            values = (session['user_id'], 
+                    ts[session['user_id']].color_original.tobytes(),
                     ts[session['user_id']].asphalt_mask.tobytes(),
                     ts[session['user_id']].aggregate_mask.tobytes(),
                     ts[session['user_id']].expert_guess,
                     ts[session['user_id']].values.info,
                     state,
                     evaluate_asphalt(),
-                    ts[session['user_id']].experiment_id)
-        execute_query(query, values)
-        
-    if state == 'finished':
-        # delete temporary storage and create a new one
-        print('Experiment finished.')
-        ts.pop(session['user_id'])
-        ts[session['user_id']] = UserTemporaryStorage()
+                    ts[session['user_id']].values.entropy_min_threshold,
+                    ts[session['user_id']].values.entropy_max_threshold,
+                    ts[session['user_id']].values.intensity_min_threshold,
+                    ts[session['user_id']].values.intensity_max_threshold,
+                    ts[session['user_id']].values.blur)
+            ts[session['user_id']].experiment_id = execute_query(query, values)[0][0]
+            print(ts[session['user_id']].experiment_id)
+        else:
+            print('Updating record.')
+            query = 'UPDATE experiments SET img=%s, img_mask_asphalt=%s, img_mask_aggregate=%s, expert_guess=%s, info=%s, current_state=%s, asphalt_ratio=%s, entropy_min_threshold=%s, entropy_max_threshold=%s, intensity_min_threshold=%s, intensity_max_threshold=%s, blur=%s WHERE id=%s'
+            values = (ts[session['user_id']].color_original.tobytes(),
+                        ts[session['user_id']].asphalt_mask.tobytes(),
+                        ts[session['user_id']].aggregate_mask.tobytes(),
+                        ts[session['user_id']].expert_guess,
+                        ts[session['user_id']].values.info,
+                        state,
+                        evaluate_asphalt(),
+                        ts[session['user_id']].values.entropy_min_threshold,
+                        ts[session['user_id']].values.entropy_max_threshold,
+                        ts[session['user_id']].values.intensity_min_threshold,
+                        ts[session['user_id']].values.intensity_max_threshold,
+                        ts[session['user_id']].values.blur,
+                        ts[session['user_id']].experiment_id)
+            execute_query(query, values)
             
-    return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
+        if state == 'finished':
+            # delete temporary storage and create a new one
+            print('Experiment finished.')
+            ts.pop(session['user_id'])
+            ts[session['user_id']] = UserTemporaryStorage()
+        status = 'success'
+    except Exception as e:
+        status = 'error'        
+    return json.dumps({'status': status}), 200, {'Content-Type': 'application/json'}
 
 
 
@@ -418,6 +464,12 @@ def apply_mask():
     max_threshold = int(request.form.get('maxThreshold', 255))
     entropy_min_threshold = int(request.form.get('entropyMinThreshold', 0))
     entropy_max_threshold = int(request.form.get('entropyMaxThreshold', 255))
+    
+    # save the values
+    ts[session['user_id']].values.intensity_min_threshold = min_threshold
+    ts[session['user_id']].values.intensity_max_threshold = max_threshold
+    ts[session['user_id']].values.entropy_min_threshold = entropy_min_threshold
+    ts[session['user_id']].values.entropy_max_threshold = entropy_max_threshold    
     
     print('Mask applied')
     # np_gray = cv2.imread('temp/gray_temp.jpg', cv2.IMREAD_GRAYSCALE)

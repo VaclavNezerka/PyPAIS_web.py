@@ -34,7 +34,16 @@ CREATE TABLE experiments(
 
 ALTER TABLE experiments ALTER COLUMN current_state varchar(10) DEFAULT 'pending' CHECK (current_state IN ('pending', 'processing', 'prepared', 'started' , 'finished', 'current_experiment'));
 ALTER table experiments add column asphalt_ratio decimal(5,2) DEFAULT NULL;
+ALTER table experiments add column active BOOLEAN DEFAULT FALSE;
+-- integer in range 0/255
+ALTER table experiments add column entropy_min_threshold INT DEFAULT NULL;
+ALTER table experiments add column entropy_max_threshold INT DEFAULT NULL;
+ALTER table experiments add column intensity_min_threshold INT DEFAULT NULL;
+ALTER table experiments add column intensity_max_threshold INT DEFAULT NULL;
+ALTER table experiments add column blur INT DEFAULT NULL;
+
 -- alter table experiments add column finished BOOLEAN DEFAULT FALSE;
+
 
 INSERT INTO experiments (added_by_user) VALUES (31) RETURNING id;
 
@@ -42,7 +51,9 @@ INSERT INTO experiments (added_by_user) VALUES (31) RETURNING id;
 
 SELECT id, added_by_user, asphalt_ratio FROM experiments ORDER BY id DESC;
 -- SELECT * FROM experiments filter out the last 5 rows;
-SELECT * FROM experiments LIMIT 5 OFFSET (SELECT COUNT(*) FROM experiments)-5;
+-- SELECT * FROM experiments LIMIT 5 OFFSET (SELECT COUNT(*) FROM experiments)-5;
+-- SELECT id, entropy_min_threshold,entropy_max_threshold,intensity_min_threshold,intensity_max_threshold,blur FROM experiments LIMIT 5 OFFSET (SELECT COUNT(*) FROM experiments)-5;
+SELECT id, entropy_min_threshold,entropy_max_threshold,intensity_min_threshold,intensity_max_threshold,blur FROM experiments;
 UPDATE experiments SET added_by_user=26, asphalt_ratio=0.5 WHERE id=91;
 -- delete from experiments where id=1;
 
