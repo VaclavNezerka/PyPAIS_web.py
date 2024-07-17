@@ -53,7 +53,7 @@ SELECT id, added_by_user, asphalt_ratio FROM experiments ORDER BY id DESC;
 -- SELECT * FROM experiments filter out the last 5 rows;
 -- SELECT * FROM experiments LIMIT 5 OFFSET (SELECT COUNT(*) FROM experiments)-5;
 -- SELECT id, entropy_min_threshold,entropy_max_threshold,intensity_min_threshold,intensity_max_threshold,blur FROM experiments LIMIT 5 OFFSET (SELECT COUNT(*) FROM experiments)-5;
-SELECT id, entropy_min_threshold,entropy_max_threshold,intensity_min_threshold,intensity_max_threshold,blur FROM experiments;
+SELECT id, added_by_user, active, entropy_min_threshold,entropy_max_threshold,intensity_min_threshold,intensity_max_threshold,blur FROM experiments;
 UPDATE experiments SET added_by_user=26, asphalt_ratio=0.5 WHERE id=91;
 -- delete from experiments where id=1;
 
@@ -61,12 +61,12 @@ delete from experiments where id > 30;
 
 INSERT INTO experiments (added_by_user, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state) 
 VALUES 
-(31, 'img1', 'mask1', 'mask2', 0.5, 'info1', 'prepared'),
+(15, 'img1', 'mask1', 'mask2', 0.5, 'info1', 'prepared'),
 (31, 'img2', 'mask3', 'mask4', 0.6, 'info2', 'finished'),
 (31, 'img3', 'mask5', 'mask6', 0.7, 'info3', 'pending'),
 (31, 'img4', 'mask7', 'mask8', 0.8, 'info4', 'pending'),
 (31, 'img4', 'mask7', 'mask8', 0.8, 'info4', 'processing'),
-(31, 'img4', 'mask7', 'mask8', 0.8, 'info4', 'started');
+(15, 'img4', 'mask7', 'mask8', 0.8, 'info4', 'started');
 
 CREATE VIEW public_users AS SELECT id, first_name, last_name, company FROM users;
 

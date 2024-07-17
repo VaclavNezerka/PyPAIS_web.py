@@ -52,7 +52,7 @@ def load_experiment(cur,conn, id):
 
 @db_connection
 def return_active_experiment_id(cur,conn, user_id):
-    cur.execute('SELECT experiment_id FROM experiments WHERE added_by_user=%s AND active=1', (user_id,))
+    cur.execute('SELECT experiment_id FROM experiments WHERE added_by_user=%s AND active=True', (user_id,))
     experiment_id=cur.fetchall()
     return experiment_id    
 

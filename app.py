@@ -83,6 +83,23 @@ class UserTemporaryStorage:
         self.asphalt_mask_manual_adjustments = None # [manual] all the pixels that are asphalt and not background (defined by the user)        
 
 # @app.before_request        
+
+def check_data_ownership(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            query = 'SELECT added_by_user FROM experiments WHERE id=%s'
+            user_id = execute_query(query, (kwargs['id'],))[0][0]   
+            if user_id == session['user_id']:
+                return func(id=kwargs['id'])
+            else:
+                flash('You do not have permission to access this data.','error')
+                return redirect('/')
+        except:
+            flash('You do not have permission to access this data.','error')
+            return redirect('/')
+    return wrapper
+
 def check_authentication(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -233,9 +250,6 @@ def update_expert_guess():
 def evaluate_asphalt():
     non_bg_pixels = np.sum(ts[session['user_id']].aggregate_mask)
     asphalt_pixels = np.sum(ts[session['user_id']].asphalt_mask) 
-    print('Asphalt pixels:', asphalt_pixels)
-    print('Non-bg pixels:', non_bg_pixels)
-    print('Asphalt ratio:', asphalt_pixels / non_bg_pixels)
     return asphalt_pixels / non_bg_pixels
 
 @app.route('/evaluate-asphalt',methods=['POST'])
@@ -243,9 +257,52 @@ def evaluate_asphalt():
 def evaluate_asphalt_caller():
     evaluation = evaluate_asphalt()
     save_asphalt_record(state='finished')
-    print('Asphalt evaluated.')
-    print(evaluation)
     return json.dumps({'evaluation': evaluation}), 200, {'Content-Type': 'application/json'}
+
+@app.route('/deactivate-experiment/<int:id>',methods=['GET', 'POST'])
+@check_authentication
+@check_data_ownership
+def deactivate_experiment_caller(id):
+    return deactivate_experiment(id)
+
+def deactivate_experiment(id):
+    if id is None:
+        id = ts[session['user_id']].experiment_id
+        if id is None:
+            flash('No active experiment found.','error')
+            return redirect('/queue')
+    print('Deactivating experiment.')
+    print(id)
+    query = 'UPDATE experiments SET active=%s WHERE id=%s'
+    values = (False, id)
+    execute_query(query, values)
+    ts[session['user_id']].experiment_id = None
+    return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
+
+@app.route('/activate-experiment/<int:id>',methods=['GET', 'POST']) 
+@check_authentication
+@check_data_ownership
+def activate_experiment(id):
+    if id is None:
+        id = ts[session['user_id']].experiment_id
+        if id is None:
+            flash('No active experiment found.','error')
+            return redirect('/queue')
+    # check if the experiment is already active if it is, deactivate it
+    query = 'SELECT id FROM experiments WHERE added_by_user=%s AND active=True'
+    active_id = execute_query(query, (session['user_id'],))
+    print(active_id)
+    if active_id:
+        for i in active_id:
+            print(i[0])
+            r=deactivate_experiment(i[0])
+
+    # activate the experiment
+    query = 'UPDATE experiments SET active=%s WHERE id=%s'
+    values = (True, id)
+    execute_query(query, values)
+    ts [session['user_id']].experiment_id = id    
+    return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
 @app.route('/load-experiment')
 @check_authentication
@@ -263,13 +320,21 @@ def load_active_experiment():
         ts[session['user_id']].values.entropy_max_threshold = response[0][10]
         ts[session['user_id']].values.intensity_min_threshold = response[0][11]
         ts[session['user_id']].values.intensity_max_threshold = response[0][12]
-
-        status = 'success'
+        
+        ts[session['user_id']].color = blur_image(ts[session['user_id']].values.blur, ts[session['user_id']].color_original)
+        # gray image
+        ts[session['user_id']].gray_original = cv2.cvtColor(ts[session['user_id']].color_original, cv2.COLOR_BGR2GRAY)
+        ts[session['user_id']].gray = blur_image(ts[session['user_id']].values.blur, ts[session['user_id']].gray_original)
+        json_response = {'status': 'success',
+                         'data': {
+                            'color': encode_to_png(ts[session['user_id']].color),
+                         }}
+        redirect('/')
     except:
         flash('No active experiment found.','error')
-        status = 'error'
-        
-    return json.dumps({'status': status}), 200, {'Content-Type': 'application/json'}
+        redirect('/')
+        return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
+    return json.dumps(json_response), 200, {'Content-Type': 'application/json'}      
     
 
 @app.route('/save',methods=['POST'])
@@ -277,11 +342,7 @@ def save_asphalt_record(**kwargs):
     if 'state' in kwargs.keys():
         state = kwargs['state']
     else:
-        state = 'started'
-    print('Saving record.')
-    print('state:', state)  
-    print('expert_guess:', ts[session['user_id']].expert_guess)
-    
+        state = 'started'    
     try:
         if ts[session['user_id']].experiment_id is None:
             print('Inserting new record.')

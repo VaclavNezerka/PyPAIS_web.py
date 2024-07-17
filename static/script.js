@@ -63,7 +63,6 @@ function disableControls() {
     });
 }
 
-
 document.getElementById('fileInput').addEventListener('change', uploadImage);
 
 // These listeners only update the mask, not the histogram
@@ -206,9 +205,14 @@ async function uploadImage() {
     .then(() => {document.getElementById('defaultImage').style.display = 'none';})
     .then(() => processImage())
     .then(() => processEntropyImage())
-    .then(() => {getImageType();})
-    .then(() => {enableControls(); }) // Enable controls after everything is loaded
-    .then(() => {removeWorkingMessage();});
+    .then(() => getImageType())
+    .then(() => enableControls()) // Enable controls after everything is loaded
+    .then(() => removeWorkingMessage())
+    .then(() => fetch('/save' + uniqueQuery, { method: 'POST' }))
+    .then(() => fetch('/activate-experiment/109'+uniqueQuery, { method: 'POST' }))
+    .catch(error => {
+        console.error('Error:', error);
+    })
 }
 
 function removeBackground(formData) {
@@ -639,6 +643,79 @@ function redrawCanvases() {
     uploadedEntropyImage.src = uploadedEntropyImage.src;
 }
 
+function activateExperiment() {
+    return new Promise((resolve, reject) => {
+        const uniqueQuery = '?nocache=' + new Date().getTime();
+        fetch('/activate-experiment' + uniqueQuery, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                resolve();
+            } else {
+                reject();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            reject();
+        });
+    }
+    );
+}
+
+function deactivateCurrentExperiment() {
+    return new Promise((resolve, reject) => {
+        const uniqueQuery = '?nocache=' + new Date().getTime();
+        fetch('/deactivate-experiment' + uniqueQuery, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                resolve();
+            } else {
+                reject();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            reject();
+        });
+    });
+}
+
+function loadExperiment() {
+    displayWorkingMessage();
+    fetch('/load-experiment/' + String(document.getElementById('experimentId').value), { method: 'POST' })
+    .then(response => response.json().data)
+    .then(data => {
+        if (data.status === 'error') {
+            alert('No experiment data found.');
+            return;
+        } 
+        // set the sliders and input boxes to the values from the experiment
+        document.getElementById('minThresholdSlider').value = data.minThreshold;
+        document.getElementById('minThresholdValue').value = data.minThreshold;
+        document.getElementById('maxThresholdSlider').value = data.maxThreshold;
+        document.getElementById('maxThresholdValue').value = data.maxThreshold;
+        document.getElementById('entropyMinThresholdSlider').value = data.entropyMinThreshold;
+        document.getElementById('entropyMinThresholdValue').value = data.entropyMinThreshold;
+        document.getElementById('entropyMaxThresholdSlider').value = data.entropyMaxThreshold;
+        document.getElementById('entropyMaxThresholdValue').value = data.entropyMaxThreshold;
+        // set the blur slider and input box to the value from the experiment
+        document.getElementById('blurSlider').value = data.blurValue;
+        document.getElementById('blurValue').value = data.blurValue;
+        redrawCanvases();
+    }).then(() => fetchOriginalEntropyData())
+    .then(() => {document.getElementById('defaultImage').style.display = 'none';})
+    .then(() => processImage())
+    .then(() => processEntropyImage())
+    .then(() => getImageType())
+    .then(() => enableControls()) // Enable controls after everything is loaded
+    .then(() => removeWorkingMessage())
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
 // Global event listeners
 document.getElementById('sharpnessCheckbox').addEventListener('change', changeSharpness);  
 document.getElementById('redOverlayCheckbox').addEventListener('change', changeRedOverlay);
@@ -657,7 +734,10 @@ document.getElementById('index_evaluation').addEventListener('click', async func
         displayNum = displayNum.toFixed(2);
         alert('Evaluation completed. Check the console for the results.' + '\n' + 'Evaluation results: ' + displayNum + '%');
         }
-    );
+    )
+    .then(() => {
+        // redirect to the '/' page
+        window.location.href = '/';})
     }
 });
 // window.addEventListener('resize', function() { magnify('imageCanvas', 4); }); // this ensures the magnifying glass is redrawn when the window is resized
