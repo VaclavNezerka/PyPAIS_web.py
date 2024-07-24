@@ -32,6 +32,8 @@ CREATE TABLE experiments(
     info TEXT
 );
 
+ALTER TABLE experiments ADD COLUMN img_width INT DEFAULT NULL;
+ALTER TABLE experiments ADD COLUMN img_height INT DEFAULT NULL;
 ALTER TABLE experiments ALTER COLUMN current_state varchar(10) DEFAULT 'pending' CHECK (current_state IN ('pending', 'processing', 'prepared', 'started' , 'finished', 'current_experiment'));
 ALTER table experiments add column asphalt_ratio decimal(5,2) DEFAULT NULL;
 ALTER table experiments add column active BOOLEAN DEFAULT FALSE;
@@ -53,7 +55,7 @@ SELECT id, added_by_user, asphalt_ratio FROM experiments ORDER BY id DESC;
 -- SELECT * FROM experiments filter out the last 5 rows;
 -- SELECT * FROM experiments LIMIT 5 OFFSET (SELECT COUNT(*) FROM experiments)-5;
 -- SELECT id, entropy_min_threshold,entropy_max_threshold,intensity_min_threshold,intensity_max_threshold,blur FROM experiments LIMIT 5 OFFSET (SELECT COUNT(*) FROM experiments)-5;
-SELECT id, added_by_user, active, entropy_min_threshold,entropy_max_threshold,intensity_min_threshold,intensity_max_threshold,blur FROM experiments;
+SELECT id, img_width, img_height, added_by_user, active, entropy_min_threshold,entropy_max_threshold,intensity_min_threshold,intensity_max_threshold,blur FROM experiments;
 UPDATE experiments SET added_by_user=26, asphalt_ratio=0.5 WHERE id=91;
 -- delete from experiments where id=1;
 

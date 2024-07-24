@@ -48,6 +48,8 @@ class UserValues:
         self.intensity_max_threshold = None
         self.entropy_min_threshold = None
         self.entropy_max_threshold = None
+        self.expert_guess = 0.        
+    
 
 class UserTemporaryStorage:
     """
@@ -70,7 +72,6 @@ class UserTemporaryStorage:
         self.values = UserValues()
         # info
         self.experiment_id = None
-        self.expert_guess = 0.        
         # images
         self.color_original = None
         self.gray_original = None
@@ -96,7 +97,7 @@ def check_data_ownership(func):
                 flash('You do not have permission to access this data.','error')
                 return redirect('/')
         except:
-            flash('You do not have permission to access this data.','error')
+            flash('Hmm You do not have permission to access this data.','error')
             return redirect('/')
     return wrapper
 
@@ -239,11 +240,12 @@ def get_grayscale_data():
 def rembg():
     return render_template('rembg.html')
 
-@app.route('/update-expert-guess',methods=['POST'])
+@app.route('/update_value/<string:value_name>',methods=['POST'])
 @check_authentication
-def update_expert_guess():
+def update_specific_value(value_name):
     value = request.form.get('expertGuess')
-    ts[session['user_id']].expert_guess = value
+    ts[session['user_id']].values.__dict__[value_name] = value
+    save_specific_value(value_name)
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
    
     
@@ -263,9 +265,12 @@ def evaluate_asphalt_caller():
 @check_authentication
 @check_data_ownership
 def deactivate_experiment_caller(id):
+    print('Deactivating experiment.', id)
     return deactivate_experiment(id)
 
 def deactivate_experiment(id):
+    if id == 'null':
+        id = None
     if id is None:
         id = ts[session['user_id']].experiment_id
         if id is None:
@@ -282,6 +287,9 @@ def deactivate_experiment(id):
 @app.route('/activate-experiment/<int:id>',methods=['GET', 'POST']) 
 @check_authentication
 @check_data_ownership
+def activate_experiment_caller(id):
+    return activate_experiment(id)
+
 def activate_experiment(id):
     if id is None:
         id = ts[session['user_id']].experiment_id
@@ -304,38 +312,116 @@ def activate_experiment(id):
     ts [session['user_id']].experiment_id = id    
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
-@app.route('/load-experiment')
+@app.route('/load-experiment/<int:id>',methods=['GET', 'POST'])
 @check_authentication
-def load_active_experiment():
-    try:
-        ts[session['user_id']].experiment_id = return_active_experiment_id(session['user_id'])
-        response = load_experiment(ts[session['user_id']].experiment_id)
-        ts[session['user_id']].color_original = np.frombuffer(response[0][1], dtype=np.uint8)
-        ts[session['user_id']].asphalt_mask = np.frombuffer(response[0][2], dtype=bool)
-        ts[session['user_id']].aggregate_mask = np.frombuffer(response[0][3], dtype=bool)
-        ts[session['user_id']].expert_guess = response[0][4]
-        ts[session['user_id']].values.info = response[0][5]
-        ts[session['user_id']].values.blur = response[0][12]
-        ts[session['user_id']].values.entropy_min_threshold = response[0][9]
-        ts[session['user_id']].values.entropy_max_threshold = response[0][10]
-        ts[session['user_id']].values.intensity_min_threshold = response[0][11]
-        ts[session['user_id']].values.intensity_max_threshold = response[0][12]
+def load_experiment(id):
+    # try:        
+        if id is None:
+            id = ts[session['user_id']].experiment_id
+            if id is None:
+                flash('NO ID No active experiment found.','error')
+                return redirect('/queue')           
+        response = load_experiment_from_db(id)
+        image_width = response[0][-1]
+        image_height = response[0][-2]
+        print('Image width:', image_width)
+        print('Image height:', image_height)
+        print(response[0][-3])
+        ts[session['user_id']].color_original = np.frombuffer(response[0][3], dtype=np.uint8).reshape(image_height, image_width, 4)
+        ts[session['user_id']].asphalt_mask = np.frombuffer(response[0][4], dtype=bool).reshape(image_height, image_width)
+        ts[session['user_id']].aggregate_mask = np.frombuffer(response[0][5], dtype=bool).reshape(image_height, image_width)
+        print('shapes')
+        print(response[0][3].shape)
+        print(ts[session['user_id']].aggregate_mask.shape)
+        print(ts[session['user_id']].asphalt_mask.shape)
+        print(ts[session['user_id']].color_original.shape)
+        ts[session['user_id']].values.expert_guess = response[0][6]
+        ts[session['user_id']].values.info = response[0][8]
+        ts[session['user_id']].values.entropy_min_threshold = response[0][-7]
+        ts[session['user_id']].values.entropy_max_threshold = response[0][-6]
+        ts[session['user_id']].values.intensity_min_threshold = response[0][-5]
+        ts[session['user_id']].values.intensity_max_threshold = response[0][-4]
+        ts[session['user_id']].values.blur = response[0][-3]
         
+        print(ts[session['user_id']].values.blur)
         ts[session['user_id']].color = blur_image(ts[session['user_id']].values.blur, ts[session['user_id']].color_original)
         # gray image
-        ts[session['user_id']].gray_original = cv2.cvtColor(ts[session['user_id']].color_original, cv2.COLOR_BGR2GRAY)
-        ts[session['user_id']].gray = blur_image(ts[session['user_id']].values.blur, ts[session['user_id']].gray_original)
+        image = Image.fromarray(ts[session['user_id']].color_original)        
+        gray_image = image.convert('L')
+        ts[session['user_id']].gray_original = np.array(gray_image)        
+        ts[session['user_id']].gray = blur_image(ts[session['user_id']].values.blur, ts[session['user_id']].gray_original) 
+        print('HMM2')
+                
+        # encode the images to string
+        encoded_gray = encode_to_png(ts[session['user_id']].gray_original)
+        encoded_color = encode_to_png(ts[session['user_id']].color_original)
+        encoded_no_bg = encode_to_png(ts[session['user_id']].color_original*ts[session['user_id']].aggregate_mask[:,:,None])
+        print('HMM3')
+        encoded_gray = base64.b64encode(encoded_gray).decode('utf-8')
+        encoded_color = base64.b64encode(encoded_color).decode('utf-8')
+        encoded_no_bg = base64.b64encode(encoded_no_bg).decode('utf-8')
+        print('HMM4')
+        # blur the images
+        encoded_no_bg_blur = encode_to_png(ts[session['user_id']].color*ts[session['user_id']].aggregate_mask[:,:,None])
+        encoded_gray_blur = encode_to_png(ts[session['user_id']].gray)
+        encoded_color_blur = encode_to_png(ts[session['user_id']].color)
+        encoded_no_bg_blur = base64.b64encode(encoded_no_bg_blur).decode('utf-8')
+        encoded_gray_blur = base64.b64encode(encoded_gray_blur).decode('utf-8')
+        encoded_color_blur = base64.b64encode(encoded_color_blur).decode('utf-8')
+        
         json_response = {'status': 'success',
-                         'data': {
-                            'color': encode_to_png(ts[session['user_id']].color),
-                         }}
-        redirect('/')
+                         'minThreshold': ts[session['user_id']].values.intensity_min_threshold,
+                         'maxThreshold': ts[session['user_id']].values.intensity_max_threshold,
+                         'entropyMinThreshold': ts[session['user_id']].values.entropy_min_threshold,
+                         'entropyMaxThreshold': ts[session['user_id']].values.entropy_max_threshold,
+                         'blurValue': ts[session['user_id']].values.blur,
+                         'expertGuess': int(ts[session['user_id']].values.expert_guess*100),
+                         'gray': encoded_gray,
+                         'color': encoded_color,
+                         'nobg': encoded_no_bg,
+                         'gray_blur': encoded_gray_blur,
+                         'color_blur': encoded_color_blur,
+                         'nobg_blur': encoded_no_bg_blur
+                         }
+        return json.dumps(json_response), 200, {'Content-Type': 'application/json'}      
+                        
+    #     print('Experiment loaded.')
+    #     redirect('/')
+    # except:
+    #     flash('ERR No active experiment found.','error')
+    #     redirect('/')
+    #     return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
+    # return json.dumps(json_response), 200, {'Content-Type': 'application/json'}      
+
+@app.route('/is-experiment-active',methods=['GET'])
+def is_active():
+    print('Checking if experiment is active.')
+    try:
+        if 'user_id' in session:
+            print('2 Checking if experiment is active.')
+            ts[session['user_id']].experiment_id = return_active_experiment_id(session['user_id'])
+            print(ts[session['user_id']].experiment_id)
+            if ts[session['user_id']].experiment_id is not None:
+                print('Checking if experiment is active.')
+                return json.dumps({'active': True, 'experimentId': ts[session['user_id']].experiment_id}), 200, {'Content-Type': 'application/json'}
     except:
-        flash('No active experiment found.','error')
-        redirect('/')
-        return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
-    return json.dumps(json_response), 200, {'Content-Type': 'application/json'}      
-    
+        pass    
+    return json.dumps({'status': False}), 200, {'Content-Type': 'application/json'}
+
+@app.route('/save_value/<string:value_name>',methods=['POST','GET'])
+def save_specific_value(value_name):
+    # try:
+        value_name = value_name.lower()
+        value = ts[session['user_id']].values.__dict__[value_name]
+        query = f'UPDATE experiments SET {value_name}=%s, asphalt_ratio=%s, img_mask_asphalt=%s WHERE id=%s'
+        values = (value,
+                  evaluate_asphalt(),
+                  ts[session['user_id']].asphalt_mask.tobytes(),
+                  ts[session['user_id']].experiment_id)
+        execute_query(query, values)
+        return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
+    # except Exception as e:
+    #     return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
 
 @app.route('/save',methods=['POST'])
 def save_asphalt_record(**kwargs):
@@ -343,15 +429,19 @@ def save_asphalt_record(**kwargs):
         state = kwargs['state']
     else:
         state = 'started'    
-    try:
+    try:        
         if ts[session['user_id']].experiment_id is None:
             print('Inserting new record.')
-            query = 'INSERT INTO experiments (added_by_user, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state, asphalt_ratio, entropy_min_threshold, entropy_max_threshold, intensity_min_threshold, intensity_max_threshold, blur) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
+            query = 'INSERT INTO experiments (added_by_user, img_width, img_height, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state, asphalt_ratio, entropy_min_threshold, entropy_max_threshold, intensity_min_threshold, intensity_max_threshold, blur) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
+            print(ts[session['user_id']].color_original.shape)
+            print('shape!!!')
             values = (session['user_id'], 
+                    ts[session['user_id']].color_original.shape[1],
+                    ts[session['user_id']].color_original.shape[0],
                     ts[session['user_id']].color_original.tobytes(),
                     ts[session['user_id']].asphalt_mask.tobytes(),
                     ts[session['user_id']].aggregate_mask.tobytes(),
-                    ts[session['user_id']].expert_guess,
+                    ts[session['user_id']].values.expert_guess,
                     ts[session['user_id']].values.info,
                     state,
                     evaluate_asphalt(),
@@ -361,23 +451,26 @@ def save_asphalt_record(**kwargs):
                     ts[session['user_id']].values.intensity_max_threshold,
                     ts[session['user_id']].values.blur)
             ts[session['user_id']].experiment_id = execute_query(query, values)[0][0]
-            print(ts[session['user_id']].experiment_id)
+            activate_experiment(ts[session['user_id']].experiment_id)
+            print(ts[session['user_id']].experiment_id)            
         else:
             print('Updating record.')
-            query = 'UPDATE experiments SET img=%s, img_mask_asphalt=%s, img_mask_aggregate=%s, expert_guess=%s, info=%s, current_state=%s, asphalt_ratio=%s, entropy_min_threshold=%s, entropy_max_threshold=%s, intensity_min_threshold=%s, intensity_max_threshold=%s, blur=%s WHERE id=%s'
-            values = (ts[session['user_id']].color_original.tobytes(),
-                        ts[session['user_id']].asphalt_mask.tobytes(),
-                        ts[session['user_id']].aggregate_mask.tobytes(),
-                        ts[session['user_id']].expert_guess,
-                        ts[session['user_id']].values.info,
-                        state,
-                        evaluate_asphalt(),
-                        ts[session['user_id']].values.entropy_min_threshold,
-                        ts[session['user_id']].values.entropy_max_threshold,
-                        ts[session['user_id']].values.intensity_min_threshold,
-                        ts[session['user_id']].values.intensity_max_threshold,
-                        ts[session['user_id']].values.blur,
-                        ts[session['user_id']].experiment_id)
+            print(ts[session['user_id']].experiment_id)
+            query = 'UPDATE experiments SET img_width = %s, img_height = %s, img_mask_asphalt=%s, img_mask_aggregate=%s, expert_guess=%s, info=%s, current_state=%s, asphalt_ratio=%s, entropy_min_threshold=%s, entropy_max_threshold=%s, intensity_min_threshold=%s, intensity_max_threshold=%s, blur=%s WHERE id=%s'
+            values = (ts[session['user_id']].color_original.shape[1],
+                      ts[session['user_id']].color_original.shape[0],
+                      ts[session['user_id']].asphalt_mask.tobytes(),
+                      ts[session['user_id']].aggregate_mask.tobytes(),
+                      ts[session['user_id']].values.expert_guess,
+                      ts[session['user_id']].values.info,
+                      state,
+                      evaluate_asphalt(),
+                      ts[session['user_id']].values.entropy_min_threshold,
+                      ts[session['user_id']].values.entropy_max_threshold,
+                      ts[session['user_id']].values.intensity_min_threshold,
+                      ts[session['user_id']].values.intensity_max_threshold,
+                      ts[session['user_id']].values.blur,
+                      ts[session['user_id']].experiment_id)
             execute_query(query, values)
             
         if state == 'finished':

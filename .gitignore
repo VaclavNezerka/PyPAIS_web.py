@@ -3,6 +3,7 @@ try.py
 unittests
 pypais.yml
 table.html
+data
 _*
 *.png
 *.heic

@@ -45,16 +45,16 @@ def save_new_user_db(cur, conn , values):
         return response
 
 @db_connection
-def load_experiment(cur,conn, id):
+def load_experiment_from_db(cur,conn, id):
     cur.execute('SELECT * FROM experiments WHERE id=%s', (id,))
     response = cur.fetchall()
     return response
 
 @db_connection
 def return_active_experiment_id(cur,conn, user_id):
-    cur.execute('SELECT experiment_id FROM experiments WHERE added_by_user=%s AND active=True', (user_id,))
+    cur.execute('SELECT id FROM experiments WHERE added_by_user=%s AND active=True', (user_id,))
     experiment_id=cur.fetchall()
-    return experiment_id    
+    return experiment_id[0][0]
 
 @db_connection
 def execute_query(cur,conn,query,values):

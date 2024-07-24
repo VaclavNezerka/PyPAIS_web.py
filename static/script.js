@@ -26,7 +26,10 @@ uploadedEntropyImage.onload = function() {
         ctx.drawImage(uploadedImageOverlay, 0, 0, canvas.width, canvas.height);
     }
 };
-uploadedEntropyImage.onerror = console.error;
+uploadedEntropyImage.onerror = function() {
+    console.error("Failed to load image at URL: " + this.src);
+    console.error;
+};
 
 uploadedImage.onload = function() { 
     var canvas = document.getElementById('imageCanvas');
@@ -41,7 +44,11 @@ uploadedImage.onload = function() {
             }            
             magnify('imageCanvas', 4);
         };
-uploadImage.onerror = console.error;
+uploadImage.onerror = function() {
+    console.error("Failed to load image at URL: " + this.src)
+    console.error
+};
+
 
 let requestedImage = null;
 let displayImageBlur = false; 
@@ -74,7 +81,9 @@ document.getElementById('minThresholdSlider').addEventListener('change', functio
         document.getElementById('maxThresholdValue').value = minVal;
     }
     document.getElementById('minThresholdValue').value = minVal;
-    validateAndUpdate();
+    validateAndUpdate()
+    .then(() => fetch('/save_value/intensity_min_threshold', { method: 'POST' }))
+    .then(() => fetch('/save_value/intensity_max_threshold', { method: 'POST' }));
 });
 document.getElementById('minThresholdValue').addEventListener('change', function() {
     let minVal = Math.max(0, Math.min(255, parseInt(this.value)));
@@ -85,7 +94,9 @@ document.getElementById('minThresholdValue').addEventListener('change', function
     }
     document.getElementById('minThresholdSlider').value = minVal;
     this.value = minVal; // Correct the value in case it was out of bounds
-    validateAndUpdate();
+    validateAndUpdate()
+    .then(() => fetch('/save_value/intensity_min_threshold', { method: 'POST' }))
+    .then(() => fetch('/save_value/intensity_max_threshold', { method: 'POST' }))
 });
 
 document.getElementById('maxThresholdSlider').addEventListener('change', function() {
@@ -96,7 +107,9 @@ document.getElementById('maxThresholdSlider').addEventListener('change', functio
         document.getElementById('minThresholdValue').value = maxVal;
     }
     document.getElementById('maxThresholdValue').value = maxVal;
-    validateAndUpdate();
+    validateAndUpdate()
+    .then(() => fetch('/save_value/intensity_max_threshold', { method: 'POST' }))
+    .then(() => fetch('/save_value/intensity_min_threshold', { method: 'POST' }));
 });
 document.getElementById('maxThresholdValue').addEventListener('change', function() {
     let maxVal = Math.max(0, Math.min(255, parseInt(this.value)));
@@ -107,7 +120,9 @@ document.getElementById('maxThresholdValue').addEventListener('change', function
     }
     document.getElementById('maxThresholdSlider').value = maxVal;
     this.value = maxVal; // Correct the value in case it was out of bounds
-    validateAndUpdate();
+    validateAndUpdate()
+    .then(() => fetch('/save_value/intensity_max_threshold', { method: 'POST' }))
+    .then(() => fetch('/save_value/intensity_min_threshold', { method: 'POST' }));
 });
 
 // Event listeners for entropy min threshold slider and value
@@ -119,7 +134,9 @@ document.getElementById('entropyMinThresholdSlider').addEventListener('change', 
         document.getElementById('entropyMaxThresholdValue').value = minVal;
     }
     document.getElementById('entropyMinThresholdValue').value = minVal;
-    validateAndUpdate(); // Update the entropy image mask
+    validateAndUpdate()
+    .then(()=>fetch('/save_value/entropy_min_threshold',method=['POST']))
+    .then(()=>fetch('/save_value/entropy_max_threshold',method=['POST']));
 });
 
 document.getElementById('entropyMinThresholdValue').addEventListener('change', function() {
@@ -131,7 +148,10 @@ document.getElementById('entropyMinThresholdValue').addEventListener('change', f
     }
     document.getElementById('entropyMinThresholdSlider').value = minVal;
     this.value = minVal; // Correct the value in case it was out of bounds
-    validateAndUpdate(); // Update the entropy image mask
+    validateAndUpdate()
+    .then(()=>fetch('/save_value/entropy_min_threshold',method=['POST']))
+    .then(()=>fetch('/save_value/entropy_max_threshold',method=['POST']));
+     // Update the entropy image mask
 });
 
 // Event listeners for entropy max threshold slider and value
@@ -143,7 +163,10 @@ document.getElementById('entropyMaxThresholdSlider').addEventListener('change', 
         document.getElementById('entropyMinThresholdValue').value = maxVal;
     }
     document.getElementById('entropyMaxThresholdValue').value = maxVal;
-    validateAndUpdate(); // Update the entropy image mask
+    validateAndUpdate()
+    .then(()=>fetch('/save_value/entropy_max_threshold',method=['POST']))
+    .then(()=>fetch('/save_value/entropy_min_threshold',method=['POST']));
+    // Update the entropy image mask
 });
 
 document.getElementById('entropyMaxThresholdValue').addEventListener('change', function() {
@@ -155,7 +178,9 @@ document.getElementById('entropyMaxThresholdValue').addEventListener('change', f
     }
     document.getElementById('entropyMaxThresholdSlider').value = maxVal;
     this.value = maxVal; // Correct the value in case it was out of bounds
-    validateAndUpdate(); // Update the entropy image mask
+    validateAndUpdate() // Update the entropy image mask
+    .then(()=>fetch('/save_value/entropy_max_threshold',method=['POST']))
+    .then(()=>fetch('/save_value/entropy_min_threshold',method=['POST']));
 });
 
 document.getElementById('blurValue').addEventListener('change', async function() {
@@ -165,6 +190,7 @@ document.getElementById('blurValue').addEventListener('change', async function()
     document.getElementById('blurSlider').value = this.value;
     document.getElementById('blurValue').value = this.value;
     await blurImage(this.value);
+    fetch('/save_value/blur', { method: 'POST' })
     redrawCanvases();
     removeWorkingMessage();
 });
@@ -174,6 +200,7 @@ document.getElementById('blurSlider').addEventListener('change', async function(
     document.getElementById('blurValue').value = this.value;
     document.getElementById('blurSlider').value = this.value;
     await blurImage(this.value);
+    fetch('/save_value/blur',method=['POST'])
     redrawCanvases();
     removeWorkingMessage();
 });
@@ -209,7 +236,6 @@ async function uploadImage() {
     .then(() => enableControls()) // Enable controls after everything is loaded
     .then(() => removeWorkingMessage())
     .then(() => fetch('/save' + uniqueQuery, { method: 'POST' }))
-    .then(() => fetch('/activate-experiment/109'+uniqueQuery, { method: 'POST' }))
     .catch(error => {
         console.error('Error:', error);
     })
@@ -235,6 +261,8 @@ function removeBackground(formData) {
     });
 }
 
+
+
 function fetchGrayscaleData(formData) {
     return new Promise((resolve, reject) => {
         const uniqueQuery = '?nocache=' + new Date().getTime();
@@ -246,21 +274,7 @@ function fetchGrayscaleData(formData) {
             if (uploadedImageURL_gray_blur == null) {
                 uploadedImageURL_gray_blur = url;
             }
-            
-            var img = new Image();
-            img.onload = function() {
-                var canvas = document.createElement('canvas');
-                var ctx = canvas.getContext('2d');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-                
-                grayscaleImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                drawIntensityHistogram(); // Draw the histogram using the fetched grayscale data
-                resolve();
-            };
-            img.onerror = reject;
-            img.src = uploadedImageURL_gray_blur;
+            createIntensityHistogram();
         })
         .then(() => { resolve(); })
         .catch(error => {
@@ -499,9 +513,6 @@ function drawIntensityHistogram() {
     //     }
     // }
 
-
-
-
     const canvas = document.getElementById('histogramCanvas');
     const ctx = canvas.getContext('2d');
     const width = canvas.width;
@@ -666,7 +677,7 @@ function activateExperiment() {
 function deactivateCurrentExperiment() {
     return new Promise((resolve, reject) => {
         const uniqueQuery = '?nocache=' + new Date().getTime();
-        fetch('/deactivate-experiment' + uniqueQuery, { method: 'POST' })
+        fetch('/deactivate-experiment/null' + uniqueQuery, { method: 'POST' })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
@@ -682,13 +693,33 @@ function deactivateCurrentExperiment() {
     });
 }
 
-function loadExperiment() {
+function createIntensityHistogram() {
+    return new Promise((resolve, reject) => {
+        var img = new Image();
+        img.onload = function() {
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            
+            grayscaleImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            drawIntensityHistogram(); // Draw the histogram using the fetched grayscale data
+            resolve();
+        };
+        img.onerror = reject;
+        img.src = uploadedImageURL_gray_blur;
+    });
+}
+
+function loadExperiment(id) {
     displayWorkingMessage();
-    fetch('/load-experiment/' + String(document.getElementById('experimentId').value), { method: 'POST' })
-    .then(response => response.json().data)
+    fetch('/load-experiment/' + String(id), { method: 'GET' })
+    .then(response => response.json())
     .then(data => {
         if (data.status === 'error') {
             alert('No experiment data found.');
+            removeWorkingMessage();
             return;
         } 
         // set the sliders and input boxes to the values from the experiment
@@ -703,13 +734,31 @@ function loadExperiment() {
         // set the blur slider and input box to the value from the experiment
         document.getElementById('blurSlider').value = data.blurValue;
         document.getElementById('blurValue').value = data.blurValue;
-        redrawCanvases();
-    }).then(() => fetchOriginalEntropyData())
+        document.getElementById('expertGuess').value = data.expertGuess;    
+
+        const image = base64toBlob(data.color, 'image/png');
+        uploadedImageURL_color = URL.createObjectURL(image);
+
+        uploadedImageURL_gray = URL.createObjectURL(base64toBlob(data.gray, 'image/png'));
+        uploadedImageURL_nobg = URL.createObjectURL(base64toBlob(data.nobg, 'image/png'));
+        uploadedImageURL_color_blur = URL.createObjectURL(base64toBlob(data.color_blur, 'image/png'));
+        uploadedImageURL_gray_blur = URL.createObjectURL(base64toBlob(data.gray_blur, 'image/png'));
+        uploadedImageURL_nobg_blur = URL.createObjectURL(base64toBlob(data.nobg_blur, 'image/png'));
+    })
+    .then(() => {
+            createIntensityHistogram();
+        })
     .then(() => {document.getElementById('defaultImage').style.display = 'none';})
+    .then(() => fetchOriginalEntropyData())
+    .then(() => {console.log('Experiment loaded.');})
     .then(() => processImage())
+    .then(() => {console.log('Experiment loaded.2');})
     .then(() => processEntropyImage())
+    .then(() => {console.log('Experiment loaded.3');})
     .then(() => getImageType())
+    .then(() => {console.log('Experiment loaded.4');})
     .then(() => enableControls()) // Enable controls after everything is loaded
+    .then(() => {console.log('Experiment loaded.5');})
     .then(() => removeWorkingMessage())
     .catch(error => {
         console.error('Error:', error);
@@ -735,6 +784,7 @@ document.getElementById('index_evaluation').addEventListener('click', async func
         alert('Evaluation completed. Check the console for the results.' + '\n' + 'Evaluation results: ' + displayNum + '%');
         }
     )
+    .then(() => {deactivateCurrentExperiment();})
     .then(() => {
         // redirect to the '/' page
         window.location.href = '/';})
@@ -742,7 +792,6 @@ document.getElementById('index_evaluation').addEventListener('click', async func
 });
 // window.addEventListener('resize', function() { magnify('imageCanvas', 4); }); // this ensures the magnifying glass is redrawn when the window is resized
 window.addEventListener('resize', redrawCanvases ); // this ensures the magnifying glass is redrawn when the window is resized
-
 
 // when the user leaves the expertGuess field and the value is not empty, the min and max values will be updated
 document.getElementById('expertGuess').addEventListener('change', function() {
@@ -760,10 +809,21 @@ document.getElementById('expertGuess').addEventListener('change', function() {
         var  formData = new FormData();
         formData.append('expertGuess', value/100);
         const uniqueQuery = '?nocache=' + new Date().getTime();
-        fetch('/update-expert-guess' + uniqueQuery, { method: 'POST', body: formData })
+        fetch('/update_value/expert_guess' + uniqueQuery, { method: 'POST', body: formData })
     }
 });
 
+// if the user visits the page '/' and the experiment is active, load the experiment
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/is-experiment-active')
+    .then(response => response.json())
+    .then(data => {
+        if (data.active === true) {
+            console.log('Experiment is active. Loading experiment data...', data.experimentId);
+            loadExperiment(data.experimentId);
+        }
+    });
+});
 
 // keyboard shortcuts
 document.addEventListener('keydown', function(event) {
@@ -788,8 +848,10 @@ document.addEventListener('keydown', function(event) {
             redrawCanvases();
             break;
         case 's':
-            const uniqueQuery = '?nocache=' + new Date().getTime();
-            fetch('/save' + uniqueQuery, { method: 'POST' })
+            // const uniqueQuery = '?nocache=' + new Date().getTime();
+            // fetch('/save' + uniqueQuery, { method: 'POST' })
+            fetch('/save', { method: 'POST' })
             break;
     }
 });
+
