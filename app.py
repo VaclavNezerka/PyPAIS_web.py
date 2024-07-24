@@ -137,6 +137,33 @@ def logout():
     session.pop('authenticated',None)
     return redirect(url_for('login'))
 
+@app.route('/change-password',methods=['GET','POST'])
+@check_authentication
+def change_password():
+    if request.method=='GET':
+        form=forms.ChangePasswordForm()
+        return render_template('form.html',dynamic_content='Change password',form=form,session=session)
+    elif request.method=='POST':
+        form=forms.ChangePasswordForm()
+        if form.validate_on_submit():
+            query='SELECT pwd FROM public_users WHERE id=%s'
+            values=(session['user_id'],)
+            pwd_hash=execute_query(query=query,values=values)[0][0]
+            authenticated=ws.check_password_hash(pwhash=pwd_hash,password=form.old_password.data)
+            if authenticated:
+                query='UPDATE public_users SET pwd=%s WHERE id=%s'
+                values=(ws.generate_password_hash(form.new_password.data,method=os.environ['HASH_METHOD'],salt_length=int(os.environ['SALT_LENGTH']),),session['user_id'])
+                execute_query(query=query,values=values)
+                flash('Password changed successfully.','success')
+                return redirect('/user')
+            else:
+                flash('The old password is incorrect.','error')
+                return render_template('form.html',dynamic_content='Change password',form=form,session=session)
+        else:
+            return render_template('form.html',dynamic_content='Change password',form=form,session=session)
+    else:
+        return redirect('/')
+
 @app.route('/login',methods=['GET','POST'])
 def login():
     logout()
@@ -189,6 +216,24 @@ def experiments():
     records=[('id','time_stamp','expert_guess', 'asphalt_ratio')]
     records.append(execute_query("SELECT id, time_stamp, expert_guess, asphalt_ratio FROM experiments where added_by_user=%s AND current_state='finished' ",(session['user_id'],)))
     return render_template('experiments.html',records=records,session=session,dynamic_content='Experiments')
+
+
+
+@app.route('/user',methods=['GET'])
+@check_authentication
+def user():
+    user_id = session['user_id']
+    if user_id!=session['user_id']:
+        flash('You do not have permission to access this page.','error')
+        return redirect('/')
+    query = 'SELECT first_name, last_name, username, e_mail, company FROM public_users WHERE id=%s'
+    user_data = execute_query(query, (user_id,))
+    user_data_dict = {'first_name': user_data[0][0],
+                      'last_name': user_data[0][1],
+                      'username': user_data[0][2],
+                      'e_mail': user_data[0][3],
+                      'company': user_data[0][4]}
+    return render_template('user.html',session=session,dynamic_content=user_data_dict)
 
 @app.route('/register',methods=['GET','POST'])
 def register():

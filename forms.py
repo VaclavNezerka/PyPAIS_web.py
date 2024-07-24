@@ -74,6 +74,13 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password',validators=[DataRequired()])
     login=SubmitField('Login')
     
+class ChangePasswordForm(FlaskForm):
+    # username = StringField('Username',validators=[DataRequired(),Exists(tablename='public_users')])
+    old_password = PasswordField('Old password',validators=[DataRequired()])
+    new_password = PasswordField('New password',validators=[DataRequired(),RequiredLength(min=8)])
+    confirm_new_password = PasswordField('Confirm new password',validators=[DataRequired(), EqualTo('new_password')])
+    submit = SubmitField('Submit')
+
 
 # class RegistrationFormCompany(FlaskForm):
 #     # in future - register companies in a smarter way

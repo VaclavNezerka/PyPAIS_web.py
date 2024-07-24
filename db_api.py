@@ -30,6 +30,11 @@ def db_connection(func):
     return wrapper
 
 @db_connection
+def change_password(cur, conn, values):
+    cur.execute('UPDATE users SET pwd=%s WHERE username=%s', values)
+    conn.commit()
+
+@db_connection
 def save_new_user_db(cur, conn , values):
     try:
         cur.execute('INSERT INTO users (username, e_mail, first_name, last_name, company, pwd) '

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+{% block content %}
+
+
+<html>
+    <head>
+        <title>User Informations</title>
+            <link rel="stylesheet" href="/static/styles.css">
+        <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
+    </head> 
+    <body>
+        <div class="container">
+            <!-- First Row: Image Upload -->
+            <div class="row">
+                <h1>User Informations</h1>
+            </div>
+            <div class="row">
+                <div class="column">
+                    <img src="/static/def_profile_picture.jpg" alt="Profile Picture" width="200" height="200" >
+                </div>
+                <div class="column">            
+                        <h3>Username: {{ dynamic_content.username }}</h3>
+                        <h3>First Name: {{ dynamic_content.first_name }}</h3>
+                        <h3>Last Name: {{ dynamic_content.last_name }}</h3>
+                        <h3>Company: {{ dynamic_content.company }}</h3>
+                        <h3>Email: {{ dynamic_content.e_mail }}</h3>
+                </div>
+                <div class="column">        
+                    <div class="row">
+                        <button id="editPersonalInformations" type=submit >Edit Personal Informations</button>
+                    </div>
+                    <div class="row">
+                        <button id="changePasswordButton" type=submit >Change Password</button>
+                    </div>
+                </div>
+            </div>
+
+    </div>
+    
+    <script src="/static/script_user.js"></script>
+</body>
+</html>
+
+{% endblock content %}

@@ -113,3 +113,4 @@ GRANT INSERT ON experiments TO pypais_small;
 GRANT ALL PRIVILEGES ON experiments TO pypais_small;
 
 GRANT USAGE, SELECT ON SEQUENCE experiments_id_seq TO pypais_small;
+GRANT UPDATE ON public_users TO pypais_small;
