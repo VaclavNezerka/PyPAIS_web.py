@@ -137,6 +137,31 @@ def logout():
     session.pop('authenticated',None)
     return redirect(url_for('login'))
 
+@app.route('/edit-personal-information',methods=['GET','POST'])
+@check_authentication
+def edit_personal_information():
+    if request.method=='GET':
+        form=forms.EditPersonalInformationForm()
+        return render_template('form.html',dynamic_content='Change personal information',form=form,session=session)
+    elif request.method=='POST':
+        form=forms.EditPersonalInformationForm()
+        if form.validate_on_submit():
+            for field in form:
+                if field.data:
+                    print(field)
+                    print(field.name)
+                    if field.name == 'csrf_token':
+                        continue
+                    query = f'UPDATE public_users SET {field.name}=%s WHERE id=%s'
+                    values = (field.data, session['user_id'])
+                    execute_query(query, values)
+            flash('Personal information changed successfully.','success')
+            return redirect('/user')
+        else:
+            return render_template('form.html',dynamic_content='Change personal info',form=form,session=session)
+    else:
+        return redirect('/')
+
 @app.route('/change-password',methods=['GET','POST'])
 @check_authentication
 def change_password():

@@ -80,7 +80,27 @@ class ChangePasswordForm(FlaskForm):
     new_password = PasswordField('New password',validators=[DataRequired(),RequiredLength(min=8)])
     confirm_new_password = PasswordField('Confirm new password',validators=[DataRequired(), EqualTo('new_password')])
     submit = SubmitField('Submit')
+    
+class EditPersonalInformationForm(FlaskForm):
+    # default values are taken from the database
+    username = StringField('Username')
+    first_name = StringField('First name')
+    last_name = StringField('Last name')
+    submit = SubmitField('Submit')
 
+    def validate(self, **kwargs):
+        #   control that at least one field is filled in 
+        if not any([self.username.data,self.first_name.data,self.last_name.data]):
+            flash('At least one field must be filled in.')
+            return False
+            # raise ValidationError('At least one field must be filled in.')
+        return super(EditPersonalInformationForm, self).validate(**kwargs)  
+
+class EditEmailForm(FlaskForm):
+    # default values are taken from the database
+    e_mail = StringField('Email address',validators=[DataRequired(), Email()])
+    submit = SubmitField('Submit')
+    
 
 # class RegistrationFormCompany(FlaskForm):
 #     # in future - register companies in a smarter way
