@@ -57,7 +57,7 @@ def RequiredLength(min=1,max=50):
 #     return exists
 
 class RegistrationFormUser(FlaskForm):    
-    username = StringField('Username',validators=[DataRequired(),IsUnique(tablename='public_users')])
+    username = StringField('Username',validators=[DataRequired(),IsUnique(tablename='public_users'),RequiredLength(min=1,max=50)])
     e_mail = StringField('Email address',validators=[DataRequired(), Email(),IsUnique(tablename='public_users')])
     first_name = StringField('First name',validators=[DataRequired()])
     last_name = StringField('Last name',validators=[DataRequired()])
@@ -83,7 +83,7 @@ class ChangePasswordForm(FlaskForm):
     
 class EditPersonalInformationForm(FlaskForm):
     # default values are taken from the database
-    username = StringField('Username')
+    username = StringField('Username',validators=[IsUnique(tablename='public_users')])
     first_name = StringField('First name')
     last_name = StringField('Last name')
     submit = SubmitField('Submit')
@@ -96,9 +96,9 @@ class EditPersonalInformationForm(FlaskForm):
             # raise ValidationError('At least one field must be filled in.')
         return super(EditPersonalInformationForm, self).validate(**kwargs)  
 
-class EditEmailForm(FlaskForm):
+class ChangeEmailForm(FlaskForm):
     # default values are taken from the database
-    e_mail = StringField('Email address',validators=[DataRequired(), Email()])
+    e_mail = StringField('New email address',validators=[DataRequired(), Email(), IsUnique(tablename='public_users')])
     submit = SubmitField('Submit')
     
 

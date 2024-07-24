@@ -137,6 +137,25 @@ def logout():
     session.pop('authenticated',None)
     return redirect(url_for('login'))
 
+@app.route('/change-email',methods=['GET','POST'])
+@check_authentication
+def change_email():
+    if request.method=='GET':
+        form=forms.ChangeEmailForm()
+        return render_template('form.html',dynamic_content='Change email',form=form,session=session)
+    elif request.method=='POST':
+        form=forms.ChangeEmailForm()
+        if form.validate_on_submit():
+            query='UPDATE public_users SET e_mail=%s WHERE id=%s'
+            values=(form.e_mail.data,session['user_id'])
+            execute_query(query,values)
+            flash('Email changed successfully.','success')
+            return redirect('/user')
+        else:
+            return render_template('form.html',dynamic_content='Change email',form=form,session=session)
+    else:
+        return redirect('/')
+
 @app.route('/edit-personal-information',methods=['GET','POST'])
 @check_authentication
 def edit_personal_information():
