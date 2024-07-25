@@ -245,12 +245,17 @@ function removeBackground(formData) {
     return new Promise((resolve, reject) => {
         const uniqueQuery = '?nocache=' + new Date().getTime();
         fetch('/remove-background' + uniqueQuery, { method: 'POST', body: formData })
-        .then(response => response.blob())
-        .then(blob => {
-            const url = URL.createObjectURL(blob);
+        .then(response => response.json())
+        .then(data => {
+            let url = URL.createObjectURL(base64toBlob(data.nobg, 'image/png'));
             uploadedImageURL_nobg = url;
             if (uploadedImageURL_nobg_blur == null) {
                 uploadedImageURL_nobg_blur = url;
+            }
+            let url2 = URL.createObjectURL(base64toBlob(data.original_image, 'image/png'));
+            uploadedImageURL_color = url2;
+            if (uploadedImageURL_color_blur == null) {
+                uploadedImageURL_color_blur = url2;
             }
             resolve();
         })
@@ -259,6 +264,17 @@ function removeBackground(formData) {
             reject(error);
         });
     });
+
+    // old code
+    // .then(response => response.blob())
+    // .then(blob => {
+    //     const url = URL.createObjectURL(blob);
+    //     uploadedImageURL_nobg = url;
+    //     if (uploadedImageURL_nobg_blur == null) {
+    //         uploadedImageURL_nobg_blur = url;
+    //     }
+    //     resolve();
+    // })
 }
 
 
@@ -676,8 +692,15 @@ function activateExperiment() {
 
 function deactivateCurrentExperiment() {
     return new Promise((resolve, reject) => {
-        const uniqueQuery = '?nocache=' + new Date().getTime();
-        fetch('/deactivate-experiment/null' + uniqueQuery, { method: 'POST' })
+        fetch('is-experiment-active', { method: 'GET' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.active === false) {
+                resolve();
+            } else {
+                return fetch('/deactivate-experiment/' + String(data.experimentId), { method: 'POST' });
+            }
+        })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
@@ -736,14 +759,13 @@ function loadExperiment(id) {
         document.getElementById('blurValue').value = data.blurValue;
         document.getElementById('expertGuess').value = data.expertGuess;    
 
-        const image = base64toBlob(data.color, 'image/png');
-        uploadedImageURL_color = URL.createObjectURL(image);
-
+        uploadedImageURL_color = URL.createObjectURL(base64toBlob(data.color, 'image/png'));
         uploadedImageURL_gray = URL.createObjectURL(base64toBlob(data.gray, 'image/png'));
         uploadedImageURL_nobg = URL.createObjectURL(base64toBlob(data.nobg, 'image/png'));
         uploadedImageURL_color_blur = URL.createObjectURL(base64toBlob(data.color_blur, 'image/png'));
         uploadedImageURL_gray_blur = URL.createObjectURL(base64toBlob(data.gray_blur, 'image/png'));
         uploadedImageURL_nobg_blur = URL.createObjectURL(base64toBlob(data.nobg_blur, 'image/png'));
+
     })
     .then(() => {
             createIntensityHistogram();
@@ -759,10 +781,10 @@ function loadExperiment(id) {
     .then(() => {console.log('Experiment loaded.4');})
     .then(() => enableControls()) // Enable controls after everything is loaded
     .then(() => {console.log('Experiment loaded.5');})
-    .then(() => removeWorkingMessage())
     .catch(error => {
         console.error('Error:', error);
-    });
+    })
+    .finally(() => removeWorkingMessage());
 }
 
 // Global event listeners
@@ -784,7 +806,7 @@ document.getElementById('index_evaluation').addEventListener('click', async func
         alert('Evaluation completed. Check the console for the results.' + '\n' + 'Evaluation results: ' + displayNum + '%');
         }
     )
-    .then(() => {deactivateCurrentExperiment();})
+    .then(() => deactivateCurrentExperiment())
     .then(() => {
         // redirect to the '/' page
         window.location.href = '/';})

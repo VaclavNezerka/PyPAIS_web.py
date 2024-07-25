@@ -358,8 +358,6 @@ def deactivate_experiment_caller(id):
     return deactivate_experiment(id)
 
 def deactivate_experiment(id):
-    if id == 'null':
-        id = None
     if id is None:
         id = ts[session['user_id']].experiment_id
         if id is None:
@@ -439,17 +437,14 @@ def load_experiment(id):
         gray_image = image.convert('L')
         ts[session['user_id']].gray_original = np.array(gray_image)        
         ts[session['user_id']].gray = blur_image(ts[session['user_id']].values.blur, ts[session['user_id']].gray_original) 
-        print('HMM2')
                 
         # encode the images to string
         encoded_gray = encode_to_png(ts[session['user_id']].gray_original)
         encoded_color = encode_to_png(ts[session['user_id']].color_original)
         encoded_no_bg = encode_to_png(ts[session['user_id']].color_original*ts[session['user_id']].aggregate_mask[:,:,None])
-        print('HMM3')
         encoded_gray = base64.b64encode(encoded_gray).decode('utf-8')
         encoded_color = base64.b64encode(encoded_color).decode('utf-8')
         encoded_no_bg = base64.b64encode(encoded_no_bg).decode('utf-8')
-        print('HMM4')
         # blur the images
         encoded_no_bg_blur = encode_to_png(ts[session['user_id']].color*ts[session['user_id']].aggregate_mask[:,:,None])
         encoded_gray_blur = encode_to_png(ts[session['user_id']].gray)
@@ -586,26 +581,26 @@ def remove_picture_background():
     # read the necessary properties
     file = request.files['file']
     # check wether the file is .heic and if so, convert it to .png
+    threshold=128 #consider changing this to a value from the form that user can set # threshold=request.form.get('threshold')
     if file.filename[-len('.HEIC'):].upper() == '.HEIC':
         image = Image.open(file.stream)
         unique_query = str(request.args.get('nocache')) + '_' + str(session['user_id'])
         path = f'temp/temp_{unique_query}.png'
         image.save(path)
         image = Image.open(path)
+        print('SHAPE ORIGINAL', image.size)
+        image = np.concatenate((np.array(image), np.ones((image.size[1], image.size[0], 1), dtype=np.uint8)*255), axis=2)
+        ts[session['user_id']].color_original = image
     else:
         image = Image.open(file.stream)
+        ts[session['user_id']].color_original = np.array(image)
     # image = request.form.get('image')
     # image=np.array(request.form.get('image'),dtype=np.int8)
     
-    
-    threshold=128 #consider changing this to a value from the form that user can set # threshold=request.form.get('threshold')
-
-    # deepcopy the image
-    ts[session['user_id']].color_original = np.array(image)
-
+    print('SAVED SHAPE ORIGINAL', ts[session['user_id']].color_original.shape)
     # remove the background
     image = np.array(remove(image))
-
+    
     # if file.filename[-len('.HEIC'):].upper() == '.HEIC':
     #     print('HEIC file detected. TRANSPOSE')
     #     image = image.transpose((1,0,2))
@@ -630,7 +625,11 @@ def remove_picture_background():
     if file.filename[-len('.HEIC'):].upper() == '.HEIC':
         # delete the temporary file
         os.remove(path)
-    return encode_to_png(image), 200, {'Content-Type': 'image/png'}
+        
+    json_response = {'original_image': base64.b64encode(encode_to_png(ts[session['user_id']].color_original)).decode('utf-8'),
+                     'nobg': base64.b64encode(encode_to_png(ts[session['user_id']].color)).decode('utf-8')}
+    return json.dumps(json_response), 200, {'Content-Type': 'application/json'}
+    # return encode_to_png(image), 200, {'Content-Type': 'image/png'}
 
 
 @app.route('/entropy', methods=['POST'])
