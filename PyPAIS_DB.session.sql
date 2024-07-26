@@ -44,18 +44,21 @@ ALTER table experiments add column intensity_min_threshold INT DEFAULT NULL;
 ALTER table experiments add column intensity_max_threshold INT DEFAULT NULL;
 ALTER table experiments add column blur INT DEFAULT NULL;
 
+ALTER TABLE experiments ADD COLUMN intensity_min_threshold_1 INT DEFAULT NULL;
+ALTER TABLE experiments ADD COLUMN intensity_max_threshold_1 INT DEFAULT NULL;
+-- rename the intensity_min_threshold to intensity_min_threshold_0
+ALTER TABLE experiments RENAME COLUMN intensity_min_threshold TO intensity_min_threshold_0;
+ALTER TABLE experiments RENAME COLUMN intensity_max_threshold TO intensity_max_threshold_0;
 -- alter table experiments add column finished BOOLEAN DEFAULT FALSE;
 
 
 INSERT INTO experiments (added_by_user) VALUES (31) RETURNING id;
 
-
-
 SELECT id, added_by_user, asphalt_ratio FROM experiments ORDER BY id DESC;
 -- SELECT * FROM experiments filter out the last 5 rows;
 -- SELECT * FROM experiments LIMIT 5 OFFSET (SELECT COUNT(*) FROM experiments)-5;
 -- SELECT id, entropy_min_threshold,entropy_max_threshold,intensity_min_threshold,intensity_max_threshold,blur FROM experiments LIMIT 5 OFFSET (SELECT COUNT(*) FROM experiments)-5;
-SELECT id, img_width, img_height, added_by_user, active, entropy_min_threshold,entropy_max_threshold,intensity_min_threshold,intensity_max_threshold,blur FROM experiments;
+SELECT id, img_width, img_height, added_by_user, active, entropy_min_threshold,entropy_max_threshold,intensity_min_threshold_0,intensity_max_threshold_0,intensity_min_threshold_1,intensity_max_threshold_1,blur FROM experiments ORDER BY id DESC LIMIT 5;
 UPDATE experiments SET added_by_user=26, asphalt_ratio=0.5 WHERE id=91;
 -- delete from experiments where id=1;
 

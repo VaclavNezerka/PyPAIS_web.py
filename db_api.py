@@ -51,7 +51,14 @@ def save_new_user_db(cur, conn , values):
 
 @db_connection
 def load_experiment_from_db(cur,conn, id):
-    cur.execute('SELECT * FROM experiments WHERE id=%s', (id,))
+    cur.execute("""SELECT img_width, img_height,
+                img, img_mask_asphalt, img_mask_aggregate,
+                expert_guess, info,
+                entropy_min_threshold, entropy_max_threshold, 
+                intensity_min_threshold_0,intensity_max_threshold_0,
+                intensity_min_threshold_1,intensity_max_threshold_1,
+                blur
+                FROM experiments WHERE id=%s""", (id,))
     response = cur.fetchall()
     return response
 

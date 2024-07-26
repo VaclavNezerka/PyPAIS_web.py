@@ -72,115 +72,141 @@ function disableControls() {
 
 document.getElementById('fileInput').addEventListener('change', uploadImage);
 
+// auxiliary functions for the string manipulation
+function matchCase(text, pattern) {
+    let result = '';
+    for (let i = 0; i < text.length; i++) {
+        if (i < pattern.length && pattern[i] === pattern[i].toUpperCase()) {
+            result += text[i].toUpperCase();
+        } else {
+            result += text[i].toLowerCase();
+        }
+    }
+    return result;
+}
+
+function replaceKeepCase(str, search, replace) {
+    const regex = new RegExp(search, 'gi');
+    return str.replace(regex, (match) => {
+        return matchCase(replace, match);
+    });
+}
+
 // These listeners only update the mask, not the histogram
-document.getElementById('minThresholdSlider').addEventListener('change', function() {
-    let minVal = parseInt(this.value);
-    let maxVal = parseInt(document.getElementById('maxThresholdSlider').value);
-    if (minVal > maxVal) {
-        document.getElementById('maxThresholdSlider').value = minVal;
-        document.getElementById('maxThresholdValue').value = minVal;
-    }
-    document.getElementById('minThresholdValue').value = minVal;
-    validateAndUpdate()
-    .then(() => fetch('/save_value/intensity_min_threshold', { method: 'POST' }))
-    .then(() => fetch('/save_value/intensity_max_threshold', { method: 'POST' }));
-});
-document.getElementById('minThresholdValue').addEventListener('change', function() {
-    let minVal = Math.max(0, Math.min(255, parseInt(this.value)));
-    let maxVal = parseInt(document.getElementById('maxThresholdSlider').value);
-    if (minVal > maxVal) {
-        document.getElementById('maxThresholdSlider').value = minVal;
-        document.getElementById('maxThresholdValue').value = minVal;
-    }
-    document.getElementById('minThresholdSlider').value = minVal;
-    this.value = minVal; // Correct the value in case it was out of bounds
-    validateAndUpdate()
-    .then(() => fetch('/save_value/intensity_min_threshold', { method: 'POST' }))
-    .then(() => fetch('/save_value/intensity_max_threshold', { method: 'POST' }))
-});
+// Event listeners for intensity thresholds 1 - always higher than 0
+function validateThresholds(id) {
+    let input_value = document.getElementById(id).value;
+    let val = Math.max(0, Math.min(255, parseInt(input_value)));
+    // value/slider
+    document.getElementById(id).value = val;
+    comp_id = id.includes('Value') ? id.replace('Value', 'Slider') : id.replace('Slider', 'Value');
+    document.getElementById(comp_id).value = val;
+    
+    // the other slider id
+    if (id.toLowerCase().includes('min')) {
+        mm_id = replaceKeepCase(id,'min', 'max');
+        if (val > document.getElementById(mm_id).value) {
+            document.getElementById(mm_id).value = val;
+            document.getElementById(mm_id.replace('Value', 'Slider')).value = val;
+            document.getElementById(mm_id.replace('Value', 'Slider')).dispatchEvent(new Event('change'));
+            document.getElementById(mm_id).dispatchEvent(new Event('change'));
+        }
+    } else if (id.toLowerCase().includes('max')) {
+        mm_id = replaceKeepCase(id,'max', 'min');
+        if (val < document.getElementById(mm_id).value) {
+            document.getElementById(mm_id).value = val;
+            document.getElementById(mm_id.replace('Value', 'Slider')).value = val;
+            document.getElementById(mm_id).dispatchEvent(new Event('change'));
+            document.getElementById(mm_id.replace('Value', 'Slider')).dispatchEvent(new Event('change'));
+        }
+    }   
 
-document.getElementById('maxThresholdSlider').addEventListener('change', function() {
-    let maxVal = parseInt(this.value);
-    let minVal = parseInt(document.getElementById('minThresholdSlider').value);
-    if (maxVal < minVal) {
-        document.getElementById('minThresholdSlider').value = maxVal;
-        document.getElementById('minThresholdValue').value = maxVal;
+    if (id.endsWith('1')){
+        if (val < document.getElementById('minThresholdSlider0').value) {
+            document.getElementById('minThresholdSlider0').value = val;
+            document.getElementById('minThresholdValue0').value = val;
+        }
+        if (val <  document.getElementById('maxThresholdSlider0').value) {
+            document.getElementById('maxThresholdSlider0').value = val;
+            document.getElementById('maxThresholdValue0').value = val;
+        }
+    } else if (id.endsWith('0')) {
+        if (val > document.getElementById('minThresholdSlider1').value) {
+            document.getElementById('minThresholdSlider1').value = val;
+            document.getElementById('minThresholdValue1').value = val;
+        }
+        if (val > document.getElementById('maxThresholdSlider1').value) {
+            document.getElementById('maxThresholdSlider1').value = val;
+            document.getElementById('maxThresholdValue1').value = val;
+        }
     }
-    document.getElementById('maxThresholdValue').value = maxVal;
-    validateAndUpdate()
-    .then(() => fetch('/save_value/intensity_max_threshold', { method: 'POST' }))
-    .then(() => fetch('/save_value/intensity_min_threshold', { method: 'POST' }));
-});
-document.getElementById('maxThresholdValue').addEventListener('change', function() {
-    let maxVal = Math.max(0, Math.min(255, parseInt(this.value)));
-    let minVal = parseInt(document.getElementById('minThresholdSlider').value);
-    if (maxVal < minVal) {
-        document.getElementById('minThresholdSlider').value = maxVal;
-        document.getElementById('minThresholdValue').value = maxVal;
-    }
-    document.getElementById('maxThresholdSlider').value = maxVal;
-    this.value = maxVal; // Correct the value in case it was out of bounds
-    validateAndUpdate()
-    .then(() => fetch('/save_value/intensity_max_threshold', { method: 'POST' }))
-    .then(() => fetch('/save_value/intensity_min_threshold', { method: 'POST' }));
-});
+    validateAndUpdate();
+}
 
-// Event listeners for entropy min threshold slider and value
+function saveThresholds(id) {
+    if (id.includes('entropy')) {
+        fetch('/save_value/entropy_min_threshold', { method: 'POST' });
+        fetch('/save_value/entropy_max_threshold', { method: 'POST' });
+    } else {
+        fetch('/save_value/intensity_min_threshold_0', { method: 'POST' });
+        fetch('/save_value/intensity_max_threshold_0', { method: 'POST' });
+        fetch('/save_value/intensity_min_threshold_1', { method: 'POST' });
+        fetch('/save_value/intensity_max_threshold_1', { method: 'POST' });
+        fetch('/save_value/entropy_min_threshold', { method: 'POST' });
+        fetch('/save_value/entropy_max_threshold', { method: 'POST' });
+    }
+}
+
+// 1 - intensity
+document.getElementById('minThresholdSlider1').addEventListener('change', function() {
+    validateThresholds('minThresholdSlider1');
+    saveThresholds('minThresholdSlider1');
+});
+document.getElementById('minThresholdValue1').addEventListener('change', function() {
+    validateThresholds('minThresholdValue1');
+    saveThresholds('minThresholdValue1');
+});
+document.getElementById('maxThresholdSlider1').addEventListener('change', function() {
+    validateThresholds('maxThresholdSlider1');
+    saveThresholds('maxThresholdSlider1');
+});
+document.getElementById('maxThresholdValue1').addEventListener('change', function() {
+    validateThresholds('maxThresholdValue1');
+    saveThresholds('maxThresholdValue1');
+});
+// 0 - intensity
+document.getElementById('minThresholdSlider0').addEventListener('change', function() {
+    validateThresholds('minThresholdSlider0');
+    saveThresholds('minThresholdSlider0');
+});
+document.getElementById('minThresholdValue0').addEventListener('change', function() {
+    validateThresholds('minThresholdValue0');
+    saveThresholds('minThresholdValue0');
+});
+document.getElementById('maxThresholdSlider0').addEventListener('change', function() {
+    validateThresholds('maxThresholdSlider0');
+    saveThresholds('maxThresholdSlider0');
+});
+document.getElementById('maxThresholdValue0').addEventListener('change', function() {
+    validateThresholds('maxThresholdValue0');
+    saveThresholds('maxThresholdValue0');
+});
+// Entopy
 document.getElementById('entropyMinThresholdSlider').addEventListener('change', function() {
-    let minVal = parseInt(this.value);
-    let maxVal = parseInt(document.getElementById('entropyMaxThresholdSlider').value);
-    if (minVal > maxVal) {
-        document.getElementById('entropyMaxThresholdSlider').value = minVal;
-        document.getElementById('entropyMaxThresholdValue').value = minVal;
-    }
-    document.getElementById('entropyMinThresholdValue').value = minVal;
-    validateAndUpdate()
-    .then(()=>fetch('/save_value/entropy_min_threshold',method=['POST']))
-    .then(()=>fetch('/save_value/entropy_max_threshold',method=['POST']));
+    validateThresholds('entropyMinThresholdSlider');
+    saveThresholds('entropyMinThresholdSlider');
 });
-
 document.getElementById('entropyMinThresholdValue').addEventListener('change', function() {
-    let minVal = Math.max(0, Math.min(255, parseInt(this.value)));
-    let maxVal = parseInt(document.getElementById('entropyMaxThresholdSlider').value);
-    if (minVal > maxVal) {
-        document.getElementById('entropyMaxThresholdSlider').value = minVal;
-        document.getElementById('entropyMaxThresholdValue').value = minVal;
-    }
-    document.getElementById('entropyMinThresholdSlider').value = minVal;
-    this.value = minVal; // Correct the value in case it was out of bounds
-    validateAndUpdate()
-    .then(()=>fetch('/save_value/entropy_min_threshold',method=['POST']))
-    .then(()=>fetch('/save_value/entropy_max_threshold',method=['POST']));
-     // Update the entropy image mask
+    validateThresholds('entropyMinThresholdValue');
+    saveThresholds('entropyMinThresholdValue');
 });
-
-// Event listeners for entropy max threshold slider and value
 document.getElementById('entropyMaxThresholdSlider').addEventListener('change', function() {
-    let maxVal = parseInt(this.value);
-    let minVal = parseInt(document.getElementById('entropyMinThresholdSlider').value);
-    if (maxVal < minVal) {
-        document.getElementById('entropyMinThresholdSlider').value = maxVal;
-        document.getElementById('entropyMinThresholdValue').value = maxVal;
-    }
-    document.getElementById('entropyMaxThresholdValue').value = maxVal;
-    validateAndUpdate()
-    .then(()=>fetch('/save_value/entropy_max_threshold',method=['POST']))
-    .then(()=>fetch('/save_value/entropy_min_threshold',method=['POST']));
-    // Update the entropy image mask
+    validateThresholds('entropyMaxThresholdSlider');
+    saveThresholds('entropyMaxThresholdSlider');
 });
-
 document.getElementById('entropyMaxThresholdValue').addEventListener('change', function() {
-    let maxVal = Math.max(0, Math.min(255, parseInt(this.value)));
-    let minVal = parseInt(document.getElementById('entropyMinThresholdSlider').value);
-    if (maxVal < minVal) {
-        document.getElementById('entropyMinThresholdSlider').value = maxVal;
-        document.getElementById('entropyMinThresholdValue').value = maxVal;
-    }
-    document.getElementById('entropyMaxThresholdSlider').value = maxVal;
-    this.value = maxVal; // Correct the value in case it was out of bounds
-    validateAndUpdate() // Update the entropy image mask
-    .then(()=>fetch('/save_value/entropy_max_threshold',method=['POST']))
-    .then(()=>fetch('/save_value/entropy_min_threshold',method=['POST']));
+    validateThresholds('entropyMaxThresholdValue');
+    saveThresholds('entropyMaxThresholdValue');
 });
 
 document.getElementById('blurValue').addEventListener('change', async function() {
@@ -264,17 +290,6 @@ function removeBackground(formData) {
             reject(error);
         });
     });
-
-    // old code
-    // .then(response => response.blob())
-    // .then(blob => {
-    //     const url = URL.createObjectURL(blob);
-    //     uploadedImageURL_nobg = url;
-    //     if (uploadedImageURL_nobg_blur == null) {
-    //         uploadedImageURL_nobg_blur = url;
-    //     }
-    //     resolve();
-    // })
 }
 
 
@@ -336,8 +351,10 @@ function fetchOriginalEntropyData() {
 function processImage() {
     return new Promise((resolve, reject) => {
         var formData = new FormData();
-        formData.append('minThreshold', document.getElementById('minThresholdSlider').value);
-        formData.append('maxThreshold', document.getElementById('maxThresholdSlider').value);
+        formData.append('minThreshold0', document.getElementById('minThresholdSlider0').value);
+        formData.append('maxThreshold0', document.getElementById('maxThresholdSlider0').value);
+        formData.append('minThreshold1', document.getElementById('minThresholdSlider1').value);
+        formData.append('maxThreshold1', document.getElementById('maxThresholdSlider1').value);
         formData.append('entropyMinThreshold', document.getElementById('entropyMinThresholdSlider').value);
         formData.append('entropyMaxThreshold', document.getElementById('entropyMaxThresholdSlider').value);
         formData.append('imageId', 'gray');
@@ -386,8 +403,10 @@ async function changeRedOverlay() {
 function processEntropyImage() {
     return new Promise((resolve, reject) => {
         var formData = new FormData();
-        formData.append('minThreshold', document.getElementById('minThresholdSlider').value);
-        formData.append('maxThreshold', document.getElementById('maxThresholdSlider').value);
+        formData.append('minThreshold0', document.getElementById('minThresholdSlider0').value);
+        formData.append('maxThreshold0', document.getElementById('maxThresholdSlider0').value);
+        formData.append('minThreshold1', document.getElementById('minThresholdSlider1').value);
+        formData.append('maxThreshold1', document.getElementById('maxThresholdSlider1').value);
         formData.append('entropyMinThreshold', document.getElementById('entropyMinThresholdSlider').value);
         formData.append('entropyMaxThreshold', document.getElementById('entropyMaxThresholdSlider').value);
         formData.append('imageId', 'entropy');
@@ -541,7 +560,9 @@ function drawIntensityHistogram() {
         const intensity = data[i];
         histogram[intensity]++;
     }
-    drawHistogram(canvas, histogram, document.getElementById('minThresholdSlider').value, document.getElementById('maxThresholdSlider').value);
+    minThresholds = [document.getElementById('minThresholdSlider0').value,document.getElementById('minThresholdSlider1').value];
+    maxThresholds = [document.getElementById('maxThresholdSlider0').value,document.getElementById('maxThresholdSlider1').value];
+    drawHistogram(canvas, histogram, minThresholds, maxThresholds);
 }
 
 function drawEntropyHistogram() {
@@ -561,7 +582,9 @@ function drawEntropyHistogram() {
         histogram[value]++;
     }
 
-    drawHistogram(canvas, histogram, document.getElementById('entropyMinThresholdSlider').value, document.getElementById('entropyMaxThresholdSlider').value);
+    minThreshold = [document.getElementById('entropyMinThresholdSlider').value];
+    maxThreshold = [document.getElementById('entropyMaxThresholdSlider').value];
+    drawHistogram(canvas, histogram, minThreshold, maxThreshold);
 }
 
 function drawHistogram(canvas, histogram, minThreshold, maxThreshold) {
@@ -573,11 +596,30 @@ function drawHistogram(canvas, histogram, minThreshold, maxThreshold) {
     histogram = histogram.map(v => (v / maxHistogramValue) * height);
 
     const barWidth = width / histogram.length;
-    for (let i = 0; i < histogram.length; i++) {
-        ctx.beginPath();
-        ctx.rect(i * barWidth, height - histogram[i], barWidth, histogram[i]);
-        ctx.fillStyle = (i >= minThreshold && i <= maxThreshold) ? 'red' : 'black';
-        ctx.fill();
+
+    let start = 0; 
+    let end = histogram.length;
+    for (let k = 0; k < minThreshold.length; k++) {
+        if (k === 0) {
+            start = 0;
+            end = maxThreshold[k];
+            if (k === minThreshold.length - 1) {
+            end = histogram.length;
+            }
+        } 
+        if (k === minThreshold.length - 1 && k > 0) {
+            start = maxThreshold[k - 1];
+            end = histogram.length;
+        } else if (k > 0) {
+            start = maxThreshold[k - 1];
+            end = maxThreshold[k];
+        }
+        for (let i = start; i < end; i++) {
+            ctx.beginPath();
+            ctx.rect(i * barWidth, height - histogram[i], barWidth, histogram[i]);
+            ctx.fillStyle = (i >= minThreshold[k] && i <= maxThreshold[k]) ? 'red' : 'black';
+            ctx.fill();
+        }
     }
 }
 
@@ -626,8 +668,6 @@ function magnify(imgID, zoom) {
         y = e.pageY - a.top - window.pageYOffset;
 
         // since the canvas adjust its size to the screen, we need to scale the cursor position
-
-
         return {x : x, y : y};
     }
     
@@ -746,10 +786,14 @@ function loadExperiment(id) {
             return;
         } 
         // set the sliders and input boxes to the values from the experiment
-        document.getElementById('minThresholdSlider').value = data.minThreshold;
-        document.getElementById('minThresholdValue').value = data.minThreshold;
-        document.getElementById('maxThresholdSlider').value = data.maxThreshold;
-        document.getElementById('maxThresholdValue').value = data.maxThreshold;
+        document.getElementById('minThresholdSlider0').value = data.minThreshold0;
+        document.getElementById('minThresholdValue0').value = data.minThreshold0;
+        document.getElementById('maxThresholdSlider0').value = data.maxThreshold0;
+        document.getElementById('maxThresholdValue0').value = data.maxThreshold0;
+        document.getElementById('minThresholdSlider1').value = data.minThreshold1;
+        document.getElementById('minThresholdValue1').value = data.minThreshold1;
+        document.getElementById('maxThresholdSlider1').value = data.maxThreshold1;
+        document.getElementById('maxThresholdValue1').value = data.maxThreshold1;
         document.getElementById('entropyMinThresholdSlider').value = data.entropyMinThreshold;
         document.getElementById('entropyMinThresholdValue').value = data.entropyMinThreshold;
         document.getElementById('entropyMaxThresholdSlider').value = data.entropyMaxThreshold;
@@ -772,15 +816,10 @@ function loadExperiment(id) {
         })
     .then(() => {document.getElementById('defaultImage').style.display = 'none';})
     .then(() => fetchOriginalEntropyData())
-    .then(() => {console.log('Experiment loaded.');})
     .then(() => processImage())
-    .then(() => {console.log('Experiment loaded.2');})
     .then(() => processEntropyImage())
-    .then(() => {console.log('Experiment loaded.3');})
     .then(() => getImageType())
-    .then(() => {console.log('Experiment loaded.4');})
     .then(() => enableControls()) // Enable controls after everything is loaded
-    .then(() => {console.log('Experiment loaded.5');})
     .catch(error => {
         console.error('Error:', error);
     })
@@ -849,11 +888,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // keyboard shortcuts
 document.addEventListener('keydown', function(event) {
-    // lowercase the key
-    // press 'a' to toggle red overlay
-    // press 'b' to toggle sharpness
-    // press 'c' to change image type
-    // press 's' to save the image
     eventKey = event.key.toLowerCase();
     switch (eventKey) {
         case 'a':
@@ -869,11 +903,10 @@ document.addEventListener('keydown', function(event) {
             imageType.selectedIndex = (imageType.selectedIndex + 1) % imageType.options.length;
             redrawCanvases();
             break;
-        case 's':
-            // const uniqueQuery = '?nocache=' + new Date().getTime();
-            // fetch('/save' + uniqueQuery, { method: 'POST' })
-            fetch('/save', { method: 'POST' })
-            break;
+        // case 's':
+        //     // const uniqueQuery = '?nocache=' + new Date().getTime();
+        //     // fetch('/save' + uniqueQuery, { method: 'POST' })
+        //     fetch('/save', { method: 'POST' })
+        //     break;
     }
 });
-

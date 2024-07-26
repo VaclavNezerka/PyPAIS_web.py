@@ -44,8 +44,10 @@ class UserValues:
         
         # values currently accessible by the users
         self.blur = 0
-        self.intensity_min_threshold = None
-        self.intensity_max_threshold = None
+        self.intensity_min_threshold_0 = None
+        self.intensity_max_threshold_0 = None
+        self.intensity_min_threshold_1 = None
+        self.intensity_max_threshold_1 = None
         self.entropy_min_threshold = None
         self.entropy_max_threshold = None
         self.expert_guess = 0.        
@@ -409,28 +411,31 @@ def load_experiment(id):
                 flash('NO ID No active experiment found.','error')
                 return redirect('/queue')           
         response = load_experiment_from_db(id)
-        image_width = response[0][-1]
-        image_height = response[0][-2]
+        image_width = response[0][0]
+        image_height = response[0][1]
         print('Image width:', image_width)
         print('Image height:', image_height)
         print(response[0][-3])
-        ts[session['user_id']].color_original = np.frombuffer(response[0][3], dtype=np.uint8).reshape(image_height, image_width, 4)
-        ts[session['user_id']].asphalt_mask = np.frombuffer(response[0][4], dtype=bool).reshape(image_height, image_width)
-        ts[session['user_id']].aggregate_mask = np.frombuffer(response[0][5], dtype=bool).reshape(image_height, image_width)
+        ts[session['user_id']].color_original = np.frombuffer(response[0][2], dtype=np.uint8).reshape(image_height, image_width, 4)
+        ts[session['user_id']].asphalt_mask = np.frombuffer(response[0][3], dtype=bool).reshape(image_height, image_width)
+        ts[session['user_id']].aggregate_mask = np.frombuffer(response[0][4], dtype=bool).reshape(image_height, image_width)
         print('shapes')
         print(response[0][3].shape)
         print(ts[session['user_id']].aggregate_mask.shape)
         print(ts[session['user_id']].asphalt_mask.shape)
         print(ts[session['user_id']].color_original.shape)
-        ts[session['user_id']].values.expert_guess = response[0][6]
-        ts[session['user_id']].values.info = response[0][8]
-        ts[session['user_id']].values.entropy_min_threshold = response[0][-7]
-        ts[session['user_id']].values.entropy_max_threshold = response[0][-6]
-        ts[session['user_id']].values.intensity_min_threshold = response[0][-5]
-        ts[session['user_id']].values.intensity_max_threshold = response[0][-4]
-        ts[session['user_id']].values.blur = response[0][-3]
-        
-        print(ts[session['user_id']].values.blur)
+        ts[session['user_id']].values.expert_guess = response[0][5]
+        ts[session['user_id']].values.info = response[0][6]
+        ts[session['user_id']].values.entropy_min_threshold = response[0][7]
+        ts[session['user_id']].values.entropy_max_threshold = response[0][8]
+        ts[session['user_id']].values.intensity_min_threshold_0 = response[0][9]
+        ts[session['user_id']].values.intensity_max_threshold_0 = response[0][10]
+        ts[session['user_id']].values.intensity_min_threshold_1 = response[0][11]
+        ts[session['user_id']].values.intensity_max_threshold_1 = response[0][12]
+        ts[session['user_id']].values.blur = response[0][13]
+        print('Response')
+        print(response)
+
         ts[session['user_id']].color = blur_image(ts[session['user_id']].values.blur, ts[session['user_id']].color_original)
         # gray image
         image = Image.fromarray(ts[session['user_id']].color_original)        
@@ -454,8 +459,10 @@ def load_experiment(id):
         encoded_color_blur = base64.b64encode(encoded_color_blur).decode('utf-8')
         
         json_response = {'status': 'success',
-                         'minThreshold': ts[session['user_id']].values.intensity_min_threshold,
-                         'maxThreshold': ts[session['user_id']].values.intensity_max_threshold,
+                         'minThreshold0': ts[session['user_id']].values.intensity_min_threshold_0,
+                         'maxThreshold0': ts[session['user_id']].values.intensity_max_threshold_0,
+                         'minThreshold1': ts[session['user_id']].values.intensity_min_threshold_1,
+                         'maxThreshold1': ts[session['user_id']].values.intensity_max_threshold_1,
                          'entropyMinThreshold': ts[session['user_id']].values.entropy_min_threshold,
                          'entropyMaxThreshold': ts[session['user_id']].values.entropy_max_threshold,
                          'blurValue': ts[session['user_id']].values.blur,
@@ -494,7 +501,7 @@ def is_active():
 
 @app.route('/save_value/<string:value_name>',methods=['POST','GET'])
 def save_specific_value(value_name):
-    # try:
+    try:
         value_name = value_name.lower()
         value = ts[session['user_id']].values.__dict__[value_name]
         query = f'UPDATE experiments SET {value_name}=%s, asphalt_ratio=%s, img_mask_asphalt=%s WHERE id=%s'
@@ -504,8 +511,8 @@ def save_specific_value(value_name):
                   ts[session['user_id']].experiment_id)
         execute_query(query, values)
         return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
-    # except Exception as e:
-    #     return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
 
 @app.route('/save',methods=['POST'])
 def save_asphalt_record(**kwargs):
@@ -516,9 +523,9 @@ def save_asphalt_record(**kwargs):
     try:        
         if ts[session['user_id']].experiment_id is None:
             print('Inserting new record.')
-            query = 'INSERT INTO experiments (added_by_user, img_width, img_height, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state, asphalt_ratio, entropy_min_threshold, entropy_max_threshold, intensity_min_threshold, intensity_max_threshold, blur) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
-            print(ts[session['user_id']].color_original.shape)
-            print('shape!!!')
+            query = 'INSERT INTO experiments (added_by_user, img_width, img_height, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state, asphalt_ratio, entropy_min_threshold, entropy_max_threshold, intensity_min_threshold_0, intensity_max_threshold_0, intensity_min_threshold_1, intensity_max_threshold_1, blur) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
+            # print(ts[session['user_id']].color_original.shape)
+            # print('shape!!!')
             values = (session['user_id'], 
                     ts[session['user_id']].color_original.shape[1],
                     ts[session['user_id']].color_original.shape[0],
@@ -531,8 +538,10 @@ def save_asphalt_record(**kwargs):
                     evaluate_asphalt(),
                     ts[session['user_id']].values.entropy_min_threshold,
                     ts[session['user_id']].values.entropy_max_threshold,
-                    ts[session['user_id']].values.intensity_min_threshold,
-                    ts[session['user_id']].values.intensity_max_threshold,
+                    ts[session['user_id']].values.intensity_min_threshold_0,
+                    ts[session['user_id']].values.intensity_max_threshold_0,
+                    ts[session['user_id']].values.intensity_min_threshold_1,
+                    ts[session['user_id']].values.intensity_max_threshold_1,
                     ts[session['user_id']].values.blur)
             ts[session['user_id']].experiment_id = execute_query(query, values)[0][0]
             activate_experiment(ts[session['user_id']].experiment_id)
@@ -540,7 +549,7 @@ def save_asphalt_record(**kwargs):
         else:
             print('Updating record.')
             print(ts[session['user_id']].experiment_id)
-            query = 'UPDATE experiments SET img_width = %s, img_height = %s, img_mask_asphalt=%s, img_mask_aggregate=%s, expert_guess=%s, info=%s, current_state=%s, asphalt_ratio=%s, entropy_min_threshold=%s, entropy_max_threshold=%s, intensity_min_threshold=%s, intensity_max_threshold=%s, blur=%s WHERE id=%s'
+            query = 'UPDATE experiments SET img_width = %s, img_height = %s, img_mask_asphalt=%s, img_mask_aggregate=%s, expert_guess=%s, info=%s, current_state=%s, asphalt_ratio=%s, entropy_min_threshold=%s, entropy_max_threshold=%s, intensity_min_threshold_0=%s, intensity_max_threshold_0=%s, intensity_min_threshold_1=%s, intensity_max_threshold_1=%s, WHERE id=%s'
             values = (ts[session['user_id']].color_original.shape[1],
                       ts[session['user_id']].color_original.shape[0],
                       ts[session['user_id']].asphalt_mask.tobytes(),
@@ -551,8 +560,10 @@ def save_asphalt_record(**kwargs):
                       evaluate_asphalt(),
                       ts[session['user_id']].values.entropy_min_threshold,
                       ts[session['user_id']].values.entropy_max_threshold,
-                      ts[session['user_id']].values.intensity_min_threshold,
-                      ts[session['user_id']].values.intensity_max_threshold,
+                      ts[session['user_id']].values.intensity_min_threshold_0,
+                      ts[session['user_id']].values.intensity_max_threshold_0,
+                      ts[session['user_id']].values.intensity_min_threshold_1,
+                      ts[session['user_id']].values.intensity_max_threshold_1,
                       ts[session['user_id']].values.blur,
                       ts[session['user_id']].experiment_id)
             execute_query(query, values)
@@ -702,14 +713,18 @@ def blur_image(blur_value,image):
 def apply_mask():
     # Assuming the image's ID or a unique identifier is sent as part of the form data for key lookup
     image_id = request.form.get('imageId')
-    min_threshold = int(request.form.get('minThreshold', 0))
-    max_threshold = int(request.form.get('maxThreshold', 255))
+    min_threshold_0 = int(request.form.get('minThreshold0', 0))
+    max_threshold_0 = int(request.form.get('maxThreshold0', 255))
+    min_threshold_1 = int(request.form.get('minThreshold1', 0))
+    max_threshold_1 = int(request.form.get('maxThreshold1', 255))
     entropy_min_threshold = int(request.form.get('entropyMinThreshold', 0))
     entropy_max_threshold = int(request.form.get('entropyMaxThreshold', 255))
     
     # save the values
-    ts[session['user_id']].values.intensity_min_threshold = min_threshold
-    ts[session['user_id']].values.intensity_max_threshold = max_threshold
+    ts[session['user_id']].values.intensity_min_threshold_0 = min_threshold_0
+    ts[session['user_id']].values.intensity_max_threshold_0 = max_threshold_0
+    ts[session['user_id']].values.intensity_min_threshold_1 = min_threshold_1
+    ts[session['user_id']].values.intensity_max_threshold_1 = max_threshold_1
     ts[session['user_id']].values.entropy_min_threshold = entropy_min_threshold
     ts[session['user_id']].values.entropy_max_threshold = entropy_max_threshold    
     
@@ -718,11 +733,18 @@ def apply_mask():
     # np_entropy = cv2.imread('temp/entropy_temp.jpg', cv2.IMREAD_GRAYSCALE)
     np_gray = ts[session['user_id']].gray
     np_entropy = ts[session['user_id']].entropy
+    
+    min_thresholds = [min_threshold_0, min_threshold_1]
+    max_thresholds = [max_threshold_0, max_threshold_1]    
+    print('Thresholds:', min_thresholds, max_thresholds)
+    print('Entropy thresholds:', entropy_min_threshold, entropy_max_threshold)
     if image_id == 'gray':
-        overlay_image = apply_red_overlay(np_gray, np_gray, np_entropy, min_threshold, max_threshold,
+        print('Gray image selected.')
+        overlay_image = apply_red_overlay(np_gray, np_gray, np_entropy, min_thresholds, max_thresholds,
                                           entropy_min_threshold, entropy_max_threshold)
     else:
-        overlay_image = apply_red_overlay(np_entropy, np_gray, np_entropy, min_threshold, max_threshold,
+        print('Color image selected.')
+        overlay_image = apply_red_overlay(np_entropy, np_gray, np_entropy, min_thresholds, max_thresholds,
                                           entropy_min_threshold, entropy_max_threshold)
 
     img_byte_arr=encode_to_png(overlay_image) #should be equivalent to the 3 rows bellow
@@ -731,18 +753,15 @@ def apply_mask():
     img_byte_arr = base64.b64encode(img_byte_arr).decode('utf-8')
     entropy_byte_arr = base64.b64encode(entropy_byte_arr).decode('utf-8')
     return json.dumps({'overlay': img_byte_arr, 'entropy': entropy_byte_arr}), 200, {'Content-Type': 'application/json'}
-    # img_byte_arr = io.BytesIO()
-    # overlay_image.save(img_byte_arr, format='PNG')
-    # img_byte_arr = img_byte_arr.getvalue()
-    # return img_byte_arr, 200, {'Content-Type': 'image/png'}
 
-
-def apply_red_overlay(masked_img, intensity_img, entropy_img, min_threshold, max_threshold, entropy_min_threshold,
-                      entropy_max_threshold):
-    intensity_mask = (intensity_img >= min_threshold) & (intensity_img <= max_threshold)
+def apply_red_overlay(masked_img, intensity_img, entropy_img, min_thresholds, max_thresholds, entropy_min_threshold,
+                      entropy_max_threshold):        
+    intensity_mask_0 = (intensity_img >= min_thresholds[0]) & (intensity_img <= max_thresholds[0])
+    intensity_mask_1 = (intensity_img >= min_thresholds[1]) & (intensity_img <= max_thresholds[1])
     entropy_mask = (entropy_img >= entropy_min_threshold) & (entropy_img <= entropy_max_threshold)
     # combined_mask = intensity_mask & entropy_mask 
 
+    intensity_mask = intensity_mask_0 | intensity_mask_1
     combined_mask = intensity_mask & entropy_mask
     combined_mask *= ts[session['user_id']].aggregate_mask.astype(bool)  
    
