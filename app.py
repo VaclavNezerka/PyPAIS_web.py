@@ -128,7 +128,10 @@ def page_not_found(error):
 @app.errorhandler(500)
 def internal_server_error(error):
     flash('An internal server error has occured.','error')
-    return redirect(url_for('index'))
+    return redirect(url_for('/logout'))
+
+
+
 
 """
 """
@@ -334,7 +337,7 @@ def rembg():
 @app.route('/update_value/<string:value_name>',methods=['POST'])
 @check_authentication
 def update_specific_value(value_name):
-    value = request.form.get('expertGuess')
+    value = request.form.get(value_name)
     ts[session['user_id']].values.__dict__[value_name] = value
     save_specific_value(value_name)
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
@@ -433,9 +436,6 @@ def load_experiment(id):
         ts[session['user_id']].values.intensity_min_threshold_1 = response[0][11]
         ts[session['user_id']].values.intensity_max_threshold_1 = response[0][12]
         ts[session['user_id']].values.blur = response[0][13]
-        print('Response')
-        print(response)
-
         ts[session['user_id']].color = blur_image(ts[session['user_id']].values.blur, ts[session['user_id']].color_original)
         # gray image
         image = Image.fromarray(ts[session['user_id']].color_original)        
@@ -458,6 +458,11 @@ def load_experiment(id):
         encoded_gray_blur = base64.b64encode(encoded_gray_blur).decode('utf-8')
         encoded_color_blur = base64.b64encode(encoded_color_blur).decode('utf-8')
         
+        try:
+            expert_guess = int(ts[session['user_id']].values.expert_guess*100)
+        except:
+            expert_guess = 'NaN'
+        
         json_response = {'status': 'success',
                          'minThreshold0': ts[session['user_id']].values.intensity_min_threshold_0,
                          'maxThreshold0': ts[session['user_id']].values.intensity_max_threshold_0,
@@ -465,8 +470,9 @@ def load_experiment(id):
                          'maxThreshold1': ts[session['user_id']].values.intensity_max_threshold_1,
                          'entropyMinThreshold': ts[session['user_id']].values.entropy_min_threshold,
                          'entropyMaxThreshold': ts[session['user_id']].values.entropy_max_threshold,
+                         'info': ts[session['user_id']].values.info,
                          'blurValue': ts[session['user_id']].values.blur,
-                         'expertGuess': int(ts[session['user_id']].values.expert_guess*100),
+                         'expertGuess': expert_guess,
                          'gray': encoded_gray,
                          'color': encoded_color,
                          'nobg': encoded_no_bg,

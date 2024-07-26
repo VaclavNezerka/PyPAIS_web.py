@@ -232,6 +232,13 @@ document.getElementById('blurSlider').addEventListener('change', async function(
 });
 
 
+document.getElementById('info').addEventListener('change', function() {
+    let value = this.value;
+    var  formData = new FormData();
+    formData.append('info', value);
+    const uniqueQuery = '?nocache=' + new Date().getTime();
+    fetch('/update_value/info' + uniqueQuery, { method: 'POST', body: formData })
+});
 
 async function uploadImage() {
     displayWorkingMessage();
@@ -801,7 +808,10 @@ function loadExperiment(id) {
         // set the blur slider and input box to the value from the experiment
         document.getElementById('blurSlider').value = data.blurValue;
         document.getElementById('blurValue').value = data.blurValue;
-        document.getElementById('expertGuess').value = data.expertGuess;    
+        if (data.expertGuess !== 'NaN') {
+            document.getElementById('expertGuess').value = data.expertGuess;    
+        }
+        document.getElementById('info').value = data.info;
 
         uploadedImageURL_color = URL.createObjectURL(base64toBlob(data.color, 'image/png'));
         uploadedImageURL_gray = URL.createObjectURL(base64toBlob(data.gray, 'image/png'));
