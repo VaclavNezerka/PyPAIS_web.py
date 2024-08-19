@@ -719,6 +719,7 @@ function redrawCanvases() {
 
 function activateExperiment() {
     return new Promise((resolve, reject) => {
+        // TODO: Control this function
         const uniqueQuery = '?nocache=' + new Date().getTime();
         fetch('/activate-experiment' + uniqueQuery, { method: 'POST' })
         .then(response => response.json())
@@ -895,6 +896,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
 
 // keyboard shortcuts
 document.addEventListener('keydown', function(event) {

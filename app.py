@@ -1,5 +1,6 @@
 # Packages
 from flask import Flask, render_template, request, send_from_directory, flash, redirect, session, url_for, g, make_response, send_file
+from flask_mail import Mail, Message
 # from flask_login import login_manager, UserMixin, login_required,
 import werkzeug.security as ws
 from PIL import Image
@@ -27,6 +28,15 @@ import forms
 app = Flask(__name__)
 
 # app.permanent_session_lifetime=timedelta(days=5)
+
+# configuration of the mail server
+app.config['MAIL_SERVER'] = 'smtp.example.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'your-email@example.com'
+app.config['MAIL_PASSWORD'] = 'your-email-password'
+app.config['MAIL_DEFAULT_SENDER'] = ('Your Name', 'your-email@example.com')
+
 
 def generate_rnd_string(length):
     possible_chars=string.ascii_letters+string.digits+string.punctuation

@@ -84,7 +84,7 @@
                 <td>{{column}}</td>
                 {% endfor %}  
                   <td>
-                    <button class="btn-details">Details</button>
+                    <button id="edit_btn" class="btn-details" onclick = "editExperimentId('{{ field.0 }}')">Edit</button>
                     <button class="btn-export">Export</button>
                 </td>
             </tr>
@@ -97,6 +97,7 @@
         </tbody>
     </table>
 </div>
+<script src="/static/script_tables.js"> </script>
 </body>
 </html>
 
