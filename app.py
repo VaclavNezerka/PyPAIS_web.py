@@ -349,8 +349,9 @@ def rembg():
 def update_specific_value(value_name):
     value = request.form.get(value_name)
     ts[session['user_id']].values.__dict__[value_name] = value
-    save_specific_value(value_name)
-    return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
+    response = save_specific_value(value_name)
+    print('Value updated.', value_name, value)
+    return response    
    
     
 def evaluate_asphalt():
@@ -364,6 +365,24 @@ def evaluate_asphalt_caller():
     evaluation = evaluate_asphalt()
     save_asphalt_record(state='finished')
     return json.dumps({'evaluation': evaluation}), 200, {'Content-Type': 'application/json'}
+
+
+@app.route('/delete-experiment/<int:id>',methods=['GET', 'POST'])
+@check_authentication
+@check_data_ownership
+def delete_experiment(id):
+    experiment_state = execute_query('SELECT current_state FROM experiments WHERE id=%s', (id,))[0][0]
+    try:
+        if experiment_state == 'finished':
+            query = 'UPDATE experiments.fake_deleted=true WHERE id=%s'
+            execute_query(query, (id,))
+        else:
+            query = 'DELETE FROM experiments WHERE id=%s'
+            execute_query(query, (id,))
+        status = 'success'
+    except:
+        status = 'error'
+    return json.dumps({'status': status}), 200, {'Content-Type': 'application/json'}
 
 @app.route('/deactivate-experiment/<int:id>',methods=['GET', 'POST'])
 @check_authentication
@@ -536,6 +555,9 @@ def save_asphalt_record(**kwargs):
         state = kwargs['state']
     else:
         state = 'started'    
+    print('Saving record.')
+    print(kwargs)
+    print(state)
     try:        
         if ts[session['user_id']].experiment_id is None:
             print('Inserting new record.')
@@ -564,8 +586,9 @@ def save_asphalt_record(**kwargs):
             print(ts[session['user_id']].experiment_id)            
         else:
             print('Updating record.')
+            print('state', state)
             print(ts[session['user_id']].experiment_id)
-            query = 'UPDATE experiments SET img_width = %s, img_height = %s, img_mask_asphalt=%s, img_mask_aggregate=%s, expert_guess=%s, info=%s, current_state=%s, asphalt_ratio=%s, entropy_min_threshold=%s, entropy_max_threshold=%s, intensity_min_threshold_0=%s, intensity_max_threshold_0=%s, intensity_min_threshold_1=%s, intensity_max_threshold_1=%s, WHERE id=%s'
+            query = 'UPDATE experiments SET img_width = %s, img_height = %s, img_mask_asphalt=%s, img_mask_aggregate=%s, expert_guess=%s, info=%s, current_state=%s, asphalt_ratio=%s, entropy_min_threshold=%s, entropy_max_threshold=%s, intensity_min_threshold_0=%s, intensity_max_threshold_0=%s, intensity_min_threshold_1=%s, intensity_max_threshold_1=%s, blur=%s WHERE id=%s'
             values = (ts[session['user_id']].color_original.shape[1],
                       ts[session['user_id']].color_original.shape[0],
                       ts[session['user_id']].asphalt_mask.tobytes(),
@@ -583,8 +606,11 @@ def save_asphalt_record(**kwargs):
                       ts[session['user_id']].values.blur,
                       ts[session['user_id']].experiment_id)
             execute_query(query, values)
-            
-        if state == 'finished':
+            print('Record up.')
+        
+        print(state.lower())
+        print(state.lower() == 'finished')
+        if state.lower() == 'finished':
             # delete temporary storage and create a new one
             print('Experiment finished.')
             ts.pop(session['user_id'])

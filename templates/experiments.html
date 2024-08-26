@@ -85,7 +85,7 @@
                 {% endfor %}  
                   <td>
                     <button id="edit_btn" class="btn-details" onclick = "editExperimentId('{{ field.0 }}')">Edit</button>
-                    <button class="btn-export">Export</button>
+                    <button id="export_btn" class="btn-export" onclick = "exportExperimentPDF('{{field.0}}')">Export</button>
                 </td>
             </tr>
                   {% endfor %}

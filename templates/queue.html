@@ -91,12 +91,10 @@
                 <td>{{column}}</td>
                 {% endfor %}  
                 <td>
-                    {% if field[-1]== 'prepared' %}
-                    <button class="btn-details">Continue</button>
-                    {% elif field[-1]== 'started' %}
-                    <button class="btn-details">Continue</button>
+                    {% if field[-1] in ['prepared', 'started'] %}
+                        <button class="btn-details" onclick = "editExperimentId('{{field.0}}')">Continue</button>
                     {% endif %}
-                    <button class="btn-cancel">Cancel</button>
+                    <button class="btn-cancel" onclick="deleteExperimentId('{{field.0}}')">Delete</button>
                 </td>
             </tr>
                   {% endfor %}
@@ -120,6 +118,7 @@
     <input type="file" id="fileInput" accept="image/*" class="custom-file-input">
     <label for="fileInput"  class="custom-file-label">Use device camera</label>
 </div>
+<script src="/static/script_tables.js"> </script>
 </html>
 {% endblock content %}
 
