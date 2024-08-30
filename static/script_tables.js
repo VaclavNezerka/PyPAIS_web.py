@@ -1,7 +1,6 @@
 // import activateExperiment from script.js
 // import {activateExperiment} from './script.js';
 
-
 function editExperimentId(id) {
     // Get the experiment id
     const uniqueQuery = '?nocache=' + new Date().getTime();
@@ -36,3 +35,130 @@ function deleteExperimentId(id) {
             console.error('Error:', error);
         });
 }
+
+function callQueryStringURL(queryString) {
+    // Get the query string
+    window.location.search = queryString;
+}
+
+function excludeFromSearchQuery(queryKey) {
+    const currentQueryString = window.location.search;
+    const keys = currentQueryString.split('&').map(key => key.split('=')[0]);
+    if (keys.includes(queryKey)) {
+        const newQueryString = currentQueryString.replace(queryKey + '=' + currentQueryString.split(queryKey + '=')[1].split('&')[0], '');
+        callQueryStringURL(newQueryString);
+    }
+}
+
+function concatenateSearchQuery(queryString) {
+            const key = queryString.split('=')[0]+"=";
+            const value = queryString.split('=')[1].split('&')[0];  
+            const currentQueryString = window.location.search;
+
+            // current query keys
+            let noQuestionMark = currentQueryString.split('?')[1];
+            if (noQuestionMark == undefined) {
+               noQuestionMark = currentQueryString;
+            }
+            const keys = noQuestionMark.split('&').map(key => key.split('=')[0]+"=");
+            // if any key == queryString key, replace the value
+            let newQueryString = '';
+            console.log('keys', keys);
+            console.log('key', key);   
+            console.log(keys.includes(key));
+            if (keys.includes(key)) {
+                id=keys.indexOf(key);
+                const currentValue = currentQueryString.split(keys[id])[1].split('&')[0];
+                newQueryString = currentQueryString.replace(keys[id] + currentValue, key + value);
+            } else {
+                newQueryString = currentQueryString + '&' + queryString;
+            }
+            console.log('newQueryString', newQueryString);
+            callQueryStringURL(newQueryString);
+}
+
+document.getElementById('previous_page').addEventListener('click', function() {
+    current_page = parseInt(document.getElementById('current_page').innerText);
+    if (current_page == 1) {
+        current_page = 1;
+    } else {
+        current_page -= 1;
+    }
+    document.getElementById('current_page').innerText = current_page;
+    concatenateSearchQuery('page=' + current_page);
+});
+document.getElementById('next_page').addEventListener('click', function() {
+    current_page = parseInt(document.getElementById('current_page').innerText);
+    console.log(current_page);
+    current_page += 1;
+    document.getElementById('current_page').innerText = current_page;
+    concatenateSearchQuery('page=' + current_page);
+});
+
+document.getElementById('sortBy').addEventListener('change', function() {
+    const sortBy = this.value;
+    instructions = sortBy.replace(/\s+/g,"").split(',');
+    console.log('instructions', instructions);
+    sort_order="";
+    for (let i = 0; i < instructions.length; i++) {
+        switch (instructions[i].toLowerCase()) {
+        case "id": sort_order += "id,"; break;
+        case "asphaltratio": sort_order += "asphalt_ratio,"; break;
+        case "expertguess": sort_order += "expert_guess,"; break;
+        case "date": sort_order += "time_stamp,"; break;
+        case "state": sort_order += "current_state,"; break;
+        default: break;
+        }
+    }
+    sort_order = sort_order.slice(0, -1);
+    console.log('sort_order', sort_order);
+    if (sort_order=="") {   
+        excludeFromSearchQuery('sort_by');
+    } else {
+        concatenateSearchQuery('sort_by=' + sort_order);
+    }   
+});
+
+
+document.getElementById('maxRecords').addEventListener('change', function() {
+    const maxRecords = this.value;
+    concatenateSearchQuery('page_limit=' + maxRecords);
+});
+
+document.getElementById('sortOrder').addEventListener('change', function() {
+    const sortOrder = this.value;
+    concatenateSearchQuery('sort_order=' + sortOrder);
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Restore any other field states as necessary (e.g., input values, checkboxes)
+    
+    // Get query parameters from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Restore page number
+    const page = urlParams.get('page');
+    if (page) {
+        document.getElementById('current_page').innerText = page;
+    }
+    // Restore sort order
+    const sortBy = urlParams.get('sort_by');
+    if (sortBy) {
+        dictionary = {
+            'id': 'id',
+            'asphalt_ratio': 'Asphalt Ratio',
+            'expert_guess': 'Expert Guess',
+            'time_stamp': 'Date',
+            'current_state': 'State'
+        };
+        document.getElementById('sortBy').value = sortBy.split(',').map(key => dictionary[key]).join(', ');
+    }
+    const maxRecords = Number(urlParams.get('page_limit'));
+    if (maxRecords) {
+        document.getElementById('maxRecords').value = maxRecords;
+    }
+    const sortOrder = urlParams.get('sort_order');
+    if (sortOrder) {
+        document.getElementById('sortOrder').value = sortOrder;
+    }
+});

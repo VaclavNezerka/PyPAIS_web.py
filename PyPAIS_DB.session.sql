@@ -66,12 +66,12 @@ delete from experiments where id > 30;
 
 INSERT INTO experiments (added_by_user, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state) 
 VALUES 
-(15, 'img1', 'mask1', 'mask2', 0.5, 'info1', 'prepared'),
 (31, 'img2', 'mask3', 'mask4', 0.6, 'info2', 'finished'),
 (31, 'img3', 'mask5', 'mask6', 0.7, 'info3', 'pending'),
 (31, 'img4', 'mask7', 'mask8', 0.8, 'info4', 'pending'),
-(31, 'img4', 'mask7', 'mask8', 0.8, 'info4', 'processing'),
-(15, 'img4', 'mask7', 'mask8', 0.8, 'info4', 'started');
+(31, 'img4', 'mask7', 'mask8', 0.8, 'info4', 'processing');
+-- (15, 'img1', 'mask1', 'mask2', 0.5, 'info1', 'prepared'),
+-- (15, 'img4', 'mask7', 'mask8', 0.8, 'info4', 'started');
 
 CREATE VIEW public_users AS SELECT id, first_name, last_name, company FROM users;
 

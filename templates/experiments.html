@@ -76,7 +76,28 @@
             </tr>
         </thead>
         <tbody>
-            {% if records %}            
+            {% if records %}
+            <tr>
+                <textarea id="current_page" style="display:none">1</textarea>
+                <td colspan="{{ column_count }}">
+                    Max.recoeds on page: <input type="number" id="maxRecords" value="10" min="1" max="100">
+                </td>
+                <td>
+                    Sort order: <select id="sortOrder">
+                        <option value="desc">Descending</option>
+                        <option value="asc">Ascending</option>
+                    </select>
+                </td>
+                <td>
+                    Sort by: <input type="text" id="sortBy" value="date,id,expert guess,asphalt ratio" maxlength=128>   
+                </td>
+                <td>
+                </td>
+                <td>
+                    <button class="btn-details" id="previous_page">Previous</button>
+                    <button class="btn-details" id="next_page">Next</button> 
+                </td>
+            </tr>         
             {% for record in records[1:] %}
             {% for field in record %}
             <tr>

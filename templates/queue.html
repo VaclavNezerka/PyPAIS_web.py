@@ -66,24 +66,74 @@
         cursor: pointer;
         transition: background-color 0.3s ease;
     }
-
+    
     .btn-details:hover, .btn-export:hover {
         background-color: #0056b3;
+    }
+
+    input[type="text"], input[type="number"] {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        font-size: 14px;
+        transition: border-color 0.3s ease;
+    }
+
+    input[type="text"]:focus, input[type="number"]:focus {
+        outline: none;
+        border-color: #007bff;
     }
 </style>
 </head>
 <div class="container">
+    <h2>Add to queue</h2>
+    <div class="row">
+        <div class="column">
+            <input type="file" id="fileInput" accept="image/*" class="custom-file-input">
+            <label for="fileInput"  class="custom-file-label">Choose File</label>
+        </div>
+        <div class="column">
+            <input type="file" id="fileInput" accept="image/*" class="custom-file-input">
+            <label for="fileInput"  class="custom-file-label">Use device camera</label>
+        </div>
+    </div>
+    
     <h2>{{dynamic_content}}</h2>
-    <table>
-        <thead>
+     <table>
+         <thead>
             <tr>
                 {% for column_name in columnames %}
-                <th>{{column_name}}</th>
+                <th>
+                    {% if column_name == "Date" %}
+                        <a href="?sort={{ 'asc' if sort_order == 'desc' else 'desc' }}">{{ column_name }}</a>
+                    {% else %}
+                        {{ column_name }}
+                    {% endif %}
+                </th>
                 {% endfor %}
             </tr>
         </thead>
         <tbody>
             {% if records %}            
+            <tr>
+                <textarea id="current_page" style="display:none">1</textarea>
+                <td colspan="{{ column_count }}">
+                    Max.recoeds on page: <input type="number" id="maxRecords" value="10" min="1" max="100">
+                </td>
+                <td>
+                    Sort order: <select id="sortOrder">
+                        <option value="asc">Ascending</option>
+                        <option value="desc">Descending</option>
+                    </select>
+                </td>
+                <td>
+                    Sort by: <input type="text" id="sortBy" value="id,date,state" maxlength=128>   
+                </td>
+                <td>
+                    <button class="btn-details" id="previous_page">Previous</button>
+                    <button class="btn-details" id="next_page">Next</button> 
+                </td>
+            </tr>
             {% for record in records[1:] %}
             {% for field in record %}
             <tr>
@@ -92,33 +142,22 @@
                 {% endfor %}  
                 <td>
                     {% if field[-1] in ['prepared', 'started'] %}
-                        <button class="btn-details" onclick = "editExperimentId('{{field.0}}')">Continue</button>
+                    <button class="btn-details" onclick = "editExperimentId('{{field.0}}')">Continue</button>
                     {% endif %}
                     <button class="btn-cancel" onclick="deleteExperimentId('{{field.0}}')">Delete</button>
                 </td>
             </tr>
-                  {% endfor %}
-                  {% endfor %}
+            {% endfor %}
+            {% endfor %}
         {% else %}
         <p>No records found</p>
         {% endif %}
         
-        </tbody>
+    </tbody>
     </table>
 
+    <script src="/static/script_tables.js"> </script>
 </body>
-    
-
-<h2>Add to queue</h2>
-<div class="row">
-    <input type="file" id="fileInput" accept="image/*" class="custom-file-input">
-    <label for="fileInput"  class="custom-file-label">Choose File</label>
-</div>
-<div class="row">
-    <input type="file" id="fileInput" accept="image/*" class="custom-file-input">
-    <label for="fileInput"  class="custom-file-label">Use device camera</label>
-</div>
-<script src="/static/script_tables.js"> </script>
 </html>
 {% endblock content %}
 

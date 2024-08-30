@@ -259,21 +259,89 @@ def login():
     else:
         return redirect('/')
 
+def sort_records(records,sort_order,sort_by,page_limit):
+    if sort_order=='asc':
+        records.sort(key=lambda x: x[sort_by])
+    elif sort_order=='desc':
+        records.sort(key=lambda x: x[sort_by],reverse=True)
+    return records[:page_limit]
 
 @app.route('/queue',methods=['GET','POST'])
 @check_authentication
 def queue():
+    sort_order=request.args.get('sort_order','asc')
+    page_limit=int(request.args.get('page_limit',10))
+    page=int(request.args.get('page',1))
+    start_sub_id=request.args.get('start_id',None)
+    sort_by=request.args.get('sort_by','time_stamp,id')
+    
     records=[('id','time_stamp','current_state')]
+    sort_by = sort_by.split(',')  
+    sort_by = [x for x in sort_by if x in records[0]]
+    
+    sort_columns=[ records[0].index(x) for x in sort_by]
+
     columnames=['id','date','state','actions']
     actions=['Edit','Cancel']
     records.append(execute_query("SELECT id, time_stamp, current_state FROM experiments where added_by_user=%s AND current_state!='finished' ",(session['user_id'],)))
+    data = records[1]
+
+    # Data sorting and slicing
+    current_state_order={'finished':0,'current_experiment': 1, 'started':2,'prepared':3,'processing':4,'pending':5}
+    reversed_current_state_order={v:k for k,v in current_state_order.items()}
+    data=list(map(lambda x: (x[0],x[1],current_state_order[x[2]]),data))
+    data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='desc')
+    # now we have to remap the data back to strings
+    data=list(map(lambda x: (x[0],x[1],reversed_current_state_order[x[2]]),data))
+        
+    pages=len(data)//page_limit+1
+    if page>pages:
+        page=pages
+    if start_sub_id is None:
+        start_sub_id=0+page_limit*(page-1)
+    else:
+        start_sub_id=int(start_sub_id)
+    
+    max_sub_id = min(len(data), start_sub_id+page_limit)
+    data=data[start_sub_id:max_sub_id]
+    records[1] = data
     return render_template('queue.html',records=records,session=session,dynamic_content='Experiment Queue',columnames=columnames, actions = actions)
 
 @app.route('/experiments',methods=['GET','POST'])
 @check_authentication
 def experiments():
+    sort_order=request.args.get('sort_order','desc')
+    page_limit=int(request.args.get('page_limit',10))
+    start_sub_id=request.args.get('start_id',None)
+    page=int(request.args.get('page',1))
+    sort_by=request.args.get('sort_by','time_stamp,id')
+    
     records=[('id','time_stamp','expert_guess', 'asphalt_ratio')]
+    sort_by = sort_by.split(',')  
+    sort_by = [x for x in sort_by if x in records[0]]
+    sort_columns=[ records[0].index(x) for x in sort_by]
+    print(sort_columns)
     records.append(execute_query("SELECT id, time_stamp, expert_guess, asphalt_ratio FROM experiments where added_by_user=%s AND current_state='finished' ",(session['user_id'],)))
+
+    # data sorting and slicing
+    data = records[1]   
+    # Replace None values with -1
+    data = [(x[0],x[1],x[2] if x[2] is not None else 0, x[3] if x[3] is not None else -1) for x in data]
+    data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='desc')
+    # replace -1 with None
+    data = [(x[0],x[1],x[2] if x[2] != -1 else None, x[3] if x[3] != -1 else None) for x in data]
+        
+    pages=len(data)//page_limit+1
+    if page>pages:
+        page=pages
+    if start_sub_id is None:
+        start_sub_id=0+page_limit*(page-1)
+    else:
+        start_sub_id=int(start_sub_id)
+    
+    max_sub_id = min(len(data), start_sub_id+page_limit)
+    data=data[start_sub_id:max_sub_id]
+    records[1] = data
     return render_template('experiments.html',records=records,session=session,dynamic_content='Experiments')
 
 
