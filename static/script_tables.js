@@ -1,4 +1,4 @@
-// import activateExperiment from script.js
+// import save from script.js
 // import {activateExperiment} from './script.js';
 
 function editExperimentId(id) {
@@ -28,7 +28,7 @@ function deleteExperimentId(id) {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                window.location.href = '/queue';
+                window.location.reload();;
             }
         })
         .catch((error) => {
@@ -63,9 +63,6 @@ function concatenateSearchQuery(queryString) {
             const keys = noQuestionMark.split('&').map(key => key.split('=')[0]+"=");
             // if any key == queryString key, replace the value
             let newQueryString = '';
-            console.log('keys', keys);
-            console.log('key', key);   
-            console.log(keys.includes(key));
             if (keys.includes(key)) {
                 id=keys.indexOf(key);
                 const currentValue = currentQueryString.split(keys[id])[1].split('&')[0];
@@ -73,7 +70,6 @@ function concatenateSearchQuery(queryString) {
             } else {
                 newQueryString = currentQueryString + '&' + queryString;
             }
-            console.log('newQueryString', newQueryString);
             callQueryStringURL(newQueryString);
 }
 
@@ -89,7 +85,6 @@ document.getElementById('previous_page').addEventListener('click', function() {
 });
 document.getElementById('next_page').addEventListener('click', function() {
     current_page = parseInt(document.getElementById('current_page').innerText);
-    console.log(current_page);
     current_page += 1;
     document.getElementById('current_page').innerText = current_page;
     concatenateSearchQuery('page=' + current_page);
@@ -98,7 +93,6 @@ document.getElementById('next_page').addEventListener('click', function() {
 document.getElementById('sortBy').addEventListener('change', function() {
     const sortBy = this.value;
     instructions = sortBy.replace(/\s+/g,"").split(',');
-    console.log('instructions', instructions);
     sort_order="";
     for (let i = 0; i < instructions.length; i++) {
         switch (instructions[i].toLowerCase()) {
@@ -111,7 +105,6 @@ document.getElementById('sortBy').addEventListener('change', function() {
         }
     }
     sort_order = sort_order.slice(0, -1);
-    console.log('sort_order', sort_order);
     if (sort_order=="") {   
         excludeFromSearchQuery('sort_by');
     } else {
@@ -161,4 +154,27 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sortOrder) {
         document.getElementById('sortOrder').value = sortOrder;
     }
+});
+
+document.getElementById('fileInput').addEventListener('change', async function() {
+    // uploadFiles;
+    files = Array.from(this.files);
+    
+    for (let i = 0; i < files.length; i++) {
+        const formData = new FormData();
+        formData.append('file', files[i]);
+        console.log('Uploading file...', i);
+        await fetch('/backup-storage', { method: 'POST' });
+        await Promise.all([
+            fetch('/remove-background', { method: 'POST', body: formData }),
+            fetch('/grayscale-data', { method: 'POST', body: formData }),
+        ])
+        await fetch('/entropy', { method: 'POST', body: formData })
+        await fetch('/apply-mask', { method: 'POST' });
+        await fetch('/save?status=processing', { method: 'POST' }).catch((error) => {
+            console.error('Error:', error);
+        });
+        await fetch('restore-storage', { method: 'POST' });        
+    }
+    window.location.reload();
 });

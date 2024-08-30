@@ -54,13 +54,13 @@ class UserValues:
         
         # values currently accessible by the users
         self.blur = 0
-        self.intensity_min_threshold_0 = None
-        self.intensity_max_threshold_0 = None
-        self.intensity_min_threshold_1 = None
-        self.intensity_max_threshold_1 = None
-        self.entropy_min_threshold = None
-        self.entropy_max_threshold = None
-        self.expert_guess = 0.        
+        self.intensity_min_threshold_0 = None 
+        self.intensity_max_threshold_0 = None 
+        self.intensity_min_threshold_1 = None 
+        self.intensity_max_threshold_1 = None 
+        self.entropy_min_threshold = None 
+        self.entropy_max_threshold = None 
+        self.expert_guess = None # 0. old value        
     
 
 class UserTemporaryStorage:
@@ -314,13 +314,12 @@ def experiments():
     page_limit=int(request.args.get('page_limit',10))
     start_sub_id=request.args.get('start_id',None)
     page=int(request.args.get('page',1))
-    sort_by=request.args.get('sort_by','time_stamp,id')
+    sort_by=request.args.get('sort_by','time_stamp,id,expert_guess,asphalt_ratio')
     
     records=[('id','time_stamp','expert_guess', 'asphalt_ratio')]
     sort_by = sort_by.split(',')  
     sort_by = [x for x in sort_by if x in records[0]]
     sort_columns=[ records[0].index(x) for x in sort_by]
-    print(sort_columns)
     records.append(execute_query("SELECT id, time_stamp, expert_guess, asphalt_ratio FROM experiments where added_by_user=%s AND current_state='finished' ",(session['user_id'],)))
 
     # data sorting and slicing
@@ -509,7 +508,8 @@ def load_experiment(id):
             id = ts[session['user_id']].experiment_id
             if id is None:
                 flash('NO ID No active experiment found.','error')
-                return redirect('/queue')           
+                return redirect('/queue')          
+
         response = load_experiment_from_db(id)
         image_width = response[0][0]
         image_height = response[0][1]
@@ -559,24 +559,24 @@ def load_experiment(id):
             expert_guess = int(ts[session['user_id']].values.expert_guess*100)
         except:
             expert_guess = 'NaN'
-        
+    
         json_response = {'status': 'success',
-                         'minThreshold0': ts[session['user_id']].values.intensity_min_threshold_0,
-                         'maxThreshold0': ts[session['user_id']].values.intensity_max_threshold_0,
-                         'minThreshold1': ts[session['user_id']].values.intensity_min_threshold_1,
-                         'maxThreshold1': ts[session['user_id']].values.intensity_max_threshold_1,
-                         'entropyMinThreshold': ts[session['user_id']].values.entropy_min_threshold,
-                         'entropyMaxThreshold': ts[session['user_id']].values.entropy_max_threshold,
-                         'info': ts[session['user_id']].values.info,
-                         'blurValue': ts[session['user_id']].values.blur,
-                         'expertGuess': expert_guess,
-                         'gray': encoded_gray,
-                         'color': encoded_color,
-                         'nobg': encoded_no_bg,
-                         'gray_blur': encoded_gray_blur,
-                         'color_blur': encoded_color_blur,
-                         'nobg_blur': encoded_no_bg_blur
-                         }
+                        'minThreshold0': ts[session['user_id']].values.intensity_min_threshold_0,
+                        'maxThreshold0': ts[session['user_id']].values.intensity_max_threshold_0,
+                        'minThreshold1': ts[session['user_id']].values.intensity_min_threshold_1,
+                        'maxThreshold1': ts[session['user_id']].values.intensity_max_threshold_1,
+                        'entropyMinThreshold': ts[session['user_id']].values.entropy_min_threshold,
+                        'entropyMaxThreshold': ts[session['user_id']].values.entropy_max_threshold,
+                        'info': ts[session['user_id']].values.info,
+                        'blurValue': ts[session['user_id']].values.blur,
+                        'expertGuess': expert_guess,
+                        'gray': encoded_gray,
+                        'color': encoded_color,
+                        'nobg': encoded_no_bg,
+                        'gray_blur': encoded_gray_blur,
+                        'color_blur': encoded_color_blur,
+                        'nobg_blur': encoded_no_bg_blur
+                        }
         return json.dumps(json_response), 200, {'Content-Type': 'application/json'}      
                         
     #     print('Experiment loaded.')
@@ -622,7 +622,9 @@ def save_asphalt_record(**kwargs):
     if 'state' in kwargs.keys():
         state = kwargs['state']
     else:
-        state = 'started'    
+        state = request.args.get('state') or request.form.get('state') or 'started'
+        # state = 'started'    
+
     print('Saving record.')
     print(kwargs)
     print(state)
@@ -689,6 +691,23 @@ def save_asphalt_record(**kwargs):
     return json.dumps({'status': status}), 200, {'Content-Type': 'application/json'}
 
 
+@app.route('/backup-storage',methods=['POST'])
+@check_authentication
+def backup_temporal_storage():
+    # This function bacups the temporary storage of the user and creates a new one
+    # it should be called when the user wants to upload new images without harming the current experiment
+    ts[str(session['user_id'])+"&backup"] = ts[session['user_id']]
+    ts[session['user_id']] = UserTemporaryStorage()
+    return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
+
+@app.route('/restore-storage',methods=['POST'])
+@check_authentication
+def restore_temporal_storage():
+    # This function restores the temporary storage of the user from the backup
+    # it should be called when the user wants to restore the previous experiment
+    ts[session['user_id']] = ts[str(session['user_id'])+"&backup"]
+    ts.pop(str(session['user_id'])+"&backup")
+    return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
 
 @app.route('/remove-background',methods=['POST'])
@@ -736,9 +755,9 @@ def remove_picture_background():
         
     # save the requested variables (in future this should be different function, doing everything at once and more 
     # importantly, at the end, when the user is satisfied with the result so we won't be constantly overwriting the DB)
-    ts[session['user_id']].aggregate_mask=np.array(mask, dtype=bool)
-    ts[session['user_id']].values.threshold=threshold
-    ts[session['user_id']].color=image
+    ts[session['user_id']].aggregate_mask = np.array(mask, dtype=bool)
+    ts[session['user_id']].values.threshold = threshold
+    ts[session['user_id']].color = image
  
     
     # return the mask
@@ -824,8 +843,8 @@ def apply_mask():
     # Assuming the image's ID or a unique identifier is sent as part of the form data for key lookup
     image_id = request.form.get('imageId')
     min_threshold_0 = int(request.form.get('minThreshold0', 0))
-    max_threshold_0 = int(request.form.get('maxThreshold0', 255))
-    min_threshold_1 = int(request.form.get('minThreshold1', 0))
+    max_threshold_0 = int(request.form.get('maxThreshold0', 100))
+    min_threshold_1 = int(request.form.get('minThreshold1', 100))
     max_threshold_1 = int(request.form.get('maxThreshold1', 255))
     entropy_min_threshold = int(request.form.get('entropyMinThreshold', 0))
     entropy_max_threshold = int(request.form.get('entropyMaxThreshold', 255))
