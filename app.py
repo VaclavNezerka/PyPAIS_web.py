@@ -19,11 +19,16 @@ from rembg import remove
 from db_api import *
 import json 
 import base64
+from matplotlib.path import Path as polygon_path
+from icecream import ic
+from rich.traceback import install
+install()
 
 
 
 # Apps
 import forms 
+from functools import wraps
 
 app = Flask(__name__)
 
@@ -36,12 +41,12 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'your-email@example.com'
 app.config['MAIL_PASSWORD'] = 'your-email-password'
 app.config['MAIL_DEFAULT_SENDER'] = ('Your Name', 'your-email@example.com')
-
+app.config['ES6_MODULES'] = True
 
 def generate_rnd_string(length):
     possible_chars=string.ascii_letters+string.digits+string.punctuation
     return ''.join(secrets.choice(possible_chars) for _ in range(int(length))) 
-
+# if in production, use the environment variable, otherwise use the default value
 app.secret_key=generate_rnd_string(os.environ['SECRET_KEY_LENGTH'])
 
 ts = {} # temporary storages for the users... ts[user_id] = UserTemporaryStorage()
@@ -92,8 +97,8 @@ class UserTemporaryStorage:
         # masks
         self.aggregate_mask = None # [auto - rembg] all the pixels that are not background
         self.asphalt_mask = None # [auto - sliders] all the pixels that are asphalt and not background
-        self.aggregate_mask_manual_adjustments = None # [manual] all the pixels that are not background or are background (defined by the user)
-        self.asphalt_mask_manual_adjustments = None # [manual] all the pixels that are asphalt and not background (defined by the user)        
+        self.aggregate_mask_manual_corrections = None # [manual] all the pixels that are not background or are background (defined by the user)
+        self.asphalt_mask_manual_corrections = None # [manual] all the pixels that are asphalt and not background (defined by the user)        
 
 # @app.before_request        
 
@@ -321,7 +326,7 @@ def experiments():
     sort_by = [x for x in sort_by if x in records[0]]
     sort_columns=[ records[0].index(x) for x in sort_by]
     records.append(execute_query("SELECT id, time_stamp, expert_guess, asphalt_ratio FROM experiments where added_by_user=%s AND current_state='finished' ",(session['user_id'],)))
-
+    
     # data sorting and slicing
     data = records[1]   
     # Replace None values with -1
@@ -417,13 +422,19 @@ def update_specific_value(value_name):
     value = request.form.get(value_name)
     ts[session['user_id']].values.__dict__[value_name] = value
     response = save_specific_value(value_name)
+    print('value_name', value_name) 
+    print('value', value) 
+    print('response', response) 
     print('Value updated.', value_name, value)
     return response    
    
     
 def evaluate_asphalt():
-    non_bg_pixels = np.sum(ts[session['user_id']].aggregate_mask)
-    asphalt_pixels = np.sum(ts[session['user_id']].asphalt_mask) 
+    non_bg_pixels = np.sum(return_foreground_mask())
+    asphalt_pixels = np.sum(ts[session['user_id']].asphalt_mask + ts[session['user_id']].asphalt_mask_manual_corrections) 
+    ic(return_asphalt_mask())
+    print('Asphalt pixels:', asphalt_pixels)
+    print('Non bg pixels:', non_bg_pixels)
     return asphalt_pixels / non_bg_pixels
 
 @app.route('/evaluate-asphalt',methods=['POST'])
@@ -455,7 +466,6 @@ def delete_experiment(id):
 @check_authentication
 @check_data_ownership
 def deactivate_experiment_caller(id):
-    print('Deactivating experiment.', id)
     return deactivate_experiment(id)
 
 def deactivate_experiment(id):
@@ -464,8 +474,7 @@ def deactivate_experiment(id):
         if id is None:
             flash('No active experiment found.','error')
             return redirect('/queue')
-    print('Deactivating experiment.')
-    print(id)
+    print('Deactivating experiment.', id)
     query = 'UPDATE experiments SET active=%s WHERE id=%s'
     values = (False, id)
     execute_query(query, values)
@@ -517,13 +526,15 @@ def load_experiment(id):
         print('Image height:', image_height)
         print(response[0][-3])
         ts[session['user_id']].color_original = np.frombuffer(response[0][2], dtype=np.uint8).reshape(image_height, image_width, 4)
-        ts[session['user_id']].asphalt_mask = np.frombuffer(response[0][3], dtype=bool).reshape(image_height, image_width)
-        ts[session['user_id']].aggregate_mask = np.frombuffer(response[0][4], dtype=bool).reshape(image_height, image_width)
-        print('shapes')
-        print(response[0][3].shape)
-        print(ts[session['user_id']].aggregate_mask.shape)
-        print(ts[session['user_id']].asphalt_mask.shape)
-        print(ts[session['user_id']].color_original.shape)
+        # ts[session['user_id']].asphalt_mask = np.frombuffer(response[0][3], dtype=bool).reshape(image_height, image_width)
+        # ts[session['user_id']].aggregate_mask = np.frombuffer(response[0][4], dtype=bool).reshape(image_height, image_width)
+        ts[session['user_id']].asphalt_mask = np.frombuffer(response[0][3], dtype=int).reshape(image_height, image_width).copy()
+        ts[session['user_id']].aggregate_mask = np.frombuffer(response[0][4], dtype=int).reshape(image_height, image_width).copy()
+        # print('shapes')
+        # print(response[0][3].shape)
+        # print(ts[session['user_id']].aggregate_mask.shape)
+        # print(ts[session['user_id']].asphalt_mask.shape)
+        # print(ts[session['user_id']].color_original.shape)
         ts[session['user_id']].values.expert_guess = response[0][5]
         ts[session['user_id']].values.info = response[0][6]
         ts[session['user_id']].values.entropy_min_threshold = response[0][7]
@@ -534,6 +545,19 @@ def load_experiment(id):
         ts[session['user_id']].values.intensity_max_threshold_1 = response[0][12]
         ts[session['user_id']].values.blur = response[0][13]
         ts[session['user_id']].color = blur_image(ts[session['user_id']].values.blur, ts[session['user_id']].color_original)
+        if response[0][14] is not None:
+            # ts[session['user_id']].asphalt_mask_manual_corrections = np.copy(np.frombuffer(response[0][14], dtype=bool).reshape(image_height, image_width))
+            ts[session['user_id']].asphalt_mask_manual_corrections = np.copy(np.frombuffer(response[0][14], dtype=int).reshape(image_height, image_width))
+        else:
+            # ts[session['user_id']].asphalt_mask_manual_corrections = np.zeros((image_height, image_width), dtype=bool) 
+            ts[session['user_id']].asphalt_mask_manual_corrections = np.zeros((image_height, image_width), dtype=int)    
+        if response[0][15] is not None:
+            # ts[session['user_id']].aggregate_mask_manual_corrections = np.copy(np.frombuffer(response[0][15], dtype=bool).reshape(image_height, image_width))
+            ts[session['user_id']].aggregate_mask_manual_corrections = np.copy(np.frombuffer(response[0][15], dtype=int).reshape(image_height, image_width))
+        else:
+            # ts[session['user_id']].aggregate_mask_manual_corrections = np.zeros((image_height, image_width), dtype=bool)   
+            ts[session['user_id']].aggregate_mask_manual_corrections = np.zeros((image_height, image_width), dtype=int)   
+
         # gray image
         image = Image.fromarray(ts[session['user_id']].color_original)        
         gray_image = image.convert('L')
@@ -587,6 +611,17 @@ def load_experiment(id):
     #     return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
     # return json.dumps(json_response), 200, {'Content-Type': 'application/json'}      
 
+# export the images folder
+@app.route('/images/<path:filename>')
+def download_file(filename):
+    return send_from_directory('images', filename, as_attachment=True)
+
+# manual corrections
+@app.route('/manual-corrections',methods=['GET'])
+@check_authentication
+def manual_corrections():
+    return render_template('manual_corrections.html')
+
 @app.route('/is-experiment-active',methods=['GET'])
 def is_active():
     print('Checking if experiment is active.')
@@ -631,7 +666,7 @@ def save_asphalt_record(**kwargs):
     try:        
         if ts[session['user_id']].experiment_id is None:
             print('Inserting new record.')
-            query = 'INSERT INTO experiments (added_by_user, img_width, img_height, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state, asphalt_ratio, entropy_min_threshold, entropy_max_threshold, intensity_min_threshold_0, intensity_max_threshold_0, intensity_min_threshold_1, intensity_max_threshold_1, blur) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
+            query = 'INSERT INTO experiments (added_by_user, img_width, img_height, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state, asphalt_ratio, entropy_min_threshold, entropy_max_threshold, intensity_min_threshold_0, intensity_max_threshold_0, intensity_min_threshold_1, intensity_max_threshold_1, blur, img_mask_asphalt_manual_correction, img_mask_aggregate_manual_correction) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
             # print(ts[session['user_id']].color_original.shape)
             # print('shape!!!')
             values = (session['user_id'], 
@@ -650,7 +685,10 @@ def save_asphalt_record(**kwargs):
                     ts[session['user_id']].values.intensity_max_threshold_0,
                     ts[session['user_id']].values.intensity_min_threshold_1,
                     ts[session['user_id']].values.intensity_max_threshold_1,
-                    ts[session['user_id']].values.blur)
+                    ts[session['user_id']].values.blur,
+                    ts[session['user_id']].asphalt_mask_manual_corrections.tobytes(),
+                    ts[session['user_id']].aggregate_mask_manual_corrections.tobytes())
+            
             ts[session['user_id']].experiment_id = execute_query(query, values)[0][0]
             activate_experiment(ts[session['user_id']].experiment_id)
             print(ts[session['user_id']].experiment_id)            
@@ -658,7 +696,25 @@ def save_asphalt_record(**kwargs):
             print('Updating record.')
             print('state', state)
             print(ts[session['user_id']].experiment_id)
-            query = 'UPDATE experiments SET img_width = %s, img_height = %s, img_mask_asphalt=%s, img_mask_aggregate=%s, expert_guess=%s, info=%s, current_state=%s, asphalt_ratio=%s, entropy_min_threshold=%s, entropy_max_threshold=%s, intensity_min_threshold_0=%s, intensity_max_threshold_0=%s, intensity_min_threshold_1=%s, intensity_max_threshold_1=%s, blur=%s WHERE id=%s'
+            query = """ 
+            UPDATE experiments SET img_width = %s, 
+            img_height = %s, 
+            img_mask_asphalt=%s, 
+            img_mask_aggregate=%s,
+            expert_guess=%s, 
+            info=%s, 
+            current_state=%s, 
+            asphalt_ratio=%s,
+            entropy_min_threshold=%s, 
+            entropy_max_threshold=%s, 
+            intensity_min_threshold_0=%s, 
+            intensity_max_threshold_0=%s, 
+            intensity_min_threshold_1=%s, 
+            intensity_max_threshold_1=%s,
+            blur=%s, 
+            img_mask_asphalt_manual_correction = %s, 
+            img_mask_aggregate_manual_correction=%s
+            WHERE id=%s"""
             values = (ts[session['user_id']].color_original.shape[1],
                       ts[session['user_id']].color_original.shape[0],
                       ts[session['user_id']].asphalt_mask.tobytes(),
@@ -674,6 +730,8 @@ def save_asphalt_record(**kwargs):
                       ts[session['user_id']].values.intensity_min_threshold_1,
                       ts[session['user_id']].values.intensity_max_threshold_1,
                       ts[session['user_id']].values.blur,
+                      ts[session['user_id']].asphalt_mask_manual_corrections.tobytes(),
+                      ts[session['user_id']].aggregate_mask_manual_corrections.tobytes(),
                       ts[session['user_id']].experiment_id)
             execute_query(query, values)
             print('Record up.')
@@ -691,7 +749,7 @@ def save_asphalt_record(**kwargs):
     return json.dumps({'status': status}), 200, {'Content-Type': 'application/json'}
 
 
-@app.route('/backup-storage',methods=['POST'])
+@app.route('/backup-storage',methods=['POST', 'GET'])
 @check_authentication
 def backup_temporal_storage():
     # This function bacups the temporary storage of the user and creates a new one
@@ -700,7 +758,7 @@ def backup_temporal_storage():
     ts[session['user_id']] = UserTemporaryStorage()
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
-@app.route('/restore-storage',methods=['POST'])
+@app.route('/restore-storage',methods=['POST', 'GET'])
 @check_authentication
 def restore_temporal_storage():
     # This function restores the temporary storage of the user from the backup
@@ -716,7 +774,6 @@ def remove_picture_background():
     # denoting wether a pixel should (T) or should not (F) be taken into
     # account during the other computations
     # adjust the mask by setting a manual threshold 
-    
     
     # read the necessary properties
     file = request.files['file']
@@ -734,6 +791,11 @@ def remove_picture_background():
     else:
         image = Image.open(file.stream)
         ts[session['user_id']].color_original = np.array(image)
+ 
+    # if the alpha channel is not present, add it   
+    if ts[session['user_id']].color_original.shape[2] == 3:
+        ts[session['user_id']].color_original = np.concatenate((ts[session['user_id']].color_original, np.ones((ts[session['user_id']].color_original.shape[0], ts[session['user_id']].color_original.shape[1], 1), dtype=np.uint8)*255), axis=2)
+    
     # image = request.form.get('image')
     # image=np.array(request.form.get('image'),dtype=np.int8)
     
@@ -755,10 +817,14 @@ def remove_picture_background():
         
     # save the requested variables (in future this should be different function, doing everything at once and more 
     # importantly, at the end, when the user is satisfied with the result so we won't be constantly overwriting the DB)
-    ts[session['user_id']].aggregate_mask = np.array(mask, dtype=bool)
+    ts[session['user_id']].aggregate_mask = np.array(mask/255, dtype=int)
     ts[session['user_id']].values.threshold = threshold
     ts[session['user_id']].color = image
- 
+    
+    # allocate the memory for the manual corrections and the asphalt mask
+    ts[session['user_id']].asphalt_mask = np.zeros_like(mask, dtype=int)
+    ts[session['user_id']].asphalt_mask_manual_corrections = np.zeros_like(mask, dtype=int)
+    ts[session['user_id']].aggregate_mask_manual_corrections = np.zeros_like(mask, dtype=int)
     
     # return the mask
     print('Background removed')
@@ -816,8 +882,8 @@ def blur_caller():
     encoded_gray = encode_to_png(ts[session['user_id']].gray)
     encoded_color = encode_to_png(ts[session['user_id']].color)
     encoded_no_bg = encode_to_png(ts[session['user_id']].color*ts[session['user_id']].aggregate_mask[:,:,None])
-    print('ci shape',ts[session['user_id']].color.shape)
-    print('mask shape',ts[session['user_id']].aggregate_mask.shape)
+    # print('ci shape',ts[session['user_id']].color.shape)
+    # print('mask shape',ts[session['user_id']].aggregate_mask.shape)
     
     encoded_gray = base64.b64encode(encoded_gray).decode('utf-8')
     encoded_color = base64.b64encode(encoded_color).decode('utf-8')
@@ -883,6 +949,22 @@ def apply_mask():
     entropy_byte_arr = base64.b64encode(entropy_byte_arr).decode('utf-8')
     return json.dumps({'overlay': img_byte_arr, 'entropy': entropy_byte_arr}), 200, {'Content-Type': 'application/json'}
 
+def return_aggregate_mask():
+    mask = ts[session['user_id']].aggregate_mask + ts[session['user_id']].aggregate_mask_manual_corrections
+    ic('AGG')
+    ic(np.sum(mask) / mask.shape[0] / mask.shape[1])
+    return mask.astype(bool)
+    
+def return_asphalt_mask():
+    mask = ts[session['user_id']].asphalt_mask + ts[session['user_id']].asphalt_mask_manual_corrections
+    ic('ASP')
+    ic(np.sum(mask) / mask.shape[0] / mask.shape[1])
+    return mask.astype(bool)
+
+def return_foreground_mask():
+    mask = return_asphalt_mask() | return_aggregate_mask()
+    return mask.astype(bool)    
+
 def apply_red_overlay(masked_img, intensity_img, entropy_img, min_thresholds, max_thresholds, entropy_min_threshold,
                       entropy_max_threshold):        
     intensity_mask_0 = (intensity_img >= min_thresholds[0]) & (intensity_img <= max_thresholds[0])
@@ -892,8 +974,9 @@ def apply_red_overlay(masked_img, intensity_img, entropy_img, min_thresholds, ma
 
     intensity_mask = intensity_mask_0 | intensity_mask_1
     combined_mask = intensity_mask & entropy_mask
-    combined_mask *= ts[session['user_id']].aggregate_mask.astype(bool)  
-   
+    combined_mask &= return_foreground_mask() 
+    # print('Combined mask:', np.sum(combined_mask))
+    # print('Foreground mask:', np.sum(return_foreground_mask()))
     # Create an RGBA version of the processed data
     rgba_image = np.dstack([masked_img] * 3 + [np.full(masked_img.shape, 255, dtype=np.uint8)])
 
@@ -903,14 +986,131 @@ def apply_red_overlay(masked_img, intensity_img, entropy_img, min_thresholds, ma
     red_overlay[combined_mask] = [255, 0, 0, 128]  # Semi-transparent red overlay where mask is True
     # Combine the original image with the overlay
     # overlay_image = Image.alpha_composite(Image.fromarray(rgba_image), Image.fromarray(red_overlay))
-    ts[session['user_id']].asphalt_mask = (red_overlay[:,:,-1] == 128).astype(bool)
+    fg_mask = return_foreground_mask().astype(int)
+    # adjust the manual corrections    
+    ts[session['user_id']].asphalt_mask = (red_overlay[:,:,-1] == 128).astype(int)
+    ts[session['user_id']].aggregate_mask = fg_mask - ts[session['user_id']].asphalt_mask
+
     print('Overlay applied.')
 
     return red_overlay
+
+def get_inner_shape(shape_object):
+    # raise NotImplementedError
+    grid_size_x, grid_size_y = ts[session['user_id']].color_original.shape[:2]
+    y, x = np.meshgrid(np.arange(grid_size_x), np.arange(grid_size_y))
+    points = np.vstack((x.ravel(), y.ravel())).T
+    match shape_object["type"]:
+        case "polygon":
+            poly_path = polygon_path([p for p in zip(shape_object["points"][::2], shape_object["points"][1::2])])
+            mask = poly_path.contains_points(points).reshape((grid_size_y, grid_size_x))
+        case "rectangle":
+            min_x, min_y = min(shape_object["points"][::2]), min(shape_object["points"][1::2])
+            max_x, max_y = max(shape_object["points"][::2]), max(shape_object["points"][1::2])
+            mask = (x >= min_x) & (x <= max_x) & (y >= min_y) & (y <= max_y)
+        case "ellipse":
+            np_points = np.array(shape_object["points"])
+            center = (np_points[:2]+np_points[2:4])/2
+            radius_x = np.abs(np_points[0] - center[0])
+            radius_y = np.abs(np_points[-1] - center[1])
+            mask = (((x - center[0]) / radius_x) ** 2 + ((y - center[1]) / radius_y) ** 2 ) <= 1
+    return np.array(mask, dtype=bool).T
+
+def correct_mask(mask: np.ndarray, label: str) -> None:
+    match label:
+        case "asphalt":
+            lidx = mask & ~ts[session['user_id']].asphalt_mask
+            ts[session['user_id']].asphalt_mask_manual_corrections[lidx.astype(bool)] = 1
+            lidx = mask & ts[session['user_id']].asphalt_mask
+            ts[session['user_id']].asphalt_mask_manual_corrections[lidx.astype(bool)] = 0
+            lidx = mask & abs(ts[session['user_id']].aggregate_mask_manual_corrections)
+            ts[session['user_id']].aggregate_mask_manual_corrections[lidx.astype(bool)] = 0
+            lidx = mask & ts[session['user_id']].aggregate_mask
+            ts[session['user_id']].aggregate_mask_manual_corrections[lidx.astype(bool)] = -1
+
+        case "aggregate":
+            lidx = (mask & ~ts[session['user_id']].aggregate_mask).astype(bool)
+            ts[session['user_id']].aggregate_mask_manual_corrections[lidx] = 1
+            lidx = (mask & ts[session['user_id']].aggregate_mask).astype(bool)
+            ts[session['user_id']].aggregate_mask_manual_corrections[lidx] = 0
+            lidx =( mask & abs(ts[session['user_id']].asphalt_mask_manual_corrections)).astype(bool)
+            ts[session['user_id']].asphalt_mask_manual_corrections[lidx] = 0
+            lidx = (mask & ts[session['user_id']].asphalt_mask).astype(bool)
+            ts[session['user_id']].asphalt_mask_manual_corrections[lidx] = -1
+        case "background":
+            lidx = (mask & abs(ts[session['user_id']].aggregate_mask_manual_corrections)).astype(bool)
+            ts[session['user_id']].aggregate_mask_manual_corrections[lidx] = 0
+            lidx = (mask & abs(ts[session['user_id']].asphalt_mask_manual_corrections)).astype(bool)
+            ts[session['user_id']].asphalt_mask_manual_corrections[lidx] = 0
+            lidx = (mask & (ts[session['user_id']].aggregate_mask)).astype(bool)
+            ts[session['user_id']].aggregate_mask_manual_corrections[lidx] = -1
+            lidx = (mask & (ts[session['user_id']].asphalt_mask)).astype(bool)
+            ts[session['user_id']].asphalt_mask_manual_corrections[lidx] = -1
+            
+    return None
+
+
+@app.route('/get-corrected-mask', methods=['POST'])
+def get_corrected_mask() -> tuple[dict, int, dict]:
+    # choose intensity for drawing the masks
+    intensity = 51 
+    
+    draw_mask_aggregate=np.zeros_like(ts[session['user_id']].color_original)
+    draw_mask_aggregate[:,:,3]=intensity*return_aggregate_mask()
+    encoded_aggregate = encode_to_png(draw_mask_aggregate)
+    
+    draw_mask_asphalt=np.zeros_like(ts[session['user_id']].color_original)
+    draw_mask_asphalt[:,:,3]=intensity*return_asphalt_mask()
+    encoded_asphalt = encode_to_png(draw_mask_asphalt)
+
+    draw_mask_aggregate[:,:,3][~np.any(ts[session['user_id']].aggregate_mask_manual_corrections | ts[session['user_id']].aggregate_mask, axis=-1)]=0
+    
+    draw_mask_bg=np.zeros_like(ts[session['user_id']].color_original)
+    draw_mask_bg[:,:,3] = intensity * (~return_foreground_mask())
+    encoded_bg = encode_to_png(draw_mask_bg)
+    
+    encoded_aggregate = base64.b64encode(encoded_aggregate).decode('utf-8')
+    encoded_asphalt = base64.b64encode(encoded_asphalt).decode('utf-8') 
+    encoded_bg = base64.b64encode(encoded_bg).decode('utf-8')
+    
+    # image_width = ts[session['user_id']].color_original.shape[1] 
+    # image_height = ts[session['user_id']].color_original.shape[0] 
+    # print('im shape',ts[session['user_id']].color_original.shape)
+    # print('bg',np.sum(draw_mask_bg[:,:,3].ravel())/image_width/image_height/intensity)
+    # print('agg',np.sum(draw_mask_aggregate[:,:,3].ravel())/image_width/image_height/intensity)
+    # print('asphalt',np.sum(draw_mask_asphalt[:,:,3].ravel())/image_width/image_height/intensity)
+    # print(np.sum(draw_mask_bg[:,:,3].ravel()+draw_mask_aggregate[:,:,3].ravel()+draw_mask_asphalt[:,:,3].ravel())/image_width/image_height/intensity)
+    
+    # return encoded_bg, encoded_aggregate, encoded_asphalt
+    json_response = {'status': 'success', 'bg': encoded_bg, 'aggregate': encoded_aggregate, 'asphalt': encoded_asphalt}
+    return json.dumps(json_response), 200, {'Content-Type': 'application/json'}
+
+@app.route('/save-annotation', methods=['POST'])
+@check_authentication
+def save_annotation():
+    # Annotate the data according to the request
+    annotation = request.get_json()
+    mask = get_inner_shape(annotation["shape"])
+    correct_mask(mask, annotation["label"])             
+    # Save the annotation to the database
+    save_asphalt_record()
+    print('Annotation saved.')
+    # return masks for bg, aggregate and asphalt
+    return get_corrected_mask()
+    
+
+    # encoded_bg, encoded_aggregate, encoded_asphalt = get_corrected_mask()
+    # json_response = {'status': 'success', 'bg': encoded_bg, 'aggregate': encoded_aggregate, 'asphalt': encoded_asphalt}
+    # return json.dumps(json_response), 200, {'Content-Type': 'application/json'}
 
 @app.route('/static/<path:path>')
 def send_static(path):
     return send_from_directory('static', path)
 
+@app.route('/node_modules/<path:path>')
+def send_node_modules(path):
+    return send_from_directory('node_modules', path)
+
 if __name__ == "__main__":
     app.run(debug=True)
+

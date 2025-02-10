@@ -1,3 +1,5 @@
+import base64toBlob from "./utils.js";
+
 // global variables
 let uploadedImageURL_color = null;
 let uploadedImageURL_gray = null;
@@ -12,6 +14,10 @@ let entropyURL = null;
 let uploadedImage = new Image();
 let uploadedImageOverlay = new Image();
 let uploadedEntropyImage = new Image();
+
+// helper declarations because of the global scope
+let grayscaleImageData = null;
+let originalEntropyImageData = null;
 
 // IMAGE FUNCTIONS
 uploadedEntropyImage.onload = function() {
@@ -99,12 +105,12 @@ function validateThresholds(id) {
     let val = Math.max(0, Math.min(255, parseInt(input_value)));
     // value/slider
     document.getElementById(id).value = val;
-    comp_id = id.includes('Value') ? id.replace('Value', 'Slider') : id.replace('Slider', 'Value');
+    const comp_id = id.includes('Value') ? id.replace('Value', 'Slider') : id.replace('Slider', 'Value');
     document.getElementById(comp_id).value = val;
     
     // the other slider id
     if (id.toLowerCase().includes('min')) {
-        mm_id = replaceKeepCase(id,'min', 'max');
+        const mm_id = replaceKeepCase(id,'min', 'max');
         if (val > document.getElementById(mm_id).value) {
             document.getElementById(mm_id).value = val;
             document.getElementById(mm_id.replace('Value', 'Slider')).value = val;
@@ -112,7 +118,7 @@ function validateThresholds(id) {
             document.getElementById(mm_id).dispatchEvent(new Event('change'));
         }
     } else if (id.toLowerCase().includes('max')) {
-        mm_id = replaceKeepCase(id,'max', 'min');
+        const mm_id = replaceKeepCase(id,'max', 'min');
         if (val < document.getElementById(mm_id).value) {
             document.getElementById(mm_id).value = val;
             document.getElementById(mm_id.replace('Value', 'Slider')).value = val;
@@ -226,7 +232,7 @@ document.getElementById('blurSlider').addEventListener('change', async function(
     document.getElementById('blurValue').value = this.value;
     document.getElementById('blurSlider').value = this.value;
     await blurImage(this.value);
-    fetch('/save_value/blur',method=['POST'])
+    fetch('/save_value/blur',{ method: 'POST' })
     redrawCanvases();
     removeWorkingMessage();
 });
@@ -481,18 +487,18 @@ function removeWorkingMessage() {
     workingMessage.style.display = 'none';
 }
 
-// this function converts a base64 string to a blob
-// the images are in a str64 format and it is decoded as a utf-8 string
-// we need to convert them to a blob
-function base64toBlob(base64, type) {
-    var byteString = atob(base64);
-    var ab = new ArrayBuffer(byteString.length);
-    var ia = new Uint8Array(ab);
-    for (var i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-    }
-    return new Blob([ab], { type: type });
-}
+// // this function converts a base64 string to a blob
+// // the images are in a str64 format and it is decoded as a utf-8 string
+// // we need to convert them to a blob
+// function base64toBlob(base64, type) {
+//     var byteString = atob(base64);
+//     var ab = new ArrayBuffer(byteString.length);
+//     var ia = new Uint8Array(ab);
+//     for (var i = 0; i < byteString.length; i++) {
+//         ia[i] = byteString.charCodeAt(i);
+//     }
+//     return new Blob([ab], { type: type });
+// }
 
 
 function blurImage(blurValue) {
@@ -567,8 +573,8 @@ function drawIntensityHistogram() {
         const intensity = data[i];
         histogram[intensity]++;
     }
-    minThresholds = [document.getElementById('minThresholdSlider0').value,document.getElementById('minThresholdSlider1').value];
-    maxThresholds = [document.getElementById('maxThresholdSlider0').value,document.getElementById('maxThresholdSlider1').value];
+    const minThresholds = [document.getElementById('minThresholdSlider0').value,document.getElementById('minThresholdSlider1').value];
+    const maxThresholds = [document.getElementById('maxThresholdSlider0').value,document.getElementById('maxThresholdSlider1').value];
     drawHistogram(canvas, histogram, minThresholds, maxThresholds);
 }
 
@@ -589,8 +595,8 @@ function drawEntropyHistogram() {
         histogram[value]++;
     }
 
-    minThreshold = [document.getElementById('entropyMinThresholdSlider').value];
-    maxThreshold = [document.getElementById('entropyMaxThresholdSlider').value];
+    const minThreshold = [document.getElementById('entropyMinThresholdSlider').value];
+    const maxThreshold = [document.getElementById('entropyMaxThresholdSlider').value];
     drawHistogram(canvas, histogram, minThreshold, maxThreshold);
 }
 
@@ -847,11 +853,12 @@ document.getElementById('index_evaluation').addEventListener('click', async func
             return;
     } else {
     const uniqueQuery = '?nocache=' + new Date().getTime();
+    console.log('Evaluating the experiment...');
     fetch('/evaluate-asphalt' + uniqueQuery, { method: 'POST' })
     .then(response => response.json())
     .then(response => {
-        displayNum = response.evaluation*100;
         // display only 2 decimal places;
+        let displayNum = response.evaluation*100;
         displayNum = displayNum.toFixed(2);
         alert('Evaluation completed. Check the console for the results.' + '\n' + 'Evaluation results: ' + displayNum + '%');
         }
@@ -879,7 +886,7 @@ document.getElementById('expertGuess').addEventListener('change', function() {
         value = this.value;
         // send the value to the server
         var  formData = new FormData();
-        formData.append('expertGuess', value/100);
+        formData.append('expert_guess', value/100);
         const uniqueQuery = '?nocache=' + new Date().getTime();
         fetch('/update_value/expert_guess' + uniqueQuery, { method: 'POST', body: formData })
     }
@@ -900,7 +907,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // keyboard shortcuts
 document.addEventListener('keydown', function(event) {
-    eventKey = event.key.toLowerCase();
+    const eventKey = event.key.toLowerCase();
     switch (eventKey) {
         case 'a':
             document.getElementById('redOverlayCheckbox').checked = !document.getElementById('redOverlayCheckbox').checked;

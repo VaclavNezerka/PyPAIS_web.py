@@ -97,6 +97,13 @@
             <label for="fileInput"  class="custom-file-label">Use device camera</label>
         </div>
     </div>
+
+    <div id="fileProgressDiv" class="row" style="display:none">
+        Loading...
+        <div class="column">
+            <progress id="fileProgress" value="0" max="100" style="width: 100%; display: none;"></progress>
+        </div>
+    </div>
     
     <h2>{{dynamic_content}}</h2>
      <table>

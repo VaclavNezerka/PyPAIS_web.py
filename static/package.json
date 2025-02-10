@@ -1,0 +1,19 @@
+{
+  "name": "static",
+  "version": "1.0.0",
+  "type":"module",
+  "description": "",
+  "main": "manual_corrections.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@annotorious/annotorious": "^3.0.11",
+    "@annotorious/openseadragon": "^3.0.11",
+    "konva": "^9.3.15",
+    "openseadragon": "^5.0.0"
+  }
+}

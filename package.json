@@ -1,0 +1,6 @@
+{
+  "name": "pypais",
+  "version": "1.0.0",
+  "main": "manual_corrections.js",
+  "type": "module"
+}

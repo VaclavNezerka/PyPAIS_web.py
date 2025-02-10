@@ -1,3 +1,22 @@
+if ('serviceWorker' in navigator) {
+    // unregister the service worker worker_0.js
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+            registration.unregister();
+        }
+    });
+}
+// register the service worker worker_0.js
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/static/worker_0.js', { scope: '/static/' })
+    .then((registration) => {
+        console.log('Service Worker registered with scope:', registration.scope);
+    })
+    .catch((error) => {
+        console.error('Service Worker registration failed:', error);
+    }
+    );
+}
 // import save from script.js
 // import {activateExperiment} from './script.js';
 
@@ -156,25 +175,87 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-document.getElementById('fileInput').addEventListener('change', async function() {
-    // uploadFiles;
-    files = Array.from(this.files);
+
+document.getElementById('fileInput').addEventListener('change', function() {
+
+});
+
+// function uploadFiles(filesUploaded) {
+//     let files = Array.from(filesUploaded);    
+//     return new Promise(async (resolve, reject) => {
+//         try {
+//             for (let i = 0; i < files.length; i++) {
+//                 console.log('Uploading file...', i);
+//                 const formData = new FormData();
+//                 formData.append('file', files[i]);
+//             await fetch('/backup-storage', { method: 'POST' });
+//             await Promise.all([
+//                 fetch('/remove-background', { method: 'POST', body: formData }),
+//                 fetch('/grayscale-data', { method: 'POST', body: formData }),
+//             ])
+//             await fetch('/entropy', { method: 'POST', body: formData })
+//             await fetch('/apply-mask', { method: 'POST' });
+//             await fetch('/save?status=processing', { method: 'POST' }).catch((error) => {
+//                 console.error('Error:', error);
+//             });
+//             await fetch('restore-storage', { method: 'POST' });        
+//         }
+//         // window.location.reload();
+//         resolve();
+//     }
+//      catch (error) {
+//         reject(error);
+//     }    
+//     });
+// }
+
+
+let progress = document.getElementById('fileProgress');
+let totalFiles = 0;
+let uploadedFiles = 0;
+document.getElementById('fileInput').addEventListener('change', () => {
+    const filesUploaded = document.getElementById('fileInput').files;
+    progress.style.display = 'block';
+    document.getElementById('fileProgressDiv').style.display = 'block';
+    totalFiles = filesUploaded.length;
     
-    for (let i = 0; i < files.length; i++) {
-        const formData = new FormData();
-        formData.append('file', files[i]);
-        console.log('Uploading file...', i);
-        await fetch('/backup-storage', { method: 'POST' });
-        await Promise.all([
-            fetch('/remove-background', { method: 'POST', body: formData }),
-            fetch('/grayscale-data', { method: 'POST', body: formData }),
-        ])
-        await fetch('/entropy', { method: 'POST', body: formData })
-        await fetch('/apply-mask', { method: 'POST' });
-        await fetch('/save?status=processing', { method: 'POST' }).catch((error) => {
-            console.error('Error:', error);
-        });
-        await fetch('restore-storage', { method: 'POST' });        
+    // pass the files to the service worker
+    const worker = new Worker('/static/worker_0.js');
+    worker.postMessage({ filesUploaded });
+    worker.onmessage = function(e) {
+        if (e.data === 'success') {
+            console.log('Success:', e.data);
+            window.location.reload();
+        } else if (e.data === 'report') {
+            uploadedFiles++;
+            console.log('Uploading file...', (uploadedFiles / totalFiles) * 100);
+            progress.value = (uploadedFiles / totalFiles) * 100;
+            if (uploadedFiles === totalFiles) {
+                progress.style.display = 'none';
+                uploadedFiles = 0;
+                totalFiles = 0;
+            } else {
+                console.log('Uploading file...', uploadedFiles);
+            }
+            console.log('Success:', e.data);
+        } else {
+            console.error('Error:', e.data);
+        }
+    }; 
+});
+
+window.addEventListener('message', function(e) {
+    if (e.data === 'success') {
+        window.location.reload();
+    } else if (e.data === 'report') {
+        progress.value = (e.data / totalFiles) * 100;
+        if (uploadedFiles === totalFiles) {
+            progress.style.display = 'none';
+        } else {
+            console.log('Uploading file...', uploadedFiles);
+        }
+        console.log('Success:', e.data);
+    } else {
+        console.error('Error:', e.data);
     }
-    window.location.reload();
 });

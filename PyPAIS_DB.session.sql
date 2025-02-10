@@ -32,6 +32,9 @@ CREATE TABLE experiments(
     info TEXT
 );
 
+ALTER TABLE experiments ADD COLUMN img_mask_asphalt_manual_correction BYTEA DEFAULT NULL;
+ALTER TABLE experiments ADD COLUMN img_mask_aggregate_manual_correction BYTEA DEFAULT NULL;  
+
 ALTER TABLE experiments ADD COLUMN img_width INT DEFAULT NULL;
 ALTER TABLE experiments ADD COLUMN img_height INT DEFAULT NULL;
 ALTER TABLE experiments ALTER COLUMN current_state varchar(10) DEFAULT 'pending' CHECK (current_state IN ('pending', 'processing', 'prepared', 'started' , 'finished', 'current_experiment'));

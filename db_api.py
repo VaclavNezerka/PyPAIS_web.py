@@ -57,7 +57,9 @@ def load_experiment_from_db(cur,conn, id):
                 entropy_min_threshold, entropy_max_threshold, 
                 intensity_min_threshold_0,intensity_max_threshold_0,
                 intensity_min_threshold_1,intensity_max_threshold_1,
-                blur
+                blur,
+                img_mask_asphalt_manual_correction,
+                img_mask_aggregate_manual_correction
                 FROM experiments WHERE id=%s""", (id,))
     response = cur.fetchall()
     return response
