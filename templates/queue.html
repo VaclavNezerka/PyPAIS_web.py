@@ -6,88 +6,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Experiment Records</title>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        text-align: center;
-        background-color: #f4f4f4;
-    }
-
-    .container {
-        width: 80%;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: white;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
-
-    th, td {
-        padding: 10px;
-        border: 1px solid #ddd;
-    }
-
-    th {
-        background-color: darkslategrey;
-        color: white;
-    }
-
-    tr:nth-child(even) {
-        background-color: #f2f2f2;
-    }
-
-    .btn-details, .btn-export {
-        padding: 8px 12px;
-        margin-right: 5px;
-        border: none;
-        border-radius: 3px;
-        background-color: #007bff;
-        color: white;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-    .btn-cancel {
-        padding: 8px 12px;
-        margin-right: 5px;
-        border: none;
-        border-radius: 3px;
-        background-color: #881c1c;
-        color: white;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-    
-    .btn-details:hover, .btn-export:hover {
-        background-color: #0056b3;
-    }
-
-    input[type="text"], input[type="number"] {
-        padding: 8px 12px;
-        border: 1px solid #ddd;
-        border-radius: 3px;
-        font-size: 14px;
-        transition: border-color 0.3s ease;
-    }
-
-    input[type="text"]:focus, input[type="number"]:focus {
-        outline: none;
-        border-color: #007bff;
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+    <title>Experiment Records</title>
 </head>
-<div class="container">
-    <h2>Add to queue</h2>
+    <div class="colorbar">
+        <h2>{{dynamic_content}}</h2>
+    </div>
+    <div id="fileProgressDiv"  class="loading" style="display:none">
+        Uploading files, please wait...
+        <!-- <progress id="fileProgress" value="0" max="100" style="width: 100%; display: none;" class = "progress"></progress> --> 
+        <progress id="fileProgress" value="0" max="100" style="width: 100%; display: none;" class = "progress"></progress>
+
+    </div>
+    
+    <div class="container">
     <div class="row">
+        <div class="column">
+           <h2>Add to queue</h2>
+        </div>
         <div class="column">
             <input type="file" id="fileInput" accept="image/*" class="custom-file-input" name="files[]" multiple>
             <label for="fileInput"  class="custom-file-label">Choose File</label>
@@ -97,15 +35,7 @@
             <label for="fileInput"  class="custom-file-label">Use device camera</label>
         </div>
     </div>
-
-    <div id="fileProgressDiv" class="row" style="display:none">
-        Loading...
-        <div class="column">
-            <progress id="fileProgress" value="0" max="100" style="width: 100%; display: none;"></progress>
-        </div>
-    </div>
     
-    <h2>{{dynamic_content}}</h2>
      <table>
          <thead>
             <tr>

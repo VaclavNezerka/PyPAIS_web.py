@@ -6,31 +6,35 @@
 <html>
     <!-- <head>Registration Form</head> -->
     <body>
-        <h1>{{ dynamic_content }}</h1>
-        <form method="post">
+        <div class="colorbar">
+            <h1>{{ dynamic_content }}</h1>
+        </div>
+        
+            <form method="post">
             {{ form.hidden_tag() }} 
             <!-- Include the CSRF token field -->
             {% for field in form %}
-                {% if field.type != 'CSRFTokenField' %}
-                    {% if field.type == 'SubmitField'  %}
-                            <div>
-                                <button type="submit">submit</button>                                
-                            </div>
-                            {% for error in field.errors %}
+            {% if field.type != 'CSRFTokenField' %}
+            {% if field.type == 'SubmitField'  %}
+            <div>
+                <button type="submit">submit</button>                                
+            </div>
+            {% for error in field.errors %}
                                 <p style="color: darkred;">{{error}}</p>
-                            {% endfor %}
-                        {% elif field.type != 'HiddenField'  %}
-                            <div>{{field.label}}{{field}}</div>
+                                {% endfor %}
+                                {% elif field.type != 'HiddenField'  %}
+                                <div>{{field.label}}{{field}}</div>
                             {% for error in field.errors %}
-                                <p style="color: darkred;">{{error}}</p>
+                            <p style="color: darkred;">{{error}}</p>
                             {% endfor %}
                         {% endif %}
                     {% endif %}
-            {% endfor %}
+                    {% endfor %}
         </form>
     </body>
-</html>
-{% endblock content %}
+    </html>
+    {% endblock content %}
 
+    
 
-
+    

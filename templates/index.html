@@ -3,135 +3,184 @@
 {% block content %}
 
 
+
 <html>
     <head>
         <title>Image Processing with Histogram and Entropy</title>
         <link rel="stylesheet" href="/static/styles.css">
         <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
     </head> 
+    
+    <!-- OpenSeadragon -->
+    <script src="../static/openseadragon_5.0/openseadragon.min.js"></script>
+    <!-- Konva.js -->
+    <script src="../static/node_modules/konva/konva.min.js"></script>
+    
     <body>
-        <div class="container">
-            <!-- First Row: Image Upload -->
-            <div class="row">
-                <input type="file" id="fileInput" accept="image/*" class="custom-file-input">
-                <label for="fileInput" class="custom-file-label">Choose File</label>
-            </div>
-            <div class="row">
+    <div id="row", class = "colorbar">
+        <h2> Current Experiment</h2>
+    </div>
+
+    <div class="container">
+        <!-- First Row: Image Upload -->
+        <div class="row">
+            <input type="file" id="fileInput" accept="image/*" class="custom-file-input"></input>
+            <label for="fileInput" class="custom-file-label">Choose File</label>
+        </div>
+    </div>
+
+    <div id="row", class = "colorbar">
+        <h3> Basic Information</h3>
+    </div>
+
+    <div class="row">
+        <!-- Row: Information -->
+        <!-- max  -->
+        <div  class="column">
+            <p>Information (max. 1024 characters):</p>
+            <input type="text" id="info" placeholder="Information about the mixture." maxlength="1024"/>
+        </div>
+        <!-- Row: Expert Guess -->
+        <div class="column">
+            <p>Expert Guess [%]:</p>
+            <input type="number" id="expertGuess" placeholder="Expert Guess"/>
+        </div>
+   </div>
+
+        
+    <div id="row", class = "colorbar">
+        <h3> Automatic Thresholding</h3>
+    </div>
+    <div class="loading" id="workingMessage" style="display:none;">
+        Working...
+    </div>
+            
+        <div class="row">
             <!-- Add a droplist allowing the user to select ORIGINAL IMAGE, original with no bg, and BW -->
             <div class="column">
-                <select id="imageType" >
-                    <option value="original">("c") Original Image</option>
-                    <option value="original_no_bg">("c") Removed Background</option>
-                    <option value="bw">("c") Grayscale Image</option>
-                </select>
+                <div class="column">
+                    <select id="imageType" >
+                        <option value="original">("c") Original Image</option>
+                        <option value="original_no_bg">("c") Removed Background</option>
+                        <option value="bw">("c") Grayscale Image</option>
+                    </select>
+                </div>
+                <div class="column">
+                    <input type="checkbox" id="sharpnessCheckbox" >Display blur ("b")</input>
+                </div>
+                <div class="column">
+                    <input type="checkbox" id="redOverlayCheckbox"  >Display Asphalt ("a")</input>
+                </div>
             </div>
-            <!-- Add a checkmark box controlling if the displayed image is supposed to be sharp or blured -->
-            <div class="column">
-                <input type="checkbox" id="sharpnessCheckbox" >Display blur ("b")</input>
-            </div>          
-            <div class="column">
-                <input type="checkbox" id="redOverlayCheckbox"  >Display Asphalt ("a")</input>
-            </div>          
+
             <div class="column">
                 <div class="slider-container">
-                    
                     <div class="slider-group">
-                        Image blurring: <input type="range" id="blurSlider" min="0" max="50" value="0">
+                        Image blurring: <input type="range" id="blurSlider" min="0" max="50" value="0" class = "slider">
                         <input type="text" id="blurValue" value="0" size="2">
-                    </div>
-             <div class="column">
-              <!-- Add a working message -->
-                <div id="workingMessage" style="display:none;">
-                    Working...
+                    </div>    
                 </div>
-                </div>
-
-                    
-                </div>
-            </div>
-            <div class="column">
-
             </div>
         </div>
-        
-        
-        <div class="row">
-            <!-- Row: Information -->
-            <!-- max  -->
-            <div  class="column">
-                <p>Information (max. 1024 characters):</p>
-                <input type="text" id="info" placeholder="Information about the mixture." maxlength="1024"/>
-            </div>
-            <!-- Row: Expert Guess -->
-            <div class="column">
-                <p>Expert Guess [%]:</p>
-                <input type="number" id="expertGuess" placeholder="Expert Guess"/>
-            </div>
-       </div>
-        
-        <!-- Second Row: Intensity Image and Controls -->
+
+    <!-- Second Row: Intensity Image and Controls -->
         <div class="row">
             <div class="column">
                 <img id="defaultImage" src="/static/logo.png" alt="Default Image">
-                <div class="img-magnifier-container">
-                    <canvas id="imageCanvas" ></canvas>
-                </div>
+                    <div class="img-magnifier-container">
+                        <canvas id="imageCanvas" ></canvas>
+                    </div>
             </div>
             <div class="column">
                 <canvas id="histogramCanvas"></canvas>
                 <div class="slider-container">
                     Brightness_0:<br> &nbsp;
                     <div class="slider-group">
-                        Min: <input type="range" id="minThresholdSlider0" min="0" max="255" value="0">
+                        Min: <input type="range" id="minThresholdSlider0" min="0" max="255" value="0" class = "slider">
                         <input type="text" id="minThresholdValue0" value="0" size="3">
                     </div>
                     <div class="slider-group">
-                        Max: <input type="range" id="maxThresholdSlider0" min="0" max="255" value="120">
+                        Max: <input type="range" id="maxThresholdSlider0" min="0" max="255" value="120" class = "slider">
                         <input type="text" id="maxThresholdValue0" value="120" size="3">
                     </div>
                 </div>
                 <div class="slider-container">
                     Brightness_1:<br> &nbsp;
                     <div class="slider-group">
-                        Min: <input type="range" id="minThresholdSlider1" min="0" max="255" value="220">
+                        Min: <input type="range" id="minThresholdSlider1" min="0" max="255" value="220" class = "slider">
                         <input type="text" id="minThresholdValue1" value="220" size="3">
                     </div>
                     <div class="slider-group">
-                        Max: <input type="range" id="maxThresholdSlider1" min="0" max="255" value="255">
+                        Max: <input type="range" id="maxThresholdSlider1" min="0" max="255" value="255" class = "slider">
                         <input type="text" id="maxThresholdValue1" value="255" size="3">
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Third Row: Entropy Image and Controls -->
-        <div class="row">
-            <div class="column">
-                <canvas id="entropyCanvas"></canvas>
-            </div>
-            <div class="column">
-                <canvas id="entropyHistogramCanvas"></canvas>
-                <div class="slider-container">
-                    Texture roughness:<br> &nbsp;
-                    <div class="slider-group">
-                        Min: <input type="range" id="entropyMinThresholdSlider" min="0" max="255" value="80">
-                        <input type="text" id="entropyMinThresholdValue" value="80" size="3">
-                    </div>
-                    <div class="slider-group">
-                        Max: <input type="range" id="entropyMaxThresholdSlider" min="0" max="255" value="160">
-                        <input type="text" id="entropyMaxThresholdValue" value="160" size="3">
-                    </div>
+    <!-- Third Row: Entropy Image and Controls -->
+    <div class="row">
+        <div class="column">
+            <canvas id="entropyCanvas"></canvas>
+        </div>
+        <div class="column">
+            <canvas id="entropyHistogramCanvas"></canvas>
+            <div class="slider-container">
+                Texture roughness:<br> &nbsp;
+                <div class="slider-group">
+                    Min: <input type="range" id="entropyMinThresholdSlider" min="0" max="255" value="80" class = "slider">
+                    <input type="text" id="entropyMinThresholdValue" value="80" size="3">
+                </div>
+                <div class="slider-group">
+                    Max: <input type="range" id="entropyMaxThresholdSlider" min="0" max="255" value="160" class = "slider">
+                    <input type="text" id="entropyMaxThresholdValue" value="160" size="3">
                 </div>
             </div>
         </div>
-
-        <div>
-            <button id='index_evaluation' type="submit">Evaluate</button>                                
+    </div>
+    
+    <div id="row", class = "colorbar">
+        <h3> Manual Corrections</h3>
+    </div>
+    
+    
+    <div class="container">
+    <!-- Annotation Tool Buttons -->
+        <div id="row", class = "row">
+            <div class="annotation-tools">
+                <button id="polygon-btn" class="tool-btn active">Polygon</button>
+                <button id="rectangle-btn" class="tool-btn">Rectangle</button>
+                <button id="ellipse-btn" class="tool-btn">Ellipse</button>
+            </div>
+        </div>
+        <div class = "viewer_box">
+            <div id="viewer", class = "viewer_box">
+            <div id="viewer"></div>
+            <div id="viewer_konva"></div>
+        </div>
+    
+        <div id="row", class = "row">
+            <div class="controls">
+                <button id="bgButton", class = "tool-btn">Background</button>
+                <button id="fgButton", class = "tool-btn">aggregate</button>
+                <button id="asphaltButton", class = "tool-btn">Asphalt</button>
+            </div>
         </div>
     </div>
     
+    
+    <div container = "row">
+        <div id="row", class = "row">
+            <div>
+                <button id='index_evaluation' type="submit">Evaluate</button>                                
+            </div>
+        </div>
+    </div>
+
+    
+    </body>
     <script type="module" src="/static/script.js"></script>
-</body>
+
 </html>
 
 {% endblock content %}
