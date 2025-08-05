@@ -9,13 +9,14 @@
         <title>Image Processing with Histogram and Entropy</title>
         <link rel="stylesheet" href="/static/styles.css">
         <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
+    
     </head> 
     
     <!-- OpenSeadragon -->
     <script src="../static/openseadragon_5.0/openseadragon.min.js"></script>
     <!-- Konva.js -->
     <script src="../static/node_modules/konva/konva.min.js"></script>
-    
+    <script type="module" src="/static/script.js"></script>
     <body>
     <div id="row", class = "colorbar">
         <h2> Current Experiment</h2>
@@ -145,42 +146,42 @@
     
     
     <div class="container">
-    <!-- Annotation Tool Buttons -->
-        <div id="row", class = "row">
-            <div class="annotation-tools">
-                <button id="polygon-btn" class="tool-btn active">Polygon</button>
-                <button id="rectangle-btn" class="tool-btn">Rectangle</button>
-                <button id="ellipse-btn" class="tool-btn">Ellipse</button>
+        <!-- Annotation Tool Buttons -->
+        <div id="row" class="row">
+            <div class="column">
+                <div class="annotation-tools">
+                    <button id="polygon-btn" class="tool-btn active">Polygon</button>
+                    <button id="rectangle-btn" class="tool-btn">Rectangle</button>
+                    <button id="ellipse-btn" class="tool-btn">Ellipse</button>
+                </div>
             </div>
-        </div>
-        <div class = "viewer_box">
-            <div id="viewer", class = "viewer_box">
-            <div id="viewer"></div>
-            <div id="viewer_konva"></div>
-        </div>
-    
-        <div id="row", class = "row">
-            <div class="controls">
-                <button id="bgButton", class = "tool-btn">Background</button>
-                <button id="fgButton", class = "tool-btn">aggregate</button>
-                <button id="asphaltButton", class = "tool-btn">Asphalt</button>
-            </div>
-        </div>
-    </div>
-    
-    
-    <div container = "row">
-        <div id="row", class = "row">
-            <div>
-                <button id='index_evaluation' type="submit">Evaluate</button>                                
+            <div class="column">
+                <div class="controls">
+                    <button id="bgButton" class="tool-btn">Background</button>
+                    <button id="fgButton" class="tool-btn">aggregate</button>
+                    <button id="asphaltButton" class="tool-btn">Asphalt</button>
+                </div>
             </div>
         </div>
     </div>
 
-    
-    </body>
-    <script type="module" src="/static/script.js"></script>
+    <div class="container">
+        <div id="dragon_row" class="row">
+            <div class="viewer_box">
+                <div id="viewer"></div>
+                <div id="viewer_konva"></div>
+            </div>
+        </div>
+    </div>
 
+    <div class="container">
+        <div class="row">
+            <button id='index_evaluation' type="submit">Evaluate</button>                                
+        </div>
+    </div>
+
+</body>
 </html>
+
 
 {% endblock content %}

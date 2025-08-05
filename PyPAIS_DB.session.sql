@@ -8,6 +8,11 @@ CREATE TABLE companies(
     company_address varchar(50)
 );
 
+INSERT INTO companies (company_name, company_address) 
+VALUES 
+('RSD', 'Čerčanská 2023/12, Krč, 140 00 Praha 4'),
+('CTU', 'Technická 1902/2, 166 27 Praha 6');
+
 CREATE TABLE users(
     id SERIAL PRIMARY KEY,
     first_name varchar(50) NOT NULL,
@@ -55,7 +60,7 @@ ALTER TABLE experiments RENAME COLUMN intensity_max_threshold TO intensity_max_t
 -- alter table experiments add column finished BOOLEAN DEFAULT FALSE;
 
 
-INSERT INTO experiments (added_by_user) VALUES (31) RETURNING id;
+-- INSERT INTO experiments (added_by_user) VALUES (31) RETURNING id;
 
 SELECT id, added_by_user, asphalt_ratio FROM experiments ORDER BY id DESC;
 -- SELECT * FROM experiments filter out the last 5 rows;
@@ -78,19 +83,16 @@ VALUES
 
 CREATE VIEW public_users AS SELECT id, first_name, last_name, company FROM users;
 
-INSERT INTO 
-companies (company_name, company_address) 
-VALUES 
-('RSD', 'rsd@fmail.com'),
-('CTU', 'ctu@fmail.com');
+-- INSERT INTO 
+-- companies (company_name, company_address) 
+-- VALUES 
+-- ('RSD', 'rsd@fmail.com'),
+-- ('CTU', 'ctu@fmail.com');
 
 INSERT INTO 
 users (first_name, last_name, username, e_mail, company) 
 VALUES 
-('Adam', 'Malik', 'amal', 'amal@fmail.com', 1),
-('Bdam', 'Nalik', 'bmal', 'bmal@fmail.com', 1),
-('Cdam', 'Halik', 'cmal', 'cmal@fmail.com', 2),
-('Ddam', 'Lalik', 'dmal', 'dmal@fmail.com', 1);
+('Test', 'User', 'testuser', 'tuser@fmail.com', 1);
 
 SELECT id, time_stamp, expert_guess FROM experiments where added_by_user=31 AND current_state='finished';
 
@@ -105,18 +107,24 @@ CREATE OR REPLACE VIEW public_users AS SELECT id, first_name, last_name, company
 ALTER TABLE companies RENAME COLUMN id TO company_id;
 CREATE VIEW public_companies AS SELECT company_id, company_name FROM companies;
 GRANT SELECT ON public_companies TO pypais_small;
-ALTER TABLE experiments add COLUMN finished BOOLEAN DEFAULT FALSE;
+-- ALTER TABLE experiments add COLUMN finished BOOLEAN DEFAULT FALSE;
 
 SELECT company_id FROM public_companies WHERE company_id=1 LIMIT 1;
-
-SELECT experiment FROM experiments WHERE added_by_user=1 LIMIT 1;
-
 GRANT SELECT ON experiments TO pypais_small;
-
 GRANT INSERT ON experiments TO pypais_small;
 
 -- grant all privileges on all tables in schema public to pypais_small;
 GRANT ALL PRIVILEGES ON experiments TO pypais_small;
-
 GRANT USAGE, SELECT ON SEQUENCE experiments_id_seq TO pypais_small;
 GRANT UPDATE ON public_users TO pypais_small;
+
+-- grant necessary privileges to the user pypais_small
+GRANT SELECT ON public_users TO pypais_small;
+GRANT INSERT ON public_users TO pypais_small;
+GRANT UPDATE ON public_users TO pypais_small;
+GRANT SELECT ON public_companies TO pypais_small;
+GRANT INSERT ON public_companies TO pypais_small;
+GRANT UPDATE ON public_companies TO pypais_small;
+GRANT SELECT, INSERT, UPDATE ON companies TO pypais_small;
+GRANT SELECT, INSERT, UPDATE ON users TO pypais_small;
+GRANT SELECT, INSERT, UPDATE ON user_id_seq TO pypais_small;

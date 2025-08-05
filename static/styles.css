@@ -459,7 +459,7 @@ select {
 
 .viewer_box > #viewer  {
     /* position: absolute; Make sure it's positioned on top of #viewer */
-    position: relative; /* Make sure it's positioned on top of #viewer */
+    position: absolute; /* Make sure it's positioned on top of #viewer */
     /* top: 80px;
     left: 20px; */
     /* width: 800px; */
@@ -488,13 +488,28 @@ select {
     outline:none; 
     background-color:#f4f4f4 !important;
     border-radius:3px;
-    position: absolute;
-    
+    position: absolute;    
+}
+
+#dragon_row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+}
+
+.viewer_box > #anchor {
+     width: 80%;
+    height: 80%;
+    outline:none; 
+    background-color:#f4f4f4 !important;
+    border-radius:3px;
+    position: relative;    
 }
 
 .controls {
-    position: absolute;
-    margin-top: 70px;
+    position: relative;
+    margin-top: 0%;
 }
 
 
@@ -559,11 +574,11 @@ button {
     background-color: var(--myBlue);
 }
 #fgButton:hover {
-    background-color: var(--myDarkRed);
+    background-color: var(--myDarkBlue);
 }   
 
 #fgButton.active {
-    background-color: var(--myDarkRed);
+    background-color: var(--myDarkBlue);
 }
 
 

@@ -25,6 +25,12 @@ from rich.traceback import install
 install()
 
 
+from typing_extensions import deprecated
+from models import discover_models, load_model, add_session_to_loaded_model, pop_session_from_loaded_models
+
+
+
+
 
 # Apps
 import forms 
@@ -134,7 +140,12 @@ def check_authentication(func):
 @app.route('/')
 @check_authentication
 def index():
-    return render_template('index.html', session=session), 200
+    models = discover_models()
+    return render_template('index.html', session=session, models=models), 200
+
+@app.route('/home')
+def home():
+    return render_template('home.html', session=session), 200
 
 @app.errorhandler(404)
 def page_not_found(error):
@@ -244,6 +255,7 @@ def login():
             values=(form.usernameXe_mail.data,form.usernameXe_mail.data)
             pwd_hash=execute_query(query=query,values=values)[0][0]
             authenticated=ws.check_password_hash(pwhash=pwd_hash,password=form.password.data)
+            print('Authenticated:', authenticated)
             if authenticated:
                 query='SELECT e_mail FROM public_users WHERE username=%s OR e_mail=%s'
                 mail=execute_query(query=query,values=values)[0][0]
@@ -346,7 +358,7 @@ def experiments():
     max_sub_id = min(len(data), start_sub_id+page_limit)
     data=data[start_sub_id:max_sub_id]
     records[1] = data
-    return render_template('experiments.html',records=records,session=session,dynamic_content='Experiments')
+    return render_template('experiments.html',records=records,session=session,dynamic_content='Experiment Records')
 
 
 
@@ -378,10 +390,15 @@ def register():
             form.password.data=ws.generate_password_hash(form.password.data,method=os.environ['HASH_METHOD'],salt_length=int(os.environ['SALT_LENGTH']))
             try:
                 form.company_id.data=int(form.company_id.data)
-                save_new_user_db(values=[field.data for field in form][:6])
-                flash(message='Registration was successful.',category='success')
-            except:
-                flash(message='The data was not provided in the requested format.',category='error')
+                result = save_new_user_db(values=[field.data for field in form][:6])
+                print(result == None)
+                if result is None:
+                    flash(message='Registration was successful.',category='success')
+                else:
+                    flash(message=f'Database error: {result}',category='error')
+                    return render_template('form.html',dynamic_content='Register new user',form=form,session=session)
+            except Exception as e:
+                flash(message=f'The data was not provided in the requested format: {e}',category='error')
                 return render_template('form.html',dynamic_content='Register new user',form=form,session=session)    
             return render_template('form.html',dynamic_content='Register new user',form=form,session=session)    
         else:
@@ -792,7 +809,11 @@ def remove_picture_background():
         image = Image.open(file.stream)
         ts[session['user_id']].color_original = np.array(image)
  
-    # if the alpha channel is not present, add it   
+    # if the image is BW image, convert it to RGB
+    if len(ts[session['user_id']].color_original.shape) == 2:
+        ts[session['user_id']].color_original = np.stack((ts[session['user_id']].color_original,)*3, axis=-1)
+
+    # if the alpha channel is not present, add it  
     if ts[session['user_id']].color_original.shape[2] == 3:
         ts[session['user_id']].color_original = np.concatenate((ts[session['user_id']].color_original, np.ones((ts[session['user_id']].color_original.shape[0], ts[session['user_id']].color_original.shape[1], 1), dtype=np.uint8)*255), axis=2)
     
@@ -836,6 +857,11 @@ def remove_picture_background():
                      'nobg': base64.b64encode(encode_to_png(ts[session['user_id']].color)).decode('utf-8')}
     return json.dumps(json_response), 200, {'Content-Type': 'application/json'}
     # return encode_to_png(image), 200, {'Content-Type': 'image/png'}
+
+
+
+
+
 
 
 @app.route('/entropy', methods=['POST'])
@@ -950,20 +976,37 @@ def apply_mask():
     return json.dumps({'overlay': img_byte_arr, 'entropy': entropy_byte_arr}), 200, {'Content-Type': 'application/json'}
 
 def return_aggregate_mask():
+    """
+    Returns a mask of the aggregate, i.e. pixels that are aggregate by automatic detection or manual corrections.
+    """
     mask = ts[session['user_id']].aggregate_mask + ts[session['user_id']].aggregate_mask_manual_corrections
     ic('AGG')
     ic(np.sum(mask) / mask.shape[0] / mask.shape[1])
     return mask.astype(bool)
     
 def return_asphalt_mask():
+    """
+    Returns a mask of the asphalt, i.e. pixels that are asphalt by automatic detection or manual corrections.
+    """
     mask = ts[session['user_id']].asphalt_mask + ts[session['user_id']].asphalt_mask_manual_corrections
     ic('ASP')
     ic(np.sum(mask) / mask.shape[0] / mask.shape[1])
     return mask.astype(bool)
 
-def return_foreground_mask():
+def return_foreground_mask() -> np.ndarray:
+    """
+    Returns a mask of the foreground, i.e. pixels that are asphalt or aggregate.
+    """
     mask = return_asphalt_mask() | return_aggregate_mask()
     return mask.astype(bool)    
+
+def return_background_mask() -> np.ndarray:
+    """
+    Returns a mask of the background, i.e. pixels that are not asphalt and not aggregate.
+    """
+    # return the mask of the background, i.e. pixels that are not asphalt and not aggregate
+    mask = np.logical_not(return_foreground_mask())
+    return mask.astype(bool)
 
 def apply_red_overlay(masked_img, intensity_img, entropy_img, min_thresholds, max_thresholds, entropy_min_threshold,
                       entropy_max_threshold):        

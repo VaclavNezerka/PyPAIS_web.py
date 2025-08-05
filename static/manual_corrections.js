@@ -1,3 +1,6 @@
+// import OpenSeadragon from "./openseadragon_5.0/openseadragon.min.js";
+import base64toBlob  from "../static/utils.js";
+
 let pointHistory = [];
 let waitingForApproval = false;
 
@@ -5,35 +8,37 @@ let waitingForApproval = false;
 let mask_bg = null;
 let mask_aggregate = null;
 let mask_asphalt = null;
+let displayed_mask = null;
 
-// const staticUrl = new URL("{{ url_for('static', filename='def_profile_picture.jpg') }}", window.location.href).href;        
-const staticUrl = uploadedImageURL_color;
+// const staticUrl = new URL("{{ url_for('..', filename='def_profile_picture.jpg') }}", window.location.href).href;        
+const staticUrl = new URL("{{ url_for('..', filename='def_profile_picture.jpg') }}");        
+// const staticUrl = original_image_url;  
 // const staticUrl = new URL("{{ url_for('static', filename='def_profile_picture.jpg') }}");
 
 // Initialize OpenSeadragon viewer
 const viewer = OpenSeadragon({
-  id: "viewer",
-  tileSize: 256,
-  minZoomLevel: 1,
-  maxZoomLevel: 8,
-  zoomInButton: "zoom-in",
-  zoomOutButton: "zoom-out",
-  homeButton: "home",
-  rotateLeftButton: "rotate-left",
-  rotateRightButton: "rotate-right",
-  showNavigator: true,
-  animationTime: 0.2,
-  preserveViewport: true,
-  tileSources: {
-    type: 'image',
-    url: staticUrl
-  },
-  gestureSettingsMouse: {
-    scrollToZoom: true,
-    clickToZoom: false,
-  },
+    id: "viewer",
+    tileSize: 256,
+    minZoomLevel: 1,
+    maxZoomLevel: 8,
+    zoomInButton: "zoom-in",
+    zoomOutButton: "zoom-out",
+    homeButton: "home",
+    rotateLeftButton: "rotate-left",
+    rotateRightButton: "rotate-right",
+    showNavigator: true,
+    animationTime: 0.2,
+    preserveViewport: true,
+    tileSources: {
+        type: 'image',
+        url: staticUrl
+      },
+      gestureSettingsMouse: {
+        scrollToZoom: true,
+        clickToZoom: false,
+      },
 });
-    
+/*
 const viewerMask = document.createElement('canvas');
 viewerMask.id = 'viewerMaskCanvas';
 viewerMask.width = viewer.container.clientWidth;
@@ -42,32 +47,35 @@ document.getElementById('viewer_mask').appendChild(viewerMask);
 
 const maskContext = viewerMask.getContext('2d');
 const maskImage = new Image();
-maskImage.src = mask_bg;
+// maskImage.src = mask_bg;
 maskImage.onload = function() {
-  maskContext.drawImage(maskImage, 0, 0, viewerMask.width, viewerMask.height);
-  initializeMask();
-};
+    maskContext.drawImage(maskImage, 0, 0, viewerMask.width, viewerMask.height);
+}; */
 
 
 // Wait for the OpenSeadragon viewer to fully open the image
-viewer.addHandler('open', function() {
-  // Get the image dimensions from the OpenSeadragon world
-  const tiledImage = viewer.world.getItemAt(0); // Assuming only one image
-  const imageWidth = tiledImage.getContentSize().x; // Image width in pixels
-  const imageHeight = tiledImage.getContentSize().y; // Image height in pixels
-  // Now set the viewer container to match the image dimensions
-  const viewerElement = document.getElementById('viewer');
-  viewerElement.style.width = imageWidth + 'px';
-  viewerElement.style.height = imageHeight + 'px';
-  // Optionally resize the Konva container to match the viewer
-  const konvaContainer = document.getElementById('viewer_konva');
-  konvaContainer.style.width = imageWidth + 'px';
-  konvaContainer.style.height = imageHeight + 'px';
-  // Adjust Konva stage size accordingly
-  konvaStage.width(imageWidth);
-  konvaStage.height(imageHeight);
-  konvaLayer.batchDraw();
-});
+  viewer.addHandler('open', function() {
+    // Get the image dimensions from the OpenSeadragon world
+    const tiledImage = viewer.world.getItemAt(0); // Assuming only one image
+    const imageWidth = tiledImage.getContentSize().x; // Image width in pixels
+    const imageHeight = tiledImage.getContentSize().y; // Image height in pixels
+
+    // Now set the viewer container to match the image dimensions
+    const viewerElement = document.getElementById('viewer');
+    viewerElement.style.width = imageWidth + 'px';
+    viewerElement.style.height = imageHeight + 'px';
+
+    // Optionally resize the Konva container to match the viewer
+    const konvaContainer = document.getElementById('viewer_konva');
+    konvaContainer.style.width = imageWidth + 'px';
+    konvaContainer.style.height = imageHeight + 'px';
+
+    // Adjust Konva stage size accordingly
+    konvaStage.width(imageWidth);
+    konvaStage.height(imageHeight);
+    konvaLayer.batchDraw();
+  });
+
 
 
 // Initialize Konva.js overlay
@@ -81,26 +89,77 @@ let konvaStage = new Konva.Stage({
 let isDrawing = false;
 let konvaLayer = new Konva.Layer();
 konvaStage.add(konvaLayer);
+let konvaLayerMaskBg = new Konva.Layer();
+let konvaLayerMaskAsphalt = new Konva.Layer();
+let konvaLayerMaskAggregate = new Konva.Layer();
 
-// Draw polygons, rectangles, ellipses based on active tool
+const imageMaskBg = new Image();
+const imageMaskAsphalt = new Image();
+const imageMaskAggregate = new Image();
+        
 const labelSettings = {
   background: { stroke: 'green', fill: 'rgba(0,255,0,0.2)', strokeWidth: 2 },
-  foreground: { stroke: 'blue', fill: 'rgba(0,0,255,0.2)', strokeWidth: 2 },
+  aggregate: { stroke: 'blue', fill: 'rgba(0,0,255,0.2)', strokeWidth: 2 },
   asphalt: { stroke: 'red', fill: 'rgba(255,0,0,0.2)', strokeWidth: 2 } 
 };
+function setMaskFilter (kl, img, rgba) {
+  let konvaImage= new Konva.Image({
+    x: 0,
+    y: 0,
+    image: img,
+    width: document.getElementById('viewer').clientWidth,
+    height: document.getElementById('viewer').clientHeight
+  });
+  konvaImage.cache();
+  konvaImage.filters([Konva.Filters.RGBA]);
+  konvaImage.red(rgba[0]);
+  konvaImage.green(rgba[1]);
+  konvaImage.blue(rgba[2]);
+  konvaImage.alpha(rgba[3]);
+  
+  konvaStage.add(kl);
+  kl.destroyChildren();
+  kl.add(konvaImage);
+
+}
+
+imageMaskBg.onload = function() {
+  //const rgba = labelSettings.background.fill.match(/\d+/g).map(Number);
+  let rgba = labelSettings.background.fill.match(/[\d.]+/g).map(Number);
+  rgba[3] = 1;
+  console.log(rgba);
+  setMaskFilter(konvaLayerMaskBg, imageMaskBg, rgba);
+};
+imageMaskAsphalt.onload = function() {
+  let rgba = labelSettings.asphalt.fill.match(/[\d.]+/g).map(Number);
+  rgba[3] = 1;
+  console.log(rgba);
+  setMaskFilter(konvaLayerMaskAsphalt, imageMaskAsphalt, rgba);
+};
+imageMaskAggregate.onload = function() {
+  let rgba = labelSettings.aggregate.fill.match(/[\d.]+/g).map(Number);
+  rgba[3] = 1;
+  console.log(rgba);
+  setMaskFilter(konvaLayerMaskAggregate,imageMaskAggregate, rgba);
+};
+
+
+
+// Draw polygons, rectangles, ellipses based on active tool
 let activeTool = 'polygon';  // Default tool
 let activeLabel = 'background';
 let startPoint = null;  // Track the start point of the shape
 let currentShape = null;
+initializeMask();
 
-
-function flattenPoints(points) {
-  return points.map(point => {
-    return [point.x, point.y];
-  }).flat();
-}
   
-// Helper to create and draw shapes
+  function flattenPoints(points) {
+    return points.map(point => {
+      return [point.x, point.y];
+    }).flat();
+  }
+
+  // Helper to create and draw shapes
   function drawShape(points) {
     if (waitingForApproval) {
       return;
@@ -111,11 +170,11 @@ function flattenPoints(points) {
     
     switch (activeTool) {
       case 'polygon':
-        shape = new Konva.Line({
-          points: points,
-          closed: true,
-          fill: labelSettings[activeLabel].fill,
-          stroke: labelSettings[activeLabel].stroke,
+      shape = new Konva.Line({
+        points: points,
+        closed: true,
+        fill: labelSettings[activeLabel].fill,
+        stroke: labelSettings[activeLabel].stroke,
         strokeWidth: labelSettings[activeLabel].strokeWidth,
         lineJoin: 'round',
         draggable: true
@@ -127,7 +186,7 @@ function flattenPoints(points) {
             const x = Math.min(points[0], points[2]);
             const y = Math.min(points[1], points[3]);
             shape = new Konva.Rect({
-              x: x,
+                x: x,
                 y: y,
                 width: width,
                 height: height,
@@ -169,17 +228,38 @@ function flattenPoints(points) {
 }
 
 function getImagePoint(position) {
-  const viewportPoint = viewer.viewport.potFromPixel(position);
+  const viewportPoint = viewer.viewport.pointFromPixel(position);
   return viewer.viewport.viewportToImageCoordinates(viewportPoint);
 }
-
-
 
 function cancelAnnotation() {
   pointHistory = [];
   setTimeout(() => {
     konvaLayer.destroyChildren();
   }, 100);
+}
+
+function initializeMask() {
+  fetch('/get-corrected-mask', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({})
+  }).then(response => response.json())
+    .then(data => {
+      console.log('Mask data:', data);
+      mask_bg = URL.createObjectURL(base64toBlob(data.bg, 'image/png'));
+      mask_aggregate = URL.createObjectURL(base64toBlob(data.aggregate, 'image/png'));
+      mask_asphalt = URL.createObjectURL(base64toBlob(data.asphalt, 'image/png'));
+
+      imageMaskBg.src = mask_bg;
+      imageMaskAsphalt.src = mask_asphalt;
+      imageMaskAggregate.src = mask_aggregate;
+    })
+    .catch(error => {
+      console.error('Error initializing mask:', error);
+    });
 }
 
 function saveAnnotation() {
@@ -200,7 +280,27 @@ function saveAnnotation() {
     body: JSON.stringify(annotationData)
   }).then(response => response.json())
     .then(data => {
-      console.log('Annotation saved:', data.status);
+      mask_bg = URL.createObjectURL(base64toBlob(data.bg, 'image/png'));
+      mask_aggregate = URL.createObjectURL(base64toBlob(data.aggregate, 'image/png'));
+      mask_asphalt = URL.createObjectURL(base64toBlob(data.asphalt, 'image/png'));
+      
+      imageMaskBg.src = mask_bg;
+      imageMaskAsphalt.src = mask_asphalt;
+      imageMaskAggregate.src = mask_aggregate;
+      
+      /*
+      let canvas = document.getElementById('viewerMaskCanvas');
+      image.onload = function() {
+        console.log('Image loaded:', image);
+        canvas.width = image.width;
+        canvas.height = image.height;
+        canvas.getContext('2d').drawImage(image, 0, 0);
+      };
+      console.log(mask_bg);
+      image.src = mask_aggregate;
+      */
+
+      console.log('Annotation saved:', data);
     })
     .catch(error => {
       console.error('Error saving annotation:', error);
@@ -220,14 +320,13 @@ viewer.addHandler('canvas-click', function (event) {
   }
   const imagePoint = getImagePoint(event.position);
   
-  len=pointHistory.push({ x: imagePoint.x, y: imagePoint.y });
-  if (len==1) {
+  pointHistory.push({ x: imagePoint.x, y: imagePoint.y });
+  if (pointHistory.length==1) {
     startPoint = pointHistory[0];
-    lastPoint = pointHistory[0];
     isDrawing = true;
   }
   
-  if (len > 1) {
+  if (pointHistory.length > 1) {
     if (currentShape) {
       currentShape.destroy();
     }
@@ -240,10 +339,9 @@ viewer.addHandler('canvas-click', function (event) {
           break;
       case 'polygon':
           currentShape=drawShape(pointHistory);
-          // lastPoint = { x: imagePoint.x, y: imagePoint.y };
           break;
       case 'ellipse':
-          if (len==3) {
+          if (pointHistory.length==3) {
             currentShape=drawShape(pointHistory);
             startPoint = null;  // Reset after drawing
             isDrawing = false; 
@@ -279,8 +377,6 @@ document.addEventListener('keydown', function (event) {
     startPoint = null;
     isDrawing = false;
     pointHistory = [];
-    firstPoint = null;
-    lastPoint = null;
     if (waitingForApproval) {
       cancelAnnotation();
       waitingForApproval = false;
@@ -308,12 +404,12 @@ document.getElementById('bgButton').addEventListener('click', () => {
 // Button Click Handlers for Labeling
     const currentSettings = labelSettings['background'];
     activeLabel = 'background';
-    activeStroke = currentSettings.stroke;
-    activeFill = currentSettings.fill;
+    const activeStroke = currentSettings.stroke;
+    const activeFill = currentSettings.fill;
 });
 
 document.getElementById('fgButton').addEventListener('click', () => {
-    activeLabel = 'foreground';
+    activeLabel = 'aggregate';
     });
     
 document.getElementById('asphaltButton').addEventListener('click', () => {
@@ -361,14 +457,14 @@ if (currentShape) {
 currentShape.destroy();
 konvaLayer.batchDraw();
 }
-pointSuggestions = pointHistory.concat({ x: imagePoint.x, y: imagePoint.y });
+const pointSuggestions = pointHistory.concat({ x: imagePoint.x, y: imagePoint.y });
 currentShape = drawShape(pointSuggestions);
 }
 
 // Event handler for starting to draw
 addEventListener('mousemove', function (e) {
 if (isDrawing) {
-offset = viewer.container.getBoundingClientRect();
+const offset = viewer.container.getBoundingClientRect();
 const position = new OpenSeadragon.Point(e.clientX-offset.left, e.clientY-offset.top);
 const imagePoint = getImagePoint(position);
 drawPreview(imagePoint);

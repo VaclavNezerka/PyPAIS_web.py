@@ -2,6 +2,7 @@
 import os
 import psycopg2 as psql
 from functools import wraps
+from flask import flash
 
 def open_db_connection() -> object:
     # Opens a connection and its cursor
@@ -40,14 +41,13 @@ def save_new_user_db(cur, conn , values):
         cur.execute('INSERT INTO users (username, e_mail, first_name, last_name, company, pwd) '
                     'VALUES (%s,%s,%s,%s,%s,%s)',
                     values)
-        b=conn.commit()
-        print(b)
-        response=None
+        conn.commit()
+        print('User successfully inserted into database')
+        return None  # Success
     except Exception as exception:
-        response=exception
-    finally:
-        print(response)
-        return response
+        print(f'Database error: {exception}')
+        conn.rollback()  # Rollback the transaction on error
+        return exception  # Return the exception for error handling
 
 @db_connection
 def load_experiment_from_db(cur,conn, id):
