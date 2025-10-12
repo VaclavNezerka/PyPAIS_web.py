@@ -11,6 +11,8 @@
     --myDarkBlue: #0056b3;
 }
 
+
+
 /* @property --myPaleBlue {
     syntax: "<color>";
     inherits: true;
@@ -40,6 +42,17 @@ body {
     /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
 }
 
+.overlayCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Ensure it doesn't block interaction with the image */
+    z-index: 2; /* Ensure it's above the image */
+    display: none; /* Initially hidden, shown when needed */
+}
+
 .row {
     display: flex;
     justify-content: space-between;
@@ -58,6 +71,7 @@ body {
 input[type="file"] {
     display: none;
 }
+
 
 /* Style for the custom file input button */
 .custom-file-input {
@@ -203,6 +217,10 @@ input[type="text"] {
     background-color: var(--myTopicColor);
 } */
 
+.navbar-right {
+    float: right;
+}
+
 .homebg {
     height: 100vh;
     display: flex;
@@ -213,6 +231,21 @@ input[type="text"] {
     background: linear-gradient(270deg, var(--myPaleRed), var(--myPaleGray), var(--myPaleBlue));
     background-size: 400% 400%;
     animation: gradientAnimation 15s ease infinite;
+}
+
+.overlayImage {
+    position: relative;
+    width: fit-content; 
+    height: fit-content;
+    display: none; 
+}
+
+.error {
+    color: darkred;
+}
+
+.text_area {
+    display: none;
 }
 
 .loading {
@@ -226,6 +259,7 @@ input[type="text"] {
     background: linear-gradient(270deg, var(--myPaleRed), var(--myPaleGray), var(--myPaleBlue));
     background-size: 400% 400%;
     animation: gradientAnimation 8s ease infinite;
+    display: none; /* Hidden by default */
 }
 .progress {
     width: 100%;
@@ -235,6 +269,7 @@ input[type="text"] {
     top: 0;
     left: 0;
     z-index: 1000;
+    display: none; /* Hidden by default */
 }
 
 @keyframes gradientAnimation {

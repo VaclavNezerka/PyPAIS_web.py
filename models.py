@@ -1,7 +1,8 @@
 import os
 import glob 
+import numpy as np
 import torch
-
+import segmentation_models_pytorch as smp
 
 # Default
 TORCH_DEVICE = os.environ.get('TORCH_DEVICE', 'cuda' if torch.cuda.is_available() else 'cpu')
@@ -9,7 +10,7 @@ torch_loaded_models = {}
 
 def discover_models() -> list[str]:
     """Discover all model files in the models directory."""
-    model_files = glob.glob(os.path.join(os.path.dirname(__file__), 'models', '*.pt'))
+    model_files = glob.glob(os.path.join(os.path.dirname(__file__), 'models', '*.pth'))
     models = [os.path.basename(file) for file in model_files]
     return models
 
@@ -20,11 +21,17 @@ def pop_session_from_loaded_models(session_id: str) -> None:
     Parameters:
     - session_id (str): Unique identifier for the session to be removed.
     """
+
+    keys_to_remove = []
+
     for model_name, model_info in torch_loaded_models.items():
         if session_id in model_info["active_users"]:
             model_info["active_users"].remove(session_id)
             if not model_info["active_users"]:
-                del torch_loaded_models[model_name]
+                keys_to_remove.append(model_name)
+
+    for key in keys_to_remove:
+        del torch_loaded_models[key]
 
 def add_session_to_loaded_model(model_name: str,session_id: str) -> None:
     """
@@ -35,6 +42,45 @@ def add_session_to_loaded_model(model_name: str,session_id: str) -> None:
     """
     torch_loaded_models[model_name]["active_users"].add(session_id)
 
+
+class TorchModel(torch.nn.Module):
+    """
+    Base class for all Torch models. It provides a method to evaluate the model.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.model = None
+
+    def __call__(self, *args, **kwds):
+        return self.evaluate(*args, **kwds)
+
+    def evaluate(self, input_data: torch.Tensor) -> torch.Tensor:
+        """
+        Perform inference on the input data using the loaded model.
+
+        Parameters:
+        - input_data (torch.Tensor): Input tensor for the model.
+
+        Returns:
+        - torch.Tensor: Output tensor from the model. Of shape (N, C, H, W) where N is batch size, C is number of classes, H and W are height and width.
+        """
+        self.model.eval()  # Set the model to evaluation mode
+        if self.model is None:
+            raise ValueError("Model is not loaded.")
+        
+        with torch.no_grad():
+            # assuming the model is returning the logits
+            logits = self.model(input_data.to(TORCH_DEVICE))
+            probabilities = torch.nn.functional.softmax(logits, dim=1)
+            return probabilities
+
+# VN_specific_models = ["unet_optimal_(v5).pth"]
+# def VN_specific_Unet(path):
+#     model = smp.Unet('resnet34', encoder_weights='imagenet', in_channels=3, classes=3)
+#     model.load_state_dict(torch.load(path, map_location=torch.device(TORCH_DEVICE)))
+#     model.to(torch.device(TORCH_DEVICE)).eval()
+#     return model
 
 def load_model(model_path: str, session_id: str) -> None:
     """
@@ -56,8 +102,30 @@ def load_model(model_path: str, session_id: str) -> None:
         add_session_to_loaded_model(model_name, session_id)
     else:
         # load the model if not already loaded
-        model = torch.load(model_path, map_location=torch.device(TORCH_DEVICE))
+        model = TorchModel()
+        # model.load_state_dict(torch.load(model_path, map_location=torch.device(TORCH_DEVICE)))
+        model.model = torch.load(model_path, map_location=torch.device(TORCH_DEVICE), weights_only=False)
+        model.to(torch.device(TORCH_DEVICE)).eval()
         torch_loaded_models[model_name] = {"model": model, "path": model_path, "active_users": {session_id}}
+
+
+# TODO: remove this after testing
+# new_model = smp.Unet('resnet34', encoder_weights='imagenet', in_channels=3, classes=3)
+# new_model.load_state_dict(torch.load(os.path.join(os.path.dirname(__file__), 'models', 'unet_optimal_(v5).pth'), map_location=torch.device(TORCH_DEVICE)))
+# torch.save(new_model.state_dict(), os.path.join(os.path.dirname(__file__), 'models', 'unet_optimal_state_dict.pth'))
+# torch.save(new_model, os.path.join(os.path.dirname(__file__), 'models', 'unet_optimal_lazy.pth'))
+
+# # model = VN_specific_Unet(os.path.join(os.path.dirname(__file__), 'models', 'unet_optimal_(v5).pth'))
+# model = torch.load(os.path.join(os.path.dirname(__file__), 'models', 'unet_optimal_lazy.pth'), map_location=torch.device(TORCH_DEVICE), weights_only=False)
+# model.to(torch.device(TORCH_DEVICE)).eval()
+# result = model(torch.randn(1, 3, 256, 256).to(TORCH_DEVICE))
+
+# model_torch = TorchModel()
+# model_torch.model = model
+# result = model_torch.evaluate(torch.randn(1, 3, 256, 256).to(TORCH_DEVICE))
+# print(f"Model loaded and evaluated: {result.shape}")
+# print(result[0,:,0,0])
+# print(result[0,:,0,0].sum())
 
 def inference(model_name: str, input_data: torch.Tensor, session_id: str) -> torch.Tensor:
     """
@@ -69,7 +137,7 @@ def inference(model_name: str, input_data: torch.Tensor, session_id: str) -> tor
     - session_id (str): Unique identifier for the session using the model.
 
     Returns:
-    - torch.Tensor: Output from the model after inference.
+    - torch.Tensor: Output from the model after inference. Of shape (N, C, H, W) where N is batch size, C is number of classes, H and W are height and width.
     """
     if model_name not in torch_loaded_models:
         load_model(os.path.join(os.path.dirname(__file__), 'models', model_name), session_id)
@@ -78,4 +146,27 @@ def inference(model_name: str, input_data: torch.Tensor, session_id: str) -> tor
 
     # Perform inference with the loaded model
     model = torch_loaded_models[model_name]["model"]
-    return model.eval(input_data.to(TORCH_DEVICE))
+    return model.evaluate(input_data.to(TORCH_DEVICE))
+
+def get_masks_from_output(output: torch.Tensor) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Convert model output probabilities to binary masks.
+
+    Parameters:
+    -----------
+    - output (torch.Tensor): Output tensor from the model. Of shape (N, C, H, W) where N is batch size, C is number of classes, H and W are height and width.
+
+    Returns:
+    --------
+    - tuple[np.ndarray, np.ndarray, np.ndarray]: A tuple containing the background mask, asphalt mask, and aggregate mask.
+    """
+    # Get the predicted masks from the output
+    masks = output.argmax(dim=1).detach().cpu().numpy()  # Shape: (N, H, W)
+
+    # Create binary masks for each class
+    bg_mask = (masks == 0).astype(np.uint8)  # Background mask
+    asphalt_mask = (masks == 1).astype(np.uint8)  # Asphalt mask
+    aggregate_mask = (masks == 2).astype(np.uint8)  # Aggregate mask
+
+    return bg_mask, asphalt_mask, aggregate_mask
+

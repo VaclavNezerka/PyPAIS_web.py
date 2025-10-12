@@ -279,79 +279,85 @@ function saveThresholds(id) {
     }
 }
 
-// 1 - intensity
-document.getElementById('minThresholdSlider1').addEventListener('change', function() {
-    validateThresholds('minThresholdSlider1');
-    saveThresholds('minThresholdSlider1');
-});
-document.getElementById('minThresholdValue1').addEventListener('change', function() {
-    validateThresholds('minThresholdValue1');
-    saveThresholds('minThresholdValue1');
-});
-document.getElementById('maxThresholdSlider1').addEventListener('change', function() {
-    validateThresholds('maxThresholdSlider1');
-    saveThresholds('maxThresholdSlider1');
-});
-document.getElementById('maxThresholdValue1').addEventListener('change', function() {
-    validateThresholds('maxThresholdValue1');
-    saveThresholds('maxThresholdValue1');
-});
-// 0 - intensity
-document.getElementById('minThresholdSlider0').addEventListener('change', function() {
-    validateThresholds('minThresholdSlider0');
-    saveThresholds('minThresholdSlider0');
-});
-document.getElementById('minThresholdValue0').addEventListener('change', function() {
-    validateThresholds('minThresholdValue0');
-    saveThresholds('minThresholdValue0');
-});
-document.getElementById('maxThresholdSlider0').addEventListener('change', function() {
-    validateThresholds('maxThresholdSlider0');
-    saveThresholds('maxThresholdSlider0');
-});
-document.getElementById('maxThresholdValue0').addEventListener('change', function() {
-    validateThresholds('maxThresholdValue0');
-    saveThresholds('maxThresholdValue0');
-});
-// Entopy
-document.getElementById('entropyMinThresholdSlider').addEventListener('change', function() {
-    validateThresholds('entropyMinThresholdSlider');
-    saveThresholds('entropyMinThresholdSlider');
-});
-document.getElementById('entropyMinThresholdValue').addEventListener('change', function() {
-    validateThresholds('entropyMinThresholdValue');
-    saveThresholds('entropyMinThresholdValue');
-});
-document.getElementById('entropyMaxThresholdSlider').addEventListener('change', function() {
-    validateThresholds('entropyMaxThresholdSlider');
-    saveThresholds('entropyMaxThresholdSlider');
-});
-document.getElementById('entropyMaxThresholdValue').addEventListener('change', function() {
-    validateThresholds('entropyMaxThresholdValue');
-    saveThresholds('entropyMaxThresholdValue');
-});
 
-document.getElementById('blurValue').addEventListener('change', async function() {
-    displayWorkingMessage();
-    let admissibleVal = Math.max(0, Math.min(50, parseInt(this.value)));
-    this.value = admissibleVal; // Correct the value in case it was out of bounds
-    document.getElementById('blurSlider').value = this.value;
-    document.getElementById('blurValue').value = this.value;
-    await blurImage(this.value);
-    fetch('/save_value/blur', { method: 'POST' })
-    redrawCanvases();
-    removeWorkingMessage();
-});
+function thresholding_event_listeners() {
+    // 1 - intensity
+    document.getElementById('minThresholdSlider1').addEventListener('change', function() {
+        validateThresholds('minThresholdSlider1');
+        saveThresholds('minThresholdSlider1');
+    });
+    document.getElementById('minThresholdValue1').addEventListener('change', function() {
+        validateThresholds('minThresholdValue1');
+        saveThresholds('minThresholdValue1');
+    });
+    document.getElementById('maxThresholdSlider1').addEventListener('change', function() {
+        validateThresholds('maxThresholdSlider1');
+        saveThresholds('maxThresholdSlider1');
+    });
+    document.getElementById('maxThresholdValue1').addEventListener('change', function() {
+        validateThresholds('maxThresholdValue1');
+        saveThresholds('maxThresholdValue1');
+    });
+    // 0 - intensity
+    document.getElementById('minThresholdSlider0').addEventListener('change', function() {
+        validateThresholds('minThresholdSlider0');
+        saveThresholds('minThresholdSlider0');
+    });
+    document.getElementById('minThresholdValue0').addEventListener('change', function() {
+        validateThresholds('minThresholdValue0');
+        saveThresholds('minThresholdValue0');
+    });
+    document.getElementById('maxThresholdSlider0').addEventListener('change', function() {
+        validateThresholds('maxThresholdSlider0');
+        saveThresholds('maxThresholdSlider0');
+    });
+    document.getElementById('maxThresholdValue0').addEventListener('change', function() {
+        validateThresholds('maxThresholdValue0');
+        saveThresholds('maxThresholdValue0');
+    });
+    // Entopy
+    document.getElementById('entropyMinThresholdSlider').addEventListener('change', function() {
+        validateThresholds('entropyMinThresholdSlider');
+        saveThresholds('entropyMinThresholdSlider');
+    });
+    document.getElementById('entropyMinThresholdValue').addEventListener('change', function() {
+        validateThresholds('entropyMinThresholdValue');
+        saveThresholds('entropyMinThresholdValue');
+    });
+    document.getElementById('entropyMaxThresholdSlider').addEventListener('change', function() {
+        validateThresholds('entropyMaxThresholdSlider');
+        saveThresholds('entropyMaxThresholdSlider');
+    });
+    document.getElementById('entropyMaxThresholdValue').addEventListener('change', function() {
+        validateThresholds('entropyMaxThresholdValue');
+        saveThresholds('entropyMaxThresholdValue');
+    });
+    
+    document.getElementById('blurValue').addEventListener('change', async function() {
+        displayWorkingMessage();
+        let admissibleVal = Math.max(0, Math.min(50, parseInt(this.value)));
+        this.value = admissibleVal; // Correct the value in case it was out of bounds
+        document.getElementById('blurSlider').value = this.value;
+        document.getElementById('blurValue').value = this.value;
+        await blurImage(this.value);
+        fetch('/save_value/blur', { method: 'POST' })
+        redrawCanvases();
+        removeWorkingMessage();
+    });
+    
+    document.getElementById('blurSlider').addEventListener('change', async function() {
+        displayWorkingMessage();
+        document.getElementById('blurValue').value = this.value;
+        document.getElementById('blurSlider').value = this.value;
+        await blurImage(this.value);
+        fetch('/save_value/blur',{ method: 'POST' })
+        redrawCanvases();
+        removeWorkingMessage();
+    });
+}
 
-document.getElementById('blurSlider').addEventListener('change', async function() {
-    displayWorkingMessage();
-    document.getElementById('blurValue').value = this.value;
-    document.getElementById('blurSlider').value = this.value;
-    await blurImage(this.value);
-    fetch('/save_value/blur',{ method: 'POST' })
-    redrawCanvases();
-    removeWorkingMessage();
-});
+// DEPRECATED: these are the old event listeners, they are not used anymore
+// thresholding_event_listeners();
 
 
 document.getElementById('info').addEventListener('change', function() {
@@ -362,15 +368,47 @@ document.getElementById('info').addEventListener('change', function() {
     fetch('/update_value/info' + uniqueQuery, { method: 'POST', body: formData })
 });
 
+// async function uploadImage() {
+//     displayWorkingMessage();
+
+//     const fileInput = document.getElementById('fileInput');
+//     if (fileInput.files.length === 0) return;
+//     const file = fileInput.files[0];
+
+//     var formData = new FormData();
+//     formData.append('file', file);
+
+//     const uniqueQuery = '?nocache=' + new Date().getTime();
+//     const url = URL.createObjectURL(file);
+//     uploadedImageURL_color = url;
+//     if (uploadedImageURL_color_blur === null) {
+//         uploadedImageURL_color_blur = url;
+//     }
+
+//     await processImage(formData);
+//     // await removeBackground(formData)
+//     // await fetchGrayscaleData(formData)
+// .then(() => fetchOriginalEntropyData())
+//     .then(() => {document.getElementById('defaultImage').style.display = 'none';})
+//     .then(() => processImage())
+//     .then(() => processEntropyImage())
+//     .then(() => getImageType())
+//     .then(() => enableControls()) // Enable controls after everything is loaded
+//     .then(() => removeWorkingMessage())
+//     .then(() => fetch('/save' + uniqueQuery, { method: 'POST' }))
+//     .catch(error => {
+//         console.error('Error:', error);
+//     })
+// }
+
+
 async function uploadImage() {
     displayWorkingMessage();
 
-    document.getElementById('blurSlider').value = 0;
-    document.getElementById('blurValue').value = 0;
     const fileInput = document.getElementById('fileInput');
     if (fileInput.files.length === 0) return;
     const file = fileInput.files[0];
-
+    
     var formData = new FormData();
     formData.append('file', file);
 
@@ -380,10 +418,10 @@ async function uploadImage() {
     if (uploadedImageURL_color_blur === null) {
         uploadedImageURL_color_blur = url;
     }
+
     await removeBackground(formData)
     await fetchGrayscaleData(formData)
-
-    .then(() => fetchOriginalEntropyData())
+    // .then(() => fetchOriginalEntropyData())
     .then(() => {document.getElementById('defaultImage').style.display = 'none';})
     .then(() => processImage())
     .then(() => processEntropyImage())
@@ -393,8 +431,43 @@ async function uploadImage() {
     .then(() => fetch('/save' + uniqueQuery, { method: 'POST' }))
     .catch(error => {
         console.error('Error:', error);
-    })
+    });
 }
+
+// OLD FUNCTIONALITY: DEPRECATED
+// async function uploadImage() {
+//     displayWorkingMessage();
+
+//     unlockSliders();
+
+//     const fileInput = document.getElementById('fileInput');
+//     if (fileInput.files.length === 0) return;
+//     const file = fileInput.files[0];
+
+//     var formData = new FormData();
+//     formData.append('file', file);
+
+//     const uniqueQuery = '?nocache=' + new Date().getTime();
+//     const url = URL.createObjectURL(file);
+//     uploadedImageURL_color = url;
+//     if (uploadedImageURL_color_blur === null) {
+//         uploadedImageURL_color_blur = url;
+//     }
+//     await removeBackground(formData)
+//     await fetchGrayscaleData(formData)
+
+//     .then(() => fetchOriginalEntropyData())
+//     .then(() => {document.getElementById('defaultImage').style.display = 'none';})
+//     .then(() => processImage())
+//     .then(() => processEntropyImage())
+//     .then(() => getImageType())
+//     .then(() => enableControls()) // Enable controls after everything is loaded
+//     .then(() => removeWorkingMessage())
+//     .then(() => fetch('/save' + uniqueQuery, { method: 'POST' }))
+//     .catch(error => {
+//         console.error('Error:', error);
+//     })
+// }
 
 function removeBackground(formData) {
     return new Promise((resolve, reject) => {

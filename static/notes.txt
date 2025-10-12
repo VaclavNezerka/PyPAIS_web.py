@@ -1,0 +1,31 @@
+kategorie > z normy dle procent 
+
+- jeden experiment muze obsahovat vice vzorku !!!
+-- moznost odmazat vzorky
+-- souhrn - charkteristika
+- frontu zachovat - presunout
+- spojit que a experiments
+
+-- jazykova verze
+-- company id - zmena za key
+-- kontrola platnosti key
+-- experimenty ostatnich
+
+-- typ kameniva
+-- typ asfaltu
+-- doplnujici informace
+
+-- manualni korekce zakomentovat
+
+1. nahraj fotky
+2. vyhodnocuj
+
+help
+- trenink na ruznych velikostech
+- freeze 
+
+
+
+OK:
+- device camera is an android feature
+- sniky vetsi nez 1200 downscale

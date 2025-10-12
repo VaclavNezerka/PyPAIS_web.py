@@ -1,8 +1,14 @@
 # Packages
-from flask import Flask, render_template, request, send_from_directory, flash, redirect, session, url_for, g, make_response, send_file
+from attrs import field
+from db_api import User
+from flask import (Flask, render_template, request, 
+                   send_from_directory, flash, redirect,
+                   session, url_for, abort, g, make_response, send_file)
 from flask_mail import Mail, Message
+from wtforms import StringField
 # from flask_login import login_manager, UserMixin, login_required,
 import werkzeug.security as ws
+from werkzeug.local import LocalProxy
 from PIL import Image
 import numpy as np
 import io
@@ -17,18 +23,20 @@ import string
 import os
 from rembg import remove
 from db_api import *
-import json 
+import db_api
+import json
 import base64
 from matplotlib.path import Path as polygon_path
 from icecream import ic
 from rich.traceback import install
+from typing import Iterable, Literal, cast
+from flask_talisman import Talisman
 install()
 
-
+from warnings import warn,WarningMessage
+import torch
 from typing_extensions import deprecated
-from models import discover_models, load_model, add_session_to_loaded_model, pop_session_from_loaded_models
-
-
+from models import discover_models, load_model, add_session_to_loaded_model, pop_session_from_loaded_models, inference
 
 
 
@@ -36,18 +44,25 @@ from models import discover_models, load_model, add_session_to_loaded_model, pop
 import forms 
 from functools import wraps
 
-app = Flask(__name__)
+app = Flask(__name__) # set debug to False for production
+csp = {
+    'default-src': ["'self'"],
+    'img-src': ["'self'", "data:", "blob:"],
+}
+Talisman(app, content_security_policy=csp) # for security headers, force https
+
+
 
 # app.permanent_session_lifetime=timedelta(days=5)
 
 # configuration of the mail server
-app.config['MAIL_SERVER'] = 'smtp.example.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'your-email@example.com'
-app.config['MAIL_PASSWORD'] = 'your-email-password'
-app.config['MAIL_DEFAULT_SENDER'] = ('Your Name', 'your-email@example.com')
-app.config['ES6_MODULES'] = True
+# app.config['MAIL_SERVER'] = 'smtp.example.com'
+# app.config['MAIL_PORT'] = 587
+# app.config['MAIL_USE_TLS'] = True
+# app.config['MAIL_USERNAME'] = 'your-email@example.com'
+# app.config['MAIL_PASSWORD'] = 'your-email-password'
+# app.config['MAIL_DEFAULT_SENDER'] = ('Your Name', 'your-email@example.com')
+# app.config['ES6_MODULES'] = True
 
 def generate_rnd_string(length):
     possible_chars=string.ascii_letters+string.digits+string.punctuation
@@ -55,30 +70,16 @@ def generate_rnd_string(length):
 # if in production, use the environment variable, otherwise use the default value
 app.secret_key=generate_rnd_string(os.environ['SECRET_KEY_LENGTH'])
 
+def generate_password_hash(password: str) -> str:
+    return ws.generate_password_hash(password,method=os.environ['HASH_METHOD'],salt_length=int(os.environ['SALT_LENGTH']))
 ts = {} # temporary storages for the users... ts[user_id] = UserTemporaryStorage()
-
-class UserValues:
-    def __init__(self):
-        self.threshold = 128
-        self.entropy_threshold = 128
-        self.info = 'No info available'
-        
-        # values currently accessible by the users
-        self.blur = 0
-        self.intensity_min_threshold_0 = None 
-        self.intensity_max_threshold_0 = None 
-        self.intensity_min_threshold_1 = None 
-        self.intensity_max_threshold_1 = None 
-        self.entropy_min_threshold = None 
-        self.entropy_max_threshold = None 
-        self.expert_guess = None # 0. old value        
-    
 
 class UserTemporaryStorage:
     """
     A class for storing temporary data for the user.
     This ensures that the user can only access their own data.
     This class replaces the need for a previous solution which was current_images dictionary.
+    
     PREVIOUS SOLUTION: (OUTDATED - OUT OF CLASS)
     # current_images = {'color': [] , 'color_original': [], 'gray': [], 'entropy': {}, 'gray_original': {}, 
     #                   'entropy_original': {}, 'suggested_mask_threshold': {}, 'suggested_mask_blur': {},
@@ -88,53 +89,210 @@ class UserTemporaryStorage:
     # # 'suggested_mask' - a mask suggested to a user by actual algorithm (based on the U-NET rembg model)
     # # 'manual_mask_adjustments' - changes manually made by the user (a sparse numpy boolean matrix), 
     """
-    def __init__(self):
-        self.username = None
+    def __init__(self, **kwargs):
         self.user_id = None
         # values
-        self.values = UserValues()
+        self.info = None
+        self.expert_guess = None
+        self.img_width = None
+        self.img_height = None
         # info
         self.experiment_id = None
         # images
-        self.color_original = None
-        self.gray_original = None
         self.color = None
-        self.gray = None        
         # masks
         self.aggregate_mask = None # [auto - rembg] all the pixels that are not background
         self.asphalt_mask = None # [auto - sliders] all the pixels that are asphalt and not background
         self.aggregate_mask_manual_corrections = None # [manual] all the pixels that are not background or are background (defined by the user)
         self.asphalt_mask_manual_corrections = None # [manual] all the pixels that are asphalt and not background (defined by the user)        
+        self.inference_model = None # name of the model to be used for inference
+
+        self.from_dict(kwargs)
+
+    def from_dict(self, data_dict: dict) -> None:
+        """
+        Loads the attributes of the class from a dictionary.
+        """
+        for key, value in data_dict.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+    def to_dict(self, features: Iterable[str] = None, for_save: bool = False) -> dict:
+        """
+        Converts the attributes of the class to a dictionary.
+
+        Parameters:
+        -----------
+            features (Iterable[str]): A list of attribute names to include in the dictionary. If None, all attributes are included.
+            for_save (bool): If True, converts numpy arrays to bytes for database storage. If False, keeps numpy arrays as is.
+        """
+        if features is not None:
+            dic = {key: value for key, value in self.__dict__.items() if key in features}
+        else:
+            dic = dict(self.__dict__)  # make a copy instead of using self.__dict__ (to avoid modifying the original)
+
+        if for_save:
+            # Convert numpy arrays to bytes for database storage
+            for key, value in dic.items():
+                if isinstance(value, np.ndarray):
+                    dic[key] = value.tobytes()
+
+        return dic
+
+    def to_json(self, features: Iterable[str] = None) -> str:
+        """
+        Converts the attributes of the class to a JSON string.
+        """
+        json_dict = self.to_dict(features=features)
+        
+        for key, value in json_dict.items():
+            # convert images to base64 strings for JSON serialization
+            if isinstance(value, np.ndarray):
+                json_dict[key] = to_base64(value)
+
+        return json.dumps(json_dict)
+
+    def get_asphalt_mask(self) -> np.ndarray | None:
+        """
+        Applies manual corrections to the masks and returns the corrected masks.
+
+        Returns:
+        --------
+            tuple: A tuple containing the corrected asphalt mask and aggregate mask.
+        """
+        asphalt_mask = get_masks_corrected(self.asphalt_mask, self.asphalt_mask_manual_corrections) 
+        # if self.asphalt_mask_manual_corrections is not None:
+        #     if asphalt_mask is None:
+        #         asphalt_mask = np.zeros((self.image_height, self.image_width), dtype=bool)
+        #     asphalt_mask += self.asphalt_mask_manual_corrections
+
+        return asphalt_mask
+
+    def get_aggregate_mask(self) -> np.ndarray | None:
+        """
+        Applies manual corrections to the masks and returns the corrected masks.
+
+        Returns:
+        --------
+            tuple: A tuple containing the corrected asphalt mask and aggregate mask.
+        """
+        return get_masks_corrected(self.aggregate_mask, self.aggregate_mask_manual_corrections) 
+
+    def get_bg_mask(self) -> np.ndarray | None:
+        """
+        Returns the background mask based on the aggregate mask and its manual corrections.
+
+        Returns:
+        --------
+            np.ndarray | None: The background mask or None if the aggregate mask is not set.
+        """
+        aggregate_mask = self.get_aggregate_mask()
+        asphalt_mask = self.get_asphalt_mask()
+        bg_mask = np.logical_and(np.logical_not(aggregate_mask), np.logical_not(asphalt_mask))
+        return bg_mask
+    
+    def get_masks_with_manual_corrections(self) -> tuple[np.ndarray | None, np.ndarray | None, np.ndarray | None]:
+        """
+        Returns the asphalt, aggregate, and background masks with manual corrections applied.
+
+        Returns:
+        --------
+            tuple: A tuple containing the corrected asphalt mask, aggregate mask, and background mask.
+        """
+        asphalt_mask = self.get_asphalt_mask()
+        aggregate_mask = self.get_aggregate_mask()
+        bg_mask = self.get_bg_mask()
+        return asphalt_mask, aggregate_mask, bg_mask
+
+    def get_asphalt_ratio(self) -> float:
+        """
+        Returns the ratio of asphalt pixels to non-background pixels.
+
+        Returns:
+        --------
+            float | None: The ratio of asphalt pixels to non-background pixels.
+        """
+
+        asphalt_mask = self.get_asphalt_mask()
+        aggregate_mask = self.get_aggregate_mask()
+
+        if asphalt_mask is None or aggregate_mask is None:
+            return 0.0
+        elif np.sum(aggregate_mask * asphalt_mask) > 0:
+            raise ValueError("Aggregate mask and asphalt mask have overlapping areas.")
+
+        non_bg_pixels = np.sum(aggregate_mask + asphalt_mask)
+        asphalt_pixels = np.sum(asphalt_mask)
+        return asphalt_pixels / non_bg_pixels if non_bg_pixels > 0 else 0.0    
+
+# storage: UserTemporaryStorage  = LocalProxy(lambda: ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id'])))
+storage = LocalProxy(lambda: ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id'])))
+storage: UserTemporaryStorage = cast(UserTemporaryStorage, storage)
+# storage... it behaves like a global variable, but it is actually a proxy to the user-specific storage
+# thus storage.name is actually ts[session['user_id']].name
+# setdefault ensures that if the user_id is not in ts, it will create a new UserTemporaryStorage for that user_id
+
+def get_masks_corrected(original: np.ndarray = None, corrections: np.ndarray = None) -> np.ndarray:
+    """
+    Applies manual corrections to the masks and returns the corrected masks.
+
+    Parameters:
+    -----------
+        original (np.ndarray): The original mask.
+        corrections (np.ndarray): The manual corrections to be applied.
+
+    Returns:
+    --------
+        tuple: A tuple containing the corrected asphalt mask and aggregate mask.
+    """
+    if original is None and corrections is None:
+        raise ValueError("At least one of 'original' or 'corrections' must be provided.")
+
+    if original is None:
+        original = np.zeros_like(corrections, dtype=bool)
+    elif corrections is None:
+        corrections = np.zeros_like(original, dtype=int)
+    
+    corrected_mask = original.copy()
+    if corrections is not None:
+        corrected_mask = np.clip(corrected_mask + corrections, 0, 1)
+    return corrected_mask.astype(bool)
+
+
+def dict_to_json(data_dict: dict, features: Iterable[str] = None) -> str:
+        """
+        Converts a dictionary to a JSON string.
+        """
+        if features is not None:
+            data_dict = {key: value for key, value in data_dict.items() if key in features}
+        
+        for key, value in data_dict.items():
+            # convert images to base64 strings for JSON serialization
+            if isinstance(value, np.ndarray):
+                data_dict[key] = to_base64(value)
+
+        return json.dumps(data_dict)        
 
 # @app.before_request        
-
 def check_data_ownership(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        try:
-            query = 'SELECT added_by_user FROM experiments WHERE id=%s'
-            user_id = execute_query(query, (kwargs['id'],))[0][0]   
-            if user_id == session['user_id']:
-                return func(id=kwargs['id'])
-            else:
-                flash('You do not have permission to access this data.','error')
-                return redirect('/')
-        except:
-            flash('Hmm You do not have permission to access this data.','error')
-            return redirect('/')
+        user_id = db_api.get_user_id_of_experiment(id=kwargs['id'])
+        if user_id == session['user_id']:
+            return func(id=kwargs['id'])
+        else:
+            flash('You do not have permission to access this data.','error')
+            return redirect('/'), 302
     return wrapper
 
 def check_authentication(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # try:
         if 'authenticated' in session and session['authenticated']:
             return func(*args, **kwargs)
         else:
             flash('You must be logged in to access this page.','error')
-            return redirect(url_for('login'))
-        # except:
-        #     return redirect(url_for('login'))
+            return redirect(url_for('login')), 302
     return wrapper
 
 @app.route('/')
@@ -151,136 +309,158 @@ def home():
 def page_not_found(error):
     return render_template('404.html', session=session), 404
 
-@app.errorhandler(500)
-def internal_server_error(error):
-    flash('An internal server error has occured.','error')
-    return redirect(url_for('/logout'))
+# @app.errorhandler(Exception)
+# def handle_exception(error) -> tuple:
+#     flash('An internal server error has occured.','error')
+#     return redirect(url_for('logout')), 500
+#     return None, 500
 
-
-
-
-"""
-"""
 
 @app.route('/logout')
 def logout():
+    print('Logging out user.')
     session.pop('username',None)
     session.pop('authenticated',None)
+    session.pop('user_id',None)
     return redirect(url_for('login'))
 
+#TODO - consider joining with edit_personal_information (Must be done together with FE editing)
 @app.route('/change-email',methods=['GET','POST'])
 @check_authentication
 def change_email():
-    if request.method=='GET':
-        form=forms.ChangeEmailForm()
-        return render_template('form.html',dynamic_content='Change email',form=form,session=session)
-    elif request.method=='POST':
-        form=forms.ChangeEmailForm()
-        if form.validate_on_submit():
-            query='UPDATE public_users SET e_mail=%s WHERE id=%s'
-            values=(form.e_mail.data,session['user_id'])
-            execute_query(query,values)
-            flash('Email changed successfully.','success')
-            return redirect('/user')
-        else:
+    match request.method:
+        case 'GET':
+            form=forms.ChangeEmailForm()
             return render_template('form.html',dynamic_content='Change email',form=form,session=session)
-    else:
-        return redirect('/')
+        case 'POST':
+            form=forms.ChangeEmailForm()
+            if form.validate_on_submit():
+                # TODO - consider removal - old approach - unused
+                # query='UPDATE public_users SET e_mail=%s WHERE id=%s'
+                # values=(form.e_mail.data,session['user_id'])
+                # execute_query(query,values)
+                db_api.update_users_table(values_dict={'e_mail': form.e_mail.data}, user_id=session['user_id'])
+                flash('Email changed successfully.','success')
+                return redirect('/user')
+            else:
+                return render_template('form.html',dynamic_content='Change email',form=form,session=session)
 
 @app.route('/edit-personal-information',methods=['GET','POST'])
 @check_authentication
 def edit_personal_information():
-    if request.method=='GET':
-        form=forms.EditPersonalInformationForm()
-        return render_template('form.html',dynamic_content='Change personal information',form=form,session=session)
-    elif request.method=='POST':
-        form=forms.EditPersonalInformationForm()
-        if form.validate_on_submit():
-            for field in form:
-                if field.data:
+    match request.method:
+        case 'GET':
+            form=forms.EditPersonalInformationForm()
+            return render_template('form.html',dynamic_content='Change personal information',form=form,session=session)
+        case 'POST':
+            form=forms.EditPersonalInformationForm()
+            if form.validate_on_submit():
+                print('Form validated successfully.')
+                for field in form:
                     print(field)
-                    print(field.name)
-                    if field.name == 'csrf_token':
-                        continue
-                    query = f'UPDATE public_users SET {field.name}=%s WHERE id=%s'
-                    values = (field.data, session['user_id'])
-                    execute_query(query, values)
-            flash('Personal information changed successfully.','success')
-            return redirect('/user')
-        else:
-            return render_template('form.html',dynamic_content='Change personal info',form=form,session=session)
-    else:
-        return redirect('/')
+                    if field.data:
+                        if field.name == 'csrf_token':
+                            continue
+                        db_api.update_users_table(values_dict={field.name: field.data}, user_id=session['user_id'])
+                        # TODO - consider removal - old approach - unused
+                        # query = f'UPDATE public_users SET {field.name}=%s WHERE id=%s'
+                        # values = (field.data, session['user_id'])
+                        # execute_query(query, values)
+                flash('Personal information updated successfully.','success')
+                return redirect('/user')
+            else:
+                return render_template('form.html',dynamic_content='Change personal information',form=form,session=session)
 
 @app.route('/change-password',methods=['GET','POST'])
 @check_authentication
 def change_password():
-    if request.method=='GET':
-        form=forms.ChangePasswordForm()
-        return render_template('form.html',dynamic_content='Change password',form=form,session=session)
-    elif request.method=='POST':
-        form=forms.ChangePasswordForm()
-        if form.validate_on_submit():
-            query='SELECT pwd FROM public_users WHERE id=%s'
-            values=(session['user_id'],)
-            pwd_hash=execute_query(query=query,values=values)[0][0]
-            authenticated=ws.check_password_hash(pwhash=pwd_hash,password=form.old_password.data)
-            if authenticated:
-                query='UPDATE public_users SET pwd=%s WHERE id=%s'
-                values=(ws.generate_password_hash(form.new_password.data,method=os.environ['HASH_METHOD'],salt_length=int(os.environ['SALT_LENGTH']),),session['user_id'])
-                execute_query(query=query,values=values)
-                flash('Password changed successfully.','success')
-                return redirect('/user')
-            else:
-                flash('The old password is incorrect.','error')
-                return render_template('form.html',dynamic_content='Change password',form=form,session=session)
-        else:
+    match request.method:
+        case 'GET':
+            form=forms.ChangePasswordForm()
             return render_template('form.html',dynamic_content='Change password',form=form,session=session)
-    else:
-        return redirect('/')
+        case 'POST':
+            form=forms.ChangePasswordForm()
+            if form.validate_on_submit():                
+                # check if the old password is correct
+                authenticated = is_password_correct(password=form.old_password.data, user_id=session['user_id'])
+                if authenticated:
+                    new_password_hash=generate_password_hash(form.new_password.data)
+                    db_api.update_users_table(values_dict={'pwd': new_password_hash}, user_id=session['user_id'])
+                    flash('Password changed successfully.','success')
+                    return redirect('/user'), 302
+                else:
+                    flash('The old password is incorrect.','error')
+                    return render_template('form.html',dynamic_content='Change password',form=form,session=session), 200
+            else:
+                return render_template('form.html',dynamic_content='Change password',form=form,session=session), 200
+
+def bool_to_image_array(array: np.ndarray) -> np.ndarray:
+    """
+    Converts a boolean numpy array to a uint8 image array.
+
+    Parameters:
+    -----------
+        array (np.ndarray): The boolean numpy array to convert.
+
+    Returns:
+    --------
+        np.ndarray: A uint8 numpy array representation of the boolean array.
+    """
+    # transfer boolean full RGBA format
+    mask = np.zeros_like(array, dtype=np.uint8)
+    mask = np.stack([mask]*4, axis=-1)  # Convert to RGBA by stacking the mask
+    mask[array, 3] = 255
+    return mask
+
+def is_password_correct(password: str, user_id: int) -> bool:
+    """
+    Checks if the provided password matches the stored password hash for the user.
+    
+    Parameters:
+    -----------
+        password (str): The password to check.
+        user_id (int): The ID of the user.
+    
+    Returns:
+    --------
+        bool: True if the password is correct, False otherwise.
+    """
+    true_pwd_hash = db_api.get_password_hash(user_id=user_id)
+    return ws.check_password_hash(pwhash=true_pwd_hash,password=password)
 
 @app.route('/login',methods=['GET','POST'])
 def login():
     logout()
-    if request.method=='GET':
-        form=forms.LoginForm()
-        return render_template('form.html',dynamic_content='Login ',form=form, session=session)
-    elif request.method=='POST':
-        if 'username' in session:   
-            # TODO - do not allow user to go to the login page if they are authenticated/logged in 
-            return redirect('/')
-        form=forms.LoginForm()
-        if form.validate_on_submit():
-            query='SELECT pwd FROM public_users WHERE username=%s OR e_mail=%s'
-            values=(form.usernameXe_mail.data,form.usernameXe_mail.data)
-            pwd_hash=execute_query(query=query,values=values)[0][0]
-            authenticated=ws.check_password_hash(pwhash=pwd_hash,password=form.password.data)
-            print('Authenticated:', authenticated)
-            if authenticated:
-                query='SELECT e_mail FROM public_users WHERE username=%s OR e_mail=%s'
-                mail=execute_query(query=query,values=values)[0][0]
-                session['authenticated']=True
-                session['username']=mail
-                session['user_id']=execute_query('SELECT id FROM public_users WHERE e_mail=%s',(mail,))[0][0]
-                
-                # create a new user temporary storage for the user
-                if session['user_id'] not in ts:
-                    ts[session['user_id']] = UserTemporaryStorage()
-                
-                return redirect('/')   
+    match request.method:
+        case 'GET':
+            form=forms.LoginForm()
+            return render_template('form.html',dynamic_content='Login ',form=form, session=session)
+        case 'POST':
+            form=forms.LoginForm()
+            if form.validate_on_submit():
+                user_id = db_api.get_user_id(username=form.usernameXe_mail.data, email=form.usernameXe_mail.data)
+                authenticated = is_password_correct(password=form.password.data, user_id=user_id)
+                if authenticated:
+                    session['authenticated'] = True
+                    session['user_id'] = user_id
+                    # TODO - consider removal - old approach - unused
+                    # TODO - currently the ts is created dynamically when needed, so this may be redundant
+                    # create a new user temporary storage for the user
+                    # if session['user_id'] not in ts:
+                    #     ts[session['user_id']] = UserTemporaryStorage()                
+                    return redirect('/'), 302   
+                else:
+                    flash('Invalid username or password.','error')
+                    return render_template('form.html',dynamic_content='Login ',form=form,session=session)
             else:
-                flash('The password or username/email is incorrect.')
+                # form validation failed - user is notified by flash messages in the form
                 return render_template('form.html',dynamic_content='Login ',form=form,session=session)
-        else:
-            return render_template('form.html',dynamic_content='Login ',form=form,session=session)
-    else:
-        return redirect('/')
 
-def sort_records(records,sort_order,sort_by,page_limit):
-    if sort_order=='asc':
+def sort_records(records: list, sort_order: Literal['asc', 'desc'], sort_by: str, page_limit: int) -> list:
+    if sort_order == 'asc':
         records.sort(key=lambda x: x[sort_by])
-    elif sort_order=='desc':
-        records.sort(key=lambda x: x[sort_by],reverse=True)
+    elif sort_order == 'desc':
+        records.sort(key=lambda x: x[sort_by], reverse=True)
     return records[:page_limit]
 
 @app.route('/queue',methods=['GET','POST'])
@@ -300,7 +480,7 @@ def queue():
 
     columnames=['id','date','state','actions']
     actions=['Edit','Cancel']
-    records.append(execute_query("SELECT id, time_stamp, current_state FROM experiments where added_by_user=%s AND current_state!='finished' ",(session['user_id'],)))
+    records.append(execute_query("SELECT id, time_stamp, current_state FROM experiments where user_id=%s AND current_state!='finished' ",(session['user_id'],)))
     data = records[1]
 
     # Data sorting and slicing
@@ -337,7 +517,7 @@ def experiments():
     sort_by = sort_by.split(',')  
     sort_by = [x for x in sort_by if x in records[0]]
     sort_columns=[ records[0].index(x) for x in sort_by]
-    records.append(execute_query("SELECT id, time_stamp, expert_guess, asphalt_ratio FROM experiments where added_by_user=%s AND current_state='finished' ",(session['user_id'],)))
+    records.append(execute_query("SELECT id, time_stamp, expert_guess, asphalt_ratio FROM experiments where user_id=%s AND current_state='finished' ",(session['user_id'],)))
     
     # data sorting and slicing
     data = records[1]   
@@ -360,92 +540,184 @@ def experiments():
     records[1] = data
     return render_template('experiments.html',records=records,session=session,dynamic_content='Experiment Records')
 
-
-
 @app.route('/user',methods=['GET'])
 @check_authentication
 def user():
-    user_id = session['user_id']
-    if user_id!=session['user_id']:
-        flash('You do not have permission to access this page.','error')
-        return redirect('/')
-    query = 'SELECT first_name, last_name, username, e_mail, company FROM public_users WHERE id=%s'
-    user_data = execute_query(query, (user_id,))
-    user_data_dict = {'first_name': user_data[0][0],
-                      'last_name': user_data[0][1],
-                      'username': user_data[0][2],
-                      'e_mail': user_data[0][3],
-                      'company': user_data[0][4]}
+    # user_id = session['user_id']
+    # if user_id!=session['user_id']:
+    #     flash('You do not have permission to access this page.','error')
+    #     return redirect('/'), 302
+    # query = 'SELECT first_name, last_name, username, e_mail, company FROM public_users WHERE id=%s'
+    # user_data = execute_query(query, (user_id,))
+    user_data_dict = db_api.get_user_info_by_id(user_id=session['user_id'])
     return render_template('user.html',session=session,dynamic_content=user_data_dict)
+
+
 
 @app.route('/register',methods=['GET','POST'])
 def register():
     logout()
-    if request.method=='GET':
-        form=forms.RegistrationFormUser()
-        return render_template('form.html',dynamic_content='Register new user',form=form,session=session)
-    elif request.method=='POST':
-        form=forms.RegistrationFormUser()
-        if form.validate_on_submit():
-            form.password.data=ws.generate_password_hash(form.password.data,method=os.environ['HASH_METHOD'],salt_length=int(os.environ['SALT_LENGTH']))
-            try:
-                form.company_id.data=int(form.company_id.data)
-                result = save_new_user_db(values=[field.data for field in form][:6])
-                print(result == None)
+    match request.method:
+        case 'GET':
+            form=forms.RegistrationFormUser()
+            return render_template('form.html',dynamic_content='Register new user',form=form,session=session)
+        case 'POST':
+            form=forms.RegistrationFormUser()
+            if form.validate_on_submit():
+                print('Form validated successfully.')
+                # form.password.data=ws.generate_password_hash(form.password.data,method=os.environ['HASH_METHOD'],salt_length=int(os.environ['SALT_LENGTH']))
+                form.password.data=generate_password_hash(form.password.data)
+                print('1')
+                company_id=db_api.get_company_id_by_key(form.company_key.data)
+                print('2')
+                user_dict = {
+                    'username': form.username.data,
+                    'e_mail': form.e_mail.data,
+                    'first_name': form.first_name.data,
+                    'last_name': form.last_name.data,
+                    'company': company_id,
+                    'pwd': form.password.data
+                }
+                print('3')
+                result = db_api.save_new_user_db(values=user_dict)
+                print('3')
                 if result is None:
-                    flash(message='Registration was successful.',category='success')
+                    flash(message='Registration successful. Please log in.',category='success')
+                    return redirect(url_for('login')), 302
                 else:
                     flash(message=f'Database error: {result}',category='error')
-                    return render_template('form.html',dynamic_content='Register new user',form=form,session=session)
-            except Exception as e:
-                flash(message=f'The data was not provided in the requested format: {e}',category='error')
-                return render_template('form.html',dynamic_content='Register new user',form=form,session=session)    
-            return render_template('form.html',dynamic_content='Register new user',form=form,session=session)    
-        else:
-            return render_template('form.html',dynamic_content='Register new user',form=form,session=session)
-    else:
-        return redirect('/')
+                    return render_template('form.html',dynamic_content='Register new user',form=form,session=session), 500
+            else:
+                # flash(message='Form validation failed. Please check your input.',category='error')
+                return render_template('form.html',dynamic_content='Register new user',form=form,session=session)
 
-@app.route('/grayscale-data', methods=['POST'])
-def get_grayscale_data():
-    file = request.files['file']
-    if file:
-        image = Image.open(file.stream)        
-        gray_image = image.convert('L')
-        np_gray = np.array(gray_image)
-        ts[session['user_id']].gray = np_gray
-        ts[session['user_id']].gray_original = np_gray
+
+# TODO: CONSIDER REMOVAL - BAD DESIGN - SPLIT THE FUNCTIONALITY
+# TODO: GET - for fetching the grayscale image
+# TODO: The image will be grayscaled automatically after uploading/loading the color image
+# @app.route('/grayscale-data', methods=['POST'])
+# def get_grayscale_data():
+#     file = request.files['file']
+#     if file:
+#         image = Image.open(file.stream)        
+#         gray_image = image.convert('L')
+#         np_gray = np.array(gray_image)
+#         storage.gray_original = np_gray
+#         storage.gray = np_gray
+
+#         # ts[session['user_id']].gray = np_gray
+#         # ts[session['user_id']].gray_original = np_gray
         
-        # cv2.imwrite('temp/gray_temp.jpg', np_gray)
-        print('Image loaded.')
+#         # cv2.imwrite('temp/gray_temp.jpg', np_gray)
+#         print('Image loaded.')
 
-        img_byte_arr = io.BytesIO()
-        gray_image.save(img_byte_arr, format='PNG')
-        img_byte_arr.seek(0)  # Rewind the buffer to the beginning
+#         img_byte_arr = io.BytesIO()
+#         gray_image.save(img_byte_arr, format='PNG')
+#         img_byte_arr.seek(0)  # Rewind the buffer to the beginning
 
-        img_byte_arr = io.BytesIO()
-        Image.fromarray(np_gray).save(img_byte_arr, format='PNG')
-        img_byte_arr = img_byte_arr.getvalue()
-        return img_byte_arr, 200, {'Content-Type': 'image/png'}
+#         img_byte_arr = io.BytesIO()
+#         Image.fromarray(np_gray).save(img_byte_arr, format='PNG')
+#         img_byte_arr = img_byte_arr.getvalue()
+#         return img_byte_arr, 200, {'Content-Type': 'image/png'}
 
-@app.route('/rembg',methods=['GET'])
+
+@app.route('/get-current-experiment', methods=['GET'])
 @check_authentication
-def rembg():
-    return render_template('rembg.html')
+def get_current_experiment():
+    """
+    Returns the current experiment data for the authenticated user.
+
+    Returns:
+    --------
+        Response: A JSON response containing the current experiment data or an error message.
+    """
+    if storage.experiment_id is None:
+        return json.dumps({'status': 'error', 'message': 'No active experiment found'}), 404, {'Content-Type': 'application/json'}
+    else:
+        dict_response = {'status': 'success'}
+        dict_response.update(storage.to_dict())
+        json_response = dict_to_json(dict_response)
+        return json_response, 200, {'Content-Type': 'application/json'}
+
+@app.route('/get-grayscale-image', methods=['GET'])
+def get_grayscale_image():
+    """
+    Returns the grayscale version of the currently loaded color image. If no color image is loaded, returns an error message.
+
+    Returns:
+    --------
+        Response: A JSON response containing the base64-encoded grayscale image or an error message.
+    """
+    if storage.color is None:
+        return json.dumps({'status': 'error', 'message': 'No image found in the experiment'}), 404, {'Content-Type': 'application/json'}
+    else:
+        dict_response = {'status': 'success'}
+        dict_response.update({
+            "gray": to_base64(grayscale_image(storage.color)),
+        })
+        return json.dumps(dict_response), 200, {'Content-Type': 'application/json'}
+
+def grayscale_image(image: np.ndarray) -> np.ndarray:
+    """
+    Converts a color image to grayscale.
+    Parameters:
+    -----------
+        image (np.ndarray): The input color image in RGB format. Shape should be (H, W, 3/4).
+        
+    Returns:
+    --------
+        np.ndarray: The grayscale image. Shape will be (H, W).
+    """
+    if len(image.shape) == 3 and image.shape[2] >= 3:
+        # Convert RGB to Grayscale, dropping alpha channel if present
+        gray_image = cv2.cvtColor(image[:, :, :3], cv2.COLOR_RGB2GRAY)
+    elif len(image.shape) == 2:
+        gray_image = image
+    else:
+        raise ValueError("Invalid image shape for grayscaling.")
+    return gray_image
+
+# TODO: CONSIDER REMOVAL - SLOWER THAN CV2
+# def grayscale_image(image: np.ndarray) -> np.ndarray:
+#     gray_image = Image.fromarray(image).convert('L')
+#     np_gray = np.array(gray_image)
+#     return np_gray
+
+# TODO: CONSIDER REMOVAL - LIKELY UNUSED
+# @app.route('/rembg',methods=['GET'])
+# @check_authentication
+# def rembg():
+#     return render_template('rembg.html')
 
 @app.route('/update_value/<string:value_name>',methods=['POST'])
 @check_authentication
 def update_specific_value(value_name):
+    # ts[session['user_id']].values.__dict__[value_name] = value
+    # setattr(ts[session['user_id']], value_name, value)
     value = request.form.get(value_name)
-    ts[session['user_id']].values.__dict__[value_name] = value
+    storage.from_dict({value_name: value})
     response = save_specific_value(value_name)
-    print('value_name', value_name) 
-    print('value', value) 
-    print('response', response) 
-    print('Value updated.', value_name, value)
     return response    
    
-    
+@app.route('/save_value/<string:value_name>',methods=['POST','GET'])
+def save_specific_value(value_name):
+    try:
+        value_name = value_name.lower()
+        # value = ts[session['user_id']].values.__dict__[value_name]
+        value = getattr(ts[session['user_id']], value_name, None)
+        query = f'UPDATE experiments SET {value_name}=%s, asphalt_ratio=%s, img_mask_asphalt=%s WHERE id=%s'
+        values = (value,
+                #   evaluate_asphalt(),
+                  storage.get_asphalt_ratio(),
+                #   ts[session['user_id']].asphalt_mask.copy().tobytes(),
+                  ts[session['user_id']].experiment_id)
+        execute_query(query, values)
+        return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
+
+# TODO: CONSIDER REMOVAL - REPLACED BY storage.get_asphalt_ratio()
+@deprecated("Use storage.get_asphalt_ratio() instead.")
 def evaluate_asphalt():
     non_bg_pixels = np.sum(return_foreground_mask())
     asphalt_pixels = np.sum(ts[session['user_id']].asphalt_mask + ts[session['user_id']].asphalt_mask_manual_corrections) 
@@ -457,11 +729,16 @@ def evaluate_asphalt():
 @app.route('/evaluate-asphalt',methods=['POST'])
 @check_authentication
 def evaluate_asphalt_caller():
-    evaluation = evaluate_asphalt()
-    save_asphalt_record(state='finished')
+    # evaluation = evaluate_asphalt()
+    # inference
+
+    # get the result
+    evaluation = storage.get_asphalt_ratio()
+    save_experiment(state='finished')
     return json.dumps({'evaluation': evaluation}), 200, {'Content-Type': 'application/json'}
 
-
+# TODO: CORRECT THE METHOD - should be DELETE
+# @app.route('/delete-experiment/<int:id>',methods=['DLELERTE'])
 @app.route('/delete-experiment/<int:id>',methods=['GET', 'POST'])
 @check_authentication
 @check_data_ownership
@@ -479,6 +756,11 @@ def delete_experiment(id):
         status = 'error'
     return json.dumps({'status': status}), 200, {'Content-Type': 'application/json'}
 
+@app.route('/deactivate-current-experiment',methods=['GET', 'POST'])
+@check_authentication
+def deactivate_current_experiment():
+    return deactivate_experiment(None)
+
 @app.route('/deactivate-experiment/<int:id>',methods=['GET', 'POST'])
 @check_authentication
 @check_data_ownership
@@ -492,7 +774,7 @@ def deactivate_experiment(id):
             flash('No active experiment found.','error')
             return redirect('/queue')
     print('Deactivating experiment.', id)
-    query = 'UPDATE experiments SET active=%s WHERE id=%s'
+    query = 'UPDATE experiments SET active=%s WHERE experiment_id=%s'
     values = (False, id)
     execute_query(query, values)
     ts[session['user_id']].experiment_id = None
@@ -506,12 +788,12 @@ def activate_experiment_caller(id):
 
 def activate_experiment(id):
     if id is None:
-        id = ts[session['user_id']].experiment_id
+        id = storage.experiment_id
         if id is None:
             flash('No active experiment found.','error')
             return redirect('/queue')
     # check if the experiment is already active if it is, deactivate it
-    query = 'SELECT id FROM experiments WHERE added_by_user=%s AND active=True'
+    query = 'SELECT experiment_id FROM experiments WHERE user_id=%s AND active=True'
     active_id = execute_query(query, (session['user_id'],))
     print(active_id)
     if active_id:
@@ -520,112 +802,45 @@ def activate_experiment(id):
             r=deactivate_experiment(i[0])
 
     # activate the experiment
-    query = 'UPDATE experiments SET active=%s WHERE id=%s'
+    query = 'UPDATE experiments SET active=%s WHERE experiment_id=%s'
     values = (True, id)
     execute_query(query, values)
     ts [session['user_id']].experiment_id = id    
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
-@app.route('/load-experiment/<int:id>',methods=['GET', 'POST'])
+# TODO: consider removal - of 'POST' method - unused
+# @app.route('/load-experiment/<int:id>',methods=['GET', 'POST'])
+@app.route('/load-experiment/<int:id>',methods=['GET'])
 @check_authentication
 def load_experiment(id):
-    # try:        
+    try:        
         if id is None:
             id = ts[session['user_id']].experiment_id
             if id is None:
                 flash('NO ID No active experiment found.','error')
                 return redirect('/queue')          
 
-        response = load_experiment_from_db(id)
-        image_width = response[0][0]
-        image_height = response[0][1]
-        print('Image width:', image_width)
-        print('Image height:', image_height)
-        print(response[0][-3])
-        ts[session['user_id']].color_original = np.frombuffer(response[0][2], dtype=np.uint8).reshape(image_height, image_width, 4)
-        # ts[session['user_id']].asphalt_mask = np.frombuffer(response[0][3], dtype=bool).reshape(image_height, image_width)
-        # ts[session['user_id']].aggregate_mask = np.frombuffer(response[0][4], dtype=bool).reshape(image_height, image_width)
-        ts[session['user_id']].asphalt_mask = np.frombuffer(response[0][3], dtype=int).reshape(image_height, image_width).copy()
-        ts[session['user_id']].aggregate_mask = np.frombuffer(response[0][4], dtype=int).reshape(image_height, image_width).copy()
-        # print('shapes')
-        # print(response[0][3].shape)
-        # print(ts[session['user_id']].aggregate_mask.shape)
-        # print(ts[session['user_id']].asphalt_mask.shape)
-        # print(ts[session['user_id']].color_original.shape)
-        ts[session['user_id']].values.expert_guess = response[0][5]
-        ts[session['user_id']].values.info = response[0][6]
-        ts[session['user_id']].values.entropy_min_threshold = response[0][7]
-        ts[session['user_id']].values.entropy_max_threshold = response[0][8]
-        ts[session['user_id']].values.intensity_min_threshold_0 = response[0][9]
-        ts[session['user_id']].values.intensity_max_threshold_0 = response[0][10]
-        ts[session['user_id']].values.intensity_min_threshold_1 = response[0][11]
-        ts[session['user_id']].values.intensity_max_threshold_1 = response[0][12]
-        ts[session['user_id']].values.blur = response[0][13]
-        ts[session['user_id']].color = blur_image(ts[session['user_id']].values.blur, ts[session['user_id']].color_original)
-        if response[0][14] is not None:
-            # ts[session['user_id']].asphalt_mask_manual_corrections = np.copy(np.frombuffer(response[0][14], dtype=bool).reshape(image_height, image_width))
-            ts[session['user_id']].asphalt_mask_manual_corrections = np.copy(np.frombuffer(response[0][14], dtype=int).reshape(image_height, image_width))
+        # response = load_experiment_from_db(id)
+        response = db_api.load_experiment_from_db(id)
+        if type(response) == dict:
+            storage.from_dict(response)
         else:
-            # ts[session['user_id']].asphalt_mask_manual_corrections = np.zeros((image_height, image_width), dtype=bool) 
-            ts[session['user_id']].asphalt_mask_manual_corrections = np.zeros((image_height, image_width), dtype=int)    
-        if response[0][15] is not None:
-            # ts[session['user_id']].aggregate_mask_manual_corrections = np.copy(np.frombuffer(response[0][15], dtype=bool).reshape(image_height, image_width))
-            ts[session['user_id']].aggregate_mask_manual_corrections = np.copy(np.frombuffer(response[0][15], dtype=int).reshape(image_height, image_width))
-        else:
-            # ts[session['user_id']].aggregate_mask_manual_corrections = np.zeros((image_height, image_width), dtype=bool)   
-            ts[session['user_id']].aggregate_mask_manual_corrections = np.zeros((image_height, image_width), dtype=int)   
-
-        # gray image
-        image = Image.fromarray(ts[session['user_id']].color_original)        
-        gray_image = image.convert('L')
-        ts[session['user_id']].gray_original = np.array(gray_image)        
-        ts[session['user_id']].gray = blur_image(ts[session['user_id']].values.blur, ts[session['user_id']].gray_original) 
-                
-        # encode the images to string
-        encoded_gray = encode_to_png(ts[session['user_id']].gray_original)
-        encoded_color = encode_to_png(ts[session['user_id']].color_original)
-        encoded_no_bg = encode_to_png(ts[session['user_id']].color_original*ts[session['user_id']].aggregate_mask[:,:,None])
-        encoded_gray = base64.b64encode(encoded_gray).decode('utf-8')
-        encoded_color = base64.b64encode(encoded_color).decode('utf-8')
-        encoded_no_bg = base64.b64encode(encoded_no_bg).decode('utf-8')
-        # blur the images
-        encoded_no_bg_blur = encode_to_png(ts[session['user_id']].color*ts[session['user_id']].aggregate_mask[:,:,None])
-        encoded_gray_blur = encode_to_png(ts[session['user_id']].gray)
-        encoded_color_blur = encode_to_png(ts[session['user_id']].color)
-        encoded_no_bg_blur = base64.b64encode(encoded_no_bg_blur).decode('utf-8')
-        encoded_gray_blur = base64.b64encode(encoded_gray_blur).decode('utf-8')
-        encoded_color_blur = base64.b64encode(encoded_color_blur).decode('utf-8')
+            if not response:
+                flash('The requested experiment does not exist.','error')
+                return redirect('/queue')
         
-        try:
-            expert_guess = int(ts[session['user_id']].values.expert_guess*100)
-        except:
-            expert_guess = 'NaN'
-    
-        json_response = {'status': 'success',
-                        'minThreshold0': ts[session['user_id']].values.intensity_min_threshold_0,
-                        'maxThreshold0': ts[session['user_id']].values.intensity_max_threshold_0,
-                        'minThreshold1': ts[session['user_id']].values.intensity_min_threshold_1,
-                        'maxThreshold1': ts[session['user_id']].values.intensity_max_threshold_1,
-                        'entropyMinThreshold': ts[session['user_id']].values.entropy_min_threshold,
-                        'entropyMaxThreshold': ts[session['user_id']].values.entropy_max_threshold,
-                        'info': ts[session['user_id']].values.info,
-                        'blurValue': ts[session['user_id']].values.blur,
-                        'expertGuess': expert_guess,
-                        'gray': encoded_gray,
-                        'color': encoded_color,
-                        'nobg': encoded_no_bg,
-                        'gray_blur': encoded_gray_blur,
-                        'color_blur': encoded_color_blur,
-                        'nobg_blur': encoded_no_bg_blur
-                        }
-        return json.dumps(json_response), 200, {'Content-Type': 'application/json'}      
-                        
+        dict_response = {'status': 'success'}
+        dict_enrich = storage.to_dict()
+        dict_response.update(dict_enrich)
+        print(dict_response)
+        return dict_to_json(dict_response), 200, {'Content-Type': 'application/json'}
+
     #     print('Experiment loaded.')
     #     redirect('/')
-    # except:
-    #     flash('ERR No active experiment found.','error')
-    #     redirect('/')
-    #     return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
+    except:
+        flash('ERR No active experiment found.','error')
+        redirect('/')
+        return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
     # return json.dumps(json_response), 200, {'Content-Type': 'application/json'}      
 
 # export the images folder
@@ -654,116 +869,82 @@ def is_active():
         pass    
     return json.dumps({'status': False}), 200, {'Content-Type': 'application/json'}
 
-@app.route('/save_value/<string:value_name>',methods=['POST','GET'])
-def save_specific_value(value_name):
-    try:
-        value_name = value_name.lower()
-        value = ts[session['user_id']].values.__dict__[value_name]
-        query = f'UPDATE experiments SET {value_name}=%s, asphalt_ratio=%s, img_mask_asphalt=%s WHERE id=%s'
-        values = (value,
-                  evaluate_asphalt(),
-                  ts[session['user_id']].asphalt_mask.tobytes(),
-                  ts[session['user_id']].experiment_id)
-        execute_query(query, values)
-        return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
-    except Exception as e:
-        return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
-
 @app.route('/save',methods=['POST'])
-def save_asphalt_record(**kwargs):
-    if 'state' in kwargs.keys():
-        state = kwargs['state']
-    else:
-        state = request.args.get('state') or request.form.get('state') or 'started'
-        # state = 'started'    
+@check_authentication
+def save_experiment(**kwargs):
+        """
+        Saves the current experiment data to the database. If no experiment is active, a new one is created.
+        """
+        if 'state' in kwargs.keys():
+            state = kwargs['state']
+        else:
+            state = request.args.get('state') or request.form.get('state') or 'started'
+            # state = 'started'    
 
-    print('Saving record.')
-    print(kwargs)
-    print(state)
-    try:        
-        if ts[session['user_id']].experiment_id is None:
+        print('Saving record.')
+    # try:        
+        if storage.experiment_id is None:
             print('Inserting new record.')
-            query = 'INSERT INTO experiments (added_by_user, img_width, img_height, img, img_mask_asphalt, img_mask_aggregate, expert_guess, info, current_state, asphalt_ratio, entropy_min_threshold, entropy_max_threshold, intensity_min_threshold_0, intensity_max_threshold_0, intensity_min_threshold_1, intensity_max_threshold_1, blur, img_mask_asphalt_manual_correction, img_mask_aggregate_manual_correction) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id'
-            # print(ts[session['user_id']].color_original.shape)
-            # print('shape!!!')
-            values = (session['user_id'], 
-                    ts[session['user_id']].color_original.shape[1],
-                    ts[session['user_id']].color_original.shape[0],
-                    ts[session['user_id']].color_original.tobytes(),
-                    ts[session['user_id']].asphalt_mask.tobytes(),
-                    ts[session['user_id']].aggregate_mask.tobytes(),
-                    ts[session['user_id']].values.expert_guess,
-                    ts[session['user_id']].values.info,
-                    state,
-                    evaluate_asphalt(),
-                    ts[session['user_id']].values.entropy_min_threshold,
-                    ts[session['user_id']].values.entropy_max_threshold,
-                    ts[session['user_id']].values.intensity_min_threshold_0,
-                    ts[session['user_id']].values.intensity_max_threshold_0,
-                    ts[session['user_id']].values.intensity_min_threshold_1,
-                    ts[session['user_id']].values.intensity_max_threshold_1,
-                    ts[session['user_id']].values.blur,
-                    ts[session['user_id']].asphalt_mask_manual_corrections.tobytes(),
-                    ts[session['user_id']].aggregate_mask_manual_corrections.tobytes())
-            
-            ts[session['user_id']].experiment_id = execute_query(query, values)[0][0]
-            activate_experiment(ts[session['user_id']].experiment_id)
-            print(ts[session['user_id']].experiment_id)            
+            ts_dict = storage.to_dict(for_save=True)
+            ts_dict['current_state'] = state
+            ts_dict.pop('experiment_id', None)  # ensure that the experiment_id is not in the dict
+            storage.experiment_id = db_api.insert_experiment_to_db(values_dict=ts_dict)
+            activate_experiment(storage.experiment_id)
+            print('New experiment ID:', storage.experiment_id)
+            # storage.from_dict(ts_dict)  # to ensure consistency
         else:
             print('Updating record.')
-            print('state', state)
-            print(ts[session['user_id']].experiment_id)
-            query = """ 
-            UPDATE experiments SET img_width = %s, 
-            img_height = %s, 
-            img_mask_asphalt=%s, 
-            img_mask_aggregate=%s,
-            expert_guess=%s, 
-            info=%s, 
-            current_state=%s, 
-            asphalt_ratio=%s,
-            entropy_min_threshold=%s, 
-            entropy_max_threshold=%s, 
-            intensity_min_threshold_0=%s, 
-            intensity_max_threshold_0=%s, 
-            intensity_min_threshold_1=%s, 
-            intensity_max_threshold_1=%s,
-            blur=%s, 
-            img_mask_asphalt_manual_correction = %s, 
-            img_mask_aggregate_manual_correction=%s
-            WHERE id=%s"""
-            values = (ts[session['user_id']].color_original.shape[1],
-                      ts[session['user_id']].color_original.shape[0],
-                      ts[session['user_id']].asphalt_mask.tobytes(),
-                      ts[session['user_id']].aggregate_mask.tobytes(),
-                      ts[session['user_id']].values.expert_guess,
-                      ts[session['user_id']].values.info,
-                      state,
-                      evaluate_asphalt(),
-                      ts[session['user_id']].values.entropy_min_threshold,
-                      ts[session['user_id']].values.entropy_max_threshold,
-                      ts[session['user_id']].values.intensity_min_threshold_0,
-                      ts[session['user_id']].values.intensity_max_threshold_0,
-                      ts[session['user_id']].values.intensity_min_threshold_1,
-                      ts[session['user_id']].values.intensity_max_threshold_1,
-                      ts[session['user_id']].values.blur,
-                      ts[session['user_id']].asphalt_mask_manual_corrections.tobytes(),
-                      ts[session['user_id']].aggregate_mask_manual_corrections.tobytes(),
-                      ts[session['user_id']].experiment_id)
-            execute_query(query, values)
-            print('Record up.')
+            ts_dict = storage.to_dict(for_save=True)
+            db_api.update_experiment_in_db(values_dict=ts_dict)
+            # print('state', state)
+            # print(storage.experiment_id)
+            # query = """ 
+            # UPDATE experiments SET img_width = %s, 
+            # img_height = %s, 
+            # img_mask_asphalt=%s, 
+            # img_mask_aggregate=%s,
+            # expert_guess=%s, 
+            # info=%s, 
+            # current_state=%s, 
+            # asphalt_ratio=%s,
+            # entropy_min_threshold=%s, 
+            # entropy_max_threshold=%s, 
+            # intensity_min_threshold_0=%s, 
+            # intensity_max_threshold_0=%s, 
+            # intensity_min_threshold_1=%s, 
+            # intensity_max_threshold_1=%s,
+            # blur=%s, 
+            # img_mask_asphalt_manual_correction = %s, 
+            # img_mask_aggregate_manual_correction=%s
+            # WHERE id=%s"""
+            # values = (ts[session['user_id']].color_original.shape[1],
+            #           ts[session['user_id']].color_original.shape[0],
+            #           ts[session['user_id']].asphalt_mask.tobytes(),
+            #           ts[session['user_id']].aggregate_mask.tobytes(),
+            #           ts[session['user_id']].values.expert_guess,
+            #           ts[session['user_id']].values.info,
+            #           state,
+            #           evaluate_asphalt(),
+            #           ts[session['user_id']].values.entropy_min_threshold,
+            #           ts[session['user_id']].values.entropy_max_threshold,
+            #           ts[session['user_id']].values.intensity_min_threshold_0,
+            #           ts[session['user_id']].values.intensity_max_threshold_0,
+            #           ts[session['user_id']].values.intensity_min_threshold_1,
+            #           ts[session['user_id']].values.intensity_max_threshold_1,
+            #           ts[session['user_id']].values.blur,
+            #           ts[session['user_id']].asphalt_mask_manual_corrections.tobytes(),
+            #           ts[session['user_id']].aggregate_mask_manual_corrections.tobytes(),
+            #           ts[session['user_id']].experiment_id)
+            # execute_query(query, values)
         
-        print(state.lower())
-        print(state.lower() == 'finished')
         if state.lower() == 'finished':
             # delete temporary storage and create a new one
             print('Experiment finished.')
             ts.pop(session['user_id'])
-            ts[session['user_id']] = UserTemporaryStorage()
-        status = 'success'
-    except Exception as e:
-        status = 'error'        
-    return json.dumps({'status': status}), 200, {'Content-Type': 'application/json'}
+            # storage = UserTemporaryStorage() # TODO: check if this is needed >>> should be created dynamically when needed by lambda function in storage definition
+        return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
+    # except Exception as e:
+    #     return json.dumps({'status': 'error', 'message': str(e)}), 500, {'Content-Type': 'application/json'}
 
 
 @app.route('/backup-storage',methods=['POST', 'GET'])
@@ -785,7 +966,242 @@ def restore_temporal_storage():
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
 
+def downscale_image(image: np.ndarray, scale_factor: float = None) -> np.ndarray:
+    """
+    Downscale the input image by a given scale factor.
+    
+    Parameters:
+    -----------
+        image (np.ndarray): The input image as a numpy array of shape (H, W, C) or (H, W).
+        scale_factor (float): The factor by which to downscale the image. E.g., a scale factor of 2 will reduce the image dimensions by half.
+    
+    Returns:
+    --------
+        np.ndarray: The downscaled image as a numpy array.
+    """
+    if scale_factor is None:
+        # compute scale factor based on the image size such that the maximum dimension is 1200 pixels
+        scale_factor = 1.0
+        max_dimension = max(image.shape[:2])
+        if max_dimension > 1200:
+            scale_factor = max_dimension / 1200.0
+    elif scale_factor <= 0:
+        raise ValueError("Scale factor must be greater than 0.")
+
+    new_size = (int(image.shape[1] / scale_factor), int(image.shape[0] / scale_factor))
+    downscaled_image = cv2.resize(image, new_size, interpolation=cv2.INTER_AREA)
+    return downscaled_image
+
+def polish_input_image_file(file) -> np.ndarray: 
+    """
+    This function processes the input image file and returns the image as a numpy array.
+    It handles HEIC files by converting them to PNG format and ensures the image has no alpha channel.
+    """
+
+    print('Polishing input image file.')
+    image = Image.open(file.stream)
+    print('1')
+
+    if file.filename.split('.')[-1].upper() == 'HEIC':
+        unique_query = str(request.args.get('nocache')) + '_' + str(session['user_id'])
+        path = f'temp/temp_{unique_query}.png'
+        image.save(path)
+        image = Image.open(path)
+
+        np_image = np.concatenate((np.array(image), np.ones((image.size[1], image.size[0], 1), dtype=np.uint8)*255), axis=2)
+    else:
+        np_image = np.array(image)
+
+    print('1.5')
+    # if the image is BW image, convert it to RGB
+    if len(np_image.shape) == 2:
+        np_image = np.stack((np_image,)*3, axis=-1)
+
+    print('2')
+    if file.filename.split('.')[-1].upper() == 'HEIC':
+        # delete the temporary file
+        os.remove(path)
+    
+    print('3')
+    # if the image has more than 4 channels, convert it to RGB
+    if np_image.shape[2] > 3:
+        np_image = np_image[:, :, :3]
+    print('4')
+
+    # downscale the image if it is larger than 1200 pixels in any dimension
+    np_image = downscale_image(np_image, scale_factor=None)
+    print('5')
+
+    return np_image.astype(np.uint8)
+
+
+def temporary_store_image(image: np.ndarray):
+    """
+    This function creates a temporary storage for the image, i.e. it creates a new UserTemporaryStorage object
+    and assigns it to the session['user_id'] key in the ts dictionary.
+    """
+    storage.from_dict({
+        'experiment_id': None,
+        'color': image.copy(),
+        'asphalt_mask': np.zeros(image.shape[:2], dtype=int),
+        'aggregate_mask': np.zeros(image.shape[:2], dtype=int),
+        'asphalt_mask_manual_corrections': np.zeros(image.shape[:2], dtype=int), # TODO consider replacement with NONE - if no corrections are made, we do not need to store the array
+        'aggregate_mask_manual_corrections': np.zeros(image.shape[:2], dtype=int), # TODO consider replacement with NONE - if no corrections are made, we do not need to store the array
+    })
+    # # manual corrections
+    # ts[session['user_id']].asphalt_mask_manual_corrections = np.zeros(ts[session['user_id']].color_original.shape[:2], dtype=int)
+    # ts[session['user_id']].aggregate_mask_manual_corrections = np.zeros(ts[session['user_id']].color_original.shape[:2], dtype=int)
+    # # initialize the masks
+    # ts[session['user_id']].asphalt_mask = np.zeros_like(ts[session['user_id']].asphalt_mask_manual_corrections, dtype=int)
+    # ts[session['user_id']].aggregate_mask = np.zeros_like(ts[session['user_id']].asphalt_mask_manual_corrections, dtype=int)
+
+    # TODO: consider removing the entropy calculation from here, as it is not used in the current approach
+    # ts[session['user_id']].entropy_original = ts[session['user_id']].gray_original.copy()
+    # ts[session['user_id']].entropy = ts[session['user_id']].entropy_original.copy()
+    # ts[session['user_id']].values.entropy_min_threshold = 0
+    # ts[session['user_id']].values.entropy_max_threshold = 255
+
+
+@app.route('/process-image',methods=['POST'])
+def process_image():
+    # This function processes the image and returns the processed image
+    # it should be called when the user wants to process the image
+    file = request.files['file']
+    image = polish_input_image_file(file)
+    # temporary_store_image(image)
+    
+    storage.from_dict({
+        'experiment_id': None,
+        'color': image.copy(),
+        'asphalt_mask': np.zeros(image.shape[:2], dtype=int),
+        'aggregate_mask': np.zeros(image.shape[:2], dtype=int),
+        'asphalt_mask_manual_corrections': np.zeros(image.shape[:2], dtype=int), # TODO consider replacement with NONE - if no corrections are made, we do not need to store the array
+        'aggregate_mask_manual_corrections': np.zeros(image.shape[:2], dtype=int), # TODO consider replacement with NONE - if no corrections are made, we do not need to store the array
+    })
+
+    # save the data to database
+    save_experiment(state='started')
+    # inference
+
+
+    response_dict = {
+        'status': 'success',
+        'color': storage.color,
+        'gray': grayscale_image(storage.color),  # convert to list for JSON serialization
+    }
+    response_json = dict_to_json(response_dict)
+
+
+    return response_json, 200, {'Content-Type': 'application/json'}
+
+def postprocess_model_prediction(prediction: torch.Tensor):
+    """
+    Postprocess the model prediction to save separated masks.
+
+    
+    Parameters:
+    prediction (torch.Tensor): 
+        expected to be a tensor with shape (batch_size, num_classes, height, width).
+        containig the probabilities for each class.
+        the class are expected
+        - 0 is asphalt, 
+        - 1 is aggregate,
+        - 2 is background
+
+    """
+    prediction = prediction.squeeze(0).cpu().numpy()  # Remove batch dimension and convert to numpy array
+    boolean_prediction = np.argmax(prediction, axis=0)  # Get the class with the highest probability
+
+    asphalt_mask = boolean_prediction == 0
+    aggregate_mask = boolean_prediction == 1
+    background_mask = boolean_prediction == 2
+
+    return asphalt_mask, aggregate_mask, background_mask
+
+@deprecated("used in thresholding approach, but not in the current one")
+def get_masks_with_manual_corrections():
+    """
+    Get the masks with manual corrections.
+    
+    Returns:
+    tuple: A tuple containing asphalt_mask, aggregate_mask, and background_mask.
+    """
+    asphalt_mask = return_asphalt_mask()
+    aggregate_mask = return_aggregate_mask()
+    background_mask = return_background_mask()
+    # asphalt_mask = ts[session['user_id']].asphalt_mask + ts[session['user_id']].asphalt_mask_manual_corrections
+    # aggregate_mask = ts[session['user_id']].aggregate_mask + ts[session['user_id']].aggregate_mask_manual_corrections
+    # background_mask = np.ones_like(asphalt_mask) - asphalt_mask - aggregate_mask
+    return asphalt_mask, aggregate_mask, background_mask
+
+def to_base64(image_array: np.ndarray) -> str:
+    """
+    Convert a numpy array to a base64 encoded string.
+    
+    Parameters:
+    array (numpy.ndarray): The numpy array to encode.
+    
+    Returns:
+    str: Base64 encoded string of the array.
+    """
+    return base64.b64encode(encode_to_png(image_array)).decode('utf-8')
+
+# @app.route('/remove-asphalt',methods=['POST'])
+@app.route('/inference',methods=['POST'])
+def inference_image():
+    storage.inference_model = request.form.get('model_name', None)
+
+
+    if storage.inference_model is None:
+        return json.dumps({'status': 'error', 'message': 'Model name is required.'}), 400, {'Content-Type': 'application/json'}
+
+    input_data = torch.from_numpy(storage.color).unsqueeze(0).float()  # Add batch channel dimension
+    input_data = input_data.permute(0, 3, 1, 2)  # Change to torch (batch_size, channels, height, width)
+    
+    print("input_data.shape")
+    print(input_data.shape)
+
+    model_prediction = inference(model_name=storage.inference_model,
+                                 input_data=input_data,
+                                 session_id=session['user_id'])
+    
+    # get model prediction and save it to the sessions
+    asphalt_mask, aggregate_mask, background_mask = postprocess_model_prediction(model_prediction)
+
+    # save the masks to the storage
+    storage.from_dict({
+        'asphalt_mask': asphalt_mask.astype(int),
+        'aggregate_mask': aggregate_mask.astype(int),
+        'background_mask': background_mask.astype(int)
+    })
+    # save to db
+    save_experiment(state='started')
+
+    # return the masks with manual corrections
+    asphalt_mask, aggregate_mask, background_mask = storage.get_masks_with_manual_corrections()
+    # asphalt_mask = ts[session['user_id']].get_asphalt_mask()
+    # aggregate_mask = ts[session['user_id']].get_aggregate_mask()
+    # background_mask = ts[session['user_id']].get_background_mask()
+
+    # save the masks to the session
+    # ts[session['user_id']].asphalt_mask = asphalt_mask.astype(int)
+    # ts[session['user_id']].aggregate_mask = aggregate_mask.astype(int)
+    # ts[session['user_id']].background_mask = background_mask.astype(int)
+
+    json_response = {
+        'status': 'success',
+        'asphalt_mask': to_base64(bool_to_image_array(asphalt_mask)),
+        'aggregate_mask': to_base64(bool_to_image_array(aggregate_mask)),
+        'background_mask': to_base64(bool_to_image_array(background_mask))
+    }
+    json_response = dict_to_json(json_response)
+
+    # return json.dumps(json_response), 200, {'Content-Type': 'application/json'}
+    return json_response, 200, {'Content-Type': 'application/json'}
+
+
 @app.route('/remove-background',methods=['POST'])
+@deprecated("used in thresholding approach, but not in the current one")
 def remove_picture_background():
     # this function returns a suggested mask, i.e. boolean matrix  
     # denoting wether a pixel should (T) or should not (F) be taken into
@@ -796,27 +1212,12 @@ def remove_picture_background():
     file = request.files['file']
     # check wether the file is .heic and if so, convert it to .png
     threshold=128 #consider changing this to a value from the form that user can set # threshold=request.form.get('threshold')
-    if file.filename[-len('.HEIC'):].upper() == '.HEIC':
-        image = Image.open(file.stream)
-        unique_query = str(request.args.get('nocache')) + '_' + str(session['user_id'])
-        path = f'temp/temp_{unique_query}.png'
-        image.save(path)
-        image = Image.open(path)
-        print('SHAPE ORIGINAL', image.size)
-        image = np.concatenate((np.array(image), np.ones((image.size[1], image.size[0], 1), dtype=np.uint8)*255), axis=2)
-        ts[session['user_id']].color_original = image
-    else:
-        image = Image.open(file.stream)
-        ts[session['user_id']].color_original = np.array(image)
- 
-    # if the image is BW image, convert it to RGB
-    if len(ts[session['user_id']].color_original.shape) == 2:
-        ts[session['user_id']].color_original = np.stack((ts[session['user_id']].color_original,)*3, axis=-1)
-
-    # if the alpha channel is not present, add it  
-    if ts[session['user_id']].color_original.shape[2] == 3:
-        ts[session['user_id']].color_original = np.concatenate((ts[session['user_id']].color_original, np.ones((ts[session['user_id']].color_original.shape[0], ts[session['user_id']].color_original.shape[1], 1), dtype=np.uint8)*255), axis=2)
+    image = polish_input_image_file(file)
     
+    # if the alpha channel is not present, add it  
+    # if np_image.shape[2] == 3:
+    #     np_image = np.concatenate((np_image, np.ones((np_image.shape[0], np_image.shape[1], 1), dtype=np.uint8)*255), axis=2)
+
     # image = request.form.get('image')
     # image=np.array(request.form.get('image'),dtype=np.int8)
     
@@ -827,7 +1228,6 @@ def remove_picture_background():
     # if file.filename[-len('.HEIC'):].upper() == '.HEIC':
     #     print('HEIC file detected. TRANSPOSE')
     #     image = image.transpose((1,0,2))
-        
 
     # sharpen the mask
     mask = image[:, :, 3]
@@ -849,22 +1249,15 @@ def remove_picture_background():
     
     # return the mask
     print('Background removed')
-    if file.filename[-len('.HEIC'):].upper() == '.HEIC':
-        # delete the temporary file
-        os.remove(path)
-        
-    json_response = {'original_image': base64.b64encode(encode_to_png(ts[session['user_id']].color_original)).decode('utf-8'),
-                     'nobg': base64.b64encode(encode_to_png(ts[session['user_id']].color)).decode('utf-8')}
+
+    json_response = {'original_image': to_base64(ts[session['user_id']].color_original),
+                     'nobg': to_base64(ts[session['user_id']].color)}
     return json.dumps(json_response), 200, {'Content-Type': 'application/json'}
     # return encode_to_png(image), 200, {'Content-Type': 'image/png'}
 
 
-
-
-
-
-
 @app.route('/entropy', methods=['POST'])
+@deprecated("used in thresholding approach, but not in the current one")
 def calculate_entropy():
     # np_gray = cv2.imread('temp/gray_temp.jpg', cv2.IMREAD_GRAYSCALE)
     np_gray = ts[session['user_id']].gray
@@ -895,6 +1288,7 @@ def encode_to_png(image):
 
 # TODO repair the image blur - err: when a value of blur is set 
 @app.route('/blur', methods=['POST'])
+@deprecated("used in thresholding approach, but not in the current one")
 def blur_caller():
     blur_value = int(request.form.get('blurValue', 0))
     ts[session['user_id']].values.blur = blur_value
@@ -905,7 +1299,7 @@ def blur_caller():
     ts[session['user_id']].entropy=blur_image(blur_value,image=ts[session['user_id']].entropy_original)
 
     #  encode the images to PNG
-    encoded_gray = encode_to_png(ts[session['user_id']].gray)
+    encoded_gray = encode_to_png(ts[session['user_id']].gray) 
     encoded_color = encode_to_png(ts[session['user_id']].color)
     encoded_no_bg = encode_to_png(ts[session['user_id']].color*ts[session['user_id']].aggregate_mask[:,:,None])
     # print('ci shape',ts[session['user_id']].color.shape)
@@ -931,7 +1325,13 @@ def blur_image(blur_value,image):
 
 
 @app.route('/apply-mask', methods=['POST'])
+@deprecated("used in thresholding approach, but not in the current one")
 def apply_mask():
+    # 
+    warn("Old endpoint will be removed soon", DeprecationWarning)
+    flash("⚠️ This endpoint APPLY-MASK is deprecated and will be removed in a future version.", "warning")
+    
+    
     # Assuming the image's ID or a unique identifier is sent as part of the form data for key lookup
     image_id = request.form.get('imageId')
     min_threshold_0 = int(request.form.get('minThreshold0', 0))
@@ -942,38 +1342,38 @@ def apply_mask():
     entropy_max_threshold = int(request.form.get('entropyMaxThreshold', 255))
     
     # save the values
-    ts[session['user_id']].values.intensity_min_threshold_0 = min_threshold_0
-    ts[session['user_id']].values.intensity_max_threshold_0 = max_threshold_0
-    ts[session['user_id']].values.intensity_min_threshold_1 = min_threshold_1
-    ts[session['user_id']].values.intensity_max_threshold_1 = max_threshold_1
-    ts[session['user_id']].values.entropy_min_threshold = entropy_min_threshold
-    ts[session['user_id']].values.entropy_max_threshold = entropy_max_threshold    
+    storage.from_dict(request.form.to_dict())
+    
+    # ts[session['user_id']].values.intensity_min_threshold_0 = min_threshold_0
+    # ts[session['user_id']].values.intensity_max_threshold_0 = max_threshold_0
+    # ts[session['user_id']].values.intensity_min_threshold_1 = min_threshold_1
+    # ts[session['user_id']].values.intensity_max_threshold_1 = max_threshold_1
+    # ts[session['user_id']].values.entropy_min_threshold = entropy_min_threshold
+    # ts[session['user_id']].values.entropy_max_threshold = entropy_max_threshold    
     
     print('Mask applied')
     # np_gray = cv2.imread('temp/gray_temp.jpg', cv2.IMREAD_GRAYSCALE)
     # np_entropy = cv2.imread('temp/entropy_temp.jpg', cv2.IMREAD_GRAYSCALE)
-    np_gray = ts[session['user_id']].gray
-    np_entropy = ts[session['user_id']].entropy
+    # np_gray = ts[session['user_id']].gray
+    # np_entropy = ts[session['user_id']].entropy
     
-    min_thresholds = [min_threshold_0, min_threshold_1]
-    max_thresholds = [max_threshold_0, max_threshold_1]    
-    print('Thresholds:', min_thresholds, max_thresholds)
-    print('Entropy thresholds:', entropy_min_threshold, entropy_max_threshold)
-    if image_id == 'gray':
-        print('Gray image selected.')
-        overlay_image = apply_red_overlay(np_gray, np_gray, np_entropy, min_thresholds, max_thresholds,
-                                          entropy_min_threshold, entropy_max_threshold)
-    else:
-        print('Color image selected.')
-        overlay_image = apply_red_overlay(np_entropy, np_gray, np_entropy, min_thresholds, max_thresholds,
-                                          entropy_min_threshold, entropy_max_threshold)
+    # min_thresholds = [min_threshold_0, min_threshold_1]
+    # max_thresholds = [max_threshold_0, max_threshold_1]    
+    # print('Thresholds:', min_thresholds, max_thresholds)
+    # print('Entropy thresholds:', entropy_min_threshold, entropy_max_threshold)
+    # if image_id == 'gray':
+    #     print('Gray image selected.')
+    #     overlay_image = apply_red_overlay(np_gray, np_gray, np_entropy, min_thresholds, max_thresholds,
+    #                                       entropy_min_threshold, entropy_max_threshold)
+    # else:
+    #     print('Color image selected.')
+    #     overlay_image = apply_red_overlay(np_entropy, np_gray, np_entropy, min_thresholds, max_thresholds,
+    #                                       entropy_min_threshold, entropy_max_threshold)
 
-    img_byte_arr=encode_to_png(overlay_image) #should be equivalent to the 3 rows bellow
-    entropy_byte_arr = encode_to_png(np_entropy)    
-    # stringify the image
-    img_byte_arr = base64.b64encode(img_byte_arr).decode('utf-8')
-    entropy_byte_arr = base64.b64encode(entropy_byte_arr).decode('utf-8')
-    return json.dumps({'overlay': img_byte_arr, 'entropy': entropy_byte_arr}), 200, {'Content-Type': 'application/json'}
+    overlay_image = get_masks_with_manual_corrections()[0]
+    overlay_image = np.dstack([overlay_image]*3)*255
+    overlay_image = to_base64(overlay_image)
+    return json.dumps({'overlay': overlay_image}), 200, {'Content-Type': 'application/json'}
 
 def return_aggregate_mask():
     """
@@ -1008,6 +1408,7 @@ def return_background_mask() -> np.ndarray:
     mask = np.logical_not(return_foreground_mask())
     return mask.astype(bool)
 
+@deprecated("used in thresholding approach, but not in the current one.")
 def apply_red_overlay(masked_img, intensity_img, entropy_img, min_thresholds, max_thresholds, entropy_min_threshold,
                       entropy_max_threshold):        
     intensity_mask_0 = (intensity_img >= min_thresholds[0]) & (intensity_img <= max_thresholds[0])
@@ -1093,7 +1494,7 @@ def correct_mask(mask: np.ndarray, label: str) -> None:
     return None
 
 
-@app.route('/get-corrected-mask', methods=['POST'])
+@app.route('/get-corrected-mask', methods=['GET'])
 def get_corrected_mask() -> tuple[dict, int, dict]:
     # choose intensity for drawing the masks
     intensity = 51 
@@ -1116,16 +1517,11 @@ def get_corrected_mask() -> tuple[dict, int, dict]:
     encoded_asphalt = base64.b64encode(encoded_asphalt).decode('utf-8') 
     encoded_bg = base64.b64encode(encoded_bg).decode('utf-8')
     
-    # image_width = ts[session['user_id']].color_original.shape[1] 
-    # image_height = ts[session['user_id']].color_original.shape[0] 
-    # print('im shape',ts[session['user_id']].color_original.shape)
-    # print('bg',np.sum(draw_mask_bg[:,:,3].ravel())/image_width/image_height/intensity)
-    # print('agg',np.sum(draw_mask_aggregate[:,:,3].ravel())/image_width/image_height/intensity)
-    # print('asphalt',np.sum(draw_mask_asphalt[:,:,3].ravel())/image_width/image_height/intensity)
-    # print(np.sum(draw_mask_bg[:,:,3].ravel()+draw_mask_aggregate[:,:,3].ravel()+draw_mask_asphalt[:,:,3].ravel())/image_width/image_height/intensity)
-    
     # return encoded_bg, encoded_aggregate, encoded_asphalt
-    json_response = {'status': 'success', 'bg': encoded_bg, 'aggregate': encoded_aggregate, 'asphalt': encoded_asphalt}
+    json_response = {'status': 'success', 
+                     'bg': encoded_bg, 
+                     'aggregate': encoded_aggregate, 
+                     'asphalt': encoded_asphalt}
     return json.dumps(json_response), 200, {'Content-Type': 'application/json'}
 
 @app.route('/save-annotation', methods=['POST'])
@@ -1136,7 +1532,7 @@ def save_annotation():
     mask = get_inner_shape(annotation["shape"])
     correct_mask(mask, annotation["label"])             
     # Save the annotation to the database
-    save_asphalt_record()
+    save_experiment()
     print('Annotation saved.')
     # return masks for bg, aggregate and asphalt
     return get_corrected_mask()
@@ -1155,5 +1551,8 @@ def send_node_modules(path):
     return send_from_directory('node_modules', path)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    debug = True
+    if debug:
+        app.secret_key='test_secret_key'
+    app.run(debug=debug)
 

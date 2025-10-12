@@ -14,10 +14,10 @@
     <div class="colorbar">
         <h2>{{dynamic_content}}</h2>
     </div>
-    <div id="fileProgressDiv"  class="loading" style="display:none">
+    <div id="fileProgressDiv"  class="loading">
         Uploading files, please wait...
         <!-- <progress id="fileProgress" value="0" max="100" style="width: 100%; display: none;" class = "progress"></progress> --> 
-        <progress id="fileProgress" value="0" max="100" style="width: 100%; display: none;" class = "progress"></progress>
+        <progress id="fileProgress" value="0" max="100" class = "progress"></progress>
 
     </div>
     
@@ -29,10 +29,6 @@
         <div class="column">
             <input type="file" id="fileInput" accept="image/*" class="custom-file-input" name="files[]" multiple>
             <label for="fileInput"  class="custom-file-label">Choose File</label>
-        </div>
-        <div class="column">
-            <input type="file" id="fileInput" accept="image/*" class="custom-file-input">
-            <label for="fileInput"  class="custom-file-label">Use device camera</label>
         </div>
     </div>
     
@@ -53,7 +49,8 @@
         <tbody>
             {% if records %}            
             <tr>
-                <textarea id="current_page" style="display:none">1</textarea>
+                <textarea class='text_area' id="current_page" >1</textarea>
+                <!-- <textarea id="current_page" style="display:none">1</textarea> -->
                 <td colspan="{{ column_count }}">
                     Max.recoeds on page: <input type="number" id="maxRecords" value="10" min="1" max="100">
                 </td>

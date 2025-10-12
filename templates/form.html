@@ -20,12 +20,12 @@
                 <button type="submit">submit</button>                                
             </div>
             {% for error in field.errors %}
-                                <p style="color: darkred;">{{error}}</p>
+                                <p class="error">{{error}}</p>
                                 {% endfor %}
                                 {% elif field.type != 'HiddenField'  %}
                                 <div>{{field.label}}{{field}}</div>
                             {% for error in field.errors %}
-                            <p style="color: darkred;">{{error}}</p>
+                            <p class="error">{{error}}</p>
                             {% endfor %}
                         {% endif %}
                     {% endif %}

@@ -20,8 +20,10 @@ def IsUnique(tablename):
 # @validator
 def Exists(tablename):
     def exists(form,field):
-        query=f'SELECT {field.name} FROM {tablename} WHERE {field.name}=%s LIMIT %s;'
-        response=db_api.execute_query(query=query,values=(int(field.data),1))
+        # query=f'SELECT {field.name} FROM {tablename} WHERE {field.name}=%s LIMIT %s;'
+        # response=db_api.execute_query(query=query,values=(int(field.data),1))
+        query=f'SELECT {field.name} FROM {tablename} WHERE {field.name}='+'%s LIMIT %s;'
+        response=db_api.execute_query(query=query,values=(field.data,1))
         if 0==len(response):
             raise ValidationError(f'No record {field.name} with value "{field.data}" exists. Contact your admin to get your credentials (or register your company).')
     return exists
@@ -49,22 +51,13 @@ def RequiredLength(min=1,max=50):
                 raise ValidationError(f'The maximal allowed length is {max} characters.')
     return exists
 
-# def IsNumeric():
-#     def is_numeric(form,field):
-#         if ~len(response):
-#             message=f'No record {field.name} with value "{field.data}" exists. Contact your admin to get your credentials (or register your company).'
-#             return ValidationError(message=message)
-#     return exists
 
 class RegistrationFormUser(FlaskForm):    
     username = StringField('Username',validators=[DataRequired(),IsUnique(tablename='public_users'),RequiredLength(min=1,max=50)])
     e_mail = StringField('Email address',validators=[DataRequired(), Email(),IsUnique(tablename='public_users')])
     first_name = StringField('First name',validators=[DataRequired()])
     last_name = StringField('Last name',validators=[DataRequired()])
-    # company_name = StringField('Company Name',validators=[DataRequired(),Exists(tablename='public_companies')])
-    # company_id = IntegerField('Company ID',validators=[DataRequired(),Exists(tablename='public_companies')])
-    company_id = StringField('Company ID',validators=[DataRequired(),Exists(tablename='public_companies')])
-    # in future - add check if the company is in registered companies
+    company_key = StringField('Company Key',validators=[DataRequired(),Exists(tablename='public_companies')])
     password = PasswordField('Password',validators=[DataRequired(),RequiredLength(min=8)])
     confirm_password = PasswordField('Confirm password',validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Submit')

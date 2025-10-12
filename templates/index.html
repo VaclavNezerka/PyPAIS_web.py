@@ -13,10 +13,11 @@
     </head> 
     
     <!-- OpenSeadragon -->
-    <script src="../static/openseadragon_5.0/openseadragon.min.js"></script>
+    <!-- <script src="../static/openseadragon_5.0/openseadragon.min.js"></script> -->
     <!-- Konva.js -->
-    <script src="../static/node_modules/konva/konva.min.js"></script>
-    <script type="module" src="/static/script.js"></script>
+    <!-- <script src="../static/node_modules/konva/konva.min.js"></script> -->
+    <!-- <script type="module" src="/static/script.js"></script> --> <!-- DEPRECATED: OLD THRESHOLDING -->
+    <script type="module" src="/static/script_automatic.js"></script>
     <body>
     <div id="row", class = "colorbar">
         <h2> Current Experiment</h2>
@@ -26,7 +27,7 @@
         <!-- First Row: Image Upload -->
         <div class="row">
             <input type="file" id="fileInput" accept="image/*" class="custom-file-input"></input>
-            <label for="fileInput" class="custom-file-label">Choose File</label>
+            <label for="fileInput" class="custom-file-label">Upload Image</label>
         </div>
     </div>
 
@@ -47,18 +48,76 @@
             <input type="number" id="expertGuess" placeholder="Expert Guess"/>
         </div>
    </div>
-
+   
+   
+   <div id="row", class = "colorbar">
+       <h3> Automatic Phase Detection</h3>
+    </div>
+        <div class="loading" id="workingMessage">
+        <!-- <div class="loading" id="workingMessage" style="display:none;"> -->
+            Working...
+        </div>
         
-    <div id="row", class = "colorbar">
-        <h3> Automatic Thresholding</h3>
-    </div>
-    <div class="loading" id="workingMessage" style="display:none;">
-        Working...
-    </div>
-            
         <div class="row">
             <!-- Add a droplist allowing the user to select ORIGINAL IMAGE, original with no bg, and BW -->
             <div class="column">
+                <h3> MODEL </h3>
+                <div class="column">
+                    <select id="model" >
+                        {% for model in models %}
+                            <option value="{{ model }}">{{ model }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Add a droplist allowing the user to select ORIGINAL IMAGE, original with no bg, and BW -->
+            <div class="column">
+                <div class="column">
+                    <select id="imageType" >
+                        <option value="original">("c") Original Image</option>
+                        <option value="original_no_bg">("c") Removed Background</option>
+                        <option value="bw">("c") Grayscale Image</option>
+                    </select>
+                </div>
+            </div>
+            <div class="column">
+                <input type="checkbox" id="redOverlayCheckbox"  >Display Asphalt ("a")</input>
+            </div>
+            <div class="column">
+                <div class="slider-container">
+                    <div class="slider-group">
+                        Mask Opacity: <input type="range" id="opacitySlider" min="0" max="100" value="20" class = "slider">
+                        <input type="text" id="opacityValue" value="20" size="2">
+                    </div>    
+                </div>
+            </div>
+        </div>
+
+    <!-- Second Row: Intensity Image and Controls -->
+        <div class="row">
+            <div class="column">
+                <img id="defaultImage" src="/static/logo.png" alt="Default Image">
+                    <div class="img-magnifier-container">
+                        <canvas id="imageCanvas" ></canvas>
+                        <canvas class="overlayCanvas" id="overlayCanvasAsphalt" ></canvas>
+                        <canvas class="overlayCanvas" id="overlayCanvasAggregate" ></canvas>
+                        <canvas class="overlayCanvas" id="overlayCanvasBackground" ></canvas>
+                    </div>
+            </div>
+        </div>
+
+
+    <!-- <div id="row", class = "colorbar">
+        <h3> Automatic Thresholding - deprecated </h3>
+    </div> -->
+
+    <!-- Add a droplist allowing the user to select ORIGINAL IMAGE, original with no bg, and BW -->
+    <!-- 
+                <div class="row">
+                <div class="column">
                 <div class="column">
                     <select id="imageType" >
                         <option value="original">("c") Original Image</option>
@@ -82,10 +141,10 @@
                     </div>    
                 </div>
             </div>
-        </div>
+        </div> -->
 
     <!-- Second Row: Intensity Image and Controls -->
-        <div class="row">
+        <!-- <div class="row">
             <div class="column">
                 <img id="defaultImage" src="/static/logo.png" alt="Default Image">
                     <div class="img-magnifier-container">
@@ -117,10 +176,10 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
     <!-- Third Row: Entropy Image and Controls -->
-    <div class="row">
+    <!-- <div class="row">
         <div class="column">
             <canvas id="entropyCanvas"></canvas>
         </div>
@@ -138,15 +197,18 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div>  -->
     
-    <div id="row", class = "colorbar">
-        <h3> Manual Corrections</h3>
-    </div>
-    
-    
-    <div class="container">
-        <!-- Annotation Tool Buttons -->
+        <!--     
+        <div id="row", class = "colorbar">
+            <h3> Manual Corrections</h3>
+        </div>
+        
+        
+        <div class="container">
+        -->
+            <!-- Annotation Tool Buttons -->
+        <!--     
         <div id="row" class="row">
             <div class="column">
                 <div class="annotation-tools">
@@ -173,6 +235,7 @@
             </div>
         </div>
     </div>
+     -->
 
     <div class="container">
         <div class="row">

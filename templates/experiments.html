@@ -29,7 +29,8 @@
         <tbody>
             {% if records %}
             <tr>
-                <textarea id="current_page" style="display:none">1</textarea>
+                <!-- <textarea id="current_page" style="display:none">1</textarea> -->
+                <textarea class='text_area' id="current_page" >1</textarea>
                 <td colspan="{{ column_count }}">
                     Max.recoeds on page: <input type="number" id="maxRecords" value="10" min="1" max="100">
                 </td>
