@@ -7,7 +7,7 @@ kategorie > z normy dle procent
 - spojit que a experiments
 
 -- jazykova verze
--- company id - zmena za key
+OK -- company id - zmena za key
 -- kontrola platnosti key
 -- experimenty ostatnich
 
@@ -15,7 +15,7 @@ kategorie > z normy dle procent
 -- typ asfaltu
 -- doplnujici informace
 
--- manualni korekce zakomentovat
+OK -- manualni korekce zakomentovat
 
 1. nahraj fotky
 2. vyhodnocuj

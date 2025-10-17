@@ -77,20 +77,22 @@
             <div class="column">
                 <div class="column">
                     <select id="imageType" >
-                        <option value="original">("c") Original Image</option>
-                        <option value="original_no_bg">("c") Removed Background</option>
-                        <option value="bw">("c") Grayscale Image</option>
+                        <option value="original">("shift + c") Original Image</option>
+                        <!-- <option value="original_no_bg">("c") Removed Background</option> -->
+                        <option value="bw">("shift + c") Grayscale Image</option>
                     </select>
                 </div>
             </div>
             <div class="column">
-                <input type="checkbox" id="redOverlayCheckbox"  >Display Asphalt ("a")</input>
+                <input type="checkbox" id="redOverlayCheckbox"  >Display Asphalt ("shift + a")</input>
+                <input type="checkbox" id="aggregateOverlayCheckbox"  >Display Aggregate ("shift + s")</input>
+                <input type="checkbox" id="backgroundOverlayCheckbox"  >Display Background ("shift + d")</input>
             </div>
             <div class="column">
                 <div class="slider-container">
                     <div class="slider-group">
-                        Mask Opacity: <input type="range" id="opacitySlider" min="0" max="100" value="20" class = "slider">
-                        <input type="text" id="opacityValue" value="20" size="2">
+                        Mask Opacity: <input type="range" id="opacitySlider" min="0" max="100" value="50" class = "slider">
+                        <input type="text" id="opacityValue" value="50" size="2">
                     </div>    
                 </div>
             </div>

@@ -76,9 +76,11 @@
                 {% endfor %}  
                 <td>
                     {% if field[-1] in ['prepared', 'started'] %}
-                    <button class="btn-details" onclick = "editExperimentId('{{field.0}}')">Continue</button>
+                    <!-- <button class="btn-details" onclick = "editExperimentId('{{field.0}}')">Continue</button> -->
+                    <button class="btn-details" id="edit_{{field.0}}" data-id="{{field.0}}">Continue</button>
                     {% endif %}
-                    <button class="btn-cancel" onclick="deleteExperimentId('{{field.0}}')">Delete</button>
+                    <!-- <button class="btn-cancel" onclick="deleteExperimentId('{{field.0}}')">Delete</button> -->
+                    <button class="btn-cancel" id="delete_{{field.0}}" data-id="{{field.0}}">Delete</button>
                 </td>
             </tr>
             {% endfor %}

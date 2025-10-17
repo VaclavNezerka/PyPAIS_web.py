@@ -5,6 +5,7 @@ from psycopg2.extras import RealDictCursor
 from functools import wraps
 from flask import flash
 from dataclasses import dataclass
+from typing_extensions import deprecated
 
 # # TODO: ***** 
 # # TODO: CONSIDER a switch to SQLModel 
@@ -198,7 +199,7 @@ def get_user_id(cur, conn, username: str = None, email: str = None) -> int | Non
 
 @db_connection
 def get_user_id_of_experiment(cur, conn, id: str) -> int | None:
-    query = 'SELECT user_id FROM experiments WHERE id=%s'
+    query = 'SELECT user_id FROM experiments WHERE experiment_id=%s'
     user_id = execute_query(query, (id,))[0][0]
     return user_id
 
@@ -261,20 +262,26 @@ def update_company_key(cur, conn, company_id: str) -> int | None:
 
 @db_connection
 def get_user_info_by_id(cur, conn, user_id: str) -> dict | None:
-    query = 'SELECT first_name, last_name, username, e_mail, company FROM public_users WHERE id=%s'
-    result = execute_query(query, (id,))
+    cursor = conn.cursor(cursor_factory=RealDictCursor) 
+    query = 'SELECT u.first_name, u.last_name, u.username, u.e_mail, c.company_name FROM public_users AS u JOIN public_companies AS c ON u.company = c.company_id WHERE u.id=%s'
+    cursor.execute(query, (user_id,))
+    result = cursor.fetchone()
     if not result:
         return None
-    return User(*result[0]).to_dict()
+    # Convert RealDictRow to a regular dict
+    result = dict(result)
+    return result
 
 @db_connection
 def get_experiment_by_id(cur, conn, experiment_id: str) -> dict | None:
     cursor = conn.cursor(cursor_factory=RealDictCursor) 
-    query = 'SELECT * FROM experiments WHERE id=%s'
+    query = 'SELECT * FROM experiments WHERE experiment_id=%s'
     cursor.execute(query, (experiment_id,))
     result = cursor.fetchone()
     if not result:
         return None
+    # Convert RealDictRow to a regular dict
+    result = dict(result)
     return result
 
 @db_connection
@@ -293,6 +300,7 @@ def save_new_user_db(cur, conn , values: dict):
     # print('User successfully inserted into database')
     return None  # Success
 
+@deprecated("This function is deprecated. Use get_experiment_by_id instead.")
 @db_connection
 def load_experiment_from_db(cur,conn, id):
     # cur.execute("""SELECT img_width, img_height,
@@ -305,9 +313,15 @@ def load_experiment_from_db(cur,conn, id):
                 # img_mask_asphalt_manual_correction,
                 # img_mask_aggregate_manual_correction
                 # FROM experiments WHERE id=%s""", (id,))
-    cur.execute("SELECT * FROM experiments WHERE id=%s", (id,))
-    response = cur.fetchall()
+    cur.execute("SELECT * FROM experiments WHERE experiment_id=%s", (id,))
+    response = cur.fetchall()[0]
     return response
+
+@db_connection
+def update_experiment_active_status(cur, conn, experiment_id, active: bool):
+    query = 'UPDATE experiments SET active=%s WHERE experiment_id=%s'
+    execute_query(query, (active, experiment_id))
+
 
 @db_connection
 def insert_experiment_to_db(cur ,conn, values_dict: dict) -> None:
@@ -319,9 +333,10 @@ def insert_experiment_to_db(cur ,conn, values_dict: dict) -> None:
     return cur.fetchone()[0]  # Return the ID of the newly inserted experiment
 
 @db_connection
-def update_experiment_in_db(cur ,conn, values_dict: dict) -> None:
+def update_experiment_in_db(cur ,conn, values_dict: dict, experiment_id: str) -> None:
     command = f'UPDATE experiments SET ' + ', '.join([f"{key}=%s" for key in values_dict.keys()]) + ' WHERE experiment_id=%s'
-    values = tuple(values_dict.values()) + (values_dict.get("experiment_id"),)
+    # print(command)
+    values = tuple(values_dict.values()) + (str(experiment_id),)
     cur.execute(command, values)
     conn.commit()
 
@@ -336,7 +351,7 @@ def update_users_table(cur,conn, values_dict: dict, user_id: int) -> None:
 def return_active_experiment_id(cur,conn, user_id) -> int | None:
     cur.execute('SELECT experiment_id FROM experiments WHERE user_id=%s AND active=True', (user_id,))
     experiment_id=cur.fetchall()
-    experiment_id = experiment_id[0][0] if experiment_id else (None,)
+    experiment_id = experiment_id[0][0] if experiment_id else None
     return experiment_id
 
 @db_connection

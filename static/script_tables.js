@@ -40,7 +40,13 @@ function exportExperimentPDF(id) {
     console.warn('Exporting experiment PDF is not yet implemented. THE FORMAT WAS NOT DEFINED');
 }
 
-function deleteExperimentId(id) {
+async function deleteExperimentId(id) {
+    
+    if (!confirm('Are you sure you want to delete experiment ID ' + id + '? This action cannot be undone.')) {
+        return;
+    }
+    
+
     // Get the experiment id
     const uniqueQuery = '?nocache=' + new Date().getTime();
         fetch('/delete-experiment/' + id + uniqueQuery, { method: 'POST' })
@@ -176,9 +182,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-document.getElementById('fileInput').addEventListener('change', function() {
+// document.getElementById('fileInput').addEventListener('change', function() {
 
-});
+// });
 
 // function uploadFiles(filesUploaded) {
 //     let files = Array.from(filesUploaded);    
@@ -213,8 +219,10 @@ document.getElementById('fileInput').addEventListener('change', function() {
 let progress = document.getElementById('fileProgress');
 let totalFiles = 0;
 let uploadedFiles = 0;
-document.getElementById('fileInput').addEventListener('change', () => {
-    const filesUploaded = document.getElementById('fileInput').files;
+
+document.querySelectorAll('fileInput').forEach(element => {
+    element.addEventListener('change', () => {
+    const filesUploaded = element.files;
     progress.style.display = 'block';
     document.getElementById('fileProgressDiv').style.display = 'block';
     totalFiles = filesUploaded.length;
@@ -241,9 +249,9 @@ document.getElementById('fileInput').addEventListener('change', () => {
         } else {
             console.error('Error:', e.data);
         }
-    }; 
+    };
+ });
 });
-
 window.addEventListener('message', function(e) {
     if (e.data === 'success') {
         window.location.reload();
@@ -258,4 +266,36 @@ window.addEventListener('message', function(e) {
     } else {
         console.error('Error:', e.data);
     }
+});
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+document.querySelectorAll('.btn-details').forEach(button => {
+    button.addEventListener('click', () => {
+    const id = button.getAttribute('data-id');
+    editExperimentId(id);
+    //   console.log('Continue experiment with ID:', id);
+    });
+});
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+document.querySelectorAll('.btn-cancel').forEach(button => {
+    button.addEventListener('click', () => {
+    const id = button.getAttribute('data-id');
+    deleteExperimentId(id);
+    //   console.log('Delete experiment with ID:', id);
+    });
+});
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+document.querySelectorAll('.btn-export').forEach(button => {
+    button.addEventListener('click', () => {
+    const id = button.getAttribute('data-id');
+    exportExperimentPDF(id);
+    //   console.log('Delete experiment with ID:', id);
+    });
+});
 });

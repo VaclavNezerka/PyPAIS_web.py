@@ -57,8 +57,10 @@
                 <td>{{column}}</td>
                 {% endfor %}  
                   <td>
-                    <button id="edit_btn" class="btn-details" onclick = "editExperimentId('{{ field.0 }}')">Edit</button>
-                    <button id="export_btn" class="btn-export" onclick = "exportExperimentPDF('{{field.0}}')">Export</button>
+                    <!-- <button id="edit_btn" class="btn-details" onclick = "editExperimentId('{{ field.0 }}')">Edit</button>
+                    <button id="export_btn" class="btn-export" onclick = "exportExperimentPDF('{{field.0}}')">Export</button> -->
+                    <button class="btn-details" data-id="{{ field.0 }}">Edit</button>
+                    <button class="btn-export" data-id="{{ field.0 }}">Export</button>
                 </td>
             </tr>
                   {% endfor %}

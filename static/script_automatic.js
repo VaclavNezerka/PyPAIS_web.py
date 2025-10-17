@@ -780,6 +780,7 @@ function deactivateCurrentExperiment() {
         fetch('is-experiment-active', { method: 'GET' })
         .then(response => response.json())
         .then(data => {
+            console.log(data);
             if (data.active === false) {
                 resolve();
             } else {
@@ -801,48 +802,35 @@ function deactivateCurrentExperiment() {
     });
 }
 
+
 function loadExperiment(id) {
     displayWorkingMessage();
     fetch('/load-experiment/' + String(id), { method: 'GET' })
     .then(response => response.json())
     // .then(data => console.log(data))
     .then(data => {
+        console.log(data);
         if (data.status === 'error') {
             alert('No experiment data found.');
             removeWorkingMessage();
             return;
         } 
-        // set the sliders and input boxes to the values from the experiment
-        // document.getElementById('minThresholdSlider0').value = data.minThreshold0;
-        // document.getElementById('minThresholdValue0').value = data.minThreshold0;
-        // document.getElementById('maxThresholdSlider0').value = data.maxThreshold0;
-        // document.getElementById('maxThresholdValue0').value = data.maxThreshold0;
-        // document.getElementById('minThresholdSlider1').value = data.minThreshold1;
-        // document.getElementById('minThresholdValue1').value = data.minThreshold1;
-        // document.getElementById('maxThresholdSlider1').value = data.maxThreshold1;
-        // document.getElementById('maxThresholdValue1').value = data.maxThreshold1;
-        // document.getElementById('entropyMinThresholdSlider').value = data.entropyMinThreshold;
-        // document.getElementById('entropyMinThresholdValue').value = data.entropyMinThreshold;
-        // document.getElementById('entropyMaxThresholdSlider').value = data.entropyMaxThreshold;
-        // document.getElementById('entropyMaxThresholdValue').value = data.entropyMaxThreshold;
-        // set the blur slider and input box to the value from the experiment
-        // document.getElementById('blurSlider').value = data.blurValue;
-        // document.getElementById('blurValue').value = data.blurValue;
         if (data.expertGuess !== 'NaN') {
-            document.getElementById('expertGuess').value = data.expertGuess;    
+            document.getElementById('expertGuess').value = Math.round(data.expert_guess * 100);    
         }
-        document.getElementById('expertGuess').value = data.expertGuess;    
         document.getElementById('info').value = data.info;
 
+        // set the image URLs
         uploadedImageURL_color = URL.createObjectURL(base64toBlob(data.color, 'image/png'));
         uploadedImageURL_gray = URL.createObjectURL(base64toBlob(data.gray, 'image/png'));
-        // uploadedImageURL_nobg = URL.createObjectURL(base64toBlob(data.nobg, 'image/png'));
-        // uploadedImageURL_gray_blur = URL.createObjectURL(base64toBlob(data.gray_blur, 'image/png'));
-        // uploadedImageURL_nobg_blur = URL.createObjectURL(base64toBlob(data.nobg_blur, 'image/png'));
+        // set overlay mask URLs
+        // uploadedImageURL_mask_asphalt = URL.createObjectURL(base64toBlob(data.asphalt_mask, 'image/png'));
+        // uploadedImageURL_mask_aggregate = URL.createObjectURL(base64toBlob(data.aggregate_mask, 'image/png'));
+        // uploadedImageURL_mask_bg = URL.createObjectURL(base64toBlob(data.background_mask, 'image/png'));
 
     })
     .then(() => {document.getElementById('defaultImage').style.display = 'none';})
-    .then(() => processImage())
+    .then(() => inference())
     .then(() => getImageType())
     .then(() => enableControls()) // Enable controls after everything is loaded
     .catch(error => {
@@ -855,8 +843,16 @@ function loadExperiment(id) {
 document.getElementById('redOverlayCheckbox').addEventListener('change', function() { 
     changeDisplayAsphalt();
 });
+document.getElementById('aggregateOverlayCheckbox').addEventListener('change', function() { 
+    changeDisplayAggregate();
+});
+document.getElementById('backgroundOverlayCheckbox').addEventListener('change', function() { 
+    changeDisplayBackground();
+});
 document.getElementById('imageType').addEventListener('change', redrawCanvases); 
-document.getElementById('index_evaluation').addEventListener('click', async function() { 
+
+
+async function evaluateExperiment() {
     if (document.getElementById('expertGuess').value === '') {
             alert('Please fill the expert guess field before evaluating the experiment.');
             return;
@@ -877,6 +873,10 @@ document.getElementById('index_evaluation').addEventListener('click', async func
         // redirect to the '/' page
         window.location.href = '/';})
     }
+}
+
+document.getElementById('index_evaluation').addEventListener('click', async function() { 
+    evaluateExperiment();
 });
 // window.addEventListener('resize', function() { magnify('imageCanvas', 4); }); // this ensures the magnifying glass is redrawn when the window is resized
 window.addEventListener('resize', redrawCanvases ); // this ensures the magnifying glass is redrawn when the window is resized
@@ -884,7 +884,6 @@ window.addEventListener('resize', redrawCanvases ); // this ensures the magnifyi
 // when the user leaves the expertGuess field and the value is not empty, the min and max values will be updated
 document.getElementById('expertGuess').addEventListener('change', function() {
     let value = this.value;
-    console.log('Expert guess changed to: ' + value);
     if (value !== '') {
         // convert to number
         value = Number(value);
@@ -900,6 +899,7 @@ document.getElementById('expertGuess').addEventListener('change', function() {
         const uniqueQuery = '?nocache=' + new Date().getTime();
         fetch('/update_value/expert_guess' + uniqueQuery, { method: 'POST', body: formData })
     }
+    console.log('Expert guess changed to: ' + value);
 });
 
 // if the user visits the page '/' and the experiment is active, load the experiment
@@ -907,6 +907,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fetch('/is-experiment-active')
     .then(response => response.json())
     .then(data => {
+        console.log(data);
         if (data.active === true) {
             console.log('Experiment is active. Loading experiment data...', data.experimentId);
             loadExperiment(data.experimentId);
@@ -918,9 +919,10 @@ document.addEventListener('DOMContentLoaded', function() {
 function changeOverlayOpacity() {
     let value = document.getElementById('opacitySlider').value;
     document.getElementById('opacityValue').value = value;
-    if (displayed_mask) {
-        displayed_mask.style.opacity = value / 100;
-    }
+    labelSettings.mask_opacity = value / 100;
+    // if (displayed_mask) {
+    //     displayed_mask.style.opacity = value / 100;
+    // }
     redrawCanvases();
 }
 
@@ -945,14 +947,20 @@ document.addEventListener('keydown', function(event) {
             break;
         case 's':
                 if (event.shiftKey) {
-                document.getElementById('redOverlayCheckbox').checked = !document.getElementById('redOverlayCheckbox').checked;
+                document.getElementById('aggregateOverlayCheckbox').checked = !document.getElementById('aggregateOverlayCheckbox').checked;
                 changeDisplayAggregate();
             }
             break;
         case 'd':
                 if (event.shiftKey) {
-                document.getElementById('redOverlayCheckbox').checked = !document.getElementById('redOverlayCheckbox').checked;
+                document.getElementById('backgroundOverlayCheckbox').checked = !document.getElementById('backgroundOverlayCheckbox').checked;
                 changeDisplayBackground();
+            }
+            break;
+        case 'e':
+                // evaluate the experiment
+            if (event.shiftKey) {
+                evaluateExperiment();
             }
             break;
         case 'c':

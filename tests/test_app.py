@@ -40,20 +40,19 @@ def test_UserTemporaryStorage_initialization(user_storage):
             assert getattr(user_storage, attr) is None, f"Attribute {attr} is not None"
 
 def test_UserTemporaryStorage_initialization():
-    user_storage = UserTemporaryStorage(user_id = 123, username='test_user')
+    user_storage = UserTemporaryStorage(user_id = 123)
 
     # ALL attributes should be initialized to None
     for attr in dir(user_storage):
         if not attr.startswith('__') and not callable(getattr(user_storage, attr)):
-            if attr in ['user_id', 'username']:
-                expected_value = 123 if attr == 'user_id' else 'test_user'
+            if attr == 'user_id':
+                expected_value = 123
                 assert getattr(user_storage, attr) == expected_value, f"Attribute {attr} is not correctly set"
             else:
                 assert getattr(user_storage, attr) is None, f"Attribute {attr} is not None"
 
 def test_UserTemporaryStorage_from_dict(user_storage):
     data = {
-        'username': 'test_user',
         'img_width': 800,
         'img_height': 600,
         'aggregate_mask': np.array([[1, 1], [0, 0]]),
@@ -73,13 +72,11 @@ def test_UserTemporaryStorage_from_dict(user_storage):
 
 def test_UserTemporaryStorage_partial_from_dict_invalid_input(user_storage):
     data = {
-        'username': 'test_user',
         'img_width': 800,
         'invalid_key': 'should be ignored'
     }
 
     user_storage.from_dict(data)
-    assert user_storage.username == 'test_user', "Attribute username does not match"
     assert user_storage.img_width == 800, "Attribute image_width does not match"
     assert user_storage.user_id is None, "user_id should remain None"
     assert not hasattr(user_storage, 'invalid_key'), "Attribute invalid_key should not exist"

@@ -1,5 +1,6 @@
 # Packages
 from attrs import field
+import pendulum as pdl
 from db_api import User
 from flask import (Flask, render_template, request, 
                    send_from_directory, flash, redirect,
@@ -37,7 +38,7 @@ from warnings import warn,WarningMessage
 import torch
 from typing_extensions import deprecated
 from models import discover_models, load_model, add_session_to_loaded_model, pop_session_from_loaded_models, inference
-
+import decimal
 
 
 # Apps
@@ -113,8 +114,20 @@ class UserTemporaryStorage:
         """
         Loads the attributes of the class from a dictionary.
         """
+        try:
+            self.img_height = data_dict['img_height']
+            self.img_width = data_dict['img_width']
+        except KeyError:
+            pass
+
         for key, value in data_dict.items():
             if hasattr(self, key):
+                if isinstance(value, decimal.Decimal):
+                    value = float(value)
+                if isinstance(value, bytes) or isinstance(value, memoryview):
+                    # NP.SAVE APPROACH - Has the metadata like shape and dtype
+                    buffer = io.BytesIO(value)
+                    value = np.load(buffer, allow_pickle=True)
                 setattr(self, key, value)
 
     def to_dict(self, features: Iterable[str] = None, for_save: bool = False) -> dict:
@@ -132,10 +145,18 @@ class UserTemporaryStorage:
             dic = dict(self.__dict__)  # make a copy instead of using self.__dict__ (to avoid modifying the original)
 
         if for_save:
+            dic['asphalt_ratio'] = storage.get_asphalt_ratio() 
             # Convert numpy arrays to bytes for database storage
             for key, value in dic.items():
                 if isinstance(value, np.ndarray):
-                    dic[key] = value.tobytes()
+                    # dic[key] = value.tobytes() 
+
+                    # NP.SAVE APPROACH - KEEPS THE METADATA LIKE SHAPE AND DTYPE
+                    buffer = io.BytesIO()
+                    np.save(buffer, value)
+                    dic[key] = buffer.getvalue()  # This is what you store in SQL (e.g., BLOB column)
+
+            dic.pop('experiment_id', None)  # remove experiment_id from the dict when saving to db  
 
         return dic
 
@@ -480,12 +501,13 @@ def queue():
 
     columnames=['id','date','state','actions']
     actions=['Edit','Cancel']
-    records.append(execute_query("SELECT id, time_stamp, current_state FROM experiments where user_id=%s AND current_state!='finished' ",(session['user_id'],)))
+    records.append(execute_query("SELECT experiment_id, time_stamp, current_state FROM experiments where user_id=%s AND current_state!='finished' ",(session['user_id'],)))
     data = records[1]
 
     # Data sorting and slicing
     current_state_order={'finished':0,'current_experiment': 1, 'started':2,'prepared':3,'processing':4,'pending':5}
     reversed_current_state_order={v:k for k,v in current_state_order.items()}
+    data = [(x[0], x[1].strftime('%Y-%m-%d  %H:%M:%S'), x[2]) for x in data]
     data=list(map(lambda x: (x[0],x[1],current_state_order[x[2]]),data))
     data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='desc')
     # now we have to remap the data back to strings
@@ -517,10 +539,12 @@ def experiments():
     sort_by = sort_by.split(',')  
     sort_by = [x for x in sort_by if x in records[0]]
     sort_columns=[ records[0].index(x) for x in sort_by]
-    records.append(execute_query("SELECT id, time_stamp, expert_guess, asphalt_ratio FROM experiments where user_id=%s AND current_state='finished' ",(session['user_id'],)))
+    records.append(execute_query("SELECT experiment_id, time_stamp, expert_guess, asphalt_ratio FROM experiments where user_id=%s AND current_state='finished' ",(session['user_id'],)))
     
     # data sorting and slicing
     data = records[1]   
+    # shorten the time_stamp to  YYYY-MM-DD HH:MM:SS
+    data = [(x[0], x[1].strftime('%Y-%m-%d  %H:%M:%S'), x[2], x[3]) for x in data]
     # Replace None values with -1
     data = [(x[0],x[1],x[2] if x[2] is not None else 0, x[3] if x[3] is not None else -1) for x in data]
     data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='desc')
@@ -543,12 +567,11 @@ def experiments():
 @app.route('/user',methods=['GET'])
 @check_authentication
 def user():
-    # user_id = session['user_id']
-    # if user_id!=session['user_id']:
-    #     flash('You do not have permission to access this page.','error')
-    #     return redirect('/'), 302
-    # query = 'SELECT first_name, last_name, username, e_mail, company FROM public_users WHERE id=%s'
-    # user_data = execute_query(query, (user_id,))
+    """"
+    Renders the user information page.
+    Returns:
+        Response: The rendered user information page.
+    """
     user_data_dict = db_api.get_user_info_by_id(user_id=session['user_id'])
     return render_template('user.html',session=session,dynamic_content=user_data_dict)
 
@@ -704,14 +727,15 @@ def save_specific_value(value_name):
     try:
         value_name = value_name.lower()
         # value = ts[session['user_id']].values.__dict__[value_name]
-        value = getattr(ts[session['user_id']], value_name, None)
-        query = f'UPDATE experiments SET {value_name}=%s, asphalt_ratio=%s, img_mask_asphalt=%s WHERE id=%s'
-        values = (value,
-                #   evaluate_asphalt(),
-                  storage.get_asphalt_ratio(),
-                #   ts[session['user_id']].asphalt_mask.copy().tobytes(),
-                  ts[session['user_id']].experiment_id)
-        execute_query(query, values)
+        value = getattr(storage, value_name)
+        db_api.update_experiment_in_db(values_dict={value_name: value}, experiment_id=storage.experiment_id)
+        # query = f'UPDATE experiments SET {value_name}=%s, asphalt_ratio=%s, img_mask_asphalt=%s WHERE experiment_id=%s'
+        # values = (value,
+        #         #   evaluate_asphalt(),
+        #           storage.get_asphalt_ratio(),
+        #         #   ts[session['user_id']].asphalt_mask.copy().tobytes(),
+        #           ts[session['user_id']].experiment_id)
+        # execute_query(query, values)
         return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
     except Exception as e:
         return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
@@ -743,13 +767,13 @@ def evaluate_asphalt_caller():
 @check_authentication
 @check_data_ownership
 def delete_experiment(id):
-    experiment_state = execute_query('SELECT current_state FROM experiments WHERE id=%s', (id,))[0][0]
+    experiment_state = execute_query('SELECT current_state FROM experiments WHERE experiment_id=%s', (id,))[0][0]
     try:
         if experiment_state == 'finished':
-            query = 'UPDATE experiments.fake_deleted=true WHERE id=%s'
+            query = 'UPDATE experiments.fake_deleted=true WHERE experiment_id=%s'
             execute_query(query, (id,))
         else:
-            query = 'DELETE FROM experiments WHERE id=%s'
+            query = 'DELETE FROM experiments WHERE experiment_id=%s'
             execute_query(query, (id,))
         status = 'success'
     except:
@@ -769,15 +793,19 @@ def deactivate_experiment_caller(id):
 
 def deactivate_experiment(id):
     if id is None:
-        id = ts[session['user_id']].experiment_id
+        id = storage.experiment_id
         if id is None:
             flash('No active experiment found.','error')
-            return redirect('/queue')
+            return redirect('/queue'), 302
+    
+    # query = 'UPDATE experiments SET active=%s WHERE experiment_id=%s'
+    # values = (False, id)
+    # execute_query(query, values)
+
+    # deactivate the current experiment in the database
     print('Deactivating experiment.', id)
-    query = 'UPDATE experiments SET active=%s WHERE experiment_id=%s'
-    values = (False, id)
-    execute_query(query, values)
-    ts[session['user_id']].experiment_id = None
+    db_api.update_experiment_active_status(experiment_id=id, active=False)
+    storage.experiment_id = None
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
 @app.route('/activate-experiment/<int:id>',methods=['GET', 'POST']) 
@@ -805,7 +833,8 @@ def activate_experiment(id):
     query = 'UPDATE experiments SET active=%s WHERE experiment_id=%s'
     values = (True, id)
     execute_query(query, values)
-    ts [session['user_id']].experiment_id = id    
+    # ts [session['user_id']].experiment_id = id    
+    storage.experiment_id = id    
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
 # TODO: consider removal - of 'POST' method - unused
@@ -813,34 +842,35 @@ def activate_experiment(id):
 @app.route('/load-experiment/<int:id>',methods=['GET'])
 @check_authentication
 def load_experiment(id):
-    try:        
+    """
+    Loads the experiment data from the database (expects a dictionary) into the user-specific temporary storage.
+    
+    Parameters:
+    -----------
+        id (int): The ID of the experiment to load. If None, loads the currently active experiment.
+    
+    Returns:
+    --------    
+        Response: A JSON response indicating success or failure of the operation and data the public experiment data.
+    """
+    if id is None:
+        id = storage.experiment_id
         if id is None:
-            id = ts[session['user_id']].experiment_id
-            if id is None:
-                flash('NO ID No active experiment found.','error')
-                return redirect('/queue')          
-
-        # response = load_experiment_from_db(id)
-        response = db_api.load_experiment_from_db(id)
-        if type(response) == dict:
-            storage.from_dict(response)
-        else:
-            if not response:
-                flash('The requested experiment does not exist.','error')
-                return redirect('/queue')
-        
-        dict_response = {'status': 'success'}
-        dict_enrich = storage.to_dict()
-        dict_response.update(dict_enrich)
-        print(dict_response)
-        return dict_to_json(dict_response), 200, {'Content-Type': 'application/json'}
+            flash('NO ID No active experiment found.','error')
+            return redirect('/queue'), 302          
+    response = db_api.get_experiment_by_id(id)
+    storage.from_dict(response)
+    
+    
+    dict_response = {
+        'status': 'success',
+        'gray': grayscale_image(storage.color)
+     }
+    dict_response.update(storage.to_dict())
+    return dict_to_json(dict_response), 200, {'Content-Type': 'application/json'}
 
     #     print('Experiment loaded.')
     #     redirect('/')
-    except:
-        flash('ERR No active experiment found.','error')
-        redirect('/')
-        return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
     # return json.dumps(json_response), 200, {'Content-Type': 'application/json'}      
 
 # export the images folder
@@ -857,17 +887,12 @@ def manual_corrections():
 @app.route('/is-experiment-active',methods=['GET'])
 def is_active():
     print('Checking if experiment is active.')
-    try:
-        if 'user_id' in session:
-            print('2 Checking if experiment is active.')
-            ts[session['user_id']].experiment_id = return_active_experiment_id(session['user_id'])
-            print(ts[session['user_id']].experiment_id)
-            if ts[session['user_id']].experiment_id is not None:
-                print('Checking if experiment is active.')
-                return json.dumps({'active': True, 'experimentId': ts[session['user_id']].experiment_id}), 200, {'Content-Type': 'application/json'}
-    except:
-        pass    
-    return json.dumps({'status': False}), 200, {'Content-Type': 'application/json'}
+    storage.experiment_id = db_api.return_active_experiment_id(user_id=session['user_id'])
+    print(storage.experiment_id)
+    if storage.experiment_id is not None:
+        return json.dumps({'status': 'success', 'active': True, 'experimentId': storage.experiment_id}), 200, {'Content-Type': 'application/json'}
+    else:
+        return json.dumps({'status': 'success', 'active': False, 'experimentId': None}), 200, {'Content-Type': 'application/json'}
 
 @app.route('/save',methods=['POST'])
 @check_authentication
@@ -882,12 +907,13 @@ def save_experiment(**kwargs):
             # state = 'started'    
 
         print('Saving record.')
+        print('state', state)
     # try:        
         if storage.experiment_id is None:
             print('Inserting new record.')
             ts_dict = storage.to_dict(for_save=True)
-            ts_dict['current_state'] = state
-            ts_dict.pop('experiment_id', None)  # ensure that the experiment_id is not in the dict
+            ts_dict['current_state'] = state 
+            # ts_dict.pop('experiment_id', None)  # ensure that the experiment_id is not in the dict
             storage.experiment_id = db_api.insert_experiment_to_db(values_dict=ts_dict)
             activate_experiment(storage.experiment_id)
             print('New experiment ID:', storage.experiment_id)
@@ -895,7 +921,8 @@ def save_experiment(**kwargs):
         else:
             print('Updating record.')
             ts_dict = storage.to_dict(for_save=True)
-            db_api.update_experiment_in_db(values_dict=ts_dict)
+            ts_dict['current_state'] = state
+            db_api.update_experiment_in_db(values_dict=ts_dict, experiment_id=storage.experiment_id)
             # print('state', state)
             # print(storage.experiment_id)
             # query = """ 
@@ -1035,6 +1062,7 @@ def polish_input_image_file(file) -> np.ndarray:
     return np_image.astype(np.uint8)
 
 
+@deprecated("currently used directly in process_image function")
 def temporary_store_image(image: np.ndarray):
     """
     This function creates a temporary storage for the image, i.e. it creates a new UserTemporaryStorage object
@@ -1047,6 +1075,8 @@ def temporary_store_image(image: np.ndarray):
         'aggregate_mask': np.zeros(image.shape[:2], dtype=int),
         'asphalt_mask_manual_corrections': np.zeros(image.shape[:2], dtype=int), # TODO consider replacement with NONE - if no corrections are made, we do not need to store the array
         'aggregate_mask_manual_corrections': np.zeros(image.shape[:2], dtype=int), # TODO consider replacement with NONE - if no corrections are made, we do not need to store the array
+        'img_width': image.shape[1],
+        'img_height': image.shape[0],
     })
     # # manual corrections
     # ts[session['user_id']].asphalt_mask_manual_corrections = np.zeros(ts[session['user_id']].color_original.shape[:2], dtype=int)
@@ -1077,6 +1107,8 @@ def process_image():
         'aggregate_mask': np.zeros(image.shape[:2], dtype=int),
         'asphalt_mask_manual_corrections': np.zeros(image.shape[:2], dtype=int), # TODO consider replacement with NONE - if no corrections are made, we do not need to store the array
         'aggregate_mask_manual_corrections': np.zeros(image.shape[:2], dtype=int), # TODO consider replacement with NONE - if no corrections are made, we do not need to store the array
+        'img_width': image.shape[1],
+        'img_height': image.shape[0],
     })
 
     # save the data to database

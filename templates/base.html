@@ -8,6 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/static/styles.css">
   <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
+  <script src="/static/script_base.js"></script>
   <title>PyPAIS</title>
 </head>
 
@@ -20,10 +21,11 @@
   </div>
     {% with messages = get_flashed_messages() %}
     {% for message in messages %}
-    <script>
+     <div class="flash-message" data-message="{{ message }}"></div>
+    <!-- <script>
       let message="{{ message }}";
       alert(message)
-    </script>  
+    </script>   -->
     {% endfor %}
     {% endwith %}
 
@@ -34,7 +36,7 @@
 
   <footer>
     <div class="container">
-          <p>&copy; 2024 Václav Nežerka, David Šilhánek. All rights reserved.</p>
+          <p>&copy; 2025 Václav Nežerka, David Šilhánek. All rights reserved.</p>
     </div>
 </footer>
 </body>
