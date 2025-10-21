@@ -9,13 +9,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/styles.css">
-    <title>Experiment Records</title>
+    <title>{{ _('Experiment Records') }}</title>
 </head>
     <div class="colorbar">
         <h2>{{dynamic_content}}</h2>
     </div>
     <div id="fileProgressDiv"  class="loading">
-        Uploading files, please wait...
+        {{ _('Uploading files, please wait...') }}
         <!-- <progress id="fileProgress" value="0" max="100" style="width: 100%; display: none;" class = "progress"></progress> --> 
         <progress id="fileProgress" value="0" max="100" class = "progress"></progress>
 
@@ -24,11 +24,11 @@
     <div class="container">
     <div class="row">
         <div class="column">
-           <h2>Add to queue</h2>
+           <h2>{{ _('Add to queue') }}</h2>
         </div>
         <div class="column">
             <input type="file" id="fileInput" accept="image/*" class="custom-file-input" name="files[]" multiple>
-            <label for="fileInput"  class="custom-file-label">Choose File</label>
+            <label for="fileInput"  class="custom-file-label">{{ _('Choose File') }}</label>
         </div>
     </div>
     
@@ -52,20 +52,20 @@
                 <textarea class='text_area' id="current_page" >1</textarea>
                 <!-- <textarea id="current_page" style="display:none">1</textarea> -->
                 <td colspan="{{ column_count }}">
-                    Max.recoeds on page: <input type="number" id="maxRecords" value="10" min="1" max="100">
+                    {{ _('Records on page:') }} <input type="number" id="maxRecords" value="10" min="1" max="100">
                 </td>
                 <td>
-                    Sort order: <select id="sortOrder">
-                        <option value="asc">Ascending</option>
-                        <option value="desc">Descending</option>
+                    {{ _('Sort order:') }} <select id="sortOrder">
+                        <option value="asc">{{ _('Ascending') }}</option>
+                        <option value="desc">{{ _('Descending') }}</option>
                     </select>
                 </td>
                 <td>
-                    Sort by: <input type="text" id="sortBy" value="id,date,state" maxlength=128>   
+                    {{ _('Sort by:') }} <input type="text" id="sortBy" value="id,date,state" maxlength=128>
                 </td>
                 <td>
-                    <button class="btn-details" id="previous_page">Previous</button>
-                    <button class="btn-details" id="next_page">Next</button> 
+                    <button class="btn-details" id="previous_page">{{ _('Previous') }}</button>
+                    <button class="btn-details" id="next_page">{{ _('Next') }}</button>
                 </td>
             </tr>
             {% for record in records[1:] %}
@@ -77,16 +77,16 @@
                 <td>
                     {% if field[-1] in ['prepared', 'started'] %}
                     <!-- <button class="btn-details" onclick = "editExperimentId('{{field.0}}')">Continue</button> -->
-                    <button class="btn-details" id="edit_{{field.0}}" data-id="{{field.0}}">Continue</button>
+                    <button class="btn-details" id="edit_{{field.0}}" data-id="{{field.0}}">{{ _('Edit') }}</button>
                     {% endif %}
                     <!-- <button class="btn-cancel" onclick="deleteExperimentId('{{field.0}}')">Delete</button> -->
-                    <button class="btn-cancel" id="delete_{{field.0}}" data-id="{{field.0}}">Delete</button>
+                    <button class="btn-cancel" id="delete_{{field.0}}" data-id="{{field.0}}">{{ _('Delete') }}</button>
                 </td>
             </tr>
             {% endfor %}
             {% endfor %}
         {% else %}
-        <p>No records found</p>
+        <p>{{ _('No records found') }}</p>
         {% endif %}
         
     </tbody>

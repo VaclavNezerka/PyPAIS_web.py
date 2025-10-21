@@ -9,7 +9,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/styles.css">
-    <title>Experiment Records</title>
+    <title>{{ _('Experiment Records') }}</title>
 </head>
 <body>
     <div class="colorbar">
@@ -19,11 +19,11 @@
     <table>
         <thead>
             <tr>
-                <th>Experiment ID</th>
-                <th>Date</th>
-                <th>Expert guess [-]</th>
-                <th>Asphalt Ratio [-]</th>
-                <th>Actions</th>
+                <th>{{ _('Experiment ID') }}</th>
+                <th>{{ _('Date') }}</th>
+                <th>{{ _('Expert guess [-]') }}</th>
+                <th>{{ _('Asphalt Ratio [-]') }}</th>
+                <th>{{ _('Actions') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -32,22 +32,22 @@
                 <!-- <textarea id="current_page" style="display:none">1</textarea> -->
                 <textarea class='text_area' id="current_page" >1</textarea>
                 <td colspan="{{ column_count }}">
-                    Max.recoeds on page: <input type="number" id="maxRecords" value="10" min="1" max="100">
+                    {{ _('Max records on page:') }} <input type="number" id="maxRecords" value="10" min="1" max="100">
                 </td>
                 <td>
-                    Sort order: <select id="sortOrder">
-                        <option value="desc">Descending</option>
-                        <option value="asc">Ascending</option>
+                    {{ _('Sort order:') }} <select id="sortOrder">
+                        <option value="desc">{{ _('Descending') }}</option>
+                        <option value="asc">{{ _('Ascending') }}</option>
                     </select>
                 </td>
                 <td>
-                    Sort by: <input type="text" id="sortBy" value="date,id,expert guess,asphalt ratio" maxlength=128>   
+                    {{ _('Sort by:') }} <input type="text" id="sortBy" value="date,id,expert guess,asphalt ratio" maxlength=128>   
                 </td>
                 <td>
                 </td>
                 <td>
-                    <button class="btn-details" id="previous_page">Previous</button>
-                    <button class="btn-details" id="next_page">Next</button> 
+                    <button class="btn-details" id="previous_page">{{ _('Previous') }}</button>
+                    <button class="btn-details" id="next_page">{{ _('Next') }}</button> 
                 </td>
             </tr>         
             {% for record in records[1:] %}
@@ -57,16 +57,14 @@
                 <td>{{column}}</td>
                 {% endfor %}  
                   <td>
-                    <!-- <button id="edit_btn" class="btn-details" onclick = "editExperimentId('{{ field.0 }}')">Edit</button>
-                    <button id="export_btn" class="btn-export" onclick = "exportExperimentPDF('{{field.0}}')">Export</button> -->
-                    <button class="btn-details" data-id="{{ field.0 }}">Edit</button>
-                    <button class="btn-export" data-id="{{ field.0 }}">Export</button>
+                    <button class="btn-details" data-id="{{ field.0 }}">{{ _('Edit') }}</button>
+                    <button class="btn-export" data-id="{{ field.0 }}">{{ _('Export') }}</button>
                 </td>
             </tr>
                   {% endfor %}
                   {% endfor %}
         {% else %}
-        <p>No records found</p>
+        <p>{{ _('No records found') }}</p>
         {% endif %}
         
         </tbody>

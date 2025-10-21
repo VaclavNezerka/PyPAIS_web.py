@@ -5,14 +5,14 @@
 
 <html>
     <head>
-        <title>User Informations</title>
+        <title>{{ _('User Information') }}</title>
             <link rel="stylesheet" href="/static/styles.css">
         <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
     </head> 
     <body>
         <!-- First Row: Image Upload -->
         <div class="colorbar">
-            <h2> User Information</h2>
+            <h2>{{ _('User Information') }}</h2>
         </div>
         <div class="container">
             <div class="row">
@@ -20,21 +20,21 @@
                     <img src="/static/def_profile_picture.jpg" alt="Profile Picture" width="200" height="200" >
                 </div>
                 <div class="column">            
-                        <h3>Username: {{ dynamic_content.username }}</h3>
-                        <h3>First Name: {{ dynamic_content.first_name }}</h3>
-                        <h3>Last Name: {{ dynamic_content.last_name }}</h3>
-                        <h3>Company: {{ dynamic_content.company_name }}</h3>
-                        <h3>Email: {{ dynamic_content.e_mail }}</h3>
+                        <h3>{{ _('Username: ') }}{{ dynamic_content.username }}</h3>
+                        <h3>{{ _('First Name: ') }}{{ dynamic_content.first_name }}</h3>
+                        <h3>{{ _('Last Name: ') }}{{ dynamic_content.last_name }}</h3>
+                        <h3>{{ _('Company: ') }}{{ dynamic_content.company_name }}</h3>
+                        <h3>{{ _('Email: ') }}{{ dynamic_content.e_mail }}</h3>
                 </div>
                 <div class="column">        
                     <div class="row">
-                        <button id="editPersonalInformation" type=submit >Edit personal information</button>
+                        <button id="editPersonalInformation" type=submit >{{ _('Edit personal information') }}</button>
                     </div>
                     <div class="row">
-                        <button id="changeEmailButton" type=submit >Change e-mail address</button>
+                        <button id="changeEmailButton" type=submit >{{ _('Change e-mail address') }}</button>
                     </div>
                     <div class="row">
-                        <button id="changePasswordButton" type=submit >Change password</button>
+                        <button id="changePasswordButton" type=submit >{{ _('Change password') }}</button>
                     </div>
                 </div>
             </div>

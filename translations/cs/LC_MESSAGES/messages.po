@@ -1,0 +1,438 @@
+# Czech translations for PROJECT.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-10-21 20:19+0200\n"
+"PO-Revision-Date: 2025-10-21 18:40+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: cs\n"
+"Language-Team: cs <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=((n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.16.0\n"
+
+#: app.py:330
+msgid "You do not have permission to access this data."
+msgstr "Na zobrazení těchto dat nemáte potřebná práva."
+
+#: app.py:340
+msgid "You must be logged in to access this page."
+msgstr "Pro zobrazení této stránky se musíte přihlásit."
+
+#: app.py:377
+msgid "Change email"
+msgstr "Změnit e-mail"
+
+#: app.py:390
+msgid "Email changed successfully."
+msgstr "E-mail úspěšně aktualizován."
+
+#: app.py:401 app.py:419
+msgid "Change personal information"
+msgstr "Upravit osobní informace"
+
+#: app.py:416
+msgid "Personal information updated successfully."
+msgstr "Osobní informace úspěšně aktualizovány."
+
+#: app.py:424 templates/user.html:37
+msgid "Change password"
+msgstr "Změnit heslo"
+
+#: app.py:437
+msgid "Password changed successfully."
+msgstr "Heslo úspěšně aktualizováno."
+
+#: app.py:440
+msgid "The old password is incorrect."
+msgstr "Zadané staré heslo je nesprávné."
+
+#: app.py:485 app.py:502 app.py:505 forms.py:77 templates/navbar.html:27
+msgid "Login"
+msgstr "Přihlásit se"
+
+#: app.py:501 forms.py:50
+msgid "Invalid username/email or password."
+msgstr "Chybné přihlašovací údaje."
+
+#: app.py:529
+msgid "id"
+msgstr "ID"
+
+#: app.py:529
+msgid "date"
+msgstr "Datum"
+
+#: app.py:529
+msgid "state"
+msgstr "Stav"
+
+#: app.py:529
+msgid "actions"
+msgstr "Akce"
+
+#: app.py:530 templates/experiments.html:60 templates/queue.html:80
+msgid "Edit"
+msgstr "Upravit"
+
+#: app.py:530
+msgid "Cancel"
+msgstr "Zrušit"
+
+#: app.py:557
+msgid "Experiment Queue"
+msgstr "Fronta experimentů"
+
+#: app.py:595 templates/experiments.html:12 templates/queue.html:12
+msgid "Experiment Records"
+msgstr "Záznamy experimentů"
+
+#: app.py:616 app.py:642 app.py:645
+msgid "Register new user"
+msgstr "Registrace nového uživatele"
+
+#: app.py:638
+msgid "Registration successful. Please log in."
+msgstr "Registrace proběhla úspěšně, prosím přihlaste se."
+
+#: app.py:641
+msgid "Database error:"
+msgstr "Chyba databáze:"
+
+#: app.py:644
+msgid "Form validation failed. Please check your input."
+msgstr "Selhala validace formuláře, prosím, zkontrolujte zadané údaje."
+
+#: app.py:828 app.py:851 app.py:889
+msgid "No active experiment found."
+msgstr "Žádný aktivní experiment nenalezen."
+
+#: forms.py:18
+#, fuzzy, python-format
+msgid ""
+"The %(field_name)s \"%(field_data)s\" is already used. Please, choose a "
+"different one."
+msgstr ""
+"Uživatelské jméno \"%(field_data)s\" je již používáno. Prosím, vyberte "
+"jiné."
+
+#: forms.py:34
+#, python-format
+msgid ""
+"No record \"%(field_name)s\" with value \"%(field_data)s\" exists. "
+"Contact your admin to get your credentials."
+msgstr ""
+"Žádný záznam \"%(field_name)s\" s hodnotou \"%(field_data)s\" neexistuje."
+" Kontaktujete svého admina pro přihlašovací údaje."
+
+#: forms.py:58
+msgid "The minimal allowed length is {min} characters."
+msgstr "Minimální povolená délka je {min} znaků."
+
+#: forms.py:61
+msgid "The maximal allowed length is {max} characters."
+msgstr "Maximální povolená délka je {max} znaků."
+
+#: forms.py:65 forms.py:87
+msgid "Username"
+msgstr "Uživatelské jméno"
+
+#: forms.py:66
+msgid "Email address"
+msgstr "E-mailová adresa"
+
+#: forms.py:67 forms.py:88
+msgid "First name"
+msgstr "Jméno"
+
+#: forms.py:68 forms.py:89
+msgid "Last name"
+msgstr "Příjmení"
+
+#: forms.py:69
+msgid "Company Key"
+msgstr "Klíč společnosti"
+
+#: forms.py:70 forms.py:76
+msgid "Password"
+msgstr "Heslo"
+
+#: forms.py:71
+msgid "Confirm password"
+msgstr "Potvrďte heslo"
+
+#: forms.py:72 forms.py:83 forms.py:90 forms.py:103
+msgid "Submit"
+msgstr "Odeslat"
+
+#: forms.py:75
+msgid "Username/Email"
+msgstr "Uživatelské jméno / E-mail"
+
+#: forms.py:80
+msgid "Old password"
+msgstr "Staré heslo"
+
+#: forms.py:81
+msgid "New password"
+msgstr "Nové heslo"
+
+#: forms.py:82
+msgid "Confirm new password"
+msgstr "Potvrďte nové heslo"
+
+#: forms.py:82
+msgid "Passwords must match."
+msgstr "Hesla se musí shodovat."
+
+#: forms.py:95
+msgid "At least one field must be filled in."
+msgstr "Alespoň jedno pole musí být vyplněno."
+
+#: forms.py:102
+msgid "New email address"
+msgstr "Nová e-mailová adresa"
+
+#: templates/404.html:8
+msgid "404 Not Found - PyPAIS"
+msgstr "404 Nenalezeno - PyPAIS"
+
+#: templates/404.html:14
+msgid "Page not found"
+msgstr "Stránka nebyla nalezena"
+
+#: templates/base.html:40
+msgid "2025 Václav Nežerka, David Šilhánek. All rights reserved."
+msgstr "2025 Václav Nežerka, David Šilhánek. Všechna práva vyhrazena."
+
+#: templates/experiments.html:22
+msgid "Experiment ID"
+msgstr "ID experimentu"
+
+#: templates/experiments.html:23
+msgid "Date"
+msgstr "Datum"
+
+#: templates/experiments.html:24
+msgid "Expert guess [-]"
+msgstr "Odborný odhad [-]"
+
+#: templates/experiments.html:25
+msgid "Asphalt Ratio [-]"
+msgstr "Podíl asfaltu [-]"
+
+#: templates/experiments.html:26
+msgid "Actions"
+msgstr "Akce"
+
+#: templates/experiments.html:35
+msgid "Max records on page:"
+msgstr "Maximální počet záznamů na stránku:"
+
+#: templates/experiments.html:38 templates/queue.html:58
+msgid "Sort order:"
+msgstr "Řazení:"
+
+#: templates/experiments.html:39 templates/queue.html:60
+msgid "Descending"
+msgstr "Sestupně"
+
+#: templates/experiments.html:40 templates/queue.html:59
+msgid "Ascending"
+msgstr "Vzestupně"
+
+#: templates/experiments.html:44
+msgid "Sort by:"
+msgstr "Řadit podle:"
+
+#: templates/experiments.html:49 templates/queue.html:67
+msgid "Previous"
+msgstr "Předchozí"
+
+#: templates/experiments.html:50 templates/queue.html:68
+msgid "Next"
+msgstr "Další"
+
+#: templates/experiments.html:61
+msgid "Export"
+msgstr "Exportovat"
+
+#: templates/experiments.html:67 templates/queue.html:89
+msgid "No records found"
+msgstr "Žádné záznamy nenalezeny"
+
+#: templates/form.html:20
+msgid "submit"
+msgstr "odeslat"
+
+#: templates/home.html:11
+msgid "asphalt classification software"
+msgstr "software pro klasifikaci asfaltu"
+
+#: templates/index.html:9
+msgid "Image Processing with NN"
+msgstr "Zpracování obrazu s neuronovou sítí"
+
+#: templates/index.html:23 templates/navbar.html:15
+msgid "Current Experiment"
+msgstr "Aktuální experiment"
+
+#: templates/index.html:30
+msgid "Upload Image"
+msgstr "Nahrát obrázek"
+
+#: templates/index.html:35
+msgid "Basic Information"
+msgstr "Základní informace"
+
+#: templates/index.html:42
+msgid "Information (max. 1024 characters):"
+msgstr "Informace (max. 1024 znaků):"
+
+#: templates/index.html:43
+msgid "Information about the mixture."
+msgstr "Informace o směsi."
+
+#: templates/index.html:47 templates/index.html:48
+msgid "Expert Guess"
+msgstr "Odborný odhad"
+
+#: templates/index.html:54
+msgid "Automatic Phase Detection"
+msgstr "Automatická detekce fází"
+
+#: templates/index.html:58
+msgid "Working..."
+msgstr "Probíhá zpracování..."
+
+#: templates/index.html:64
+msgid "MODEL"
+msgstr "MODEL"
+
+#: templates/index.html:80
+msgid "Original Image"
+msgstr "Původní obrázek"
+
+#: templates/index.html:82
+msgid "Grayscale Image"
+msgstr "Obrázek ve stupních šedi"
+
+#: templates/index.html:87
+msgid "Display Asphalt"
+msgstr "Zobrazit asfalt"
+
+#: templates/index.html:88
+msgid "Display Aggregate"
+msgstr "Zobrazit kamenivo"
+
+#: templates/index.html:89
+msgid "Display Background"
+msgstr "Zobrazit pozadí"
+
+#: templates/index.html:94
+msgid "Mask Opacity:"
+msgstr "Průhlednost masky:"
+
+#: templates/index.html:244
+msgid "Evaluate"
+msgstr "Vyhodnotit"
+
+#: templates/navbar.html:8
+msgid "Navbar"
+msgstr "Navigace"
+
+#: templates/navbar.html:16
+msgid "Queue"
+msgstr "Fronta"
+
+#: templates/navbar.html:17
+msgid "Experiment History"
+msgstr "Historie experimentů"
+
+#: templates/navbar.html:20
+msgid "User"
+msgstr "Uživatel"
+
+#: templates/navbar.html:21
+msgid "Logout"
+msgstr "Odhlásit se"
+
+#: templates/navbar.html:26
+msgid "About"
+msgstr "O aplikaci"
+
+#: templates/navbar.html:28
+msgid "Register"
+msgstr "Registrovat se"
+
+#: templates/queue.html:18
+msgid "Uploading files, please wait..."
+msgstr "Nahrávám soubory, prosím čekejte..."
+
+#: templates/queue.html:27
+msgid "Add to queue"
+msgstr "Přidat do fronty"
+
+#: templates/queue.html:31
+msgid "Choose File"
+msgstr "Vybrat soubor"
+
+#: templates/queue.html:55
+msgid "Records on page:"
+msgstr "Počet záznamů na stránku:"
+
+#: templates/queue.html:83
+msgid "Delete"
+msgstr "Smazat"
+
+#: templates/user.html:8 templates/user.html:15
+msgid "User Information"
+msgstr "Uživatelské informace"
+
+#: templates/user.html:23
+msgid "Username: "
+msgstr "Uživatelské jméno: "
+
+#: templates/user.html:24
+msgid "First Name: "
+msgstr "Jméno: "
+
+#: templates/user.html:25
+msgid "Last Name: "
+msgstr "Příjmení: "
+
+#: templates/user.html:26
+msgid "Company: "
+msgstr "Organizace: "
+
+#: templates/user.html:27
+msgid "Email: "
+msgstr "E-mail: "
+
+#: templates/user.html:31
+msgid "Edit personal information"
+msgstr "Upravit osobní informace"
+
+#: templates/user.html:34
+msgid "Change e-mail address"
+msgstr "Upravit e-mailovou adresu"
+
+#~ msgid "Enter your username"
+#~ msgstr "Zadejte své uživatelské jméno"
+
+#~ msgctxt "e_mail"
+#~ msgid ""
+#~ "The %(field_name)s \"%(field_data)s\" is "
+#~ "already used. Please, choose a different"
+#~ " one."
+#~ msgstr ""
+#~ "E-mailová adresa \"%(field_data)s\" je již "
+#~ "používána. Prosím, vyberte jinou."
+

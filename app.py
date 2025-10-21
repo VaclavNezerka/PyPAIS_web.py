@@ -4,7 +4,7 @@ import pendulum as pdl
 from db_api import User
 from flask import (Flask, render_template, request, 
                    send_from_directory, flash, redirect,
-                   session, url_for, abort, g, make_response, send_file)
+                   session, url_for, abort)
 from flask_mail import Mail, Message
 from wtforms import StringField
 # from flask_login import login_manager, UserMixin, login_required,
@@ -38,8 +38,9 @@ from warnings import warn,WarningMessage
 import torch
 from typing_extensions import deprecated
 from models import discover_models, load_model, add_session_to_loaded_model, pop_session_from_loaded_models, inference
+import models
 import decimal
-
+from flask_babel import Babel, _
 
 # Apps
 import forms 
@@ -54,7 +55,21 @@ Talisman(app, content_security_policy=csp) # for security headers, force https
 
 
 
+# LANGUAGE CONFIGURATION
+app.config['BABEL_DEFAULT_LOCALE'] = 'cs'
+app.config['BABEL_SUPPORTED_LOCALES'] = ['en', 'cs']
+# app.config['BABEL_TRANSLATION_DIRECTORIES'] = ['translations']
+app.config['LANGUAGES'] = ['en', 'cs']
 # app.permanent_session_lifetime=timedelta(days=5)
+
+def get_locale():
+    lang = session.get('lang', None) 
+    if lang is None:
+        lang = request.accept_languages.best_match(app.config['BABEL_SUPPORTED_LOCALES'])
+    return lang
+
+babel = Babel(app, locale_selector=get_locale)
+
 
 # configuration of the mail server
 # app.config['MAIL_SERVER'] = 'smtp.example.com'
@@ -279,6 +294,16 @@ def get_masks_corrected(original: np.ndarray = None, corrections: np.ndarray = N
         corrected_mask = np.clip(corrected_mask + corrections, 0, 1)
     return corrected_mask.astype(bool)
 
+@app.route('/switch-language/<string:lang_code>', methods=['GET'])
+def switch_language(lang_code: str):
+    if lang_code not in app.config['LANGUAGES']:
+        abort(404)
+    response = redirect(request.referrer or url_for('index'))
+    # optional: also persist in a cookie for non-session clients
+    response.set_cookie('lang', lang_code, max_age=60*60*24*365)
+    session['lang'] = lang_code
+    return response
+    return response, 302
 
 def dict_to_json(data_dict: dict, features: Iterable[str] = None) -> str:
         """
@@ -302,7 +327,7 @@ def check_data_ownership(func):
         if user_id == session['user_id']:
             return func(id=kwargs['id'])
         else:
-            flash('You do not have permission to access this data.','error')
+            flash(_('You do not have permission to access this data.'), 'error')
             return redirect('/'), 302
     return wrapper
 
@@ -312,7 +337,7 @@ def check_authentication(func):
         if 'authenticated' in session and session['authenticated']:
             return func(*args, **kwargs)
         else:
-            flash('You must be logged in to access this page.','error')
+            flash(_('You must be logged in to access this page.'), 'error')
             return redirect(url_for('login')), 302
     return wrapper
 
@@ -332,7 +357,7 @@ def page_not_found(error):
 
 # @app.errorhandler(Exception)
 # def handle_exception(error) -> tuple:
-#     flash('An internal server error has occured.','error')
+#     flash(_('An internal server error has occured.'), 'error')
 #     return redirect(url_for('logout')), 500
 #     return None, 500
 
@@ -349,10 +374,11 @@ def logout():
 @app.route('/change-email',methods=['GET','POST'])
 @check_authentication
 def change_email():
+    title = _('Change email')
     match request.method:
         case 'GET':
             form=forms.ChangeEmailForm()
-            return render_template('form.html',dynamic_content='Change email',form=form,session=session)
+            return render_template('form.html',dynamic_content=title,form=form,session=session)
         case 'POST':
             form=forms.ChangeEmailForm()
             if form.validate_on_submit():
@@ -361,10 +387,10 @@ def change_email():
                 # values=(form.e_mail.data,session['user_id'])
                 # execute_query(query,values)
                 db_api.update_users_table(values_dict={'e_mail': form.e_mail.data}, user_id=session['user_id'])
-                flash('Email changed successfully.','success')
+                flash(_('Email changed successfully.'), 'success')
                 return redirect('/user')
             else:
-                return render_template('form.html',dynamic_content='Change email',form=form,session=session)
+                return render_template('form.html',dynamic_content=title,form=form,session=session)
 
 @app.route('/edit-personal-information',methods=['GET','POST'])
 @check_authentication
@@ -372,7 +398,7 @@ def edit_personal_information():
     match request.method:
         case 'GET':
             form=forms.EditPersonalInformationForm()
-            return render_template('form.html',dynamic_content='Change personal information',form=form,session=session)
+            return render_template('form.html',dynamic_content=_('Change personal information'),form=form,session=session)
         case 'POST':
             form=forms.EditPersonalInformationForm()
             if form.validate_on_submit():
@@ -387,18 +413,19 @@ def edit_personal_information():
                         # query = f'UPDATE public_users SET {field.name}=%s WHERE id=%s'
                         # values = (field.data, session['user_id'])
                         # execute_query(query, values)
-                flash('Personal information updated successfully.','success')
+                flash(_('Personal information updated successfully.'), 'success')
                 return redirect('/user')
             else:
-                return render_template('form.html',dynamic_content='Change personal information',form=form,session=session)
+                return render_template('form.html',dynamic_content=_('Change personal information'),form=form,session=session)
 
 @app.route('/change-password',methods=['GET','POST'])
 @check_authentication
 def change_password():
+    title = _('Change password')
     match request.method:
         case 'GET':
             form=forms.ChangePasswordForm()
-            return render_template('form.html',dynamic_content='Change password',form=form,session=session)
+            return render_template('form.html',dynamic_content=title,form=form,session=session)
         case 'POST':
             form=forms.ChangePasswordForm()
             if form.validate_on_submit():                
@@ -407,13 +434,13 @@ def change_password():
                 if authenticated:
                     new_password_hash=generate_password_hash(form.new_password.data)
                     db_api.update_users_table(values_dict={'pwd': new_password_hash}, user_id=session['user_id'])
-                    flash('Password changed successfully.','success')
+                    flash(_('Password changed successfully.'), 'success')
                     return redirect('/user'), 302
                 else:
-                    flash('The old password is incorrect.','error')
-                    return render_template('form.html',dynamic_content='Change password',form=form,session=session), 200
+                    flash(_('The old password is incorrect.'), 'error')
+                    return render_template('form.html',dynamic_content=title,form=form,session=session), 200
             else:
-                return render_template('form.html',dynamic_content='Change password',form=form,session=session), 200
+                return render_template('form.html',dynamic_content=title,form=form,session=session), 200
 
 def bool_to_image_array(array: np.ndarray) -> np.ndarray:
     """
@@ -455,7 +482,7 @@ def login():
     match request.method:
         case 'GET':
             form=forms.LoginForm()
-            return render_template('form.html',dynamic_content='Login ',form=form, session=session)
+            return render_template('form.html',dynamic_content=_('Login'),form=form, session=session)
         case 'POST':
             form=forms.LoginForm()
             if form.validate_on_submit():
@@ -471,11 +498,11 @@ def login():
                     #     ts[session['user_id']] = UserTemporaryStorage()                
                     return redirect('/'), 302   
                 else:
-                    flash('Invalid username or password.','error')
-                    return render_template('form.html',dynamic_content='Login ',form=form,session=session)
+                    flash(_('Invalid username/email or password.'), 'error')
+                    return render_template('form.html', dynamic_content=_('Login'), form=form, session=session)
             else:
                 # form validation failed - user is notified by flash messages in the form
-                return render_template('form.html',dynamic_content='Login ',form=form,session=session)
+                return render_template('form.html', dynamic_content=_('Login'), form=form, session=session)
 
 def sort_records(records: list, sort_order: Literal['asc', 'desc'], sort_by: str, page_limit: int) -> list:
     if sort_order == 'asc':
@@ -499,8 +526,8 @@ def queue():
     
     sort_columns=[ records[0].index(x) for x in sort_by]
 
-    columnames=['id','date','state','actions']
-    actions=['Edit','Cancel']
+    columnames=[_('id'),_('date'),_('state'),_('actions')]
+    actions=[_('Edit'),_('Cancel')]
     records.append(execute_query("SELECT experiment_id, time_stamp, current_state FROM experiments where user_id=%s AND current_state!='finished' ",(session['user_id'],)))
     data = records[1]
 
@@ -524,7 +551,10 @@ def queue():
     max_sub_id = min(len(data), start_sub_id+page_limit)
     data=data[start_sub_id:max_sub_id]
     records[1] = data
-    return render_template('queue.html',records=records,session=session,dynamic_content='Experiment Queue',columnames=columnames, actions = actions)
+
+    # translate_column_names
+    columnames = [ _(col) for col in columnames ]
+    return render_template('queue.html',records=records,session=session,dynamic_content=_('Experiment Queue'),columnames=columnames, actions = actions)
 
 @app.route('/experiments',methods=['GET','POST'])
 @check_authentication
@@ -562,7 +592,7 @@ def experiments():
     max_sub_id = min(len(data), start_sub_id+page_limit)
     data=data[start_sub_id:max_sub_id]
     records[1] = data
-    return render_template('experiments.html',records=records,session=session,dynamic_content='Experiment Records')
+    return render_template('experiments.html',records=records,session=session,dynamic_content=_('Experiment Records'))
 
 @app.route('/user',methods=['GET'])
 @check_authentication
@@ -583,7 +613,7 @@ def register():
     match request.method:
         case 'GET':
             form=forms.RegistrationFormUser()
-            return render_template('form.html',dynamic_content='Register new user',form=form,session=session)
+            return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session)
         case 'POST':
             form=forms.RegistrationFormUser()
             if form.validate_on_submit():
@@ -605,14 +635,14 @@ def register():
                 result = db_api.save_new_user_db(values=user_dict)
                 print('3')
                 if result is None:
-                    flash(message='Registration successful. Please log in.',category='success')
+                    flash(message=_('Registration successful. Please log in.'),category='success')
                     return redirect(url_for('login')), 302
                 else:
-                    flash(message=f'Database error: {result}',category='error')
-                    return render_template('form.html',dynamic_content='Register new user',form=form,session=session), 500
+                    flash(message=_('Database error:') + f'{result}', category='error')
+                    return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session), 500
             else:
-                # flash(message='Form validation failed. Please check your input.',category='error')
-                return render_template('form.html',dynamic_content='Register new user',form=form,session=session)
+                flash(message=_('Form validation failed. Please check your input.'),category='error')
+                return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session)
 
 
 # TODO: CONSIDER REMOVAL - BAD DESIGN - SPLIT THE FUNCTIONALITY
@@ -795,7 +825,7 @@ def deactivate_experiment(id):
     if id is None:
         id = storage.experiment_id
         if id is None:
-            flash('No active experiment found.','error')
+            flash(_('No active experiment found.'), 'error')
             return redirect('/queue'), 302
     
     # query = 'UPDATE experiments SET active=%s WHERE experiment_id=%s'
@@ -818,7 +848,7 @@ def activate_experiment(id):
     if id is None:
         id = storage.experiment_id
         if id is None:
-            flash('No active experiment found.','error')
+            flash(_('No active experiment found.'), 'error')
             return redirect('/queue')
     # check if the experiment is already active if it is, deactivate it
     query = 'SELECT experiment_id FROM experiments WHERE user_id=%s AND active=True'
@@ -856,7 +886,7 @@ def load_experiment(id):
     if id is None:
         id = storage.experiment_id
         if id is None:
-            flash('NO ID No active experiment found.','error')
+            flash(_('No active experiment found.'), 'error')
             return redirect('/queue'), 302          
     response = db_api.get_experiment_by_id(id)
     storage.from_dict(response)
@@ -1126,29 +1156,6 @@ def process_image():
 
     return response_json, 200, {'Content-Type': 'application/json'}
 
-def postprocess_model_prediction(prediction: torch.Tensor):
-    """
-    Postprocess the model prediction to save separated masks.
-
-    
-    Parameters:
-    prediction (torch.Tensor): 
-        expected to be a tensor with shape (batch_size, num_classes, height, width).
-        containig the probabilities for each class.
-        the class are expected
-        - 0 is asphalt, 
-        - 1 is aggregate,
-        - 2 is background
-
-    """
-    prediction = prediction.squeeze(0).cpu().numpy()  # Remove batch dimension and convert to numpy array
-    boolean_prediction = np.argmax(prediction, axis=0)  # Get the class with the highest probability
-
-    asphalt_mask = boolean_prediction == 0
-    aggregate_mask = boolean_prediction == 1
-    background_mask = boolean_prediction == 2
-
-    return asphalt_mask, aggregate_mask, background_mask
 
 @deprecated("used in thresholding approach, but not in the current one")
 def get_masks_with_manual_corrections():
@@ -1198,7 +1205,7 @@ def inference_image():
                                  session_id=session['user_id'])
     
     # get model prediction and save it to the sessions
-    asphalt_mask, aggregate_mask, background_mask = postprocess_model_prediction(model_prediction)
+    asphalt_mask, aggregate_mask, background_mask = models.postprocess_model_prediction(model_prediction)
 
     # save the masks to the storage
     storage.from_dict({
@@ -1362,8 +1369,8 @@ def apply_mask():
     # 
     warn("Old endpoint will be removed soon", DeprecationWarning)
     flash("⚠️ This endpoint APPLY-MASK is deprecated and will be removed in a future version.", "warning")
-    
-    
+
+
     # Assuming the image's ID or a unique identifier is sent as part of the form data for key lookup
     image_id = request.form.get('imageId')
     min_threshold_0 = int(request.form.get('minThreshold0', 0))
@@ -1587,4 +1594,3 @@ if __name__ == "__main__":
     if debug:
         app.secret_key='test_secret_key'
     app.run(debug=debug)
-

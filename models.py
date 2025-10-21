@@ -3,6 +3,7 @@ import glob
 import numpy as np
 import torch
 import segmentation_models_pytorch as smp
+from typing_extensions import deprecated
 
 # Default
 TORCH_DEVICE = os.environ.get('TORCH_DEVICE', 'cuda' if torch.cuda.is_available() else 'cpu')
@@ -148,6 +149,31 @@ def inference(model_name: str, input_data: torch.Tensor, session_id: str) -> tor
     model = torch_loaded_models[model_name]["model"]
     return model.evaluate(input_data.to(TORCH_DEVICE))
 
+def postprocess_model_prediction(prediction: torch.Tensor):
+    """
+    Postprocess the model prediction to save separated masks.
+
+    
+    Parameters:
+    prediction (torch.Tensor): 
+        expected to be a tensor with shape (batch_size, num_classes, height, width).
+        containig the probabilities for each class.
+        the class are expected
+        - 0 is asphalt, 
+        - 1 is aggregate,
+        - 2 is background
+
+    """
+    prediction = prediction.squeeze(0).cpu().numpy()  # Remove batch dimension and convert to numpy array
+    boolean_prediction = np.argmax(prediction, axis=0)  # Get the class with the highest probability
+
+    background_mask = boolean_prediction == 2
+    asphalt_mask = boolean_prediction == 1
+    aggregate_mask = boolean_prediction == 0
+
+    return asphalt_mask, aggregate_mask, background_mask
+
+@deprecated("get_masks_from_output is deprecated and will be removed in future versions.")
 def get_masks_from_output(output: torch.Tensor) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Convert model output probabilities to binary masks.
@@ -165,8 +191,8 @@ def get_masks_from_output(output: torch.Tensor) -> tuple[np.ndarray, np.ndarray,
 
     # Create binary masks for each class
     bg_mask = (masks == 0).astype(np.uint8)  # Background mask
-    asphalt_mask = (masks == 1).astype(np.uint8)  # Asphalt mask
-    aggregate_mask = (masks == 2).astype(np.uint8)  # Aggregate mask
+    aggregate_mask = (masks == 1).astype(np.uint8)  # Aggregate mask
+    asphalt_mask = (masks == 2).astype(np.uint8)  # Asphalt mask
 
     return bg_mask, asphalt_mask, aggregate_mask
 

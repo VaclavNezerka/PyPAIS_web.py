@@ -19,7 +19,6 @@ from app import (
     generate_password_hash,
     sort_records,
     grayscale_image,
-    temporary_store_image,
     downscale_image,
     polish_input_image_file,
 )
@@ -1065,19 +1064,3 @@ def test_polish_input_image_file():
     invalid_image_4d = (np.random.rand(5, 5, 5, 5) * 255).astype(np.uint8)  # 4D array
     with pytest.raises(ValueError, match="Input image must be a 2D or 3D numpy array."):
         polish_input_image_file(invalid_image_4d)
-
-# @pytest.mark.parametrize("client", [True], indirect=["client"])
-# def test_temporary_store_image(client, ts):
-#     user_storage = UserTemporaryStorage(user_id=1, username='test_user')
-#     ts['1'] = user_storage
-
-#     # Create a sample image (2x2 pixels, RGB)
-#     sample_image = np.array([[[255, 0, 0], [0, 255, 0]],
-#                              [[0, 0, 255], [255, 255, 0]]], dtype=np.uint8)
-    
-#     # Store the image
-#     temporary_store_image(sample_image)
-
-    
-    
-#     np.testing.assert_array_equal(user_storage.color, sample_image, "Image not stored correctly in temporary storage")

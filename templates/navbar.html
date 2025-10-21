@@ -5,27 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/styles.css">
     <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
-    <title>Navbar</title>
+    <title>{{ _('Navbar') }}</title>
   </head>
   <body>
     
 <nav class="navbar">
     {% if session.authenticated %}
   <ul>
-    <li><a href="/">Current Experiment</a></li>
-    <li><a href="/queue">Queue</a></li>
-    <li><a href="/experiments">Experiment History</a></li>
+    <li><a href="/">{{ _('Current Experiment') }}</a></li>
+    <li><a href="/queue">{{ _('Queue') }}</a></li>
+    <li><a href="/experiments">{{ _('Experiment History') }}</a></li>
   </ul>
   <ul class="navbar-right">
-      <li><a href="/user">User</a></li>
-      <li><a href="/logout">Logout</a></li>
+      <li><a href="/user">{{ _('User') }}</a></li>
+      <li><a href="/logout">{{ _('Logout') }}</a></li>
   </ul>
   </ul>
   {% else %}
   <ul>
-    <li><a href="/home">About</a></li>
-    <li><a href="/login">Login</a></li>
-    <li><a href="/register">Register</a></li>
+    <li><a href="/home">{{ _('About') }}</a></li>
+    <li><a href="/login">{{ _('Login') }}</a></li>
+    <li><a href="/register">{{ _('Register') }}</a></li>
   </ul>
   {% endif %}
 </nav>

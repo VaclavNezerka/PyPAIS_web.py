@@ -288,7 +288,9 @@ input[type="text"] {
 
 .colorbar {
     /* background: linear-gradient(to right, var(--myPaleGray), var(--myPaleGray)); */
-    background: linear-gradient(to right, var(--myDarkGray), var(--myPaleBlue));
+    /* background: linear-gradient(to right, var(--myDarkGray), var(--myPaleBlue)); */
+    /* background: black; */
+    background: var(--myDarkGray);
     /* background: var(--myTopicColor); */
     color: white;
     text-align: center;

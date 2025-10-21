@@ -6,7 +6,7 @@
 
 <html>
     <head>
-        <title>Image Processing with Histogram and Entropy</title>
+        <title>{{ _('Image Processing with NN') }}</title>
         <link rel="stylesheet" href="/static/styles.css">
         <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
     
@@ -20,48 +20,48 @@
     <script type="module" src="/static/script_automatic.js"></script>
     <body>
     <div id="row", class = "colorbar">
-        <h2> Current Experiment</h2>
+        <h2> {{ _('Current Experiment') }}</h2>
     </div>
 
     <div class="container">
         <!-- First Row: Image Upload -->
         <div class="row">
             <input type="file" id="fileInput" accept="image/*" class="custom-file-input"></input>
-            <label for="fileInput" class="custom-file-label">Upload Image</label>
+            <label for="fileInput" class="custom-file-label">{{ _('Upload Image') }}</label>
         </div>
     </div>
 
     <div id="row", class = "colorbar">
-        <h3> Basic Information</h3>
+        <h3>{{ _('Basic Information') }}</h3>
     </div>
 
     <div class="row">
         <!-- Row: Information -->
         <!-- max  -->
         <div  class="column">
-            <p>Information (max. 1024 characters):</p>
-            <input type="text" id="info" placeholder="Information about the mixture." maxlength="1024"/>
+            <p>{{ _('Information (max. 1024 characters):') }}</p>
+            <input type="text" id="info" placeholder="{{ _('Information about the mixture.') }}" maxlength="1024"/>
         </div>
         <!-- Row: Expert Guess -->
         <div class="column">
-            <p>Expert Guess [%]:</p>
-            <input type="number" id="expertGuess" placeholder="Expert Guess"/>
+            <p>{{ _('Expert Guess') }} [%]:</p>
+            <input type="number" id="expertGuess" placeholder="{{ _('Expert Guess') }}"/>
         </div>
    </div>
    
    
    <div id="row", class = "colorbar">
-       <h3> Automatic Phase Detection</h3>
+       <h3>{{ _('Automatic Phase Detection') }}</h3>
     </div>
         <div class="loading" id="workingMessage">
         <!-- <div class="loading" id="workingMessage" style="display:none;"> -->
-            Working...
+            {{ _('Working...') }}
         </div>
         
         <div class="row">
             <!-- Add a droplist allowing the user to select ORIGINAL IMAGE, original with no bg, and BW -->
             <div class="column">
-                <h3> MODEL </h3>
+                <h3>{{ _('MODEL') }}</h3>
                 <div class="column">
                     <select id="model" >
                         {% for model in models %}
@@ -77,21 +77,21 @@
             <div class="column">
                 <div class="column">
                     <select id="imageType" >
-                        <option value="original">("shift + c") Original Image</option>
+                        <option value="original">("shift + c") {{ _('Original Image') }}</option>
                         <!-- <option value="original_no_bg">("c") Removed Background</option> -->
-                        <option value="bw">("shift + c") Grayscale Image</option>
+                        <option value="bw">("shift + c") {{ _('Grayscale Image') }}</option>
                     </select>
                 </div>
             </div>
             <div class="column">
-                <input type="checkbox" id="redOverlayCheckbox"  >Display Asphalt ("shift + a")</input>
-                <input type="checkbox" id="aggregateOverlayCheckbox"  >Display Aggregate ("shift + s")</input>
-                <input type="checkbox" id="backgroundOverlayCheckbox"  >Display Background ("shift + d")</input>
+                <input type="checkbox" id="redOverlayCheckbox"  >{{ _('Display Asphalt') }} ("shift + a")</input>
+                <input type="checkbox" id="aggregateOverlayCheckbox"  >{{ _('Display Aggregate') }} ("shift + s")</input>
+                <input type="checkbox" id="backgroundOverlayCheckbox"  >{{ _('Display Background') }} ("shift + d")</input>
             </div>
             <div class="column">
                 <div class="slider-container">
                     <div class="slider-group">
-                        Mask Opacity: <input type="range" id="opacitySlider" min="0" max="100" value="50" class = "slider">
+                        {{ _('Mask Opacity:') }} <input type="range" id="opacitySlider" min="0" max="100" value="50" class = "slider">
                         <input type="text" id="opacityValue" value="50" size="2">
                     </div>    
                 </div>
@@ -241,7 +241,7 @@
 
     <div class="container">
         <div class="row">
-            <button id='index_evaluation' type="submit">Evaluate</button>                                
+            <button id='index_evaluation' type="submit">{{ _('Evaluate') }}</button>                                
         </div>
     </div>
 
