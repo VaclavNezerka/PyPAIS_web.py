@@ -293,7 +293,12 @@ function replaceKeepCase(str, search, replace) {
     });
 }
 
-
+function switchLanguage(lang) {
+    fetch('/switch-language/' + lang, { method: 'POST' })
+    .then(() => {
+        location.reload();
+    });
+}
 
 document.getElementById('info').addEventListener('change', function() {
     let value = this.value;

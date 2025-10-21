@@ -17,7 +17,7 @@
             {% if field.type != 'CSRFTokenField' %}
             {% if field.type == 'SubmitField'  %}
             <div>
-                <button type="submit">submit</button>                                
+                <button type="submit">{{ _('submit') }}</button>
             </div>
             {% for error in field.errors %}
                                 <p class="error">{{error}}</p>

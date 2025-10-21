@@ -1,0 +1,421 @@
+# Translations template for PROJECT.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-10-21 20:19+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.16.0\n"
+
+#: app.py:330
+msgid "You do not have permission to access this data."
+msgstr ""
+
+#: app.py:340
+msgid "You must be logged in to access this page."
+msgstr ""
+
+#: app.py:377
+msgid "Change email"
+msgstr ""
+
+#: app.py:390
+msgid "Email changed successfully."
+msgstr ""
+
+#: app.py:401 app.py:419
+msgid "Change personal information"
+msgstr ""
+
+#: app.py:416
+msgid "Personal information updated successfully."
+msgstr ""
+
+#: app.py:424 templates/user.html:37
+msgid "Change password"
+msgstr ""
+
+#: app.py:437
+msgid "Password changed successfully."
+msgstr ""
+
+#: app.py:440
+msgid "The old password is incorrect."
+msgstr ""
+
+#: app.py:485 app.py:502 app.py:505 forms.py:77 templates/navbar.html:27
+msgid "Login"
+msgstr ""
+
+#: app.py:501 forms.py:50
+msgid "Invalid username/email or password."
+msgstr ""
+
+#: app.py:529
+msgid "id"
+msgstr ""
+
+#: app.py:529
+msgid "date"
+msgstr ""
+
+#: app.py:529
+msgid "state"
+msgstr ""
+
+#: app.py:529
+msgid "actions"
+msgstr ""
+
+#: app.py:530 templates/experiments.html:60 templates/queue.html:80
+msgid "Edit"
+msgstr ""
+
+#: app.py:530
+msgid "Cancel"
+msgstr ""
+
+#: app.py:557
+msgid "Experiment Queue"
+msgstr ""
+
+#: app.py:595 templates/experiments.html:12 templates/queue.html:12
+msgid "Experiment Records"
+msgstr ""
+
+#: app.py:616 app.py:642 app.py:645
+msgid "Register new user"
+msgstr ""
+
+#: app.py:638
+msgid "Registration successful. Please log in."
+msgstr ""
+
+#: app.py:641
+msgid "Database error:"
+msgstr ""
+
+#: app.py:644
+msgid "Form validation failed. Please check your input."
+msgstr ""
+
+#: app.py:828 app.py:851 app.py:889
+msgid "No active experiment found."
+msgstr ""
+
+#: forms.py:18
+#, python-format
+msgid ""
+"The %(field_name)s \"%(field_data)s\" is already used. Please, choose a "
+"different one."
+msgstr ""
+
+#: forms.py:34
+#, python-format
+msgid ""
+"No record \"%(field_name)s\" with value \"%(field_data)s\" exists. "
+"Contact your admin to get your credentials."
+msgstr ""
+
+#: forms.py:58
+msgid "The minimal allowed length is {min} characters."
+msgstr ""
+
+#: forms.py:61
+msgid "The maximal allowed length is {max} characters."
+msgstr ""
+
+#: forms.py:65 forms.py:87
+msgid "Username"
+msgstr ""
+
+#: forms.py:66
+msgid "Email address"
+msgstr ""
+
+#: forms.py:67 forms.py:88
+msgid "First name"
+msgstr ""
+
+#: forms.py:68 forms.py:89
+msgid "Last name"
+msgstr ""
+
+#: forms.py:69
+msgid "Company Key"
+msgstr ""
+
+#: forms.py:70 forms.py:76
+msgid "Password"
+msgstr ""
+
+#: forms.py:71
+msgid "Confirm password"
+msgstr ""
+
+#: forms.py:72 forms.py:83 forms.py:90 forms.py:103
+msgid "Submit"
+msgstr ""
+
+#: forms.py:75
+msgid "Username/Email"
+msgstr ""
+
+#: forms.py:80
+msgid "Old password"
+msgstr ""
+
+#: forms.py:81
+msgid "New password"
+msgstr ""
+
+#: forms.py:82
+msgid "Confirm new password"
+msgstr ""
+
+#: forms.py:82
+msgid "Passwords must match."
+msgstr ""
+
+#: forms.py:95
+msgid "At least one field must be filled in."
+msgstr ""
+
+#: forms.py:102
+msgid "New email address"
+msgstr ""
+
+#: templates/404.html:8
+msgid "404 Not Found - PyPAIS"
+msgstr ""
+
+#: templates/404.html:14
+msgid "Page not found"
+msgstr ""
+
+#: templates/base.html:40
+msgid "2025 Václav Nežerka, David Šilhánek. All rights reserved."
+msgstr ""
+
+#: templates/experiments.html:22
+msgid "Experiment ID"
+msgstr ""
+
+#: templates/experiments.html:23
+msgid "Date"
+msgstr ""
+
+#: templates/experiments.html:24
+msgid "Expert guess [-]"
+msgstr ""
+
+#: templates/experiments.html:25
+msgid "Asphalt Ratio [-]"
+msgstr ""
+
+#: templates/experiments.html:26
+msgid "Actions"
+msgstr ""
+
+#: templates/experiments.html:35
+msgid "Max records on page:"
+msgstr ""
+
+#: templates/experiments.html:38 templates/queue.html:58
+msgid "Sort order:"
+msgstr ""
+
+#: templates/experiments.html:39 templates/queue.html:60
+msgid "Descending"
+msgstr ""
+
+#: templates/experiments.html:40 templates/queue.html:59
+msgid "Ascending"
+msgstr ""
+
+#: templates/experiments.html:44
+msgid "Sort by:"
+msgstr ""
+
+#: templates/experiments.html:49 templates/queue.html:67
+msgid "Previous"
+msgstr ""
+
+#: templates/experiments.html:50 templates/queue.html:68
+msgid "Next"
+msgstr ""
+
+#: templates/experiments.html:61
+msgid "Export"
+msgstr ""
+
+#: templates/experiments.html:67 templates/queue.html:89
+msgid "No records found"
+msgstr ""
+
+#: templates/form.html:20
+msgid "submit"
+msgstr ""
+
+#: templates/home.html:11
+msgid "asphalt classification software"
+msgstr ""
+
+#: templates/index.html:9
+msgid "Image Processing with NN"
+msgstr ""
+
+#: templates/index.html:23 templates/navbar.html:15
+msgid "Current Experiment"
+msgstr ""
+
+#: templates/index.html:30
+msgid "Upload Image"
+msgstr ""
+
+#: templates/index.html:35
+msgid "Basic Information"
+msgstr ""
+
+#: templates/index.html:42
+msgid "Information (max. 1024 characters):"
+msgstr ""
+
+#: templates/index.html:43
+msgid "Information about the mixture."
+msgstr ""
+
+#: templates/index.html:47 templates/index.html:48
+msgid "Expert Guess"
+msgstr ""
+
+#: templates/index.html:54
+msgid "Automatic Phase Detection"
+msgstr ""
+
+#: templates/index.html:58
+msgid "Working..."
+msgstr ""
+
+#: templates/index.html:64
+msgid "MODEL"
+msgstr ""
+
+#: templates/index.html:80
+msgid "Original Image"
+msgstr ""
+
+#: templates/index.html:82
+msgid "Grayscale Image"
+msgstr ""
+
+#: templates/index.html:87
+msgid "Display Asphalt"
+msgstr ""
+
+#: templates/index.html:88
+msgid "Display Aggregate"
+msgstr ""
+
+#: templates/index.html:89
+msgid "Display Background"
+msgstr ""
+
+#: templates/index.html:94
+msgid "Mask Opacity:"
+msgstr ""
+
+#: templates/index.html:244
+msgid "Evaluate"
+msgstr ""
+
+#: templates/navbar.html:8
+msgid "Navbar"
+msgstr ""
+
+#: templates/navbar.html:16
+msgid "Queue"
+msgstr ""
+
+#: templates/navbar.html:17
+msgid "Experiment History"
+msgstr ""
+
+#: templates/navbar.html:20
+msgid "User"
+msgstr ""
+
+#: templates/navbar.html:21
+msgid "Logout"
+msgstr ""
+
+#: templates/navbar.html:26
+msgid "About"
+msgstr ""
+
+#: templates/navbar.html:28
+msgid "Register"
+msgstr ""
+
+#: templates/queue.html:18
+msgid "Uploading files, please wait..."
+msgstr ""
+
+#: templates/queue.html:27
+msgid "Add to queue"
+msgstr ""
+
+#: templates/queue.html:31
+msgid "Choose File"
+msgstr ""
+
+#: templates/queue.html:55
+msgid "Records on page:"
+msgstr ""
+
+#: templates/queue.html:83
+msgid "Delete"
+msgstr ""
+
+#: templates/user.html:8 templates/user.html:15
+msgid "User Information"
+msgstr ""
+
+#: templates/user.html:23
+msgid "Username: "
+msgstr ""
+
+#: templates/user.html:24
+msgid "First Name: "
+msgstr ""
+
+#: templates/user.html:25
+msgid "Last Name: "
+msgstr ""
+
+#: templates/user.html:26
+msgid "Company: "
+msgstr ""
+
+#: templates/user.html:27
+msgid "Email: "
+msgstr ""
+
+#: templates/user.html:31
+msgid "Edit personal information"
+msgstr ""
+
+#: templates/user.html:34
+msgid "Change e-mail address"
+msgstr ""
+
