@@ -7,3 +7,6 @@ data
 _*
 *.png
 *.heic
+git_workflow.sh
+__pycache__/
+*.pyc
