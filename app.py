@@ -294,16 +294,17 @@ def get_masks_corrected(original: np.ndarray = None, corrections: np.ndarray = N
         corrected_mask = np.clip(corrected_mask + corrections, 0, 1)
     return corrected_mask.astype(bool)
 
-@app.route('/switch-language/<string:lang_code>', methods=['GET'])
+@app.route('/switch-language/<string:lang_code>', methods=['GET', 'POST'])
 def switch_language(lang_code: str):
+    print(f'Switching language to: {lang_code}')
     if lang_code not in app.config['LANGUAGES']:
         abort(404)
-    response = redirect(request.referrer or url_for('index'))
     # optional: also persist in a cookie for non-session clients
-    response.set_cookie('lang', lang_code, max_age=60*60*24*365)
+    # response.set_cookie('lang', lang_code, max_age=60*60*24*365)
     session['lang'] = lang_code
-    return response
-    return response, 302
+    # response = redirect(request.referrer or url_for('index'))
+    return json.dumps({'lang': lang_code}), 200
+    # return response, 302
 
 def dict_to_json(data_dict: dict, features: Iterable[str] = None) -> str:
         """

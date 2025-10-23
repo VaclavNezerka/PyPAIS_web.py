@@ -1,0 +1,16 @@
+<div class="language-dropdown">
+  <button id="current-lang-btn" class="lang-btn" value="en">
+    <img id="current-lang-icon" src="/static/language_icons/icon_{{ session.lang or 'en' }}.png" alt="English" class="current-lang">
+    <span class="arrow">▼</span>
+  </button>
+  <div  class="lang-menu">
+    <a id="cs" title="Česky">
+      <img src="/static/language_icons/icon_cs.png" alt="Česky"> Česky
+    </a>
+    <a id="en" title="English">
+      <img src="/static/language_icons/icon_en.png" alt="English"> English
+    </a>
+  </div>
+</div>
+
+<script src="/static/script_lang.js"></script>

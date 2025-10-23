@@ -97,12 +97,40 @@ let uploadedImageOverlay_asphalt = new Image();
 let uploadedImageOverlay_aggregate = new Image();
 let uploadedImageOverlay_bg = new Image();
 
-        
-const labelSettings = {
-  background: { stroke: 'green', fill: 'rgba(0,255,0,0.2)', strokeWidth: 2 },
-  aggregate: { stroke: 'blue', fill: 'rgba(0,0,255,0.2)', strokeWidth: 2 },
-  asphalt: { stroke: 'red', fill: 'rgba(255,0,0,0.2)', strokeWidth: 2 },
-  magnify: 10,
+function hexToRgba(hex, alpha = 1) {
+  // Remove '#' if present
+  hex = hex.replace('#', '');
+
+  // Handle shorthand (#abc)
+  if (hex.length === 3) {
+    hex = hex.split('').map(c => c + c).join('');
+  }
+
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// Access CSS variables for label settings
+const rootStyles = getComputedStyle(document.documentElement);
+
+// Theme colors
+let aggregateColor = hexToRgba(rootStyles.getPropertyValue('--myBlue').trim(), 1);
+let backgroundColor = hexToRgba(rootStyles.getPropertyValue('--myPaleGreen').trim(), 1);
+let bitumenColor = hexToRgba(rootStyles.getPropertyValue('--myPaleRed').trim(), 1);
+
+// Highcontrast colors
+bitumenColor = 'rgba(255, 0, 0, 1)';
+aggregateColor = 'rgba(0, 0, 225, 1)';
+backgroundColor = 'rgba(0, 255, 0, 1)';
+
+const labelSettings = { 
+  background: { stroke: backgroundColor, fill: backgroundColor, strokeWidth: 2 },
+  aggregate: { stroke: aggregateColor, fill: aggregateColor, strokeWidth: 2 },
+  asphalt: { stroke: bitumenColor, fill: bitumenColor, strokeWidth: 2 },
+  magnify: 3,
   mask_opacity: 0.5,
 };
 
@@ -293,12 +321,56 @@ function replaceKeepCase(str, search, replace) {
     });
 }
 
-function switchLanguage(lang) {
-    fetch('/switch-language/' + lang, { method: 'POST' })
-    .then(() => {
-        location.reload();
-    });
+async function switchLanguage(lang) {
+    document.getElementById('current-lang-icon').src = '/static/language_icons/icon_' + lang + '.png';
+    await fetch('/switch-language/' + lang, { method: 'POST' });
 }
+
+// document.getElementById('languageSelect').addEventListener('change', function() {
+    //     const urlParams = new URLSearchParams(window.location.search);
+    //     let lang = urlParams.get('lang') || document.getElementById('languageSelect').value;
+    //     // if lang was provided via ?lang=..., reflect it in the select control
+    //     if (urlParams.has('lang')) {
+        //         const sel = document.getElementById('languageSelect');
+        //         if (sel) sel.value = lang;
+        //     }
+        
+        
+        //     switchLanguage(lang);
+        //     document.getElementById('current-lang-icon').src = '/static/language_icons/icon_' + lang + '.png';
+        // });
+        
+        
+        document.addEventListener("DOMContentLoaded", () => {
+            const langMenu = document.querySelector(".lang-menu");
+            const currentIcon = document.getElementById("current-lang-icon");
+            
+            document.querySelectorAll(".lang-menu a").forEach(link => {
+                
+                link.addEventListener("click", async (e) => {
+                    // e.preventDefault();
+                    const langBtn = document.getElementById("current-lang-btn");
+                    const selectedLang = link.id;
+                    // const selectedIcon = '/static/language_icons/icon_' + selectedLang + '.png';
+                    const currentLang = langBtn.value;
+                    langBtn.value = selectedLang;
+                    console.log(`Selected language: ${selectedLang}, Current language: ${currentLang}`);
+                    // console.log(`Selected icon: ${selectedIcon}`);
+                    // If same language, just close menu
+                    // if (selectedLang === currentLang) {
+                        //     langMenu.classList.remove("show");
+                        //     return;
+                        // }
+                        currentIcon.src = '/static/language_icons/icon_' + selectedLang + '.png';
+                        await switchLanguage(selectedLang);
+                        location.reload();
+        });
+    });
+
+});
+
+
+
 
 document.getElementById('info').addEventListener('change', function() {
     let value = this.value;
@@ -978,6 +1050,8 @@ document.addEventListener('keydown', function(event) {
             break;
     }
 });
+
+
 
 
 // import OpenSeadragon from "./openseadragon_5.0/openseadragon.min.js";

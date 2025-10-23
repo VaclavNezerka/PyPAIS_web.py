@@ -1,6 +1,7 @@
 <!DOCTYPE html>
+
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/styles.css">
@@ -9,26 +10,46 @@
   </head>
   <body>
     
-<nav class="navbar">
-    {% if session.authenticated %}
-  <ul>
-    <li><a href="/">{{ _('Current Experiment') }}</a></li>
-    <li><a href="/queue">{{ _('Queue') }}</a></li>
-    <li><a href="/experiments">{{ _('Experiment History') }}</a></li>
-  </ul>
-  <ul class="navbar-right">
-      <li><a href="/user">{{ _('User') }}</a></li>
-      <li><a href="/logout">{{ _('Logout') }}</a></li>
-  </ul>
-  </ul>
-  {% else %}
-  <ul>
-    <li><a href="/home">{{ _('About') }}</a></li>
-    <li><a href="/login">{{ _('Login') }}</a></li>
-    <li><a href="/register">{{ _('Register') }}</a></li>
-  </ul>
-  {% endif %}
-</nav>
+    <nav class="navbar">
+      {% if session.authenticated %}
+      <ul>
+        <li><a href="/">{{ _('Current Experiment') }}</a></li>
+        <li><a href="/queue">{{ _('Queue') }}</a></li>
+        <li><a href="/experiments">{{ _('Experiment History') }}</a></li>
+      </ul>
+      <ul class="navbar-right">
+        <li><a href="/user">{{ _('User') }}</a></li>
+        <li><a href="/logout">{{ _('Logout') }}</a></li>
+        <li>
+          {% include "language_switcher.html" %}
+        </li>
+      </ul>
+    </ul>
+    {% else %}
+    <ul>
+      <li><a href="/home">{{ _('About') }}</a></li>
+      <li><a href="/login">{{ _('Login') }}</a></li>
+      <li><a href="/register">{{ _('Register') }}</a></li>
+    </ul>
+    <ul class="navbar-right">
+      <li>
+        {% include "language_switcher.html" %}
+      </li>
+    </ul>
+    {% endif %}
+  
+  <!-- 🌐 Language Switcher -->
+  <!-- <div class="language-switcher"> -->
+    <!-- <a href="?lang=en" title="English">
+      <img src="/static/language_icons/icon_en.png" alt="English">
+    </a>
+    <a href="?lang=cs" title="Česky">
+      <img src="/static/language_icons/icon_cs.png" alt="Česky">
+    </a>
+  </div> -->
+  
 
+</nav>
+  
 </body>
 </html>
