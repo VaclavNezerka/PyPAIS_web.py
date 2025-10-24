@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-10-21 20:19+0200\n"
+"POT-Creation-Date: 2025-10-24 16:09+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,99 +17,99 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: app.py:330
+#: app.py:331
 msgid "You do not have permission to access this data."
 msgstr ""
 
-#: app.py:340
+#: app.py:341
 msgid "You must be logged in to access this page."
 msgstr ""
 
-#: app.py:377
+#: app.py:378
 msgid "Change email"
 msgstr ""
 
-#: app.py:390
+#: app.py:391
 msgid "Email changed successfully."
 msgstr ""
 
-#: app.py:401 app.py:419
+#: app.py:402 app.py:420
 msgid "Change personal information"
 msgstr ""
 
-#: app.py:416
+#: app.py:417
 msgid "Personal information updated successfully."
 msgstr ""
 
-#: app.py:424 templates/user.html:37
+#: app.py:425 templates/user.html:37
 msgid "Change password"
 msgstr ""
 
-#: app.py:437
+#: app.py:438
 msgid "Password changed successfully."
 msgstr ""
 
-#: app.py:440
+#: app.py:441
 msgid "The old password is incorrect."
 msgstr ""
 
-#: app.py:485 app.py:502 app.py:505 forms.py:77 templates/navbar.html:27
+#: app.py:486 app.py:503 app.py:506 forms.py:77 templates/navbar.html:31
 msgid "Login"
 msgstr ""
 
-#: app.py:501 forms.py:50
+#: app.py:502 forms.py:50
 msgid "Invalid username/email or password."
 msgstr ""
 
-#: app.py:529
+#: app.py:530
 msgid "id"
 msgstr ""
 
-#: app.py:529
+#: app.py:530
 msgid "date"
 msgstr ""
 
-#: app.py:529
+#: app.py:530
 msgid "state"
 msgstr ""
 
-#: app.py:529
+#: app.py:530
 msgid "actions"
 msgstr ""
 
-#: app.py:530 templates/experiments.html:60 templates/queue.html:80
+#: app.py:531 templates/experiments.html:60 templates/queue.html:80
 msgid "Edit"
 msgstr ""
 
-#: app.py:530
+#: app.py:531
 msgid "Cancel"
 msgstr ""
 
-#: app.py:557
+#: app.py:558
 msgid "Experiment Queue"
 msgstr ""
 
-#: app.py:595 templates/experiments.html:12 templates/queue.html:12
+#: app.py:596 templates/experiments.html:12 templates/queue.html:12
 msgid "Experiment Records"
 msgstr ""
 
-#: app.py:616 app.py:642 app.py:645
+#: app.py:617 app.py:643 app.py:646
 msgid "Register new user"
 msgstr ""
 
-#: app.py:638
+#: app.py:639
 msgid "Registration successful. Please log in."
 msgstr ""
 
-#: app.py:641
+#: app.py:642
 msgid "Database error:"
 msgstr ""
 
-#: app.py:644
+#: app.py:645
 msgid "Form validation failed. Please check your input."
 msgstr ""
 
-#: app.py:828 app.py:851 app.py:889
+#: app.py:829 app.py:852 app.py:890
 msgid "No active experiment found."
 msgstr ""
 
@@ -163,6 +163,10 @@ msgstr ""
 msgid "Confirm password"
 msgstr ""
 
+#: forms.py:71 forms.py:82
+msgid "Passwords must match."
+msgstr ""
+
 #: forms.py:72 forms.py:83 forms.py:90 forms.py:103
 msgid "Submit"
 msgstr ""
@@ -183,10 +187,6 @@ msgstr ""
 msgid "Confirm new password"
 msgstr ""
 
-#: forms.py:82
-msgid "Passwords must match."
-msgstr ""
-
 #: forms.py:95
 msgid "At least one field must be filled in."
 msgstr ""
@@ -203,8 +203,30 @@ msgstr ""
 msgid "Page not found"
 msgstr ""
 
+#: templates/base.html:37
+msgid "2025 Václav Nežerka, David Šilhánek."
+msgstr ""
+
+#: templates/base.html:38
+msgid ""
+"All rights reserved excluding icons which are where created by artists on"
+" the"
+msgstr ""
+
 #: templates/base.html:40
-msgid "2025 Václav Nežerka, David Šilhánek. All rights reserved."
+msgid "platform, namely:"
+msgstr ""
+
+#: templates/base.html:47
+msgid "Development supported by"
+msgstr ""
+
+#: templates/base.html:49
+msgid "Technology Agency of the Czech Republic"
+msgstr ""
+
+#: templates/base.html:49
+msgid "project CL02000145."
 msgstr ""
 
 #: templates/experiments.html:22
@@ -243,7 +265,7 @@ msgstr ""
 msgid "Ascending"
 msgstr ""
 
-#: templates/experiments.html:44
+#: templates/experiments.html:44 templates/queue.html:64
 msgid "Sort by:"
 msgstr ""
 
@@ -275,95 +297,102 @@ msgstr ""
 msgid "Image Processing with NN"
 msgstr ""
 
-#: templates/index.html:23 templates/navbar.html:15
+#: templates/index.html:24 templates/navbar.html:16
 msgid "Current Experiment"
 msgstr ""
 
-#: templates/index.html:30
+#: templates/index.html:31
 msgid "Upload Image"
 msgstr ""
 
-#: templates/index.html:35
+#: templates/index.html:34
+msgid ""
+"By uploading an image, you agree that it may be stored in the application"
+" repository and potentially used by the authors for training future "
+"models."
+msgstr ""
+
+#: templates/index.html:39
 msgid "Basic Information"
 msgstr ""
 
-#: templates/index.html:42
+#: templates/index.html:47
 msgid "Information (max. 1024 characters):"
 msgstr ""
 
-#: templates/index.html:43
+#: templates/index.html:53
 msgid "Information about the mixture."
 msgstr ""
 
-#: templates/index.html:47 templates/index.html:48
+#: templates/index.html:61 templates/index.html:67
 msgid "Expert Guess"
 msgstr ""
 
-#: templates/index.html:54
+#: templates/index.html:74
 msgid "Automatic Phase Detection"
 msgstr ""
 
-#: templates/index.html:58
+#: templates/index.html:77
 msgid "Working..."
 msgstr ""
 
-#: templates/index.html:64
+#: templates/index.html:84
 msgid "MODEL"
-msgstr ""
-
-#: templates/index.html:80
-msgid "Original Image"
-msgstr ""
-
-#: templates/index.html:82
-msgid "Grayscale Image"
-msgstr ""
-
-#: templates/index.html:87
-msgid "Display Asphalt"
-msgstr ""
-
-#: templates/index.html:88
-msgid "Display Aggregate"
-msgstr ""
-
-#: templates/index.html:89
-msgid "Display Background"
 msgstr ""
 
 #: templates/index.html:94
 msgid "Mask Opacity:"
 msgstr ""
 
-#: templates/index.html:244
+#: templates/index.html:106
+msgid "Display Asphalt"
+msgstr ""
+
+#: templates/index.html:112
+msgid "Display Aggregate"
+msgstr ""
+
+#: templates/index.html:118
+msgid "Display Background"
+msgstr ""
+
+#: templates/index.html:126
+msgid "Original Image"
+msgstr ""
+
+#: templates/index.html:128
+msgid "Grayscale Image"
+msgstr ""
+
+#: templates/index.html:147
 msgid "Evaluate"
 msgstr ""
 
-#: templates/navbar.html:8
+#: templates/navbar.html:9
 msgid "Navbar"
 msgstr ""
 
-#: templates/navbar.html:16
+#: templates/navbar.html:17
 msgid "Queue"
 msgstr ""
 
-#: templates/navbar.html:17
+#: templates/navbar.html:18
 msgid "Experiment History"
 msgstr ""
 
-#: templates/navbar.html:20
+#: templates/navbar.html:21
 msgid "User"
 msgstr ""
 
-#: templates/navbar.html:21
+#: templates/navbar.html:22
 msgid "Logout"
 msgstr ""
 
-#: templates/navbar.html:26
+#: templates/navbar.html:30
 msgid "About"
 msgstr ""
 
-#: templates/navbar.html:28
+#: templates/navbar.html:32
 msgid "Register"
 msgstr ""
 

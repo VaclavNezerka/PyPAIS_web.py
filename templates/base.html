@@ -34,7 +34,27 @@
 
     <footer class="footer">
       <div class="container">
-            <p>&copy; {{ _('2025 Václav Nežerka, David Šilhánek. All rights reserved.') }}</p>
+            <p>&copy; {{ _('2025 Václav Nežerka, David Šilhánek.') }}
+            </p>
+            <br>
+            <p>{{ _('All rights reserved excluding icons which are where created by artists on the') }} 
+              <a class="footer-link" href="https://www.flaticon.com/" title="Flaticon">Flaticon</a> 
+              {{ _('platform, namely:') }}
+            </p>
+            <p>
+              <a class="footer-link" href="https://www.flaticon.com/free-icons/user" title="user icons">User icons - manshagraphics,</a>
+              <a class="footer-link" href="https://www.flaticon.com/free-icons/animals" title="animals icons">Animals icons - Freepik,</a>
+              <a class="footer-link" href="https://www.flaticon.com/free-icons/uk-flag" title="uk flag icons">Flag icons - Freepik</a>
+            </p>
+            <br>
+            <p>
+              {{ _('Development supported by') }}
+              <a class="footer-link" href="https://tacr.gov.cz/en/technology-agency-of-the-czech-republic/">
+                {{ _('Technology Agency of the Czech Republic') }}</a>, {{ _('project CL02000145.') }}<br>
+              </p>
+         
+              <img src="/static/CVUT_logo_white.png" alt="CVUT Logo" class="footer-logo">
+              <img src="/static/TACR_logo_white.png" alt="TACR Logo" class="footer-logo">
       </div>
     </footer>
   </body>

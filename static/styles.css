@@ -1,8 +1,10 @@
 :root{
     --myPaleBlue:  #4ecdc4; 
     --myTopicColor:  #32847e; /* #ff6b6b; */
+    --myDarkDarkGray: #2b2b2b;
     --myDarkGray: #333;
     --myPaleGray: #556270 ; /*  #556270  // #555 */
+    --myPalePaleGray: #6b7280 ; /*  #556270  // #555 */
     --myPaleRed: #fd4646;
     --myDarkRed: #b00d28;
     --myPaleGreen: #0db077;
@@ -27,7 +29,8 @@ body {
     padding: 0;
     text-align: center;
     /* background-color: #f4f4f4; */
-    background-color: white;
+    /* background-color: white; */
+    background-color: var(--myWhite);
     width: 100%;
     height: 100%;
     overflow-x: hidden;
@@ -256,7 +259,7 @@ input[type="text"] {
     color: white;
     justify-content: center;
     align-items: center;
-    font-size: 16px;
+    font-size: 18px;
     background: linear-gradient(270deg, var(--myPaleRed), var(--myPaleGray), var(--myPaleBlue));
     background-size: 400% 400%;
     animation: gradientAnimation 8s ease infinite;
@@ -286,6 +289,9 @@ input[type="text"] {
 }
 
 
+.upper {
+  text-transform: capitalize;
+}
 
 .colorbar {
     /* background: linear-gradient(to right, var(--myPaleGray), var(--myPaleGray)); */
@@ -293,14 +299,17 @@ input[type="text"] {
     /* background: black; */
     background: var(--myDarkGray);
     /* background: var(--myTopicColor); */
+        /* background: linear-gradient(to right, var(--myDarkGray), var(--myPaleGray));    */
+    /* background: var(--myTopicColor); */
     color: white;
     text-align: center;
     padding-top: 1px;
     padding-bottom: 0.5%;
     margin-bottom: 1%;
 }
+
 .colorbar2 {
-    background: linear-gradient(to right, var(--myPaleGray), var(--myPaleGray));
+    background: linear-gradient(to right, var(--myTopicColor), var(--myPaleBlue));
     /* background: var(--myTopicColor); */
     color: white;
     text-align: center;
@@ -310,7 +319,10 @@ input[type="text"] {
 }
 
 nav {
-    background: linear-gradient(to right, var(--myDarkGray), var(--myPaleGray));   
+    background: linear-gradient(to right, var(--myDarkGray), var(--myDarkDarkGray));   
+    /* background: linear-gradient(to right, black, var(--myDarkGray));    */
+    /* background: linear-gradient(to right, var(--myTopicColor), var(--myPaleBlue)); */
+    background: var(--myDarkDarkGray);
     /* background: linear-gradient(to right, var(--myDarkGray), var(--myPaleBlue)); */
     color: white;
     /* overflow: hidden; */
@@ -336,9 +348,9 @@ nav ul li a {
 }
 
 nav ul li a:hover {
-    background-color: var(--myPaleGray);
+    /* background-color: var(--myPaleGray); */
     transition: 0.15s;
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
 
 /* @media screen and (max-width: 80%) {
@@ -706,7 +718,7 @@ input[type="text"]:focus, input[type="number"]:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #1e1e1e;
+    /* background-color: #1e1e1e; */
     padding: 0.6rem 1.5rem;
     color: white;
     font-family: sans-serif;
@@ -840,4 +852,38 @@ input[type="text"]:focus, input[type="number"]:focus {
     .navbar {
         flex-wrap: wrap;
     }
+}
+
+.footer-link {
+    color: white;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    font-style: italic;
+}
+
+footer .container p {
+    margin: 5px 0;
+}
+
+.footer-link:hover {
+    color: var(--myBlue);
+}
+
+.text-gray-500 {
+    color: var(--myPalePaleGray); /* Tailwind's gray-500 */
+    font-size: 0.875rem; /* Tailwind's text-sm */
+    font-style: italic;
+}
+
+#imageType {
+    display: none;
+}
+
+
+.footer-logo {
+    height: 128px;
+    vertical-align: middle;
+    margin: 24px;
+    margin-left: 30px;
+    margin-right: 30px;
 }

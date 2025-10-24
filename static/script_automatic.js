@@ -321,56 +321,6 @@ function replaceKeepCase(str, search, replace) {
     });
 }
 
-async function switchLanguage(lang) {
-    document.getElementById('current-lang-icon').src = '/static/language_icons/icon_' + lang + '.png';
-    await fetch('/switch-language/' + lang, { method: 'POST' });
-}
-
-// document.getElementById('languageSelect').addEventListener('change', function() {
-    //     const urlParams = new URLSearchParams(window.location.search);
-    //     let lang = urlParams.get('lang') || document.getElementById('languageSelect').value;
-    //     // if lang was provided via ?lang=..., reflect it in the select control
-    //     if (urlParams.has('lang')) {
-        //         const sel = document.getElementById('languageSelect');
-        //         if (sel) sel.value = lang;
-        //     }
-        
-        
-        //     switchLanguage(lang);
-        //     document.getElementById('current-lang-icon').src = '/static/language_icons/icon_' + lang + '.png';
-        // });
-        
-        
-        document.addEventListener("DOMContentLoaded", () => {
-            const langMenu = document.querySelector(".lang-menu");
-            const currentIcon = document.getElementById("current-lang-icon");
-            
-            document.querySelectorAll(".lang-menu a").forEach(link => {
-                
-                link.addEventListener("click", async (e) => {
-                    // e.preventDefault();
-                    const langBtn = document.getElementById("current-lang-btn");
-                    const selectedLang = link.id;
-                    // const selectedIcon = '/static/language_icons/icon_' + selectedLang + '.png';
-                    const currentLang = langBtn.value;
-                    langBtn.value = selectedLang;
-                    console.log(`Selected language: ${selectedLang}, Current language: ${currentLang}`);
-                    // console.log(`Selected icon: ${selectedIcon}`);
-                    // If same language, just close menu
-                    // if (selectedLang === currentLang) {
-                        //     langMenu.classList.remove("show");
-                        //     return;
-                        // }
-                        currentIcon.src = '/static/language_icons/icon_' + selectedLang + '.png';
-                        await switchLanguage(selectedLang);
-                        location.reload();
-        });
-    });
-
-});
-
-
-
 
 document.getElementById('info').addEventListener('change', function() {
     let value = this.value;

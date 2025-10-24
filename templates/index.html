@@ -8,6 +8,7 @@
     <head>
         <title>{{ _('Image Processing with NN') }}</title>
         <link rel="stylesheet" href="/static/styles.css">
+        <link rel="stylesheet" href="/static/new_styles.css">
         <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
     
     </head> 
@@ -29,74 +30,103 @@
             <input type="file" id="fileInput" accept="image/*" class="custom-file-input"></input>
             <label for="fileInput" class="custom-file-label">{{ _('Upload Image') }}</label>
         </div>
+        <p class="text-gray-500">
+            {{ _('By uploading an image, you agree that it may be stored in the application repository and potentially used by the authors for training future models.') }}
+        </p>
     </div>
 
-    <div id="row", class = "colorbar">
+    <div id="row", class = "colorbar2">
         <h3>{{ _('Basic Information') }}</h3>
     </div>
 
-    <div class="row">
-        <!-- Row: Information -->
-        <!-- max  -->
-        <div  class="column">
-            <p>{{ _('Information (max. 1024 characters):') }}</p>
-            <input type="text" id="info" placeholder="{{ _('Information about the mixture.') }}" maxlength="1024"/>
+
+    <div class="row modern-row">
+        <!-- Information -->
+        <div class="column modern-column">
+            <label for="info" class="modern-label upper">
+            {{ _('Information (max. 1024 characters):') }}
+            </label>
+            <input
+            type="text"
+            id="info"
+            class="modern-input enhanced-input"
+            placeholder="{{ _('Information about the mixture.') }}"
+            maxlength="1024"
+            />
         </div>
-        <!-- Row: Expert Guess -->
-        <div class="column">
-            <p>{{ _('Expert Guess') }} [%]:</p>
-            <input type="number" id="expertGuess" placeholder="{{ _('Expert Guess') }}"/>
+
+        <!-- Expert Guess -->
+        <div class="column modern-column">
+            <label for="expertGuess" class="modern-label upper">
+            {{ _('Expert Guess') }} [%]:
+            </label>
+            <input
+            type="number"
+            id="expertGuess"
+            class="modern-input enhanced-input"
+            placeholder="{{ _('Expert Guess') }}"
+            />
         </div>
-   </div>
+    </div>
    
    
-   <div id="row", class = "colorbar">
+   <div id="row", class = "colorbar2">
        <h3>{{ _('Automatic Phase Detection') }}</h3>
     </div>
-        <div class="loading" id="workingMessage">
-        <!-- <div class="loading" id="workingMessage" style="display:none;"> -->
-            {{ _('Working...') }}
-        </div>
+    <div class="loading" id="workingMessage">
+        {{ _('Working...') }}
+    </div>
         
-        <div class="row">
-            <!-- Add a droplist allowing the user to select ORIGINAL IMAGE, original with no bg, and BW -->
-            <div class="column">
-                <h3>{{ _('MODEL') }}</h3>
-                <div class="column">
-                    <select id="model" >
-                        {% for model in models %}
-                            <option value="{{ model }}">{{ model }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+
+        <div class="row modern-row">
+            <div class="column modern-column">
+                <h3 for="info" class="modern-label upper">
+                {{ _('MODEL') }}
+                </h3>
+                <select id="model" >
+                    {% for model in models %}
+                        <option value="{{ model }}">{{ model }}</option>
+                    {% endfor %}
+                </select>
             </div>
-        </div>
-        
-        <div class="row">
-            <!-- Add a droplist allowing the user to select ORIGINAL IMAGE, original with no bg, and BW -->
-            <div class="column">
-                <div class="column">
-                    <select id="imageType" >
-                        <option value="original">("shift + c") {{ _('Original Image') }}</option>
-                        <!-- <option value="original_no_bg">("c") Removed Background</option> -->
-                        <option value="bw">("shift + c") {{ _('Grayscale Image') }}</option>
-                    </select>
-                </div>
-            </div>
-            <div class="column">
-                <input type="checkbox" id="redOverlayCheckbox"  >{{ _('Display Asphalt') }} ("shift + a")</input>
-                <input type="checkbox" id="aggregateOverlayCheckbox"  >{{ _('Display Aggregate') }} ("shift + s")</input>
-                <input type="checkbox" id="backgroundOverlayCheckbox"  >{{ _('Display Background') }} ("shift + d")</input>
-            </div>
-            <div class="column">
-                <div class="slider-container">
-                    <div class="slider-group">
-                        {{ _('Mask Opacity:') }} <input type="range" id="opacitySlider" min="0" max="100" value="50" class = "slider">
+            <div class="column modern-column">
+                <h3 for="info" class="modern-label upper">
+                {{ _('Mask Opacity:') }} 
+                </h3>
+                <div class="slider-group">
+                        <input type="range" id="opacitySlider" min="0" max="100" value="50" class = "slider">
                         <input type="text" id="opacityValue" value="50" size="2">
-                    </div>    
+                </div>    
+            </div>
+            <div class="modern-column column">
+                <div class="overlay-options">
+                <label class="overlay-label">
+                    <input type="checkbox" id="redOverlayCheckbox">
+                    <span class="overlay-custom"></span>
+                    {{ _('Display Asphalt') }} <span class="shortcut">(Shift + A)</span>
+                </label>
+                
+                <label class="overlay-label">
+                    <input type="checkbox" id="aggregateOverlayCheckbox">
+                    <span class="overlay-custom"></span>
+                    {{ _('Display Aggregate') }} <span class="shortcut">(Shift + S)</span>
+                </label>
+                
+                <label class="overlay-label">
+                    <input type="checkbox" id="backgroundOverlayCheckbox">
+                    <span class="overlay-custom"></span>
+                    {{ _('Display Background') }} <span class="shortcut">(Shift + D)</span>
+                </label>
                 </div>
             </div>
+
         </div>
+        
+        <select id="imageType">
+            <option value="original">("shift + c") {{ _('Original Image') }}</option>
+            <!-- <option value="original_no_bg">("c") Removed Background</option> -->
+            <option value="bw">("shift + c") {{ _('Grayscale Image') }}</option>
+        </select>
 
     <!-- Second Row: Intensity Image and Controls -->
         <div class="row">
@@ -111,133 +141,6 @@
             </div>
         </div>
 
-
-    <!-- <div id="row", class = "colorbar">
-        <h3> Automatic Thresholding - deprecated </h3>
-    </div> -->
-
-    <!-- Add a droplist allowing the user to select ORIGINAL IMAGE, original with no bg, and BW -->
-    <!-- 
-                <div class="row">
-                <div class="column">
-                <div class="column">
-                    <select id="imageType" >
-                        <option value="original">("c") Original Image</option>
-                        <option value="original_no_bg">("c") Removed Background</option>
-                        <option value="bw">("c") Grayscale Image</option>
-                    </select>
-                </div>
-                <div class="column">
-                    <input type="checkbox" id="sharpnessCheckbox" >Display blur ("b")</input>
-                </div>
-                <div class="column">
-                    <input type="checkbox" id="redOverlayCheckbox"  >Display Asphalt ("a")</input>
-                </div>
-            </div>
-
-            <div class="column">
-                <div class="slider-container">
-                    <div class="slider-group">
-                        Image blurring: <input type="range" id="blurSlider" min="0" max="50" value="0" class = "slider">
-                        <input type="text" id="blurValue" value="0" size="2">
-                    </div>    
-                </div>
-            </div>
-        </div> -->
-
-    <!-- Second Row: Intensity Image and Controls -->
-        <!-- <div class="row">
-            <div class="column">
-                <img id="defaultImage" src="/static/logo.png" alt="Default Image">
-                    <div class="img-magnifier-container">
-                        <canvas id="imageCanvas" ></canvas>
-                    </div>
-            </div>
-            <div class="column">
-                <canvas id="histogramCanvas"></canvas>
-                <div class="slider-container">
-                    Brightness_0:<br> &nbsp;
-                    <div class="slider-group">
-                        Min: <input type="range" id="minThresholdSlider0" min="0" max="255" value="0" class = "slider">
-                        <input type="text" id="minThresholdValue0" value="0" size="3">
-                    </div>
-                    <div class="slider-group">
-                        Max: <input type="range" id="maxThresholdSlider0" min="0" max="255" value="120" class = "slider">
-                        <input type="text" id="maxThresholdValue0" value="120" size="3">
-                    </div>
-                </div>
-                <div class="slider-container">
-                    Brightness_1:<br> &nbsp;
-                    <div class="slider-group">
-                        Min: <input type="range" id="minThresholdSlider1" min="0" max="255" value="220" class = "slider">
-                        <input type="text" id="minThresholdValue1" value="220" size="3">
-                    </div>
-                    <div class="slider-group">
-                        Max: <input type="range" id="maxThresholdSlider1" min="0" max="255" value="255" class = "slider">
-                        <input type="text" id="maxThresholdValue1" value="255" size="3">
-                    </div>
-                </div>
-            </div>
-        </div> -->
-
-    <!-- Third Row: Entropy Image and Controls -->
-    <!-- <div class="row">
-        <div class="column">
-            <canvas id="entropyCanvas"></canvas>
-        </div>
-        <div class="column">
-            <canvas id="entropyHistogramCanvas"></canvas>
-            <div class="slider-container">
-                Texture roughness:<br> &nbsp;
-                <div class="slider-group">
-                    Min: <input type="range" id="entropyMinThresholdSlider" min="0" max="255" value="80" class = "slider">
-                    <input type="text" id="entropyMinThresholdValue" value="80" size="3">
-                </div>
-                <div class="slider-group">
-                    Max: <input type="range" id="entropyMaxThresholdSlider" min="0" max="255" value="160" class = "slider">
-                    <input type="text" id="entropyMaxThresholdValue" value="160" size="3">
-                </div>
-            </div>
-        </div>
-    </div>  -->
-    
-        <!--     
-        <div id="row", class = "colorbar">
-            <h3> Manual Corrections</h3>
-        </div>
-        
-        
-        <div class="container">
-        -->
-            <!-- Annotation Tool Buttons -->
-        <!--     
-        <div id="row" class="row">
-            <div class="column">
-                <div class="annotation-tools">
-                    <button id="polygon-btn" class="tool-btn active">Polygon</button>
-                    <button id="rectangle-btn" class="tool-btn">Rectangle</button>
-                    <button id="ellipse-btn" class="tool-btn">Ellipse</button>
-                </div>
-            </div>
-            <div class="column">
-                <div class="controls">
-                    <button id="bgButton" class="tool-btn">Background</button>
-                    <button id="fgButton" class="tool-btn">aggregate</button>
-                    <button id="asphaltButton" class="tool-btn">Asphalt</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container">
-        <div id="dragon_row" class="row">
-            <div class="viewer_box">
-                <div id="viewer"></div>
-                <div id="viewer_konva"></div>
-            </div>
-        </div>
-    </div>
-     -->
 
     <div class="container">
         <div class="row">
