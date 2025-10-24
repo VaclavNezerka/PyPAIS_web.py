@@ -18,8 +18,12 @@
         <li><a href="/experiments">{{ _('Experiment History') }}</a></li>
       </ul>
       <ul class="navbar-right">
-        <li><a href="/user">{{ _('User') }}</a></li>
-        <li><a href="/logout">{{ _('Logout') }}</a></li>
+        <!-- <li><a href="/user">{{ _('User') }}</a></li> -->
+        <!-- <li><a href="/user">{{ _('User') }}</a></li> -->
+        <li>
+          {% include "user_nav_element.html" %}
+        </li>
+        <!-- <li><a href="/logout">{{ _('Logout') }}</a></li> -->
         <li>
           {% include "language_switcher.html" %}
         </li>

@@ -492,6 +492,7 @@ def login():
                 if authenticated:
                     session['authenticated'] = True
                     session['user_id'] = user_id
+                    session['user_email'] = form.usernameXe_mail.data
                     # TODO - consider removal - old approach - unused
                     # TODO - currently the ts is created dynamically when needed, so this may be redundant
                     # create a new user temporary storage for the user

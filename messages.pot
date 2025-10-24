@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-10-24 16:09+0200\n"
+"POT-Creation-Date: 2025-10-24 17:41+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -53,63 +53,63 @@ msgstr ""
 msgid "The old password is incorrect."
 msgstr ""
 
-#: app.py:486 app.py:503 app.py:506 forms.py:77 templates/navbar.html:31
+#: app.py:486 app.py:504 app.py:507 forms.py:77 templates/navbar.html:35
 msgid "Login"
 msgstr ""
 
-#: app.py:502 forms.py:50
+#: app.py:503 forms.py:50
 msgid "Invalid username/email or password."
 msgstr ""
 
-#: app.py:530
+#: app.py:531
 msgid "id"
 msgstr ""
 
-#: app.py:530
+#: app.py:531
 msgid "date"
 msgstr ""
 
-#: app.py:530
+#: app.py:531
 msgid "state"
 msgstr ""
 
-#: app.py:530
+#: app.py:531
 msgid "actions"
 msgstr ""
 
-#: app.py:531 templates/experiments.html:60 templates/queue.html:80
+#: app.py:532 templates/experiments.html:60 templates/queue.html:80
 msgid "Edit"
 msgstr ""
 
-#: app.py:531
+#: app.py:532
 msgid "Cancel"
 msgstr ""
 
-#: app.py:558
+#: app.py:559
 msgid "Experiment Queue"
 msgstr ""
 
-#: app.py:596 templates/experiments.html:12 templates/queue.html:12
+#: app.py:597 templates/experiments.html:12 templates/queue.html:12
 msgid "Experiment Records"
 msgstr ""
 
-#: app.py:617 app.py:643 app.py:646
+#: app.py:618 app.py:644 app.py:647
 msgid "Register new user"
 msgstr ""
 
-#: app.py:639
+#: app.py:640
 msgid "Registration successful. Please log in."
 msgstr ""
 
-#: app.py:642
+#: app.py:643
 msgid "Database error:"
 msgstr ""
 
-#: app.py:645
+#: app.py:646
 msgid "Form validation failed. Please check your input."
 msgstr ""
 
-#: app.py:829 app.py:852 app.py:890
+#: app.py:830 app.py:853 app.py:891
 msgid "No active experiment found."
 msgstr ""
 
@@ -207,25 +207,25 @@ msgstr ""
 msgid "2025 Václav Nežerka, David Šilhánek."
 msgstr ""
 
-#: templates/base.html:38
+#: templates/base.html:40
 msgid ""
 "All rights reserved excluding icons which are where created by artists on"
 " the"
 msgstr ""
 
-#: templates/base.html:40
+#: templates/base.html:42
 msgid "platform, namely:"
 msgstr ""
 
-#: templates/base.html:47
+#: templates/base.html:51
 msgid "Development supported by"
 msgstr ""
 
-#: templates/base.html:49
+#: templates/base.html:53
 msgid "Technology Agency of the Czech Republic"
 msgstr ""
 
-#: templates/base.html:49
+#: templates/base.html:53
 msgid "project CL02000145."
 msgstr ""
 
@@ -380,19 +380,19 @@ msgstr ""
 msgid "Experiment History"
 msgstr ""
 
-#: templates/navbar.html:21
+#: templates/navbar.html:21 templates/navbar.html:22
 msgid "User"
 msgstr ""
 
-#: templates/navbar.html:22
+#: templates/navbar.html:26 templates/user_nav_element.html:10
 msgid "Logout"
 msgstr ""
 
-#: templates/navbar.html:30
+#: templates/navbar.html:34
 msgid "About"
 msgstr ""
 
-#: templates/navbar.html:32
+#: templates/navbar.html:36
 msgid "Register"
 msgstr ""
 
@@ -446,5 +446,9 @@ msgstr ""
 
 #: templates/user.html:34
 msgid "Change e-mail address"
+msgstr ""
+
+#: templates/user_nav_element.html:9
+msgid "User Profile"
 msgstr ""
 

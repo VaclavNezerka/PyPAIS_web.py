@@ -751,15 +751,15 @@ input[type="text"]:focus, input[type="number"]:focus {
 } */
 
 /* 🌐 Language Switcher */
-.language-switcher {
+/* .language-switcher {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
 .language-switcher a img {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     border: 2px solid transparent;
     transition: transform 0.2s ease, border-color 0.2s ease;
@@ -768,21 +768,21 @@ input[type="text"]:focus, input[type="number"]:focus {
 
 .language-switcher a img:hover {
     transform: scale(1.1);
-    /* border-color: #ffb400; */
+    /* border-color: #ffb400; 
     border-color: var(--myPaleGreen);
-}
+} */
 
 
 
 
 /* 🌐 Language Dropdown */
-.language-dropdown {
+.nav-dropdown {
   position: relative;
   display: inline-block;
   z-index: 1000; /* ensures the dropdown appears on top */
 }
 /* Show dropdown on hover (desktop) */
-.language-dropdown:hover .lang-menu {
+.nav-dropdown:hover .lang-menu , .nav-dropdown:hover .user-menu {
   display: block;
 }
 
@@ -803,8 +803,8 @@ input[type="text"]:focus, input[type="number"]:focus {
 
 
 .lang-btn img.current-lang {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
 }
 
@@ -813,6 +813,7 @@ input[type="text"]:focus, input[type="number"]:focus {
   opacity: 0.8;
 }
 
+.user-menu, 
 .lang-menu {
   display: none;
   position: absolute;
@@ -826,7 +827,7 @@ input[type="text"]:focus, input[type="number"]:focus {
   overflow: visible;
 }
 
-.lang-menu a {
+.lang-menu a, .user-menu a {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -837,14 +838,15 @@ input[type="text"]:focus, input[type="number"]:focus {
   transition: background 0.2s ease;
 }
 
-.lang-menu a img {
+.lang-menu a img, .user-menu a img {
   width: 22px;
   height: 22px;
   border-radius: 50%;
 }
 
-.lang-menu a:hover {
-  background: rgba(255, 180, 0, 0.2);
+.lang-menu a:hover, .user-menu a:hover {
+  /* background: rgba(192, 188, 178, 0.2); */
+  background: var(--myTopicColor);
 }
 
 /* Responsive adjustment */
@@ -886,4 +888,13 @@ footer .container p {
     margin: 24px;
     margin-left: 30px;
     margin-right: 30px;
+}
+
+/* Email below avatar */
+.user-email {
+  font-size: 0.8rem;
+  /* color: #ddd; */
+  color: var(--myPalePaleGray);
+  text-align: center;
+  line-height: 1.1;
 }

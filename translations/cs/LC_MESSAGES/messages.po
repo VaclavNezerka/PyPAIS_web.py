@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-10-24 16:09+0200\n"
+"POT-Creation-Date: 2025-10-24 17:41+0200\n"
 "PO-Revision-Date: 2025-10-21 18:40+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: cs\n"
@@ -54,63 +54,63 @@ msgstr "Heslo úspěšně aktualizováno."
 msgid "The old password is incorrect."
 msgstr "Zadané staré heslo je nesprávné."
 
-#: app.py:486 app.py:503 app.py:506 forms.py:77 templates/navbar.html:31
+#: app.py:486 app.py:504 app.py:507 forms.py:77 templates/navbar.html:35
 msgid "Login"
 msgstr "Přihlásit se"
 
-#: app.py:502 forms.py:50
+#: app.py:503 forms.py:50
 msgid "Invalid username/email or password."
 msgstr "Chybné přihlašovací údaje."
 
-#: app.py:530
+#: app.py:531
 msgid "id"
 msgstr "ID"
 
-#: app.py:530
+#: app.py:531
 msgid "date"
 msgstr "Datum"
 
-#: app.py:530
+#: app.py:531
 msgid "state"
 msgstr "Stav"
 
-#: app.py:530
+#: app.py:531
 msgid "actions"
 msgstr "Akce"
 
-#: app.py:531 templates/experiments.html:60 templates/queue.html:80
+#: app.py:532 templates/experiments.html:60 templates/queue.html:80
 msgid "Edit"
 msgstr "Upravit"
 
-#: app.py:531
+#: app.py:532
 msgid "Cancel"
 msgstr "Zrušit"
 
-#: app.py:558
+#: app.py:559
 msgid "Experiment Queue"
 msgstr "Fronta experimentů"
 
-#: app.py:596 templates/experiments.html:12 templates/queue.html:12
+#: app.py:597 templates/experiments.html:12 templates/queue.html:12
 msgid "Experiment Records"
 msgstr "Záznamy experimentů"
 
-#: app.py:617 app.py:643 app.py:646
+#: app.py:618 app.py:644 app.py:647
 msgid "Register new user"
 msgstr "Registrace nového uživatele"
 
-#: app.py:639
+#: app.py:640
 msgid "Registration successful. Please log in."
 msgstr "Registrace proběhla úspěšně, prosím přihlaste se."
 
-#: app.py:642
+#: app.py:643
 msgid "Database error:"
 msgstr "Chyba databáze:"
 
-#: app.py:645
+#: app.py:646
 msgid "Form validation failed. Please check your input."
 msgstr "Selhala validace formuláře, prosím, zkontrolujte zadané údaje."
 
-#: app.py:829 app.py:852 app.py:890
+#: app.py:830 app.py:853 app.py:891
 msgid "No active experiment found."
 msgstr "Žádný aktivní experiment nenalezen."
 
@@ -212,7 +212,7 @@ msgstr "Stránka nebyla nalezena"
 msgid "2025 Václav Nežerka, David Šilhánek."
 msgstr "2025 Václav Nežerka, David Šilhánek."
 
-#: templates/base.html:38
+#: templates/base.html:40
 msgid ""
 "All rights reserved excluding icons which are where created by artists on"
 " the"
@@ -220,19 +220,19 @@ msgstr ""
 "Všechna práva vyhrezena vyjma práv k inkonám vytvořených umělci na "
 "platformě"
 
-#: templates/base.html:40
+#: templates/base.html:42
 msgid "platform, namely:"
 msgstr "jmenovitě:"
 
-#: templates/base.html:47
+#: templates/base.html:51
 msgid "Development supported by"
 msgstr "Vývoj je pdopořen"
 
-#: templates/base.html:49
+#: templates/base.html:53
 msgid "Technology Agency of the Czech Republic"
 msgstr "Technologickou Agenturou České Republiky"
 
-#: templates/base.html:49
+#: templates/base.html:53
 msgid "project CL02000145."
 msgstr "projekt CL02000145."
 
@@ -389,19 +389,19 @@ msgstr "Fronta"
 msgid "Experiment History"
 msgstr "Historie experimentů"
 
-#: templates/navbar.html:21
+#: templates/navbar.html:21 templates/navbar.html:22
 msgid "User"
 msgstr "Uživatel"
 
-#: templates/navbar.html:22
+#: templates/navbar.html:26 templates/user_nav_element.html:10
 msgid "Logout"
 msgstr "Odhlásit se"
 
-#: templates/navbar.html:30
+#: templates/navbar.html:34
 msgid "About"
 msgstr "O aplikaci"
 
-#: templates/navbar.html:32
+#: templates/navbar.html:36
 msgid "Register"
 msgstr "Registrovat se"
 
@@ -456,6 +456,10 @@ msgstr "Upravit osobní informace"
 #: templates/user.html:34
 msgid "Change e-mail address"
 msgstr "Upravit e-mailovou adresu"
+
+#: templates/user_nav_element.html:9
+msgid "User Profile"
+msgstr "Profil uživatele"
 
 #~ msgid "Enter your username"
 #~ msgstr "Zadejte své uživatelské jméno"
