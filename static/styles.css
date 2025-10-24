@@ -32,7 +32,7 @@ body {
     height: 100%;
     /* margin: 0; */
     /* padding: 0; */
-    /* overflow-x: hidden; */
+    overflow-x: hidden;
 }
 
 .container {
@@ -315,7 +315,8 @@ nav {
     background: linear-gradient(to right, var(--myDarkGray), var(--myPaleGray));   
     /* background: linear-gradient(to right, var(--myDarkGray), var(--myPaleBlue)); */
     color: white;
-    overflow: hidden;
+    /* overflow: hidden; */
+    overflow: visible;
     padding-top: 0.5%; 
     padding-bottom: 0.5%; 
 }
@@ -428,6 +429,10 @@ footer {
     /* background-color: var(--myDarkGray); */
     color: #fff;
     padding-top: 0%;
+    /* background-color: #1e1e1e; */
+    /* color: white; */
+    text-align: center;
+    /* padding: 1rem; */
 }
 
 footer .container {
@@ -437,6 +442,11 @@ footer .container {
     padding-top: 15px;
     padding-bottom: 15px;
 }
+
+.content {
+  flex: 1; /* pushes footer to bottom */
+}
+
 
 select {
     width: 100%;
