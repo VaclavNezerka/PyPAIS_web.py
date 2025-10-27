@@ -1,0 +1,3 @@
+KNOWN Bugs
+
+When resizing index without an uploading image - JS abroating 404 

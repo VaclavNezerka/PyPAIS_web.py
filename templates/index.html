@@ -83,9 +83,9 @@
                 <h3 for="info" class="modern-label upper">
                 {{ _('MODEL') }}
                 </h3>
-                <select id="model" >
+                <select id="model" class="enhanced-select">
                     {% for model in models %}
-                        <option value="{{ model }}">{{ model }}</option>
+                        <option class="option" value="{{ model }}">{{ model }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -95,7 +95,7 @@
                 </h3>
                 <div class="slider-group">
                         <input type="range" id="opacitySlider" min="0" max="100" value="50" class = "slider">
-                        <input type="text" id="opacityValue" value="50" size="2">
+                        <input type="text" id="opacityValue" value="50" size="2" class="enhanced-input">
                 </div>    
             </div>
             <div class="modern-column column">
@@ -103,19 +103,19 @@
                 <label class="overlay-label">
                     <input type="checkbox" id="redOverlayCheckbox">
                     <span class="overlay-custom"></span>
-                    {{ _('Display Asphalt') }} <span class="shortcut">(Shift + A)</span>
+                    {{ _('Display mask - Bitumen') }} <span class="shortcut">(Shift + A)</span>
                 </label>
                 
                 <label class="overlay-label">
                     <input type="checkbox" id="aggregateOverlayCheckbox">
                     <span class="overlay-custom"></span>
-                    {{ _('Display Aggregate') }} <span class="shortcut">(Shift + S)</span>
+                    {{ _('Display mask - Aggregate') }} <span class="shortcut">(Shift + S)</span>
                 </label>
                 
                 <label class="overlay-label">
                     <input type="checkbox" id="backgroundOverlayCheckbox">
                     <span class="overlay-custom"></span>
-                    {{ _('Display Background') }} <span class="shortcut">(Shift + D)</span>
+                    {{ _('Display mask - Background') }} <span class="shortcut">(Shift + D)</span>
                 </label>
                 </div>
             </div>

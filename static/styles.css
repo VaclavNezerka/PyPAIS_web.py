@@ -36,6 +36,12 @@ body {
     overflow-x: hidden;
 }
 
+.page-container {
+  min-height: 65vh;         /* take full viewport height */
+  display: flex;
+  flex-direction: column;    /* stack header, main, footer vertically */
+}
+
 .container {
     margin: auto;
     width: 90%;
@@ -428,6 +434,7 @@ button[type="submit"] {
     transition: background-color 0.3s ease;
 }
 
+button[type="submit"]:hover,
 form button[type="submit"]:hover {
     background-color: var(--myDarkBlue);
 }
@@ -437,6 +444,7 @@ form button[type="submit"]:hover {
 
 footer {
     /* background-color: var(--myDarkGray); */
+    height: auto;
     color: #fff;
     padding-top: 0%;
     /* background-color: #1e1e1e; */
@@ -451,6 +459,7 @@ footer .container {
     margin: 20 auto;
     padding-top: 15px;
     padding-bottom: 15px;
+    min-height: 35vh;
 }
 
 .content {
@@ -897,4 +906,19 @@ footer .container p {
   color: var(--myPalePaleGray);
   text-align: center;
   line-height: 1.1;
+}
+
+.profile-picture {
+    border-radius: 50%;
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    margin-bottom: 15px;
+}
+
+@media (max-width: 600px) {
+    .profile-picture {
+        width: 150px;
+        height: 150px;
+    }
 }

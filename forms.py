@@ -6,19 +6,21 @@ from flask import flash
 from wtforms import StringField, PasswordField, SubmitField,ValidationError,IntegerField
 from wtforms.validators import DataRequired, Email, EqualTo
 import db_api 
-from flask_babel import lazy_gettext, _, lazy_pgettext
-    
+from flask_babel import lazy_gettext, _
+
+messages={
+    'email_already_used': lazy_gettext('This email address is already used. Please use a different one.'),
+    'username_already_taken': lazy_gettext('This username is already taken. Please choose a different one.'),
+    'passwords_must_match': lazy_gettext('Passwords must match.')
+}
+
 # TODO - define validators (especially because of desired uniqueness of mail/username)
 # @validator
-def IsUnique(tablename):
+def IsUnique(tablename, message=None):
     def is_unique(form,field):
         query=f'SELECT {field.name} FROM {tablename} WHERE {field.name}=%s LIMIT %s;'
         response=db_api.execute_query(query=query,values=(field.data,1))
         if len(response):
-            message = lazy_pgettext(
-                field.name,
-                'The %(field_name)s "%(field_data)s" is already used. Please, choose a different one.'
-                ) % {'field_name': field.label.text, 'field_data': field.data}
             raise ValidationError(message)
     return is_unique
 
@@ -62,13 +64,14 @@ def RequiredLength(min=1,max=50):
     return exists
 
 class RegistrationFormUser(FlaskForm):  
-    username = StringField(lazy_gettext('Username'),validators=[DataRequired(),IsUnique(tablename='public_users'),RequiredLength(min=1,max=50)],)    
-    e_mail = StringField(lazy_gettext('Email address'),validators=[DataRequired(), Email(),IsUnique(tablename='public_users')])
+    username = StringField(lazy_gettext('Username'),validators=[DataRequired(),IsUnique(tablename='public_users', message=messages['username_already_taken']),RequiredLength(min=1,max=50)],)    
+    e_mail = StringField(lazy_gettext('Email address'),
+                         validators=[DataRequired(), Email(),IsUnique(tablename='public_users', message=messages['email_already_used']),RequiredLength(min=5,max=100)])
     first_name = StringField(lazy_gettext('First name'),validators=[DataRequired()])
     last_name = StringField(lazy_gettext('Last name'),validators=[DataRequired()])
     company_key = StringField(lazy_gettext('Company Key'),validators=[DataRequired(),Exists(tablename='public_companies')])
     password = PasswordField(lazy_gettext('Password'),validators=[DataRequired(),RequiredLength(min=8)])
-    confirm_password = PasswordField(lazy_gettext('Confirm password'),validators=[DataRequired(), EqualTo('password', message=lazy_gettext('Passwords must match.'))])
+    confirm_password = PasswordField(lazy_gettext('Confirm password'),validators=[DataRequired(), EqualTo('password', message=messages['passwords_must_match'])])
     submit = SubmitField(lazy_gettext('Submit'))
 
 class LoginForm(FlaskForm):
@@ -79,12 +82,12 @@ class LoginForm(FlaskForm):
 class ChangePasswordForm(FlaskForm):
     old_password = PasswordField(lazy_gettext('Old password'),validators=[DataRequired()])
     new_password = PasswordField(lazy_gettext('New password'),validators=[DataRequired(),RequiredLength(min=8)])
-    confirm_new_password = PasswordField(lazy_gettext('Confirm new password'),validators=[DataRequired(), EqualTo('new_password', message=lazy_gettext('Passwords must match.'))])
+    confirm_new_password = PasswordField(lazy_gettext('Confirm new password'),validators=[DataRequired(), EqualTo('new_password', message=messages['passwords_must_match'])])
     submit = SubmitField(lazy_gettext('Submit'))
 
 class EditPersonalInformationForm(FlaskForm):
     # default values are taken from the database
-    username = StringField(lazy_gettext('Username'),validators=[IsUnique(tablename='public_users')])
+    username = StringField(lazy_gettext('Username'),validators=[IsUnique(tablename='public_users', message=messages['username_already_taken']),RequiredLength(min=1,max=50)])
     first_name = StringField(lazy_gettext('First name'))
     last_name = StringField(lazy_gettext('Last name'))
     submit = SubmitField(lazy_gettext('Submit'))
@@ -99,7 +102,7 @@ class EditPersonalInformationForm(FlaskForm):
 
 class ChangeEmailForm(FlaskForm):
     # default values are taken from the database
-    e_mail = StringField(lazy_gettext('New email address'),validators=[DataRequired(), Email(), IsUnique(tablename='public_users')])
+    e_mail = StringField(lazy_gettext('New email address'),validators=[DataRequired(), Email(), IsUnique(tablename='public_users', message=messages['email_already_used']),RequiredLength(min=5,max=100)])
     submit = SubmitField(lazy_gettext('Submit'))
 
 

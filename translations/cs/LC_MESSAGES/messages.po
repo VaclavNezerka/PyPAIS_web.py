@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-10-24 17:41+0200\n"
+"POT-Creation-Date: 2025-10-27 12:10+0100\n"
 "PO-Revision-Date: 2025-10-21 18:40+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: cs\n"
@@ -42,7 +42,7 @@ msgstr "Upravit osobní informace"
 msgid "Personal information updated successfully."
 msgstr "Osobní informace úspěšně aktualizovány."
 
-#: app.py:425 templates/user.html:37
+#: app.py:425 templates/user.html:55
 msgid "Change password"
 msgstr "Změnit heslo"
 
@@ -54,11 +54,11 @@ msgstr "Heslo úspěšně aktualizováno."
 msgid "The old password is incorrect."
 msgstr "Zadané staré heslo je nesprávné."
 
-#: app.py:486 app.py:504 app.py:507 forms.py:77 templates/navbar.html:35
+#: app.py:486 app.py:504 app.py:507 forms.py:80 templates/navbar.html:35
 msgid "Login"
 msgstr "Přihlásit se"
 
-#: app.py:503 forms.py:50
+#: app.py:503 forms.py:52
 msgid "Invalid username/email or password."
 msgstr "Chybné přihlašovací údaje."
 
@@ -114,16 +114,21 @@ msgstr "Selhala validace formuláře, prosím, zkontrolujte zadané údaje."
 msgid "No active experiment found."
 msgstr "Žádný aktivní experiment nenalezen."
 
-#: forms.py:18
+#: forms.py:12
 #, python-format
-msgid ""
-"The %(field_name)s \"%(field_data)s\" is already used. Please, choose a "
-"different one."
-msgstr ""
-"Uživatelské jméno \"%(field_data)s\" je již používáno. Prosím, vyberte "
-"jiné."
+msgid "This email address is already used. Please use a different one."
+msgstr "Tento e-mail je již používán. Prosím, zvolte jiný."
 
-#: forms.py:34
+#: forms.py:13
+#, python-format
+msgid "This username is already taken. Please choose a different one."
+msgstr "Toto uživatelské jméno je již používáno. Prosím, zvolte jiné.""
+
+#: forms.py:14
+msgid "Passwords must match."
+msgstr "Hesla se musí shodovat."
+
+#: forms.py:36
 #, python-format
 msgid ""
 "No record \"%(field_name)s\" with value \"%(field_data)s\" exists. "
@@ -132,71 +137,67 @@ msgstr ""
 "Žádný záznam \"%(field_name)s\" s hodnotou \"%(field_data)s\" neexistuje."
 " Kontaktujete svého admina pro přihlašovací údaje."
 
-#: forms.py:58
+#: forms.py:60
 msgid "The minimal allowed length is {min} characters."
 msgstr "Minimální povolená délka je {min} znaků."
 
-#: forms.py:61
+#: forms.py:63
 msgid "The maximal allowed length is {max} characters."
 msgstr "Maximální povolená délka je {max} znaků."
 
-#: forms.py:65 forms.py:87
+#: forms.py:67 forms.py:90
 msgid "Username"
 msgstr "Uživatelské jméno"
 
-#: forms.py:66
+#: forms.py:68
 msgid "Email address"
 msgstr "E-mailová adresa"
 
-#: forms.py:67 forms.py:88
+#: forms.py:70 forms.py:91
 msgid "First name"
 msgstr "Jméno"
 
-#: forms.py:68 forms.py:89
+#: forms.py:71 forms.py:92
 msgid "Last name"
 msgstr "Příjmení"
 
-#: forms.py:69
+#: forms.py:72
 msgid "Company Key"
 msgstr "Klíč společnosti"
 
-#: forms.py:70 forms.py:76
+#: forms.py:73 forms.py:79
 msgid "Password"
 msgstr "Heslo"
 
-#: forms.py:71
+#: forms.py:74
 msgid "Confirm password"
 msgstr "Potvrďte heslo"
 
-#: forms.py:71 forms.py:82
-msgid "Passwords must match."
-msgstr "Hesla se musí shodovat."
-
-#: forms.py:72 forms.py:83 forms.py:90 forms.py:103
+#: forms.py:75 forms.py:86 forms.py:93 forms.py:106
 msgid "Submit"
 msgstr "Odeslat"
 
-#: forms.py:75
+#: forms.py:78
 msgid "Username/Email"
 msgstr "Uživatelské jméno / E-mail"
 
-#: forms.py:80
+#: forms.py:83
 msgid "Old password"
 msgstr "Staré heslo"
 
-#: forms.py:81
+#: forms.py:84
 msgid "New password"
 msgstr "Nové heslo"
 
-#: forms.py:82
+#: forms.py:85
 msgid "Confirm new password"
 msgstr "Potvrďte nové heslo"
 
-#: forms.py:95
+#: forms.py:98
 msgid "At least one field must be filled in."
 msgstr "Alespoň jedno pole musí být vyplněno."
 
-#: forms.py:102
+#: forms.py:105
 msgid "New email address"
 msgstr "Nová e-mailová adresa"
 
@@ -208,11 +209,11 @@ msgstr "404 Nenalezeno - PyPAIS"
 msgid "Page not found"
 msgstr "Stránka nebyla nalezena"
 
-#: templates/base.html:37
+#: templates/base.html:39
 msgid "2025 Václav Nežerka, David Šilhánek."
 msgstr "2025 Václav Nežerka, David Šilhánek."
 
-#: templates/base.html:40
+#: templates/base.html:42
 msgid ""
 "All rights reserved excluding icons which are where created by artists on"
 " the"
@@ -220,19 +221,19 @@ msgstr ""
 "Všechna práva vyhrezena vyjma práv k inkonám vytvořených umělci na "
 "platformě"
 
-#: templates/base.html:42
+#: templates/base.html:44
 msgid "platform, namely:"
 msgstr "jmenovitě:"
 
-#: templates/base.html:51
+#: templates/base.html:53
 msgid "Development supported by"
 msgstr "Vývoj je pdopořen"
 
-#: templates/base.html:53
+#: templates/base.html:55
 msgid "Technology Agency of the Czech Republic"
 msgstr "Technologickou Agenturou České Republiky"
 
-#: templates/base.html:53
+#: templates/base.html:55
 msgid "project CL02000145."
 msgstr "projekt CL02000145."
 
@@ -354,16 +355,16 @@ msgid "Mask Opacity:"
 msgstr "Neprůhlednost masky:"
 
 #: templates/index.html:106
-msgid "Display Asphalt"
-msgstr "Zobrazit asfalt"
+msgid "Display mask - Bitumen"
+msgstr "Zobrazit masku - Asfalt"
 
 #: templates/index.html:112
-msgid "Display Aggregate"
-msgstr "Zobrazit kamenivo"
+msgid "Display mask - Aggregate"
+msgstr "Zobrazit masku - Kamenivo"
 
 #: templates/index.html:118
-msgid "Display Background"
-msgstr "Zobrazit pozadí"
+msgid "Display mask - Background"
+msgstr "Zobrazit masku - Pozadí"
 
 #: templates/index.html:126
 msgid "Original Image"
@@ -429,31 +430,31 @@ msgstr "Smazat"
 msgid "User Information"
 msgstr "Uživatelské informace"
 
-#: templates/user.html:23
+#: templates/user.html:25
 msgid "Username: "
 msgstr "Uživatelské jméno: "
 
-#: templates/user.html:24
+#: templates/user.html:29
 msgid "First Name: "
 msgstr "Jméno: "
 
-#: templates/user.html:25
+#: templates/user.html:33
 msgid "Last Name: "
 msgstr "Příjmení: "
 
-#: templates/user.html:26
+#: templates/user.html:37
 msgid "Company: "
 msgstr "Organizace: "
 
-#: templates/user.html:27
-msgid "Email: "
+#: templates/user.html:41
+msgid "E-mail: "
 msgstr "E-mail: "
 
-#: templates/user.html:31
+#: templates/user.html:49
 msgid "Edit personal information"
 msgstr "Upravit osobní informace"
 
-#: templates/user.html:34
+#: templates/user.html:52
 msgid "Change e-mail address"
 msgstr "Upravit e-mailovou adresu"
 
@@ -472,4 +473,7 @@ msgstr "Profil uživatele"
 #~ msgstr ""
 #~ "E-mailová adresa \"%(field_data)s\" je již "
 #~ "používána. Prosím, vyberte jinou."
+
+#~ msgid "Display Asphalt"
+#~ msgstr "Zobrazit asfalt"
 

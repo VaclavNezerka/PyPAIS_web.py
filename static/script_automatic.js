@@ -1002,6 +1002,20 @@ document.addEventListener('keydown', function(event) {
 });
 
 
+document.querySelectorAll('.custom-select').forEach(select => {
+  const trigger = select.querySelector('.select-trigger');
+  trigger.addEventListener('click', () => {
+    select.classList.toggle('open');
+  });
+
+  select.querySelectorAll('.option').forEach(option => {
+    option.addEventListener('click', () => {
+      trigger.textContent = option.textContent + ' ▼';
+      select.classList.remove('open');
+    });
+  });
+});
+
 
 
 // import OpenSeadragon from "./openseadragon_5.0/openseadragon.min.js";
