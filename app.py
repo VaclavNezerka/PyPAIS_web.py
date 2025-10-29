@@ -259,7 +259,7 @@ class UserTemporaryStorage:
 
         non_bg_pixels = np.sum(aggregate_mask + asphalt_mask)
         asphalt_pixels = np.sum(asphalt_mask)
-        return asphalt_pixels / non_bg_pixels if non_bg_pixels > 0 else 0.0    
+        return float(asphalt_pixels / non_bg_pixels) if non_bg_pixels > 0 else 0.0
 
 # storage: UserTemporaryStorage  = LocalProxy(lambda: ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id'])))
 storage = LocalProxy(lambda: ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id'])))
