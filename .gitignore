@@ -10,3 +10,7 @@ _*
 git_workflow.sh
 __pycache__/
 *.pyc
+*.sql
+verbose_requirements.txt
+export_req.sh
+initialize_app_linux.sh

@@ -593,6 +593,8 @@ def experiments():
     
     max_sub_id = min(len(data), start_sub_id+page_limit)
     data=data[start_sub_id:max_sub_id]
+    # convert the expert guess and asphalt_ratio to string with 2 decimal places
+    data = [(x[0], x[1], f"{x[2]*100:.2f}" if x[2] is not None else _('None'), f"{x[3]*100:.2f}" if x[3] is not None else _('None')) for x in data]
     records[1] = data
     return render_template('experiments.html',records=records,session=session,dynamic_content=_('Experiment Records'))
 

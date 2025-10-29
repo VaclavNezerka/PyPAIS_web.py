@@ -1,3 +1,5 @@
 KNOWN Bugs
 
-When resizing index without an uploading image - JS abroating 404 
+- BE - When resizing index without an uploading image - JS abroating 404 
+- BE - When changing personal information - it is impossible to keep some fields unchanged
+- BE - SECURITY - When changing email the password schould be required

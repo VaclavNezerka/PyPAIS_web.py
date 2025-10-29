@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-10-27 12:10+0100\n"
+"POT-Creation-Date: 2025-10-27 12:48+0100\n"
 "PO-Revision-Date: 2025-10-21 18:40+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: cs\n"
@@ -90,39 +90,41 @@ msgstr "Zrušit"
 msgid "Experiment Queue"
 msgstr "Fronta experimentů"
 
-#: app.py:597 templates/experiments.html:12 templates/queue.html:12
+#: app.py:597
+msgid "None"
+msgstr ""
+
+#: app.py:599 templates/experiments.html:12 templates/queue.html:12
 msgid "Experiment Records"
 msgstr "Záznamy experimentů"
 
-#: app.py:618 app.py:644 app.py:647
+#: app.py:620 app.py:646 app.py:649
 msgid "Register new user"
 msgstr "Registrace nového uživatele"
 
-#: app.py:640
+#: app.py:642
 msgid "Registration successful. Please log in."
 msgstr "Registrace proběhla úspěšně, prosím přihlaste se."
 
-#: app.py:643
+#: app.py:645
 msgid "Database error:"
 msgstr "Chyba databáze:"
 
-#: app.py:646
+#: app.py:648
 msgid "Form validation failed. Please check your input."
 msgstr "Selhala validace formuláře, prosím, zkontrolujte zadané údaje."
 
-#: app.py:830 app.py:853 app.py:891
+#: app.py:832 app.py:855 app.py:893
 msgid "No active experiment found."
 msgstr "Žádný aktivní experiment nenalezen."
 
 #: forms.py:12
-#, python-format
 msgid "This email address is already used. Please use a different one."
 msgstr "Tento e-mail je již používán. Prosím, zvolte jiný."
 
 #: forms.py:13
-#, python-format
 msgid "This username is already taken. Please choose a different one."
-msgstr "Toto uživatelské jméno je již používáno. Prosím, zvolte jiné.""
+msgstr "Toto uživatelské jméno je již používáno. Prosím, zvolte jiné.\""
 
 #: forms.py:14
 msgid "Passwords must match."
@@ -246,12 +248,20 @@ msgid "Date"
 msgstr "Datum"
 
 #: templates/experiments.html:24
-msgid "Expert guess [-]"
-msgstr "Odborný odhad [-]"
+msgid "Asphalt coverage - "
+msgstr "Pokrytí asfaltem - "
+
+#: templates/experiments.html:24
+msgid "Expert guess [%%]"
+msgstr "Odborný odhad [%%]"
 
 #: templates/experiments.html:25
-msgid "Asphalt Ratio [-]"
-msgstr "Podíl asfaltu [-]"
+msgid "Asphalt coverage"
+msgstr "Pokrytí asfaltem - "
+
+#: templates/experiments.html:25
+msgid "Model prediction [%%]"
+msgstr "Predikce modelu [%%]"
 
 #: templates/experiments.html:26
 msgid "Actions"
