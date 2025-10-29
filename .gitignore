@@ -5,7 +5,9 @@ pypais.yml
 table.html
 data
 _*
-*.png
+# *.png
+*static/node_modules*
+*static/openseadragon*
 *.heic
 git_workflow.sh
 __pycache__/
