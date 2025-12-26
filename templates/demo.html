@@ -1,0 +1,98 @@
+<link rel="stylesheet" href="/static/styles.css">
+<link rel="stylesheet" href="/static/new_styles.css">
+
+
+<div id="row" , class="colorbar">
+    <h2> {{ _('DEMO') }}</h2>
+</div>
+
+<div class="container">
+    <!-- First Row: Image Upload -->
+    <div class="row">
+        <input type="file" id="fileInput" accept="image/*" class="custom-file-input"></input>
+        <label for="fileInput" class="custom-file-label">{{ _('Upload Image') }}</label>
+    </div>
+    <!-- <p class="text-gray-500">
+            {{ _('By uploading an image, you agree that it may be stored in the application repository and potentially used by the authors for training future models.') }}
+        </p> -->
+</div>
+
+<div id="row" , class="colorbar2">
+    <h3>{{ _('Automatic Phase Detection') }}</h3>
+</div>
+<div class="loading" id="workingMessage">
+    {{ _('Working...') }}
+</div>
+
+
+<div class="row modern-row">
+    <div class="column modern-column">
+        <h3 for="info" class="modern-label upper">
+            {{ _('MODEL') }}
+        </h3>
+        <select id="model" class="enhanced-select">
+            {% for model in models %}
+            <option class="option" value="{{ model }}">{{ model }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="column modern-column">
+        <h3 for="info" class="modern-label upper">
+            {{ _('Mask Opacity:') }}
+        </h3>
+        <div class="slider-group">
+            <input type="range" id="opacitySlider" min="0" max="100" value="50" class="slider">
+            <input type="text" id="opacityValue" value="50" size="2" class="enhanced-input">
+        </div>
+    </div>
+    <div class="modern-column column">
+        <div class="overlay-options">
+            <label class="overlay-label">
+                <input type="checkbox" id="redOverlayCheckbox">
+                <span class="overlay-custom"></span>
+                {{ _('Display mask - Bitumen') }} <span class="shortcut">(Shift + A)</span>
+            </label>
+
+            <label class="overlay-label">
+                <input type="checkbox" id="aggregateOverlayCheckbox">
+                <span class="overlay-custom"></span>
+                {{ _('Display mask - Aggregate') }} <span class="shortcut">(Shift + S)</span>
+            </label>
+
+            <label class="overlay-label">
+                <input type="checkbox" id="backgroundOverlayCheckbox">
+                <span class="overlay-custom"></span>
+                {{ _('Display mask - Background') }} <span class="shortcut">(Shift + D)</span>
+            </label>
+        </div>
+    </div>
+
+</div>
+
+<select id="imageType">
+    <option value="original">("shift + c") {{ _('Original Image') }}</option>
+    <!-- <option value="original_no_bg">("c") Removed Background</option> -->
+    <option value="bw">("shift + c") {{ _('Grayscale Image') }}</option>
+</select>
+
+<!-- Second Row: Intensity Image and Controls -->
+<div class="row">
+    <div class="column">
+        <img id="defaultImage" src="/static/logo.png" alt="Default Image">
+        <div class="img-magnifier-container">
+            <canvas id="imageCanvas"></canvas>
+            <canvas class="overlayCanvas" id="overlayCanvasAsphalt"></canvas>
+            <canvas class="overlayCanvas" id="overlayCanvasAggregate"></canvas>
+            <canvas class="overlayCanvas" id="overlayCanvasBackground"></canvas>
+        </div>
+    </div>
+</div>
+
+
+<div class="container">
+    <div class="row">
+        <button id='index_evaluation' type="submit">{{ _('Evaluate') }}</button>
+    </div>
+</div>
+
+<script type="module" src="{{ url_for('static', filename='demo.js') }}"></script>

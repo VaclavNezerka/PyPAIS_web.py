@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
 <html lang="en">
+
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,8 +9,9 @@
     <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
     <title>{{ _('Navbar') }}</title>
   </head>
+
   <body>
-    
+
     <nav class="navbar">
       {% if session.authenticated %}
       <ul>
@@ -28,32 +30,33 @@
           {% include "language_switcher.html" %}
         </li>
       </ul>
-    </ul>
-    {% else %}
-    <ul>
-      <li><a href="/home">{{ _('About') }}</a></li>
-      <li><a href="/login">{{ _('Login') }}</a></li>
-      <li><a href="/register">{{ _('Register') }}</a></li>
-    </ul>
-    <ul class="navbar-right">
-      <li>
-        {% include "language_switcher.html" %}
-      </li>
-    </ul>
-    {% endif %}
-  
-  <!-- 🌐 Language Switcher -->
-  <!-- <div class="language-switcher"> -->
-    <!-- <a href="?lang=en" title="English">
+      </ul>
+      {% else %}
+      <ul>
+        <li><a href="/home">{{ _('About') }}</a></li>
+        <li><a href="/login">{{ _('Login') }}</a></li>
+        <li><a href="/register">{{ _('Register') }}</a></li>
+      </ul>
+      <ul class="navbar-right">
+        <li>
+          {% include "language_switcher.html" %}
+        </li>
+      </ul>
+      {% endif %}
+
+      <!-- 🌐 Language Switcher -->
+      <!-- <div class="language-switcher"> -->
+      <!-- <a href="?lang=en" title="English">
       <img src="/static/language_icons/icon_en.png" alt="English">
     </a>
     <a href="?lang=cs" title="Česky">
       <img src="/static/language_icons/icon_cs.png" alt="Česky">
     </a>
   </div> -->
-  
 
-</nav>
-  
-</body>
+
+    </nav>
+
+  </body>
+
 </html>

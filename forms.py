@@ -2,6 +2,7 @@
 # from typing import Any, Mapping
 # from flask_wtf.form import _Auto
 from flask_wtf import FlaskForm
+# RecaptchaField
 from flask import flash
 from wtforms import StringField, PasswordField, SubmitField,ValidationError,IntegerField
 from wtforms.validators import DataRequired, Email, EqualTo
@@ -73,6 +74,7 @@ class RegistrationFormUser(FlaskForm):
     password = PasswordField(lazy_gettext('Password'),validators=[DataRequired(),RequiredLength(min=8)])
     confirm_password = PasswordField(lazy_gettext('Confirm password'),validators=[DataRequired(), EqualTo('password', message=messages['passwords_must_match'])])
     submit = SubmitField(lazy_gettext('Submit'))
+    # recaptcha = RecaptchaField()
 
 class LoginForm(FlaskForm):
     usernameXe_mail = StringField(lazy_gettext('Username/Email'),validators=[DataRequired(),ExistsAny(tablename='public_users')])

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-10-27 12:48+0100\n"
+"POT-Creation-Date: 2025-12-26 13:13+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,447 +17,530 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: app.py:331
+#: app.py:318
+msgid "Your session has expired. Please refresh the page and try again."
+msgstr ""
+
+#: app.py:403
 msgid "You do not have permission to access this data."
 msgstr ""
 
-#: app.py:341
+#: app.py:413
 msgid "You must be logged in to access this page."
 msgstr ""
 
-#: app.py:378
+#: app.py:462
 msgid "Change email"
 msgstr ""
 
-#: app.py:391
+#: app.py:475
 msgid "Email changed successfully."
 msgstr ""
 
-#: app.py:402 app.py:420
+#: app.py:486 app.py:504
 msgid "Change personal information"
 msgstr ""
 
-#: app.py:417
+#: app.py:501
 msgid "Personal information updated successfully."
 msgstr ""
 
-#: app.py:425 templates/user.html:55
+#: app.py:509 templates/user.html:57
 msgid "Change password"
 msgstr ""
 
-#: app.py:438
+#: app.py:522
 msgid "Password changed successfully."
 msgstr ""
 
-#: app.py:441
+#: app.py:525
 msgid "The old password is incorrect."
 msgstr ""
 
-#: app.py:486 app.py:504 app.py:507 forms.py:80 templates/navbar.html:35
+#: app.py:570 app.py:588 app.py:591 forms.py:82 templates/navbar.html:37
 msgid "Login"
 msgstr ""
 
-#: app.py:503 forms.py:52
+#: app.py:587 forms.py:53
 msgid "Invalid username/email or password."
 msgstr ""
 
-#: app.py:531
+#: app.py:615
 msgid "id"
 msgstr ""
 
-#: app.py:531
+#: app.py:615
 msgid "date"
 msgstr ""
 
-#: app.py:531
+#: app.py:615
 msgid "state"
 msgstr ""
 
-#: app.py:531
+#: app.py:615
 msgid "actions"
 msgstr ""
 
-#: app.py:532 templates/experiments.html:60 templates/queue.html:80
+#: app.py:616 templates/experiments.html:63 templates/queue.html:81
 msgid "Edit"
 msgstr ""
 
-#: app.py:532
+#: app.py:616
 msgid "Cancel"
 msgstr ""
 
-#: app.py:559
+#: app.py:643
 msgid "Experiment Queue"
 msgstr ""
 
-#: app.py:597
+#: app.py:681
 msgid "None"
 msgstr ""
 
-#: app.py:599 templates/experiments.html:12 templates/queue.html:12
+#: app.py:683 templates/experiments.html:13 templates/queue.html:13
 msgid "Experiment Records"
 msgstr ""
 
-#: app.py:620 app.py:646 app.py:649
+#: app.py:704 app.py:730 app.py:733
 msgid "Register new user"
 msgstr ""
 
-#: app.py:642
+#: app.py:726
 msgid "Registration successful. Please log in."
 msgstr ""
 
-#: app.py:645
+#: app.py:729
 msgid "Database error:"
 msgstr ""
 
-#: app.py:648
+#: app.py:732
 msgid "Form validation failed. Please check your input."
 msgstr ""
 
-#: app.py:832 app.py:855 app.py:893
+#: app.py:921 app.py:944 app.py:982
 msgid "No active experiment found."
 msgstr ""
 
-#: forms.py:12
-msgid "This email address is already used. Please use a different one."
+#: app.py:1688
+msgid "No experiment data found."
+msgstr ""
+
+#: app.py:1689
+msgid "Please fill the expert guess field before evaluating the experiment."
+msgstr ""
+
+#: app.py:1690
+msgid "Evaluation completed. Check the console for the results."
+msgstr ""
+
+#: app.py:1691
+msgid "Evaluation results: "
+msgstr ""
+
+#: app.py:1692
+msgid ""
+"Would you like to use this app with no limitations? Store and export "
+"these results? Contact us to create an account."
 msgstr ""
 
 #: forms.py:13
-msgid "This username is already taken. Please choose a different one."
+msgid "This email address is already used. Please use a different one."
 msgstr ""
 
 #: forms.py:14
+msgid "This username is already taken. Please choose a different one."
+msgstr ""
+
+#: forms.py:15
 msgid "Passwords must match."
 msgstr ""
 
-#: forms.py:36
+#: forms.py:37
 #, python-format
 msgid ""
 "No record \"%(field_name)s\" with value \"%(field_data)s\" exists. "
 "Contact your admin to get your credentials."
 msgstr ""
 
-#: forms.py:60
+#: forms.py:61
 msgid "The minimal allowed length is {min} characters."
 msgstr ""
 
-#: forms.py:63
+#: forms.py:64
 msgid "The maximal allowed length is {max} characters."
 msgstr ""
 
-#: forms.py:67 forms.py:90
+#: forms.py:68 forms.py:92
 msgid "Username"
 msgstr ""
 
-#: forms.py:68
+#: forms.py:69
 msgid "Email address"
 msgstr ""
 
-#: forms.py:70 forms.py:91
+#: forms.py:71 forms.py:93
 msgid "First name"
 msgstr ""
 
-#: forms.py:71 forms.py:92
+#: forms.py:72 forms.py:94
 msgid "Last name"
 msgstr ""
 
-#: forms.py:72
+#: forms.py:73
 msgid "Company Key"
 msgstr ""
 
-#: forms.py:73 forms.py:79
+#: forms.py:74 forms.py:81
 msgid "Password"
 msgstr ""
 
-#: forms.py:74
+#: forms.py:75
 msgid "Confirm password"
 msgstr ""
 
-#: forms.py:75 forms.py:86 forms.py:93 forms.py:106
+#: forms.py:76 forms.py:88 forms.py:95 forms.py:108
 msgid "Submit"
 msgstr ""
 
-#: forms.py:78
+#: forms.py:80
 msgid "Username/Email"
 msgstr ""
 
-#: forms.py:83
+#: forms.py:85
 msgid "Old password"
 msgstr ""
 
-#: forms.py:84
+#: forms.py:86
 msgid "New password"
 msgstr ""
 
-#: forms.py:85
+#: forms.py:87
 msgid "Confirm new password"
 msgstr ""
 
-#: forms.py:98
+#: forms.py:100
 msgid "At least one field must be filled in."
 msgstr ""
 
-#: forms.py:105
+#: forms.py:107
 msgid "New email address"
 msgstr ""
 
-#: templates/404.html:8
-msgid "404 Not Found - PyPAIS"
+#: templates/404.html:9
+msgid "404 Not Found - AIBAL"
 msgstr ""
 
-#: templates/404.html:14
+#: templates/404.html:15
 msgid "Page not found"
 msgstr ""
 
-#: templates/base.html:39
+#: templates/base.html:40
 msgid "2025 Václav Nežerka, David Šilhánek."
 msgstr ""
 
-#: templates/base.html:42
+#: templates/base.html:43
 msgid ""
 "All rights reserved excluding icons which are where created by artists on"
 " the"
 msgstr ""
 
-#: templates/base.html:44
+#: templates/base.html:45
 msgid "platform, namely:"
 msgstr ""
 
-#: templates/base.html:53
+#: templates/base.html:54
 msgid "Development supported by"
 msgstr ""
 
-#: templates/base.html:55
+#: templates/base.html:56
 msgid "Technology Agency of the Czech Republic"
 msgstr ""
 
-#: templates/base.html:55
+#: templates/base.html:56
 msgid "project CL02000145."
 msgstr ""
 
-#: templates/experiments.html:22
-msgid "Experiment ID"
+#: templates/demo.html:6
+msgid "DEMO"
 msgstr ""
 
-#: templates/experiments.html:23
-msgid "Date"
-msgstr ""
-
-#: templates/experiments.html:24
-msgid "Asphalt coverage "
-msgstr ""
-
-#: templates/experiments.html:24
-msgid "Expert guess [%]"
-msgstr ""
-
-#: templates/experiments.html:25
-msgid "Asphalt coverage"
-msgstr ""
-
-#: templates/experiments.html:25
-msgid "Model prediction [%]"
-msgstr ""
-
-#: templates/experiments.html:26
-msgid "Actions"
-msgstr ""
-
-#: templates/experiments.html:35
-msgid "Max records on page:"
-msgstr ""
-
-#: templates/experiments.html:38 templates/queue.html:58
-msgid "Sort order:"
-msgstr ""
-
-#: templates/experiments.html:39 templates/queue.html:60
-msgid "Descending"
-msgstr ""
-
-#: templates/experiments.html:40 templates/queue.html:59
-msgid "Ascending"
-msgstr ""
-
-#: templates/experiments.html:44 templates/queue.html:64
-msgid "Sort by:"
-msgstr ""
-
-#: templates/experiments.html:49 templates/queue.html:67
-msgid "Previous"
-msgstr ""
-
-#: templates/experiments.html:50 templates/queue.html:68
-msgid "Next"
-msgstr ""
-
-#: templates/experiments.html:61
-msgid "Export"
-msgstr ""
-
-#: templates/experiments.html:67 templates/queue.html:89
-msgid "No records found"
-msgstr ""
-
-#: templates/form.html:20
-msgid "submit"
-msgstr ""
-
-#: templates/home.html:11
-msgid "asphalt classification software"
-msgstr ""
-
-#: templates/index.html:9
-msgid "Image Processing with NN"
-msgstr ""
-
-#: templates/index.html:24 templates/navbar.html:16
-msgid "Current Experiment"
-msgstr ""
-
-#: templates/index.html:31
+#: templates/demo.html:13 templates/index.html:33
 msgid "Upload Image"
 msgstr ""
 
-#: templates/index.html:34
+#: templates/demo.html:16 templates/index.html:36
 msgid ""
 "By uploading an image, you agree that it may be stored in the application"
 " repository and potentially used by the authors for training future "
 "models."
 msgstr ""
 
-#: templates/index.html:39
-msgid "Basic Information"
-msgstr ""
-
-#: templates/index.html:47
-msgid "Information (max. 1024 characters):"
-msgstr ""
-
-#: templates/index.html:53
-msgid "Information about the mixture."
-msgstr ""
-
-#: templates/index.html:61 templates/index.html:67
-msgid "Expert Guess"
-msgstr ""
-
-#: templates/index.html:74
+#: templates/demo.html:21 templates/index.html:67
 msgid "Automatic Phase Detection"
 msgstr ""
 
-#: templates/index.html:77
+#: templates/demo.html:24 templates/index.html:70
 msgid "Working..."
 msgstr ""
 
-#: templates/index.html:84
+#: templates/demo.html:31 templates/index.html:77
 msgid "MODEL"
 msgstr ""
 
-#: templates/index.html:94
+#: templates/demo.html:41 templates/index.html:87
 msgid "Mask Opacity:"
 msgstr ""
 
-#: templates/index.html:106
+#: templates/demo.html:53 templates/index.html:99
 msgid "Display mask - Bitumen"
 msgstr ""
 
-#: templates/index.html:112
+#: templates/demo.html:59 templates/index.html:105
 msgid "Display mask - Aggregate"
 msgstr ""
 
-#: templates/index.html:118
+#: templates/demo.html:65 templates/index.html:111
 msgid "Display mask - Background"
 msgstr ""
 
-#: templates/index.html:126
+#: templates/demo.html:73 templates/index.html:119
 msgid "Original Image"
 msgstr ""
 
-#: templates/index.html:128
+#: templates/demo.html:75 templates/index.html:121
 msgid "Grayscale Image"
 msgstr ""
 
-#: templates/index.html:147
+#: templates/demo.html:94 templates/index.html:140
 msgid "Evaluate"
 msgstr ""
 
-#: templates/navbar.html:9
+#: templates/experiments.html:24
+msgid "Experiment ID"
+msgstr ""
+
+#: templates/experiments.html:25
+msgid "Date"
+msgstr ""
+
+#: templates/experiments.html:26 templates/experiments.html:27
+msgid "Asphalt coverage - "
+msgstr ""
+
+#: templates/experiments.html:26
+#, python-format
+msgid "Expert guess [%%]"
+msgstr ""
+
+#: templates/experiments.html:27
+#, python-format
+msgid "Model prediction [%%]"
+msgstr ""
+
+#: templates/experiments.html:28
+msgid "Actions"
+msgstr ""
+
+#: templates/experiments.html:36
+msgid "Max records on page:"
+msgstr ""
+
+#: templates/experiments.html:40 templates/queue.html:59
+msgid "Sort order:"
+msgstr ""
+
+#: templates/experiments.html:41 templates/queue.html:61
+msgid "Descending"
+msgstr ""
+
+#: templates/experiments.html:42 templates/queue.html:60
+msgid "Ascending"
+msgstr ""
+
+#: templates/experiments.html:46 templates/queue.html:65
+msgid "Sort by:"
+msgstr ""
+
+#: templates/experiments.html:52 templates/queue.html:68
+msgid "Previous"
+msgstr ""
+
+#: templates/experiments.html:53 templates/queue.html:69
+msgid "Next"
+msgstr ""
+
+#: templates/experiments.html:64
+msgid "Export"
+msgstr ""
+
+#: templates/experiments.html:70 templates/queue.html:91
+msgid "No records found"
+msgstr ""
+
+#: templates/form.html:21
+msgid "submit"
+msgstr ""
+
+#: templates/home.html:13
+msgid "asphalt classification software"
+msgstr ""
+
+#: templates/home.html:14
+msgid "bitumen adhesion lab"
+msgstr ""
+
+#: templates/home.html:25
+msgid "Welcome to AI BAL!"
+msgstr ""
+
+#: templates/home.html:26
+msgid ""
+"AI BAL is an advanced software tool designed for the analysis and "
+"classification of asphalt images. Utilizing state-of-the-art machine "
+"learning models, AI BAL provides accurate segmentation and classification"
+" of bitumen, aggregate, and background components in asphalt samples."
+msgstr ""
+
+#: templates/home.html:27
+msgid ""
+"With an intuitive interface and powerful features, AI BAL is ideal for "
+"researchers, engineers, and professionals in the field of pavement "
+"materials."
+msgstr ""
+
+#: templates/home.html:28
+msgid ""
+"AI Bitumen Adhesion Lab is a web application for the analysis and "
+"classification of bitumen-aggregate adhesion in asphalt concrete with the"
+" support of national standards (e.g. according to ČSN 73 6161). Using a U"
+"-Net-based AI model, it precisely segments stripped and coated surfaces, "
+"delivering objective, and repeatable results. "
+msgstr ""
+
+#: templates/home.html:30
+msgid ""
+"With an intuitive interface and useful features like automated reports, "
+"it provides researchers, engineers and professionals with fast, reliable,"
+" and science-based alternative to subjective visual assessment."
+msgstr ""
+
+#: templates/home.html:32
+msgid "Try it out"
+msgstr ""
+
+#: templates/home.html:33
+msgid ""
+"Would you like to register your company or research institute? Or does it"
+" sound interesting, but you have more questions\n"
+"                        or need adjustments for your optimal "
+"workflow—such as support for a different national standard?"
+msgstr ""
+
+#: templates/home.html:36
+msgid "Contact us!"
+msgstr ""
+
+#: templates/index.html:10
+msgid "Image Processing with NN"
+msgstr ""
+
+#: templates/index.html:26 templates/navbar.html:18
+msgid "Current Experiment"
+msgstr ""
+
+#: templates/index.html:41
+msgid "Basic Information"
+msgstr ""
+
+#: templates/index.html:49
+msgid "Information (max. 1024 characters):"
+msgstr ""
+
+#: templates/index.html:52
+msgid "Information about the mixture."
+msgstr ""
+
+#: templates/index.html:58 templates/index.html:61
+msgid "Expert Guess"
+msgstr ""
+
+#: templates/navbar.html:10
 msgid "Navbar"
 msgstr ""
 
-#: templates/navbar.html:17
+#: templates/navbar.html:19
 msgid "Queue"
 msgstr ""
 
-#: templates/navbar.html:18
+#: templates/navbar.html:20
 msgid "Experiment History"
 msgstr ""
 
-#: templates/navbar.html:21 templates/navbar.html:22
+#: templates/navbar.html:23 templates/navbar.html:24
 msgid "User"
 msgstr ""
 
-#: templates/navbar.html:26 templates/user_nav_element.html:10
+#: templates/navbar.html:28 templates/user_nav_element.html:10
 msgid "Logout"
 msgstr ""
 
-#: templates/navbar.html:34
+#: templates/navbar.html:36
 msgid "About"
 msgstr ""
 
-#: templates/navbar.html:36
+#: templates/navbar.html:38
 msgid "Register"
 msgstr ""
 
-#: templates/queue.html:18
+#: templates/queue.html:19
 msgid "Uploading files, please wait..."
 msgstr ""
 
-#: templates/queue.html:27
+#: templates/queue.html:28
 msgid "Add to queue"
 msgstr ""
 
-#: templates/queue.html:31
+#: templates/queue.html:32
 msgid "Choose File"
 msgstr ""
 
-#: templates/queue.html:55
+#: templates/queue.html:56
 msgid "Records on page:"
 msgstr ""
 
-#: templates/queue.html:83
+#: templates/queue.html:85
 msgid "Delete"
 msgstr ""
 
-#: templates/user.html:8 templates/user.html:15
+#: templates/user.html:9 templates/user.html:17
 msgid "User Information"
 msgstr ""
 
-#: templates/user.html:25
+#: templates/user.html:27
 msgid "Username: "
 msgstr ""
 
-#: templates/user.html:29
+#: templates/user.html:31
 msgid "First Name: "
 msgstr ""
 
-#: templates/user.html:33
+#: templates/user.html:35
 msgid "Last Name: "
 msgstr ""
 
-#: templates/user.html:37
+#: templates/user.html:39
 msgid "Company: "
 msgstr ""
 
-#: templates/user.html:41
+#: templates/user.html:43
 msgid "E-mail: "
 msgstr ""
 
-#: templates/user.html:49
+#: templates/user.html:51
 msgid "Edit personal information"
 msgstr ""
 
-#: templates/user.html:52
+#: templates/user.html:54
 msgid "Change e-mail address"
 msgstr ""
 

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+
+  <head>
     <title>OpenSeadragon with Konva - Drawing Annotations</title>
 
     <!-- OpenSeadragon -->
@@ -10,110 +11,118 @@
     <script src="../static/node_modules/konva/konva.min.js"></script>
 
     <style>
-        #toolbar {
-            margin-bottom:10px;
-        }
-        
-          #viewer {
-            top: 80px;
-            left: 20px;
-            width: 800px;
-            height: 600px;
-            position: absolute; /* Make sure it's positioned on top of #viewer */
-            border: 1px solid black;
-          }
-          
-          #viewer_mask  {
-            position: absolute; /* Make sure it's positioned on top of #viewer */
-            top: 80px;
-            left: 20px;
-            width: 800px;
-            height: 600px;
-            border: 1px solid black;
-          pointer-events: none; /* Ensure it doesn't block interaction with the OSD viewer */
-        }
-          #viewer_konva  {
-            position: absolute; /* Make sure it's positioned on top of #viewer */
-            top: 80px;
-            left: 20px;
-            width: 800px;
-            height: 600px;
-            border: 1px solid black;
-          pointer-events: none; /* Ensure it doesn't block interaction with the OSD viewer */
-        }
-        .openseadragon-canvas {
-            outline:none; 
-            background-color:#f4f4f4 !important;
-            border-radius:3px;
-            position: absolute;
-        }
+      #toolbar {
+        margin-bottom: 10px;
+      }
 
-        .controls {
-            position: relative;
-            margin-top: 70px;
-        }
+      #viewer {
+        top: 80px;
+        left: 20px;
+        width: 800px;
+        height: 600px;
+        position: absolute;
+        /* Make sure it's positioned on top of #viewer */
+        border: 1px solid black;
+      }
 
-        button {
-            margin-right: 10px;
-        }
+      #viewer_mask {
+        position: absolute;
+        /* Make sure it's positioned on top of #viewer */
+        top: 80px;
+        left: 20px;
+        width: 800px;
+        height: 600px;
+        border: 1px solid black;
+        pointer-events: none;
+        /* Ensure it doesn't block interaction with the OSD viewer */
+      }
 
-        .annotation-tools {
-            position: absolute;
-            top: 10px;
-            left: 175px;
-            z-index: 1000;
-            display: flex;
-            gap: 10px;
-        }
+      #viewer_konva {
+        position: absolute;
+        /* Make sure it's positioned on top of #viewer */
+        top: 80px;
+        left: 20px;
+        width: 800px;
+        height: 600px;
+        border: 1px solid black;
+        pointer-events: none;
+        /* Ensure it doesn't block interaction with the OSD viewer */
+      }
 
-        .tool-btn {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 15px;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
+      .openseadragon-canvas {
+        outline: none;
+        background-color: #f4f4f4 !important;
+        border-radius: 3px;
+        position: absolute;
+      }
 
-        .tool-btn:hover {
-            background-color: #0056b3;
-          }
+      .controls {
+        position: relative;
+        margin-top: 70px;
+      }
 
-        .tool-btn.active {
-            background-color: #0056b3;
-        }
+      button {
+        margin-right: 10px;
+      }
 
+      .annotation-tools {
+        position: absolute;
+        top: 10px;
+        left: 175px;
+        z-index: 1000;
+        display: flex;
+        gap: 10px;
+      }
+
+      .tool-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 15px;
+        cursor: pointer;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        transition: background-color 0.3s;
+      }
+
+      .tool-btn:hover {
+        background-color: #0056b3;
+      }
+
+      .tool-btn.active {
+        background-color: #0056b3;
+      }
     </style>
-</head>
-<body>
+  </head>
 
-  <!-- Annotation Tool Buttons -->
-  <h2>Manual Corrections</h2>
+  <body>
+
+    <!-- Annotation Tool Buttons -->
+    <h2>Manual Corrections</h2>
     <div class="annotation-tools">
-        <button id="polygon-btn" class="tool-btn active">Polygon</button>
-        <button id="rectangle-btn" class="tool-btn">Rectangle</button>
-        <button id="ellipse-btn" class="tool-btn">Ellipse</button>
+      <button id="polygon-btn" class="tool-btn active">Polygon</button>
+      <button id="rectangle-btn" class="tool-btn">Rectangle</button>
+      <button id="ellipse-btn" class="tool-btn">Ellipse</button>
     </div>
 
 
     <div id="viewer"></div>
     <div id="viewer_konva"></div>
-    <div class = "row">
+    <div class="row">
       <div class="controls">
-          <button id="bgButton">Background</button>
-          <button id="fgButton">aggregate</button>
-          <button id="asphaltButton">Asphalt</button>
-        </div>
-    </div>  
+        <button id="bgButton">Background</button>
+        <button id="fgButton">aggregate</button>
+        <button id="asphaltButton">Asphalt</button>
+      </div>
+    </div>
 
-    <script type = "module", src="../static/manual_corrections.js"></script>
-
-
+    <script type="module" , src="../static/manual_corrections.js"></script>
 
 
 
-</body>
+
+
+  </body>
+
 </html>

@@ -4,11 +4,13 @@
 
 
 <html>
+
     <head>
         <title>{{ _('User Information') }}</title>
-            <link rel="stylesheet" href="/static/styles.css">
+        <link rel="stylesheet" href="/static/styles.css">
         <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
-    </head> 
+    </head>
+
     <body>
         <!-- First Row: Image Upload -->
         <div class="colorbar">
@@ -17,9 +19,9 @@
         <div class="container">
             <div class="row modern-row">
                 <div class="column modern-column">
-                    <img class="profile-picture" src="/static/avatars/gorilla.png" alt="Profile Picture" >
+                    <img class="profile-picture" src="/static/avatars/gorilla.png" alt="Profile Picture">
                 </div>
-                <div class="column modern-column">        
+                <div class="column modern-column">
                     <table>
                         <tr>
                             <td>{{ _('Username: ') }}</td>
@@ -44,23 +46,24 @@
                     </table>
                 </div>
 
-                <div class="column modern-column">        
+                <div class="column modern-column">
                     <div class="row">
-                        <button id="editPersonalInformation" type=submit >{{ _('Edit personal information') }}</button>
+                        <button id="editPersonalInformation" type=submit>{{ _('Edit personal information') }}</button>
                     </div>
                     <div class="row">
-                        <button id="changeEmailButton" type=submit >{{ _('Change e-mail address') }}</button>
+                        <button id="changeEmailButton" type=submit>{{ _('Change e-mail address') }}</button>
                     </div>
                     <div class="row">
-                        <button id="changePasswordButton" type=submit >{{ _('Change password') }}</button>
+                        <button id="changePasswordButton" type=submit>{{ _('Change password') }}</button>
                     </div>
                 </div>
             </div>
 
-    </div>
-    
-    <script src="/static/script_user.js"></script>
-</body>
+        </div>
+
+        <script src="/static/script_user.js"></script>
+    </body>
+
 </html>
 
 {% endblock content %}

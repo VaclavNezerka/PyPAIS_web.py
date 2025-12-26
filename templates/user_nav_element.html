@@ -1,11 +1,11 @@
 <div class="nav-dropdown">
-    <button id="user_button" class="lang-btn" >
-        <span class="user-email" > {{ session.user_email }}</span>
-        <img id="user-icon" src="/static/avatars/gorilla.png" alt="User" class="current-lang">
-        <span class="arrow">▼</span>
-    </button>
-    
-  <div  class="user-menu">
+  <button id="user_button" class="lang-btn">
+    <span class="user-email"> {{ session.user_email }}</span>
+    <img id="user-icon" src="/static/avatars/gorilla.png" alt="User" class="current-lang">
+    <span class="arrow">▼</span>
+  </button>
+
+  <div class="user-menu">
     <a href="/user">{{ _('User Profile') }}</a>
     <a href="/logout">{{ _('Logout') }}</a>
   </div>

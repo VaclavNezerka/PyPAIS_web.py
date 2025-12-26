@@ -24,4 +24,3 @@ typing_extensions
 Werkzeug
 WTForms
 email-validator
-onnxruntime

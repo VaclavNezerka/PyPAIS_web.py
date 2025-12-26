@@ -5,97 +5,97 @@
 {% block content %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/styles.css">
-    <title>{{ _('Experiment Records') }}</title>
-</head>
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/styles.css">
+        <title>{{ _('Experiment Records') }}</title>
+    </head>
     <div class="colorbar">
         <h2>{{dynamic_content}}</h2>
     </div>
-    <div id="fileProgressDiv"  class="loading">
+    <div id="fileProgressDiv" class="loading">
         {{ _('Uploading files, please wait...') }}
-        <!-- <progress id="fileProgress" value="0" max="100" style="width: 100%; display: none;" class = "progress"></progress> --> 
-        <progress id="fileProgress" value="0" max="100" class = "progress"></progress>
+        <!-- <progress id="fileProgress" value="0" max="100" style="width: 100%; display: none;" class = "progress"></progress> -->
+        <progress id="fileProgress" value="0" max="100" class="progress"></progress>
 
     </div>
-    
+
     <div class="container">
-    <div class="row">
-        <div class="column">
-           <h2>{{ _('Add to queue') }}</h2>
+        <div class="row">
+            <div class="column">
+                <h2>{{ _('Add to queue') }}</h2>
+            </div>
+            <div class="column">
+                <input type="file" id="fileInput" accept="image/*" class="custom-file-input" name="files[]" multiple>
+                <label for="fileInput" class="custom-file-label">{{ _('Choose File') }}</label>
+            </div>
         </div>
-        <div class="column">
-            <input type="file" id="fileInput" accept="image/*" class="custom-file-input" name="files[]" multiple>
-            <label for="fileInput"  class="custom-file-label">{{ _('Choose File') }}</label>
-        </div>
-    </div>
-    
-     <table>
-         <thead>
-            <tr>
-                {% for column_name in columnames %}
-                <th>
-                    {% if column_name == "Date" %}
-                        <a href="?sort={{ 'asc' if sort_order == 'desc' else 'desc' }}">{{ column_name }}</a>
-                    {% else %}
-                        {{ column_name }}
-                    {% endif %}
-                </th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% if records %}            
-            <tr>
-                <textarea class='text_area' id="current_page" >1</textarea>
-                <!-- <textarea id="current_page" style="display:none">1</textarea> -->
-                <td colspan="{{ column_count }}">
-                    {{ _('Records on page:') }} <input type="number" id="maxRecords" value="10" min="1" max="100">
-                </td>
-                <td>
-                    {{ _('Sort order:') }} <select id="sortOrder">
-                        <option value="asc">{{ _('Ascending') }}</option>
-                        <option value="desc">{{ _('Descending') }}</option>
-                    </select>
-                </td>
-                <td>
-                    {{ _('Sort by:') }} <input type="text" id="sortBy" value="id,date,state" maxlength=128>
-                </td>
-                <td>
-                    <button class="btn-details" id="previous_page">{{ _('Previous') }}</button>
-                    <button class="btn-details" id="next_page">{{ _('Next') }}</button>
-                </td>
-            </tr>
-            {% for record in records[1:] %}
-            {% for field in record %}
-            <tr>
-                {% for column in field %}
-                <td>{{column}}</td>
-                {% endfor %}  
-                <td>
-                    {% if field[-1] in ['prepared', 'started'] %}
-                    <!-- <button class="btn-details" onclick = "editExperimentId('{{field.0}}')">Continue</button> -->
-                    <button class="btn-details" id="edit_{{field.0}}" data-id="{{field.0}}">{{ _('Edit') }}</button>
-                    {% endif %}
-                    <!-- <button class="btn-cancel" onclick="deleteExperimentId('{{field.0}}')">Delete</button> -->
-                    <button class="btn-cancel" id="delete_{{field.0}}" data-id="{{field.0}}">{{ _('Delete') }}</button>
-                </td>
-            </tr>
-            {% endfor %}
-            {% endfor %}
-        {% else %}
-        <p>{{ _('No records found') }}</p>
-        {% endif %}
-        
-    </tbody>
-    </table>
 
-    <script src="/static/script_tables.js"> </script>
-</body>
+        <table>
+            <thead>
+                <tr>
+                    {% for column_name in columnames %}
+                    <th>
+                        {% if column_name == "Date" %}
+                        <a href="?sort={{ 'asc' if sort_order == 'desc' else 'desc' }}">{{ column_name }}</a>
+                        {% else %}
+                        {{ column_name }}
+                        {% endif %}
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% if records %}
+                <tr>
+                    <textarea class='text_area' id="current_page">1</textarea>
+                    <!-- <textarea id="current_page" style="display:none">1</textarea> -->
+                    <td colspan="{{ column_count }}">
+                        {{ _('Records on page:') }} <input type="number" id="maxRecords" value="10" min="1" max="100">
+                    </td>
+                    <td>
+                        {{ _('Sort order:') }} <select id="sortOrder">
+                            <option value="asc">{{ _('Ascending') }}</option>
+                            <option value="desc">{{ _('Descending') }}</option>
+                        </select>
+                    </td>
+                    <td>
+                        {{ _('Sort by:') }} <input type="text" id="sortBy" value="id,date,state" maxlength=128>
+                    </td>
+                    <td>
+                        <button class="btn-details" id="previous_page">{{ _('Previous') }}</button>
+                        <button class="btn-details" id="next_page">{{ _('Next') }}</button>
+                    </td>
+                </tr>
+                {% for record in records[1:] %}
+                {% for field in record %}
+                <tr>
+                    {% for column in field %}
+                    <td>{{column}}</td>
+                    {% endfor %}
+                    <td>
+                        {% if field[-1] in ['prepared', 'started'] %}
+                        <!-- <button class="btn-details" onclick = "editExperimentId('{{field.0}}')">Continue</button> -->
+                        <button class="btn-details" id="edit_{{field.0}}" data-id="{{field.0}}">{{ _('Edit') }}</button>
+                        {% endif %}
+                        <!-- <button class="btn-cancel" onclick="deleteExperimentId('{{field.0}}')">Delete</button> -->
+                        <button class="btn-cancel" id="delete_{{field.0}}"
+                            data-id="{{field.0}}">{{ _('Delete') }}</button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+                {% else %}
+                <p>{{ _('No records found') }}</p>
+                {% endif %}
+
+            </tbody>
+        </table>
+
+        <script src="/static/script_tables.js"> </script>
+        </body>
+
 </html>
 {% endblock content %}
-
-
-

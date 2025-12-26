@@ -5,75 +5,79 @@
 {% block content %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/styles.css">
-    <title>{{ _('Experiment Records') }}</title>
-</head>
-<body>
-    <div class="colorbar">
-        <h2>{{dynamic_content}}</h2>
-    </div>
-    <div class="container">
-    <table>
-        <thead>
-            <tr>
-                <th>{{ _('Experiment ID') }}</th>
-                <th>{{ _('Date') }}</th>
-                <th>{{ _('Asphalt coverage - ') + _('Expert guess [%%]') }}</th>
-                <th>{{ _('Asphalt coverage - ') + _('Model prediction [%%]') }}</th>
-                <th>{{ _('Actions') }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% if records %}         
-                <tr> 
-                    <textarea class='text_area' id="current_page" >1</textarea>
-                    <td colspan="{{ column_count }}">
-                        {{ _('Max records on page:') }} <input type="number" id="maxRecords" value="10" min="1" max="100">
-                    </td>
-                    <td>
-                        {{ _('Sort order:') }} <select id="sortOrder">
-                            <option value="desc">{{ _('Descending') }}</option>
-                            <option value="asc">{{ _('Ascending') }}</option>
-                        </select>
-                    </td>
-                    <td>
-                        {{ _('Sort by:') }} <input type="text" id="sortBy" value="date,id,expert guess,asphalt ratio" maxlength=128>   
-                    </td>
-                    <td>
-                    </td>
-                    <td>
-                        <button class="btn-details" id="previous_page">{{ _('Previous') }}</button>
-                        <button class="btn-details" id="next_page">{{ _('Next') }}</button> 
-                    </td>
-                </tr>
-                {% for record in records[1:] %}
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/styles.css">
+        <title>{{ _('Experiment Records') }}</title>
+    </head>
+
+    <body>
+        <div class="colorbar">
+            <h2>{{dynamic_content}}</h2>
+        </div>
+        <div class="container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ _('Experiment ID') }}</th>
+                        <th>{{ _('Date') }}</th>
+                        <th>{{ _('Asphalt coverage - ') + _('Expert guess [%%]') }}</th>
+                        <th>{{ _('Asphalt coverage - ') + _('Model prediction [%%]') }}</th>
+                        <th>{{ _('Actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if records %}
+                    <tr>
+                        <textarea class='text_area' id="current_page">1</textarea>
+                        <td colspan="{{ column_count }}">
+                            {{ _('Max records on page:') }} <input type="number" id="maxRecords" value="10" min="1"
+                                max="100">
+                        </td>
+                        <td>
+                            {{ _('Sort order:') }} <select id="sortOrder">
+                                <option value="desc">{{ _('Descending') }}</option>
+                                <option value="asc">{{ _('Ascending') }}</option>
+                            </select>
+                        </td>
+                        <td>
+                            {{ _('Sort by:') }} <input type="text" id="sortBy"
+                                value="date,id,expert guess,asphalt ratio" maxlength=128>
+                        </td>
+                        <td>
+                        </td>
+                        <td>
+                            <button class="btn-details" id="previous_page">{{ _('Previous') }}</button>
+                            <button class="btn-details" id="next_page">{{ _('Next') }}</button>
+                        </td>
+                    </tr>
+                    {% for record in records[1:] %}
                     {% for field in record %}
                     <tr>
                         {% for column in field %}
                         <td>{{column}}</td>
-                        {% endfor %}  
+                        {% endfor %}
                         <td>
                             <button class="btn-details" data-id="{{ field.0 }}">{{ _('Edit') }}</button>
                             <button class="btn-export" data-id="{{ field.0 }}">{{ _('Export') }}</button>
                         </td>
                     </tr>
                     {% endfor %}
-                {% endfor %}
-            {% else %}
-                <p>{{ _('No records found') }}</p>
-            {% endif %}
-    </tbody>
-    </table>
+                    {% endfor %}
+                    {% else %}
+                    <p>{{ _('No records found') }}</p>
+                    {% endif %}
+                </tbody>
+            </table>
 
 
 
-</div>
-<script src="/static/script_tables.js"> </script>
-</body>
+        </div>
+        <script src="/static/script_tables.js"> </script>
+    </body>
+
 </html>
 
 {% endblock content %}
-

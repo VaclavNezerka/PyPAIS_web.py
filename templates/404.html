@@ -4,23 +4,22 @@
 
 {% block content %}
 <html>
+
     <head>
-        <title>{{ _('404 Not Found - PyPAIS') }}</title>
+        <title>{{ _('404 Not Found - AIBAL') }}</title>
         <link rel="stylesheet" href="/static/styles.css">
         <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
     </head>
 
     <body>
         <h1>{{ _('Page not found') }}</h1>
-            <div class="column">
-                <img id="defaultImage" src="/static/logo.png" alt="Default Image">
-                <div class="img-magnifier-container">
-                    <img id="uploadedImage" style="display:none;">
-                </div>
+        <div class="column">
+            <img id="defaultImage" src="/static/logo.png" alt="Default Image">
+            <div class="img-magnifier-container">
+                <img id="uploadedImage" style="display:none;">
             </div>
+        </div>
     </body>
+
 </html>
 {% endblock content %}
-
-
-

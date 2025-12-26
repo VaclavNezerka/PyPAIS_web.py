@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-10-27 12:48+0100\n"
+"POT-Creation-Date: 2025-12-26 13:13+0100\n"
 "PO-Revision-Date: 2025-10-21 18:40+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: cs\n"
@@ -18,119 +18,146 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: app.py:331
+#: app.py:318
+msgid "Your session has expired. Please refresh the page and try again."
+msgstr "Vaše relace vypršela. Obnovte ptosím stránku a zkuste znovu."
+
+#: app.py:403
 msgid "You do not have permission to access this data."
 msgstr "Na zobrazení těchto dat nemáte potřebná práva."
 
-#: app.py:341
+#: app.py:413
 msgid "You must be logged in to access this page."
 msgstr "Pro zobrazení této stránky se musíte přihlásit."
 
-#: app.py:378
+#: app.py:462
 msgid "Change email"
 msgstr "Změnit e-mail"
 
-#: app.py:391
+#: app.py:475
 msgid "Email changed successfully."
 msgstr "E-mail úspěšně aktualizován."
 
-#: app.py:402 app.py:420
+#: app.py:486 app.py:504
 msgid "Change personal information"
 msgstr "Upravit osobní informace"
 
-#: app.py:417
+#: app.py:501
 msgid "Personal information updated successfully."
 msgstr "Osobní informace úspěšně aktualizovány."
 
-#: app.py:425 templates/user.html:55
+#: app.py:509 templates/user.html:57
 msgid "Change password"
 msgstr "Změnit heslo"
 
-#: app.py:438
+#: app.py:522
 msgid "Password changed successfully."
 msgstr "Heslo úspěšně aktualizováno."
 
-#: app.py:441
+#: app.py:525
 msgid "The old password is incorrect."
 msgstr "Zadané staré heslo je nesprávné."
 
-#: app.py:486 app.py:504 app.py:507 forms.py:80 templates/navbar.html:35
+#: app.py:570 app.py:588 app.py:591 forms.py:82 templates/navbar.html:37
 msgid "Login"
 msgstr "Přihlásit se"
 
-#: app.py:503 forms.py:52
+#: app.py:587 forms.py:53
 msgid "Invalid username/email or password."
 msgstr "Chybné přihlašovací údaje."
 
-#: app.py:531
+#: app.py:615
 msgid "id"
 msgstr "ID"
 
-#: app.py:531
+#: app.py:615
 msgid "date"
 msgstr "Datum"
 
-#: app.py:531
+#: app.py:615
 msgid "state"
 msgstr "Stav"
 
-#: app.py:531
+#: app.py:615
 msgid "actions"
 msgstr "Akce"
 
-#: app.py:532 templates/experiments.html:60 templates/queue.html:80
+#: app.py:616 templates/experiments.html:63 templates/queue.html:81
 msgid "Edit"
 msgstr "Upravit"
 
-#: app.py:532
+#: app.py:616
 msgid "Cancel"
 msgstr "Zrušit"
 
-#: app.py:559
+#: app.py:643
 msgid "Experiment Queue"
 msgstr "Fronta experimentů"
 
-#: app.py:597
+#: app.py:681
 msgid "None"
 msgstr ""
 
-#: app.py:599 templates/experiments.html:12 templates/queue.html:12
+#: app.py:683 templates/experiments.html:13 templates/queue.html:13
 msgid "Experiment Records"
 msgstr "Záznamy experimentů"
 
-#: app.py:620 app.py:646 app.py:649
+#: app.py:704 app.py:730 app.py:733
 msgid "Register new user"
 msgstr "Registrace nového uživatele"
 
-#: app.py:642
+#: app.py:726
 msgid "Registration successful. Please log in."
 msgstr "Registrace proběhla úspěšně, prosím přihlaste se."
 
-#: app.py:645
+#: app.py:729
 msgid "Database error:"
 msgstr "Chyba databáze:"
 
-#: app.py:648
+#: app.py:732
 msgid "Form validation failed. Please check your input."
 msgstr "Selhala validace formuláře, prosím, zkontrolujte zadané údaje."
 
-#: app.py:832 app.py:855 app.py:893
+#: app.py:921 app.py:944 app.py:982
 msgid "No active experiment found."
 msgstr "Žádný aktivní experiment nenalezen."
 
-#: forms.py:12
+#: app.py:1688
+#, fuzzy
+msgid "No experiment data found."
+msgstr "Žádný aktivní experiment nenalezen."
+
+#: app.py:1689
+msgid "Please fill the expert guess field before evaluating the experiment."
+msgstr "Prosím, vyplňte expertní odhad před vyhodnocením experimentu."
+
+#: app.py:1690
+msgid "Evaluation completed. Check the console for the results."
+msgstr "Vyhodnocení dokončeno. Vizte konzoli s výsledky. "
+
+#: app.py:1691
+msgid "Evaluation results: "
+msgstr "Vyhodnocení výsledků: "
+
+#: app.py:1692
+msgid ""
+"Would you like to use this app with no limitations? Store and export "
+"these results? Contact us to create an account."
+msgstr "Chcete používat tuto aplikaci bez omezení? Ukládat a exportovat tyto výsledky? Kontaktujte nás pro vytvoření účtu."
+
+#: forms.py:13
 msgid "This email address is already used. Please use a different one."
 msgstr "Tento e-mail je již používán. Prosím, zvolte jiný."
 
-#: forms.py:13
+#: forms.py:14
 msgid "This username is already taken. Please choose a different one."
 msgstr "Toto uživatelské jméno je již používáno. Prosím, zvolte jiné.\""
 
-#: forms.py:14
+#: forms.py:15
 msgid "Passwords must match."
 msgstr "Hesla se musí shodovat."
 
-#: forms.py:36
+#: forms.py:37
 #, python-format
 msgid ""
 "No record \"%(field_name)s\" with value \"%(field_data)s\" exists. "
@@ -139,83 +166,84 @@ msgstr ""
 "Žádný záznam \"%(field_name)s\" s hodnotou \"%(field_data)s\" neexistuje."
 " Kontaktujete svého admina pro přihlašovací údaje."
 
-#: forms.py:60
+#: forms.py:61
 msgid "The minimal allowed length is {min} characters."
 msgstr "Minimální povolená délka je {min} znaků."
 
-#: forms.py:63
+#: forms.py:64
 msgid "The maximal allowed length is {max} characters."
 msgstr "Maximální povolená délka je {max} znaků."
 
-#: forms.py:67 forms.py:90
+#: forms.py:68 forms.py:92
 msgid "Username"
 msgstr "Uživatelské jméno"
 
-#: forms.py:68
+#: forms.py:69
 msgid "Email address"
 msgstr "E-mailová adresa"
 
-#: forms.py:70 forms.py:91
+#: forms.py:71 forms.py:93
 msgid "First name"
 msgstr "Jméno"
 
-#: forms.py:71 forms.py:92
+#: forms.py:72 forms.py:94
 msgid "Last name"
 msgstr "Příjmení"
 
-#: forms.py:72
+#: forms.py:73
 msgid "Company Key"
 msgstr "Klíč společnosti"
 
-#: forms.py:73 forms.py:79
+#: forms.py:74 forms.py:81
 msgid "Password"
 msgstr "Heslo"
 
-#: forms.py:74
+#: forms.py:75
 msgid "Confirm password"
 msgstr "Potvrďte heslo"
 
-#: forms.py:75 forms.py:86 forms.py:93 forms.py:106
+#: forms.py:76 forms.py:88 forms.py:95 forms.py:108
 msgid "Submit"
 msgstr "Odeslat"
 
-#: forms.py:78
+#: forms.py:80
 msgid "Username/Email"
 msgstr "Uživatelské jméno / E-mail"
 
-#: forms.py:83
+#: forms.py:85
 msgid "Old password"
 msgstr "Staré heslo"
 
-#: forms.py:84
+#: forms.py:86
 msgid "New password"
 msgstr "Nové heslo"
 
-#: forms.py:85
+#: forms.py:87
 msgid "Confirm new password"
 msgstr "Potvrďte nové heslo"
 
-#: forms.py:98
+#: forms.py:100
 msgid "At least one field must be filled in."
 msgstr "Alespoň jedno pole musí být vyplněno."
 
-#: forms.py:105
+#: forms.py:107
 msgid "New email address"
 msgstr "Nová e-mailová adresa"
 
-#: templates/404.html:8
-msgid "404 Not Found - PyPAIS"
+#: templates/404.html:9
+#, fuzzy
+msgid "404 Not Found - AIBAL"
 msgstr "404 Nenalezeno - PyPAIS"
 
-#: templates/404.html:14
+#: templates/404.html:15
 msgid "Page not found"
 msgstr "Stránka nebyla nalezena"
 
-#: templates/base.html:39
+#: templates/base.html:40
 msgid "2025 Václav Nežerka, David Šilhánek."
 msgstr "2025 Václav Nežerka, David Šilhánek."
 
-#: templates/base.html:42
+#: templates/base.html:43
 msgid ""
 "All rights reserved excluding icons which are where created by artists on"
 " the"
@@ -223,107 +251,31 @@ msgstr ""
 "Všechna práva vyhrezena vyjma práv k inkonám vytvořených umělci na "
 "platformě"
 
-#: templates/base.html:44
+#: templates/base.html:45
 msgid "platform, namely:"
 msgstr "jmenovitě:"
 
-#: templates/base.html:53
+#: templates/base.html:54
 msgid "Development supported by"
 msgstr "Vývoj je pdopořen"
 
-#: templates/base.html:55
+#: templates/base.html:56
 msgid "Technology Agency of the Czech Republic"
 msgstr "Technologickou Agenturou České Republiky"
 
-#: templates/base.html:55
+#: templates/base.html:56
 msgid "project CL02000145."
 msgstr "projekt CL02000145."
 
-#: templates/experiments.html:22
-msgid "Experiment ID"
-msgstr "ID experimentu"
+#: templates/demo.html:6
+msgid "DEMO"
+msgstr "DEMO"
 
-#: templates/experiments.html:23
-msgid "Date"
-msgstr "Datum"
-
-#: templates/experiments.html:24
-msgid "Asphalt coverage - "
-msgstr "Pokrytí asfaltem - "
-
-#: templates/experiments.html:24
-msgid "Expert guess [%%]"
-msgstr "Odborný odhad [%%]"
-
-#: templates/experiments.html:25
-msgid "Asphalt coverage"
-msgstr "Pokrytí asfaltem - "
-
-#: templates/experiments.html:25
-msgid "Model prediction [%%]"
-msgstr "Predikce modelu [%%]"
-
-#: templates/experiments.html:26
-msgid "Actions"
-msgstr "Akce"
-
-#: templates/experiments.html:35
-msgid "Max records on page:"
-msgstr "Maximální počet záznamů na stránku:"
-
-#: templates/experiments.html:38 templates/queue.html:58
-msgid "Sort order:"
-msgstr "Řazení:"
-
-#: templates/experiments.html:39 templates/queue.html:60
-msgid "Descending"
-msgstr "Sestupně"
-
-#: templates/experiments.html:40 templates/queue.html:59
-msgid "Ascending"
-msgstr "Vzestupně"
-
-#: templates/experiments.html:44 templates/queue.html:64
-msgid "Sort by:"
-msgstr "Řadit podle:"
-
-#: templates/experiments.html:49 templates/queue.html:67
-msgid "Previous"
-msgstr "Předchozí"
-
-#: templates/experiments.html:50 templates/queue.html:68
-msgid "Next"
-msgstr "Další"
-
-#: templates/experiments.html:61
-msgid "Export"
-msgstr "Exportovat"
-
-#: templates/experiments.html:67 templates/queue.html:89
-msgid "No records found"
-msgstr "Žádné záznamy nenalezeny"
-
-#: templates/form.html:20
-msgid "submit"
-msgstr "odeslat"
-
-#: templates/home.html:11
-msgid "asphalt classification software"
-msgstr "software pro klasifikaci asfaltu"
-
-#: templates/index.html:9
-msgid "Image Processing with NN"
-msgstr "Zpracování obrazu s neuronovou sítí"
-
-#: templates/index.html:24 templates/navbar.html:16
-msgid "Current Experiment"
-msgstr "Aktuální experiment"
-
-#: templates/index.html:31
+#: templates/demo.html:13 templates/index.html:33
 msgid "Upload Image"
 msgstr "Nahrát obrázek"
 
-#: templates/index.html:34
+#: templates/demo.html:16 templates/index.html:36
 msgid ""
 "By uploading an image, you agree that it may be stored in the application"
 " repository and potentially used by the authors for training future "
@@ -332,139 +284,292 @@ msgstr ""
 "Nahráním obrázku souhlasíte s jeho uložením v aplikaci a možností "
 "budoucího použití jejími autory pro trénink nových modelů."
 
-#: templates/index.html:39
-msgid "Basic Information"
-msgstr "Základní informace"
-
-#: templates/index.html:47
-msgid "Information (max. 1024 characters):"
-msgstr "Informace (max. 1024 znaků):"
-
-#: templates/index.html:53
-msgid "Information about the mixture."
-msgstr "Informace o směsi."
-
-#: templates/index.html:61 templates/index.html:67
-msgid "Expert Guess"
-msgstr "Odborný odhad"
-
-#: templates/index.html:74
+#: templates/demo.html:21 templates/index.html:67
 msgid "Automatic Phase Detection"
 msgstr "Automatická detekce fází"
 
-#: templates/index.html:77
+#: templates/demo.html:24 templates/index.html:70
 msgid "Working..."
 msgstr "Probíhá zpracování..."
 
-#: templates/index.html:84
+#: templates/demo.html:31 templates/index.html:77
 msgid "MODEL"
 msgstr "MODEL"
 
-#: templates/index.html:94
+#: templates/demo.html:41 templates/index.html:87
 msgid "Mask Opacity:"
 msgstr "Neprůhlednost masky:"
 
-#: templates/index.html:106
+#: templates/demo.html:53 templates/index.html:99
 msgid "Display mask - Bitumen"
 msgstr "Zobrazit masku - Asfalt"
 
-#: templates/index.html:112
+#: templates/demo.html:59 templates/index.html:105
 msgid "Display mask - Aggregate"
 msgstr "Zobrazit masku - Kamenivo"
 
-#: templates/index.html:118
+#: templates/demo.html:65 templates/index.html:111
 msgid "Display mask - Background"
 msgstr "Zobrazit masku - Pozadí"
 
-#: templates/index.html:126
+#: templates/demo.html:73 templates/index.html:119
 msgid "Original Image"
 msgstr "Původní obrázek"
 
-#: templates/index.html:128
+#: templates/demo.html:75 templates/index.html:121
 msgid "Grayscale Image"
 msgstr "Obrázek ve stupních šedi"
 
-#: templates/index.html:147
+#: templates/demo.html:94 templates/index.html:140
 msgid "Evaluate"
 msgstr "Vyhodnotit"
 
-#: templates/navbar.html:9
+#: templates/experiments.html:24
+msgid "Experiment ID"
+msgstr "ID experimentu"
+
+#: templates/experiments.html:25
+msgid "Date"
+msgstr "Datum"
+
+#: templates/experiments.html:26 templates/experiments.html:27
+msgid "Asphalt coverage - "
+msgstr "Pokrytí asfaltem - "
+
+#: templates/experiments.html:26
+#, python-format
+msgid "Expert guess [%%]"
+msgstr "Odborný odhad [%%]"
+
+#: templates/experiments.html:27
+#, python-format
+msgid "Model prediction [%%]"
+msgstr "Predikce modelu [%%]"
+
+#: templates/experiments.html:28
+msgid "Actions"
+msgstr "Akce"
+
+#: templates/experiments.html:36
+msgid "Max records on page:"
+msgstr "Maximální počet záznamů na stránku:"
+
+#: templates/experiments.html:40 templates/queue.html:59
+msgid "Sort order:"
+msgstr "Řazení:"
+
+#: templates/experiments.html:41 templates/queue.html:61
+msgid "Descending"
+msgstr "Sestupně"
+
+#: templates/experiments.html:42 templates/queue.html:60
+msgid "Ascending"
+msgstr "Vzestupně"
+
+#: templates/experiments.html:46 templates/queue.html:65
+msgid "Sort by:"
+msgstr "Řadit podle:"
+
+#: templates/experiments.html:52 templates/queue.html:68
+msgid "Previous"
+msgstr "Předchozí"
+
+#: templates/experiments.html:53 templates/queue.html:69
+msgid "Next"
+msgstr "Další"
+
+#: templates/experiments.html:64
+msgid "Export"
+msgstr "Exportovat"
+
+#: templates/experiments.html:70 templates/queue.html:91
+msgid "No records found"
+msgstr "Žádné záznamy nenalezeny"
+
+#: templates/form.html:21
+msgid "submit"
+msgstr "odeslat"
+
+#: templates/home.html:13
+msgid "asphalt classification software"
+msgstr "software pro klasifikaci asfaltu"
+
+#: templates/home.html:14
+msgid "bitumen adhesion lab"
+msgstr "bitumen adhesion lab"
+
+#: templates/home.html:25
+msgid "Welcome to AI BAL!"
+msgstr "Vítejte v AI BAL!"
+
+#: templates/home.html:26
+msgid ""
+"AI BAL is an advanced software tool designed for the analysis and "
+"classification of asphalt images. Utilizing state-of-the-art machine "
+"learning models, AI BAL provides accurate segmentation and classification"
+" of bitumen, aggregate, and background components in asphalt samples."
+msgstr ""
+"AI BAL je pokročilý softwarový nástroj navržený pro analýzu a "
+"klasifikaci fotografií asfaltu. používá nejmodernější modely"
+"strojového učení, AI BAL umožňuje přesnou klasifikaci a segmentaci "
+"komponent asfaltu, kameniva a pozadí asfaltových vzorků."
+
+
+#: templates/home.html:27
+msgid ""
+"With an intuitive interface and powerful features, AI BAL is ideal for "
+"researchers, engineers, and professionals in the field of pavement "
+"materials."
+msgstr ""
+"S intuitivním uživatelským rozhraním stejně jako výkonnými funkcemi je AI BAL ideální volbou pro "
+"výzkumníky, inženýry a techniky zabývající se oblastí materiálů pro pozemní komuniakce."
+
+#: templates/home.html:28
+msgid ""
+"AI Bitumen Adhesion Lab is a web application for the analysis and "
+"classification of bitumen-aggregate adhesion in asphalt concrete with the"
+" support of national standards (e.g. according to ČSN 73 6161). Using a U"
+"-Net-based AI model, it precisely segments stripped and coated surfaces, "
+"delivering objective, and repeatable results. "
+msgstr ""
+"AI Bitumen Adhesion Lab je webovou aplikací určnou k analýze a klasifikaci "
+"vzorků přilnavosti asfaltové směsi ke kamenivu podporující"
+" národní technické normy (např. vyhodnocení dle ČSN 73 6161). Založena na U-Net"
+" AI architektuře, přesně segmentuje povrchy odkryté a zakryté asfaltovou směsí, "
+"čímž vytváří objektivní a replikovatelné výsledky."
+
+#: templates/home.html:30
+msgid ""
+"With an intuitive interface and useful features like automated reports, "
+"it provides researchers, engineers and professionals with fast, reliable,"
+" and science-based alternative to subjective visual assessment."
+msgstr ""
+"S intuitivním rozhraním a šikovnými nástroji jakými jsou například automatizované zkušební protokoly, "
+"nabízí výzkumníkům, inženýrům a profesionálním technikům rychlou, věděckou a spolehlivou"
+" alternativu k vizuálnímu posuzování asfaltových vzorků."
+
+#: templates/home.html:32
+msgid "Try it out"
+msgstr "Zkuste to"
+
+#: templates/home.html:33
+msgid ""
+"Would you like to register your company or research institute? Or does it"
+" sound interesting, but you have more questions\n"
+"                        or need adjustments for your optimal "
+"workflow—such as support for a different national standard?"
+msgstr ""
+"Chtěli byste registrovat svou společnost či institut? Zní to zajímavě, "
+"ale máte více otázek? \n"
+"                        Nebo byste pro své optimální workflow potřebovali další úpravy  "
+"(jako například odlišnou technickou normu)?"
+
+
+#: templates/home.html:36
+msgid "Contact us!"
+msgstr "Kontaktujte nás!"
+
+#: templates/index.html:10
+msgid "Image Processing with NN"
+msgstr "Zpracování obrazu s neuronovou sítí"
+
+#: templates/index.html:26 templates/navbar.html:18
+msgid "Current Experiment"
+msgstr "Aktuální experiment"
+
+#: templates/index.html:41
+msgid "Basic Information"
+msgstr "Základní informace"
+
+#: templates/index.html:49
+msgid "Information (max. 1024 characters):"
+msgstr "Informace (max. 1024 znaků):"
+
+#: templates/index.html:52
+msgid "Information about the mixture."
+msgstr "Informace o směsi."
+
+#: templates/index.html:58 templates/index.html:61
+msgid "Expert Guess"
+msgstr "Odborný odhad"
+
+#: templates/navbar.html:10
 msgid "Navbar"
 msgstr "Navigace"
 
-#: templates/navbar.html:17
+#: templates/navbar.html:19
 msgid "Queue"
 msgstr "Fronta"
 
-#: templates/navbar.html:18
+#: templates/navbar.html:20
 msgid "Experiment History"
 msgstr "Historie experimentů"
 
-#: templates/navbar.html:21 templates/navbar.html:22
+#: templates/navbar.html:23 templates/navbar.html:24
 msgid "User"
 msgstr "Uživatel"
 
-#: templates/navbar.html:26 templates/user_nav_element.html:10
+#: templates/navbar.html:28 templates/user_nav_element.html:10
 msgid "Logout"
 msgstr "Odhlásit se"
 
-#: templates/navbar.html:34
+#: templates/navbar.html:36
 msgid "About"
 msgstr "O aplikaci"
 
-#: templates/navbar.html:36
+#: templates/navbar.html:38
 msgid "Register"
 msgstr "Registrovat se"
 
-#: templates/queue.html:18
+#: templates/queue.html:19
 msgid "Uploading files, please wait..."
 msgstr "Nahrávám soubory, prosím čekejte..."
 
-#: templates/queue.html:27
+#: templates/queue.html:28
 msgid "Add to queue"
 msgstr "Přidat do fronty"
 
-#: templates/queue.html:31
+#: templates/queue.html:32
 msgid "Choose File"
 msgstr "Vybrat soubor"
 
-#: templates/queue.html:55
+#: templates/queue.html:56
 msgid "Records on page:"
 msgstr "Počet záznamů na stránku:"
 
-#: templates/queue.html:83
+#: templates/queue.html:85
 msgid "Delete"
 msgstr "Smazat"
 
-#: templates/user.html:8 templates/user.html:15
+#: templates/user.html:9 templates/user.html:17
 msgid "User Information"
 msgstr "Uživatelské informace"
 
-#: templates/user.html:25
+#: templates/user.html:27
 msgid "Username: "
 msgstr "Uživatelské jméno: "
 
-#: templates/user.html:29
+#: templates/user.html:31
 msgid "First Name: "
 msgstr "Jméno: "
 
-#: templates/user.html:33
+#: templates/user.html:35
 msgid "Last Name: "
 msgstr "Příjmení: "
 
-#: templates/user.html:37
+#: templates/user.html:39
 msgid "Company: "
 msgstr "Organizace: "
 
-#: templates/user.html:41
+#: templates/user.html:43
 msgid "E-mail: "
 msgstr "E-mail: "
 
-#: templates/user.html:49
+#: templates/user.html:51
 msgid "Edit personal information"
 msgstr "Upravit osobní informace"
 
-#: templates/user.html:52
+#: templates/user.html:54
 msgid "Change e-mail address"
 msgstr "Upravit e-mailovou adresu"
 
@@ -486,4 +591,7 @@ msgstr "Profil uživatele"
 
 #~ msgid "Display Asphalt"
 #~ msgstr "Zobrazit asfalt"
+
+#~ msgid "Asphalt coverage"
+#~ msgstr "Pokrytí asfaltem - "
 

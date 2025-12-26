@@ -1,4 +1,5 @@
 # Packages
+import uuid
 from attrs import field
 import pendulum as pdl
 from db_api import User
@@ -32,6 +33,8 @@ from icecream import ic
 from rich.traceback import install
 from typing import Iterable, Literal, cast
 from flask_talisman import Talisman
+import flask_limiter
+import threading
 install()
 
 from warnings import warn,WarningMessage
@@ -70,6 +73,11 @@ def get_locale():
 
 babel = Babel(app, locale_selector=get_locale)
 
+limiter = flask_limiter.Limiter(
+    app=app,
+    key_func=lambda: session.get('user_id', request.remote_addr),
+    default_limits=["500 per day", "100 per hour"]   
+)
 
 # configuration of the mail server
 # app.config['MAIL_SERVER'] = 'smtp.example.com'
@@ -261,8 +269,72 @@ class UserTemporaryStorage:
         asphalt_pixels = np.sum(asphalt_mask)
         return float(asphalt_pixels / non_bg_pixels) if non_bg_pixels > 0 else 0.0
 
-# storage: UserTemporaryStorage  = LocalProxy(lambda: ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id'])))
-storage = LocalProxy(lambda: ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id'])))
+class TemporaryStoryManager:
+    def __init__(self, expire_after_seconds: int = 900):
+        self._storages: dict[str, UserTemporaryStorage] = {}
+        self.expire_after = expire_after_seconds  # in seconds
+        self._lock = threading.Lock()
+        self._check_frequency_seconds = 300  # check every 5 minutes
+        self._start_cleanup_thread()
+
+    def _start_cleanup_thread(self):
+        def cleanup():
+            while True:
+                time.sleep(self._check_frequency_seconds)
+                with self._lock:
+                    current_time = time.time()
+                    expired_keys = [key for key, storage in self._storages.items()
+                                      if current_time - storage.created > self.expire_after]
+                    for key in expired_keys:
+                        print(f'Cleaning up temporary storage for user_id: {key}')
+                        del self._storages[key]
+                        # flash(_('Your temporary data has expired due to time limit. If you want to use the service without limitations, consider creating an account.'), 'info') 
+                        # redirect(url_for('home')) 
+        thread = threading.Thread(target=cleanup, daemon=True)
+        thread.start()
+
+    def create_storage(self, user_id: str) -> None:
+        if user_id not in self._storages:
+            with self._lock:
+                self._storages[user_id] = UserTemporaryStorage(user_id=user_id)
+                self._storages[user_id].created = time.time()
+
+    def get(self, user_id: str) -> UserTemporaryStorage:
+        with self._lock:
+            storage = self._storages[user_id]
+            return storage
+
+tsm = TemporaryStoryManager()  # expire after 1 minute of inactivity    
+
+
+def check_session_timeout(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+
+        uid = session.get('user_id', None)
+        if (uid in ts) or (uid in tsm._storages):
+            return func(*args, **kwargs)
+        else:
+            message = _('Your session has expired. Please refresh the page and try again.')
+            return json.dumps({'status': 'error', 'message': message}), 200
+    return wrapper
+
+
+
+def _get_storage() -> UserTemporaryStorage:
+    if 'user_id' not in session: 
+        session['user_id'] = str(uuid.uuid4())
+
+    if ('authenticated' not in session or not session['authenticated']):
+        # unathenticated user - no session 
+        tsm.create_storage(session['user_id'])
+        return tsm.get(session['user_id'])
+    elif 'authenticated' in session and session['authenticated']:
+        # authenticated user - ensure storage exists
+        return ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id']))
+
+# storage = LocalProxy(lambda: ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id'])))
+storage = LocalProxy(lambda: _get_storage())
 storage: UserTemporaryStorage = cast(UserTemporaryStorage, storage)
 # storage... it behaves like a global variable, but it is actually a proxy to the user-specific storage
 # thus storage.name is actually ts[session['user_id']].name
@@ -342,6 +414,16 @@ def check_authentication(func):
             return redirect(url_for('login')), 302
     return wrapper
 
+def ignore_unauthenticated(func):
+    """The decorator allows access only to authenticated users, otherwise the function is skipped."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if 'authenticated' in session and session['authenticated']:
+            return func(*args, **kwargs)
+        else:
+            pass
+    return wrapper
+
 @app.route('/')
 @check_authentication
 def index():
@@ -350,7 +432,8 @@ def index():
 
 @app.route('/home')
 def home():
-    return render_template('home.html', session=session), 200
+    models = discover_models()
+    return render_template('home.html', session=session, models=models), 200
 
 @app.errorhandler(404)
 def page_not_found(error):
@@ -369,6 +452,7 @@ def logout():
     session.pop('username',None)
     session.pop('authenticated',None)
     session.pop('user_id',None)
+    session.pop('user_email',None)
     return redirect(url_for('login'))
 
 #TODO - consider joining with edit_personal_information (Must be done together with FE editing)
@@ -757,6 +841,7 @@ def update_specific_value(value_name):
     return response    
    
 @app.route('/save_value/<string:value_name>',methods=['POST','GET'])
+@ignore_unauthenticated
 def save_specific_value(value_name):
     try:
         value_name = value_name.lower()
@@ -784,16 +869,20 @@ def evaluate_asphalt():
     print('Non bg pixels:', non_bg_pixels)
     return asphalt_pixels / non_bg_pixels
 
-@app.route('/evaluate-asphalt',methods=['POST'])
-@check_authentication
+
+@app.route('/evaluate-asphalt',methods=['GET', 'POST'])
+# @check_authentication
+@check_session_timeout
 def evaluate_asphalt_caller():
     # evaluation = evaluate_asphalt()
     # inference
-
     # get the result
+    print('storage.user_id')
+    print(storage.user_id)
     evaluation = storage.get_asphalt_ratio()
     save_experiment(state='finished')
-    return json.dumps({'evaluation': evaluation}), 200, {'Content-Type': 'application/json'}
+    print('Asphalt ratio evaluated:', evaluation)
+    return json.dumps({'status': 'success', 'evaluation': evaluation}), 200, {'Content-Type': 'application/json'}
 
 # TODO: CORRECT THE METHOD - should be DELETE
 # @app.route('/delete-experiment/<int:id>',methods=['DLELERTE'])
@@ -913,10 +1002,10 @@ def download_file(filename):
     return send_from_directory('images', filename, as_attachment=True)
 
 # manual corrections
-@app.route('/manual-corrections',methods=['GET'])
-@check_authentication
-def manual_corrections():
-    return render_template('manual_corrections.html')
+# @app.route('/manual-corrections',methods=['GET'])
+# @check_authentication
+# def manual_corrections():
+#     return render_template('manual_corrections.html')
 
 @app.route('/is-experiment-active',methods=['GET'])
 def is_active():
@@ -929,7 +1018,8 @@ def is_active():
         return json.dumps({'status': 'success', 'active': False, 'experimentId': None}), 200, {'Content-Type': 'application/json'}
 
 @app.route('/save',methods=['POST'])
-@check_authentication
+@ignore_unauthenticated
+# @check_authentication
 def save_experiment(**kwargs):
         """
         Saves the current experiment data to the database. If no experiment is active, a new one is created.
@@ -1145,10 +1235,7 @@ def process_image():
         'img_height': image.shape[0],
     })
 
-    # save the data to database
     save_experiment(state='started')
-    # inference
-
 
     response_dict = {
         'status': 'success',
@@ -1568,7 +1655,9 @@ def get_corrected_mask() -> tuple[dict, int, dict]:
     return json.dumps(json_response), 200, {'Content-Type': 'application/json'}
 
 @app.route('/save-annotation', methods=['POST'])
-@check_authentication
+@ignore_unauthenticated
+# @check_authentication
+@deprecated("Used for manual annotation correction in thresholding approach, but not in the current one.")
 def save_annotation():
     # Annotate the data according to the request
     annotation = request.get_json()
@@ -1592,6 +1681,17 @@ def send_static(path):
 @app.route('/node_modules/<path:path>')
 def send_node_modules(path):
     return send_from_directory('node_modules', path)
+
+@app.route('/translations-alerts')
+def translations_alerts():
+    json_translations = {
+        'noExperiment': _('No experiment data found.'),
+        'expertGuessEmpty': _('Please fill the expert guess field before evaluating the experiment.'),
+        'evaluationCompleted': _('Evaluation completed. Check the console for the results.'),
+        'evaluationResults': _('Evaluation results: '),
+        'evaluationDemo': _('Would you like to use this app with no limitations? Store and export these results? Contact us to create an account.'),
+    }
+    return json.dumps(json_translations), 200, {'Content-Type': 'application/json'}
 
 if __name__ == "__main__":
     debug = True
