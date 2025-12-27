@@ -17,3 +17,4 @@ verbose_requirements.txt
 export_req.sh
 initialize_app_linux.sh
 *.ipynb
+.env

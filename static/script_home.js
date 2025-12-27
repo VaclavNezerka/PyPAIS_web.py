@@ -1,8 +1,11 @@
 document.getElementById("TryDemoBtn").addEventListener("click", function () {
-    console.log("Try Demo button clicked")
     document.getElementById("demo_section").scrollIntoView({
         behavior: "smooth",
-        // block: "start",
-        // inline: "nearest",
+    })
+})
+
+document.getElementById("ContactUsBtn").addEventListener("click", function () {
+    document.getElementById("contact_form").scrollIntoView({
+        behavior: "smooth",
     })
 })

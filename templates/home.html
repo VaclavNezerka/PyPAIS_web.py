@@ -33,7 +33,7 @@
                         <p>{{ _('Would you like to register your company or research institute? Or does it sound interesting, but you have more questions
                         or need adjustments for your optimal workflow—such as support for a different national standard?') }}
                         </p>
-                        <button class="custom-file-label">{{ _('Contact us!') }}</button>
+                        <button id='ContactUsBtn' class="custom-file-label">{{ _('Contact us!') }}</button>
                     </div>
                 </div>
             </div>
@@ -41,6 +41,10 @@
 
         <div id="demo_section">
             {%  include "demo.html" %}
+        </div>
+
+        <div id="contact_form">
+            {%  include "form_plain.html" %}
         </div>
 
     </body>

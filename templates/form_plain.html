@@ -1,0 +1,31 @@
+<body>
+
+    <div class="colorbar">
+        <h1>{{ dynamic_content }}</h1>
+    </div>
+
+    <form id="form-recaptcha-protected" method="post">
+        {{ form.hidden_tag() }}
+        <!-- Include the CSRF token field -->
+        {% for field in form %}
+        {% if field.type != 'CSRFTokenField' %}
+        {% if field.type == 'SubmitField'  %}
+        <div>
+            <!-- <button type="submit">{{ _('submit') }}</button> -->
+            <button type="submit" class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}" data-callback='onSubmit'
+                data-action='submit'>{{ _('submit') }}</button>
+        </div>
+
+        {% for error in field.errors %}
+        <p class="error">{{error}}</p>
+        {% endfor %}
+        {% elif field.type != 'HiddenField'  %}
+        <div>{{field.label}}{{field}}</div>
+        {% for error in field.errors %}
+        <p class="error">{{error}}</p>
+        {% endfor %}
+        {% endif %}
+        {% endif %}
+        {% endfor %}
+    </form>
+</body>

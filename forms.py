@@ -4,7 +4,7 @@
 from flask_wtf import FlaskForm
 # RecaptchaField
 from flask import flash
-from wtforms import StringField, PasswordField, SubmitField,ValidationError,IntegerField
+from wtforms import StringField, PasswordField, SubmitField,ValidationError,IntegerField, TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo
 import db_api 
 from flask_babel import lazy_gettext, _
@@ -107,6 +107,15 @@ class ChangeEmailForm(FlaskForm):
     e_mail = StringField(lazy_gettext('New email address'),validators=[DataRequired(), Email(), IsUnique(tablename='public_users', message=messages['email_already_used']),RequiredLength(min=5,max=100)])
     submit = SubmitField(lazy_gettext('Submit'))
 
+class ContactForm(FlaskForm):
+    name = StringField(lazy_gettext('Your Name'),validators=[DataRequired(),RequiredLength(min=1,max=100)])
+    email = StringField(lazy_gettext('Email address'),validators=[DataRequired(), Email(),RequiredLength(min=5,max=100)])
+    subject = StringField(lazy_gettext('Subject'),validators=[DataRequired(),RequiredLength(min=1,max=150)])
+    message = TextAreaField(
+        lazy_gettext('Message'),
+        validators=[DataRequired(),RequiredLength(min=1,max=2000)], 
+    )
+    submit = SubmitField(lazy_gettext('Submit'))
 
 # class RegistrationFormCompany(FlaskForm):
 #     # in future - register companies in a smarter way

@@ -1,10 +1,10 @@
-:root{
-    --myPaleBlue:  #4ecdc4; 
-    --myTopicColor:  #32847e; /* #ff6b6b; */
+:root {
+    --myPaleBlue: #4ecdc4;
+    --myTopicColor: #32847e; /* #ff6b6b; */
     --myDarkDarkGray: #2b2b2b;
     --myDarkGray: #333;
-    --myPaleGray: #556270 ; /*  #556270  // #555 */
-    --myPalePaleGray: #6b7280 ; /*  #556270  // #555 */
+    --myPaleGray: #556270; /*  #556270  // #555 */
+    --myPalePaleGray: #6b7280; /*  #556270  // #555 */
     --myPaleRed: #fd4646;
     --myDarkRed: #b00d28;
     --myPaleGreen: #0db077;
@@ -13,8 +13,6 @@
     --myDarkBlue: #0056b3;
     --myWhite: #ffffff;
 }
-
-
 
 /* @property --myPaleBlue {
     syntax: "<color>";
@@ -37,9 +35,9 @@ body {
 }
 
 .page-container {
-  min-height: 65vh;         /* take full viewport height */
-  display: flex;
-  flex-direction: column;    /* stack header, main, footer vertically */
+    min-height: 65vh; /* take full viewport height */
+    display: flex;
+    flex-direction: column; /* stack header, main, footer vertically */
 }
 
 .container {
@@ -80,12 +78,11 @@ input[type="file"] {
     display: none;
 }
 
-
 /* Style for the custom file input button */
 .custom-file-input {
     margin: 20px 0;
     margin-left: auto;
-    margin-right: auto; 
+    margin-right: auto;
     width: 20%;
     padding: 10px;
     background-color: var(--myTopicColor);
@@ -97,14 +94,14 @@ input[type="file"] {
     transition: background-color 0.3s ease;
     display: inline-block;
     text-align: center;
-    line-height: 40px; 
+    line-height: 40px;
 }
 
 /* Style for the file input label (to mimic button appearance) */
 .custom-file-label {
     margin: 20px 0;
     margin-left: auto;
-    margin-right: auto; 
+    margin-right: auto;
     width: 20%;
     padding: 10px;
     background-color: var(--myTopicColor);
@@ -120,14 +117,18 @@ input[type="file"] {
     background-color: var(--myDarkBlue);
 }
 
-#defaultImage, #uploadedImage, #entropyCanvas, #imageCanvas  {
+#defaultImage,
+#uploadedImage,
+#entropyCanvas,
+#imageCanvas {
     max-width: 100%;
     height: auto;
     display: block;
     margin: 0 auto;
 }
 
-#histogramCanvas, #entropyHistogramCanvas {
+#histogramCanvas,
+#entropyHistogramCanvas {
     width: 90%;
     max-width: 80%;
     height: 200px;
@@ -150,7 +151,7 @@ input[type="file"] {
     margin-bottom: 10px;
 }
 
-.slider{
+.slider {
     appearance: none;
     /* -webkit-appearance: none;
     -moz-appearance: none; */
@@ -161,7 +162,7 @@ input[type="file"] {
     opacity: 0.7;
     transition: opacity 0.2s;
     border-radius: 5px;
-    }
+}
 
 .slider:hover {
     opacity: 1;
@@ -196,7 +197,6 @@ input[type="file"] {
     background: #999;
 }
 
-
 input[type="range"],
 input[type="text"] {
     margin-right: 20px; /* Add spacing between slider and edit box */
@@ -204,7 +204,7 @@ input[type="text"] {
 }
 
 .img-magnifier-container {
-  position: relative;
+    position: relative;
 }
 
 .img-magnifier-glass {
@@ -238,16 +238,21 @@ input[type="text"] {
     justify-content: center;
     align-items: center;
     font-size: 50px;
-    background: linear-gradient(270deg, var(--myPaleRed), var(--myPaleGray), var(--myPaleBlue));
+    background: linear-gradient(
+        270deg,
+        var(--myPaleRed),
+        var(--myPaleGray),
+        var(--myPaleBlue)
+    );
     background-size: 400% 400%;
     animation: gradientAnimation 15s ease infinite;
 }
 
 .overlayImage {
     position: relative;
-    width: fit-content; 
+    width: fit-content;
     height: fit-content;
-    display: none; 
+    display: none;
 }
 
 .error {
@@ -266,7 +271,12 @@ input[type="text"] {
     justify-content: center;
     align-items: center;
     font-size: 18px;
-    background: linear-gradient(270deg, var(--myPaleRed), var(--myPaleGray), var(--myPaleBlue));
+    background: linear-gradient(
+        270deg,
+        var(--myPaleRed),
+        var(--myPaleGray),
+        var(--myPaleBlue)
+    );
     background-size: 400% 400%;
     animation: gradientAnimation 8s ease infinite;
     display: none; /* Hidden by default */
@@ -294,9 +304,8 @@ input[type="text"] {
     }
 }
 
-
 .upper {
-  text-transform: capitalize;
+    text-transform: capitalize;
 }
 
 .colorbar {
@@ -305,7 +314,7 @@ input[type="text"] {
     /* background: black; */
     background: var(--myDarkGray);
     /* background: var(--myTopicColor); */
-        /* background: linear-gradient(to right, var(--myDarkGray), var(--myPaleGray));    */
+    /* background: linear-gradient(to right, var(--myDarkGray), var(--myPaleGray));    */
     /* background: var(--myTopicColor); */
     color: white;
     text-align: center;
@@ -315,7 +324,11 @@ input[type="text"] {
 }
 
 .colorbar2 {
-    background: linear-gradient(to right, var(--myTopicColor), var(--myPaleBlue));
+    background: linear-gradient(
+        to right,
+        var(--myTopicColor),
+        var(--myPaleBlue)
+    );
     /* background: var(--myTopicColor); */
     color: white;
     text-align: center;
@@ -325,7 +338,11 @@ input[type="text"] {
 }
 
 nav {
-    background: linear-gradient(to right, var(--myDarkGray), var(--myDarkDarkGray));   
+    background: linear-gradient(
+        to right,
+        var(--myDarkGray),
+        var(--myDarkDarkGray)
+    );
     /* background: linear-gradient(to right, black, var(--myDarkGray));    */
     /* background: linear-gradient(to right, var(--myTopicColor), var(--myPaleBlue)); */
     background: var(--myDarkDarkGray);
@@ -333,8 +350,8 @@ nav {
     color: white;
     /* overflow: hidden; */
     overflow: visible;
-    padding-top: 0.5%; 
-    padding-bottom: 0.5%; 
+    padding-top: 0.5%;
+    padding-bottom: 0.5%;
 }
 nav ul {
     list-style-type: none;
@@ -399,7 +416,8 @@ form label {
 /* Style for form input fields */
 form input[type="text"],
 form input[type="email"],
-form input[type="password"] {
+form input[type="password"],
+form textarea {
     width: 100%;
     padding: 10px;
     margin-bottom: 15px;
@@ -407,6 +425,11 @@ form input[type="password"] {
     border-radius: 3px;
     font-size: 16px;
     box-sizing: border-box; /* Ensure padding and border are included in width */
+}
+
+form textarea {
+    resize: vertical; /* Allow vertical resizing */
+    min-height: 100px; /* Set a minimum height */
 }
 
 /* Style for form submit button */
@@ -439,7 +462,6 @@ form button[type="submit"]:hover {
     background-color: var(--myDarkBlue);
 }
 
-
 /* footer style */
 
 footer {
@@ -463,9 +485,8 @@ footer .container {
 }
 
 .content {
-  flex: 1; /* pushes footer to bottom */
+    flex: 1; /* pushes footer to bottom */
 }
-
 
 select {
     width: 100%;
@@ -479,11 +500,10 @@ select {
 
 /* image container */
 
-
 .image-container {
     position: relative;
-    width: fit-content; 
-    height: fit-content;; 
+    width: fit-content;
+    height: fit-content;
 }
 
 .image {
@@ -507,7 +527,7 @@ select {
 /* end of image container */
 
 #toolbar {
-    margin-bottom:10px;
+    margin-bottom: 10px;
 }
 
 .viewer_box {
@@ -516,7 +536,7 @@ select {
     width: 80%;
     height: 80%;
     margin: 0 auto;
-} 
+}
 
 .viewer_box > #viewer {
     width: 80%;
@@ -526,7 +546,7 @@ select {
     border: 1px solid black;
 }
 
-.viewer_box > #viewer  {
+.viewer_box > #viewer {
     /* position: absolute; Make sure it's positioned on top of #viewer */
     position: absolute; /* Make sure it's positioned on top of #viewer */
     /* top: 80px;
@@ -538,7 +558,7 @@ select {
     pointer-events: none; /* Ensure it doesn't block interaction with the OSD viewer */
 }
 
-.viewer_box > #viewer_konva  {
+.viewer_box > #viewer_konva {
     position: absolute; /* Make sure it's positioned on top of #viewer */
     /* top: 80px; */
     /* left: 20px; */
@@ -554,10 +574,10 @@ select {
     width: 80%;
     /* width: auto; */
     height: 80%;
-    outline:none; 
-    background-color:#f4f4f4 !important;
-    border-radius:3px;
-    position: absolute;    
+    outline: none;
+    background-color: #f4f4f4 !important;
+    border-radius: 3px;
+    position: absolute;
 }
 
 #dragon_row {
@@ -568,12 +588,12 @@ select {
 }
 
 .viewer_box > #anchor {
-     width: 80%;
+    width: 80%;
     height: 80%;
-    outline:none; 
-    background-color:#f4f4f4 !important;
-    border-radius:3px;
-    position: relative;    
+    outline: none;
+    background-color: #f4f4f4 !important;
+    border-radius: 3px;
+    position: relative;
 }
 
 .controls {
@@ -581,11 +601,9 @@ select {
     margin-top: 0%;
 }
 
-
 button {
     margin-right: 0px;
 }
-
 
 .viewer_box > .annotation-tools {
     position: relative;
@@ -629,11 +647,11 @@ button {
 }
 
 #asphaltButton {
-    background-color: var(--myPaleRed)
+    background-color: var(--myPaleRed);
 }
 #asphaltButton:hover {
     background-color: var(--myDarkRed);
-}   
+}
 
 #asphaltButton.active {
     background-color: var(--myDarkRed);
@@ -644,13 +662,11 @@ button {
 }
 #fgButton:hover {
     background-color: var(--myDarkBlue);
-}   
+}
 
 #fgButton.active {
     background-color: var(--myDarkBlue);
 }
-
-
 
 /* ------------------------------ */
 /* TABLES */
@@ -663,7 +679,8 @@ table {
     margin-bottom: 20px;
 }
 
-th, td {
+th,
+td {
     padding: 10px;
     border: 1px solid #ddd;
 }
@@ -677,7 +694,8 @@ tr:nth-child(even) {
     background-color: #f2f2f2;
 }
 
-.btn-details, .btn-export {
+.btn-details,
+.btn-export {
     padding: 8px 12px;
     margin-right: 5px;
     border: none;
@@ -688,7 +706,8 @@ tr:nth-child(even) {
     transition: background-color 0.3s ease;
 }
 
-.btn-details:hover, .btn-export:hover {
+.btn-details:hover,
+.btn-export:hover {
     background-color: var(--myDarkBlue);
 }
 
@@ -706,10 +725,10 @@ tr:nth-child(even) {
 }
 .btn-cancel:hover {
     background-color: var(--myPaleRed);
-
 }
 
-input[type="text"], input[type="number"] {
+input[type="text"],
+input[type="number"] {
     padding: 8px 12px;
     border: 1px solid #ddd;
     border-radius: 3px;
@@ -717,7 +736,8 @@ input[type="text"], input[type="number"] {
     transition: border-color 0.3s ease;
 }
 
-input[type="text"]:focus, input[type="number"]:focus {
+input[type="text"]:focus,
+input[type="number"]:focus {
     outline: none;
     border-color: var(--myBlue);
 }
@@ -732,7 +752,7 @@ input[type="text"]:focus, input[type="number"]:focus {
     color: white;
     font-family: sans-serif;
     position: relative;
-    z-index: 10;       /* keep it above other sections */
+    z-index: 10; /* keep it above other sections */
     overflow: visible; /* <-- important! */
 }
 
@@ -781,81 +801,79 @@ input[type="text"]:focus, input[type="number"]:focus {
     border-color: var(--myPaleGreen);
 } */
 
-
-
-
 /* 🌐 Language Dropdown */
 .nav-dropdown {
-  position: relative;
-  display: inline-block;
-  z-index: 1000; /* ensures the dropdown appears on top */
+    position: relative;
+    display: inline-block;
+    z-index: 1000; /* ensures the dropdown appears on top */
 }
 /* Show dropdown on hover (desktop) */
-.nav-dropdown:hover .lang-menu , .nav-dropdown:hover .user-menu {
-  display: block;
+.nav-dropdown:hover .lang-menu,
+.nav-dropdown:hover .user-menu {
+    display: block;
 }
-
-
 
 .lang-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: white;
-  font-weight: 500;
-  padding: 0.3rem 0.5rem;
-  transition: background 0.2s ease;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: white;
+    font-weight: 500;
+    padding: 0.3rem 0.5rem;
+    transition: background 0.2s ease;
 }
 
-
 .lang-btn img.current-lang {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
 }
 
 .lang-btn .arrow {
-  font-size: 0.7rem;
-  opacity: 0.8;
+    font-size: 0.7rem;
+    opacity: 0.8;
 }
 
-.user-menu, 
+.user-menu,
 .lang-menu {
-  display: none;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background-color: #2c2c2c;
-  border-radius: 10px;
-  min-width: 140px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-  z-index: 2000; /* ensures visibility even outside navbar */
-  overflow: visible;
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #2c2c2c;
+    border-radius: 10px;
+    min-width: 140px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 2000; /* ensures visibility even outside navbar */
+    overflow: visible;
 }
 
-.lang-menu a, .user-menu a {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0.5rem 0.8rem;
-  text-decoration: none;
-  color: white;
-  font-size: 0.9rem;
-  transition: background 0.2s ease;
+.lang-menu a,
+.user-menu a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.5rem 0.8rem;
+    text-decoration: none;
+    color: white;
+    font-size: 0.9rem;
+    transition: background 0.2s ease;
 }
 
-.lang-menu a img, .user-menu a img {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
+.lang-menu a img,
+.user-menu a img {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
 }
 
-.lang-menu a:hover, .user-menu a:hover {
-  /* background: rgba(192, 188, 178, 0.2); */
-  background: var(--myTopicColor);
+.lang-menu a:hover,
+.user-menu a:hover {
+    /* background: rgba(192, 188, 178, 0.2); */
+    background: var(--myTopicColor);
 }
 
 /* Responsive adjustment */
@@ -890,7 +908,6 @@ footer .container p {
     display: none;
 }
 
-
 .footer-logo {
     height: 128px;
     vertical-align: middle;
@@ -901,11 +918,11 @@ footer .container p {
 
 /* Email below avatar */
 .user-email {
-  font-size: 0.8rem;
-  /* color: #ddd; */
-  color: var(--myPalePaleGray);
-  text-align: center;
-  line-height: 1.1;
+    font-size: 0.8rem;
+    /* color: #ddd; */
+    color: var(--myPalePaleGray);
+    text-align: center;
+    line-height: 1.1;
 }
 
 .profile-picture {

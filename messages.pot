@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-12-26 13:13+0100\n"
+"POT-Creation-Date: 2025-12-27 18:55+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,127 +17,135 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: app.py:318
+#: app.py:348
+msgid "reCAPTCHA verification failed. Please try again."
+msgstr ""
+
+#: app.py:359
 msgid "Your session has expired. Please refresh the page and try again."
 msgstr ""
 
-#: app.py:403
+#: app.py:444
 msgid "You do not have permission to access this data."
 msgstr ""
 
-#: app.py:413
+#: app.py:454
 msgid "You must be logged in to access this page."
 msgstr ""
 
-#: app.py:462
+#: app.py:477 templates/home.html:36
+msgid "Contact us!"
+msgstr ""
+
+#: app.py:514
 msgid "Change email"
 msgstr ""
 
-#: app.py:475
+#: app.py:528
 msgid "Email changed successfully."
 msgstr ""
 
-#: app.py:486 app.py:504
+#: app.py:539 app.py:558
 msgid "Change personal information"
 msgstr ""
 
-#: app.py:501
+#: app.py:555
 msgid "Personal information updated successfully."
 msgstr ""
 
-#: app.py:509 templates/user.html:57
+#: app.py:563 templates/user.html:57
 msgid "Change password"
 msgstr ""
 
-#: app.py:522
+#: app.py:577
 msgid "Password changed successfully."
 msgstr ""
 
-#: app.py:525
+#: app.py:580
 msgid "The old password is incorrect."
 msgstr ""
 
-#: app.py:570 app.py:588 app.py:591 forms.py:82 templates/navbar.html:37
+#: app.py:625 app.py:644 app.py:647 forms.py:82 templates/navbar.html:37
 msgid "Login"
 msgstr ""
 
-#: app.py:587 forms.py:53
+#: app.py:643 forms.py:53
 msgid "Invalid username/email or password."
 msgstr ""
 
-#: app.py:615
+#: app.py:671
 msgid "id"
 msgstr ""
 
-#: app.py:615
+#: app.py:671
 msgid "date"
 msgstr ""
 
-#: app.py:615
+#: app.py:671
 msgid "state"
 msgstr ""
 
-#: app.py:615
+#: app.py:671
 msgid "actions"
 msgstr ""
 
-#: app.py:616 templates/experiments.html:63 templates/queue.html:81
+#: app.py:672 templates/experiments.html:63 templates/queue.html:81
 msgid "Edit"
 msgstr ""
 
-#: app.py:616
+#: app.py:672
 msgid "Cancel"
 msgstr ""
 
-#: app.py:643
+#: app.py:699
 msgid "Experiment Queue"
 msgstr ""
 
-#: app.py:681
+#: app.py:737
 msgid "None"
 msgstr ""
 
-#: app.py:683 templates/experiments.html:13 templates/queue.html:13
+#: app.py:739 templates/experiments.html:13 templates/queue.html:13
 msgid "Experiment Records"
 msgstr ""
 
-#: app.py:704 app.py:730 app.py:733
+#: app.py:760 app.py:783 app.py:786
 msgid "Register new user"
 msgstr ""
 
-#: app.py:726
+#: app.py:779
 msgid "Registration successful. Please log in."
 msgstr ""
 
-#: app.py:729
+#: app.py:782
 msgid "Database error:"
 msgstr ""
 
-#: app.py:732
+#: app.py:785
 msgid "Form validation failed. Please check your input."
 msgstr ""
 
-#: app.py:921 app.py:944 app.py:982
+#: app.py:973 app.py:996 app.py:1034
 msgid "No active experiment found."
 msgstr ""
 
-#: app.py:1688
+#: app.py:1740
 msgid "No experiment data found."
 msgstr ""
 
-#: app.py:1689
+#: app.py:1741
 msgid "Please fill the expert guess field before evaluating the experiment."
 msgstr ""
 
-#: app.py:1690
+#: app.py:1742
 msgid "Evaluation completed. Check the console for the results."
 msgstr ""
 
-#: app.py:1691
+#: app.py:1743
 msgid "Evaluation results: "
 msgstr ""
 
-#: app.py:1692
+#: app.py:1744
 msgid ""
 "Would you like to use this app with no limitations? Store and export "
 "these results? Contact us to create an account."
@@ -174,7 +182,7 @@ msgstr ""
 msgid "Username"
 msgstr ""
 
-#: forms.py:69
+#: forms.py:69 forms.py:112
 msgid "Email address"
 msgstr ""
 
@@ -198,7 +206,7 @@ msgstr ""
 msgid "Confirm password"
 msgstr ""
 
-#: forms.py:76 forms.py:88 forms.py:95 forms.py:108
+#: forms.py:76 forms.py:88 forms.py:95 forms.py:108 forms.py:118
 msgid "Submit"
 msgstr ""
 
@@ -226,6 +234,18 @@ msgstr ""
 msgid "New email address"
 msgstr ""
 
+#: forms.py:111
+msgid "Your Name"
+msgstr ""
+
+#: forms.py:113
+msgid "Subject"
+msgstr ""
+
+#: forms.py:115
+msgid "Message"
+msgstr ""
+
 #: templates/404.html:9
 msgid "404 Not Found - AIBAL"
 msgstr ""
@@ -234,29 +254,29 @@ msgstr ""
 msgid "Page not found"
 msgstr ""
 
-#: templates/base.html:40
+#: templates/base.html:41
 msgid "2025 Václav Nežerka, David Šilhánek."
 msgstr ""
 
-#: templates/base.html:43
+#: templates/base.html:44
 msgid ""
 "All rights reserved excluding icons which are where created by artists on"
 " the"
 msgstr ""
 
-#: templates/base.html:45
+#: templates/base.html:46
 msgid "platform, namely:"
 msgstr ""
 
-#: templates/base.html:54
+#: templates/base.html:58
 msgid "Development supported by"
 msgstr ""
 
-#: templates/base.html:56
+#: templates/base.html:60
 msgid "Technology Agency of the Czech Republic"
 msgstr ""
 
-#: templates/base.html:56
+#: templates/base.html:60
 msgid "project CL02000145."
 msgstr ""
 
@@ -377,7 +397,7 @@ msgstr ""
 msgid "No records found"
 msgstr ""
 
-#: templates/form.html:21
+#: templates/form_plain.html:14 templates/form_plain.html:16
 msgid "submit"
 msgstr ""
 
@@ -434,10 +454,6 @@ msgid ""
 " sound interesting, but you have more questions\n"
 "                        or need adjustments for your optimal "
 "workflow—such as support for a different national standard?"
-msgstr ""
-
-#: templates/home.html:36
-msgid "Contact us!"
 msgstr ""
 
 #: templates/index.html:10

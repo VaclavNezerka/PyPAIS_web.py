@@ -3,6 +3,7 @@ import uuid
 from attrs import field
 import pendulum as pdl
 from db_api import User
+import requests
 from flask import (Flask, render_template, request, 
                    send_from_directory, flash, redirect,
                    session, url_for, abort)
@@ -37,6 +38,7 @@ import flask_limiter
 import threading
 install()
 
+from dotenv import load_dotenv
 from warnings import warn,WarningMessage
 import torch
 from typing_extensions import deprecated
@@ -49,9 +51,25 @@ from flask_babel import Babel, _
 import forms 
 from functools import wraps
 
+load_dotenv(dotenv_path='.env')
+RECAPTCHA_SITE_KEY=os.getenv('RECAPTCHA_SITE_KEY')
+RECAPTCHA_SECRET_KEY=os.getenv('RECAPTCHA_SECRET_KEY')
+print(f'Using reCAPTCHA site key: {RECAPTCHA_SITE_KEY}')
+
 app = Flask(__name__) # set debug to False for production
+# app.config['RECAPTCHA_PUBLIC_KEY'] = RECAPTCHA_SITE_KEY
+# app.config['RECAPTCHA_PRIVATE_KEY'] = RECAPTCHA_SECRET_KEY
+
 csp = {
-    'default-src': ["'self'"],
+    'default-src': [
+        "'self'",
+        "https://www.google.com/recaptcha/"
+    ],
+     'script-src': [
+        "'self'",
+        "https://www.google.com/recaptcha/",
+        "https://www.gstatic.com/recaptcha/"
+     ],
     'img-src': ["'self'", "data:", "blob:"],
 }
 Talisman(app, content_security_policy=csp) # for security headers, force https
@@ -307,6 +325,29 @@ class TemporaryStoryManager:
 tsm = TemporaryStoryManager()  # expire after 1 minute of inactivity    
 
 
+def verify_recaptcha(response_token: str) -> bool:
+    """Verify reCAPTCHA response token with Google's API."""
+    secret_key = RECAPTCHA_SECRET_KEY
+    verify_url = "https://www.google.com/recaptcha/api/siteverify"
+    verify_url = f"{verify_url}?secret={secret_key}&response={response_token}"
+    try:
+        r = requests.post(verify_url).json()
+        if r['success'] == True and r['score'] >= 0.7:
+            return True
+        else:
+            return False
+    except requests.RequestException as e:
+        print(f"Error verifying reCAPTCHA: {e}")
+        return False
+
+def verify_recaptcha_or_abort(response_token: str) -> bool:
+    """Verify reCAPTCHA and abort with 400 if verification fails."""
+    if verify_recaptcha(response_token)==True:
+        pass
+    else:
+        abort(400, description=_('reCAPTCHA verification failed. Please try again.'))
+
+
 def check_session_timeout(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -433,7 +474,18 @@ def index():
 @app.route('/home')
 def home():
     models = discover_models()
-    return render_template('home.html', session=session, models=models), 200
+    title = _('Contact us!')
+    match request.method:
+        case 'GET':
+            form = forms.ContactForm()
+            return render_template('home.html', session=session, models=models, form=form, dynamic_content=title, recaptcha_site_key = RECAPTCHA_SITE_KEY), 200
+        case 'POST':
+            verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
+            form = forms.ContactForm()
+            if form.validate_on_submit():
+                raise NotImplementedError('Email sending not implemented yet.')
+                ... # TODO - send email
+
 
 @app.errorhandler(404)
 def page_not_found(error):
@@ -463,8 +515,9 @@ def change_email():
     match request.method:
         case 'GET':
             form=forms.ChangeEmailForm()
-            return render_template('form.html',dynamic_content=title,form=form,session=session)
+            return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
+            verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form=forms.ChangeEmailForm()
             if form.validate_on_submit():
                 # TODO - consider removal - old approach - unused
@@ -475,7 +528,7 @@ def change_email():
                 flash(_('Email changed successfully.'), 'success')
                 return redirect('/user')
             else:
-                return render_template('form.html',dynamic_content=title,form=form,session=session)
+                return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
 
 @app.route('/edit-personal-information',methods=['GET','POST'])
 @check_authentication
@@ -483,8 +536,9 @@ def edit_personal_information():
     match request.method:
         case 'GET':
             form=forms.EditPersonalInformationForm()
-            return render_template('form.html',dynamic_content=_('Change personal information'),form=form,session=session)
+            return render_template('form.html',dynamic_content=_('Change personal information'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
+            verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form=forms.EditPersonalInformationForm()
             if form.validate_on_submit():
                 print('Form validated successfully.')
@@ -501,7 +555,7 @@ def edit_personal_information():
                 flash(_('Personal information updated successfully.'), 'success')
                 return redirect('/user')
             else:
-                return render_template('form.html',dynamic_content=_('Change personal information'),form=form,session=session)
+                return render_template('form.html',dynamic_content=_('Change personal information'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
 
 @app.route('/change-password',methods=['GET','POST'])
 @check_authentication
@@ -510,8 +564,9 @@ def change_password():
     match request.method:
         case 'GET':
             form=forms.ChangePasswordForm()
-            return render_template('form.html',dynamic_content=title,form=form,session=session)
+            return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
+            verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form=forms.ChangePasswordForm()
             if form.validate_on_submit():                
                 # check if the old password is correct
@@ -523,9 +578,9 @@ def change_password():
                     return redirect('/user'), 302
                 else:
                     flash(_('The old password is incorrect.'), 'error')
-                    return render_template('form.html',dynamic_content=title,form=form,session=session), 200
+                    return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY), 200
             else:
-                return render_template('form.html',dynamic_content=title,form=form,session=session), 200
+                return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY), 200
 
 def bool_to_image_array(array: np.ndarray) -> np.ndarray:
     """
@@ -567,8 +622,9 @@ def login():
     match request.method:
         case 'GET':
             form=forms.LoginForm()
-            return render_template('form.html',dynamic_content=_('Login'),form=form, session=session)
+            return render_template('form.html',dynamic_content=_('Login'),form=form, session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
+            verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form=forms.LoginForm()
             if form.validate_on_submit():
                 user_id = db_api.get_user_id(username=form.usernameXe_mail.data, email=form.usernameXe_mail.data)
@@ -585,10 +641,10 @@ def login():
                     return redirect('/'), 302   
                 else:
                     flash(_('Invalid username/email or password.'), 'error')
-                    return render_template('form.html', dynamic_content=_('Login'), form=form, session=session)
+                    return render_template('form.html', dynamic_content=_('Login'), form=form, session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
             else:
                 # form validation failed - user is notified by flash messages in the form
-                return render_template('form.html', dynamic_content=_('Login'), form=form, session=session)
+                return render_template('form.html', dynamic_content=_('Login'), form=form, session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
 
 def sort_records(records: list, sort_order: Literal['asc', 'desc'], sort_by: str, page_limit: int) -> list:
     if sort_order == 'asc':
@@ -701,16 +757,15 @@ def register():
     match request.method:
         case 'GET':
             form=forms.RegistrationFormUser()
-            return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session)
+            return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
+            verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form=forms.RegistrationFormUser()
             if form.validate_on_submit():
                 print('Form validated successfully.')
                 # form.password.data=ws.generate_password_hash(form.password.data,method=os.environ['HASH_METHOD'],salt_length=int(os.environ['SALT_LENGTH']))
                 form.password.data=generate_password_hash(form.password.data)
-                print('1')
                 company_id=db_api.get_company_id_by_key(form.company_key.data)
-                print('2')
                 user_dict = {
                     'username': form.username.data,
                     'e_mail': form.e_mail.data,
@@ -719,18 +774,16 @@ def register():
                     'company': company_id,
                     'pwd': form.password.data
                 }
-                print('3')
                 result = db_api.save_new_user_db(values=user_dict)
-                print('3')
                 if result is None:
                     flash(message=_('Registration successful. Please log in.'),category='success')
                     return redirect(url_for('login')), 302
                 else:
                     flash(message=_('Database error:') + f'{result}', category='error')
-                    return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session), 500
+                    return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY), 500
             else:
                 flash(message=_('Form validation failed. Please check your input.'),category='error')
-                return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session)
+                return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
 
 
 # TODO: CONSIDER REMOVAL - BAD DESIGN - SPLIT THE FUNCTIONALITY
@@ -876,9 +929,8 @@ def evaluate_asphalt():
 def evaluate_asphalt_caller():
     # evaluation = evaluate_asphalt()
     # inference
-    # get the result
-    print('storage.user_id')
-    print(storage.user_id)
+    # get the resul
+
     evaluation = storage.get_asphalt_ratio()
     save_experiment(state='finished')
     print('Asphalt ratio evaluated:', evaluation)
