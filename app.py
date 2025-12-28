@@ -83,6 +83,37 @@ app.config['BABEL_SUPPORTED_LOCALES'] = ['en', 'cs']
 app.config['LANGUAGES'] = ['en', 'cs']
 # app.permanent_session_lifetime=timedelta(days=5)
 
+# MAIL CONFIGURATION
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
+app.config['MAIL_SUPPRESS_SEND'] = os.getenv('MAIL_SUPPRESS_SEND') == 'True'
+# the mail password must be provided via environment variable for security reasons 
+# app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+# app.config['TESTING'] = False
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+
+mail = Mail(app)
+
+print(f'Mail server configured: {app.config["MAIL_SERVER"]}, \n user: {app.config["MAIL_USERNAME"]}, \n TLS: {app.config["MAIL_USE_TLS"]}, \n SSL: {app.config["MAIL_USE_SSL"]}, \n Suppress send: {app.config["MAIL_SUPPRESS_SEND"]}')
+
+def send_email(subject: str, recipients: list[str], body: str) -> bool:
+    """Send an email using Flask-Mail."""
+    try:
+        msg = Message(
+            subject, 
+            sender=app.config['MAIL_USERNAME'],
+            recipients=recipients, 
+            body=body
+        )
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        return False
+
 def get_locale():
     lang = session.get('lang', None) 
     if lang is None:
@@ -471,7 +502,7 @@ def index():
     models = discover_models()
     return render_template('index.html', session=session, models=models), 200
 
-@app.route('/home')
+@app.route('/home', methods=['GET','POST'])
 def home():
     models = discover_models()
     title = _('Contact us!')
@@ -483,9 +514,19 @@ def home():
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form = forms.ContactForm()
             if form.validate_on_submit():
-                raise NotImplementedError('Email sending not implemented yet.')
-                ... # TODO - send email
-
+                # send email to admin
+                subject =f'AIBAL: {form.subject.data}'
+                body = f'From: {form.name.data} <{form.email.data}>\n\n{form.message.data}'
+                r = send_email(subject=subject, recipients=[os.getenv('MAIL_RECIPIENT_ADDRESS'), 'david.silhanek@fsv.cvut.cz'], body=body)
+                if r:
+                    flash(_('Your message has been sent successfully.'), 'success')
+                    return redirect(url_for('home')), 302
+                else:
+                    flash(_('There was an error sending your message. Please try again.'), 'error')
+                    return render_template('home.html', session=session, models=models, form=form, dynamic_content=title, recaptcha_site_key = RECAPTCHA_SITE_KEY), 200
+            else:
+                flash(_('There was an error sending your message. Please try again.'), 'error')
+                return render_template('home.html', session=session, models=models, form=form, dynamic_content=title, recaptcha_site_key = RECAPTCHA_SITE_KEY), 200
 
 @app.errorhandler(404)
 def page_not_found(error):
@@ -748,9 +789,7 @@ def user():
     """
     user_data_dict = db_api.get_user_info_by_id(user_id=session['user_id'])
     return render_template('user.html',session=session,dynamic_content=user_data_dict)
-
-
-
+            
 @app.route('/register',methods=['GET','POST'])
 def register():
     logout()
