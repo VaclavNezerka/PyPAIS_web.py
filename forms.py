@@ -76,6 +76,13 @@ class RegistrationFormUser(FlaskForm):
     submit = SubmitField(lazy_gettext('Submit'))
     # recaptcha = RecaptchaField()
 
+class RegistrationFormCompany(FlaskForm):  
+    company_name = StringField(lazy_gettext('Company Name'),validators=[DataRequired(),IsUnique(tablename='public_companies', message=messages['username_already_taken']),RequiredLength(min=1,max=50)],)    
+    e_mail = StringField(lazy_gettext('Email address'),
+                         validators=[DataRequired(), Email(),IsUnique(tablename='public_companies', message=messages['email_already_used']),RequiredLength(min=5,max=100)])
+    company_address = StringField(lazy_gettext('Company address'),validators=[DataRequired()])
+    submit = SubmitField(lazy_gettext('Submit'))
+
 class LoginForm(FlaskForm):
     usernameXe_mail = StringField(lazy_gettext('Username/Email'),validators=[DataRequired(),ExistsAny(tablename='public_users')])
     password = PasswordField(lazy_gettext('Password'),validators=[DataRequired()])
@@ -85,6 +92,15 @@ class ChangePasswordForm(FlaskForm):
     old_password = PasswordField(lazy_gettext('Old password'),validators=[DataRequired()])
     new_password = PasswordField(lazy_gettext('New password'),validators=[DataRequired(),RequiredLength(min=8)])
     confirm_new_password = PasswordField(lazy_gettext('Confirm new password'),validators=[DataRequired(), EqualTo('new_password', message=messages['passwords_must_match'])])
+    submit = SubmitField(lazy_gettext('Submit'))
+
+class ChangeForgottenPasswordForm(FlaskForm):
+    new_password = PasswordField(lazy_gettext('New password'),validators=[DataRequired(),RequiredLength(min=8)])
+    confirm_new_password = PasswordField(lazy_gettext('Confirm new password'),validators=[DataRequired(), EqualTo('new_password', message=messages['passwords_must_match'])])
+    submit = SubmitField(lazy_gettext('Submit'))
+
+class ForgottenPasswordForm(FlaskForm):
+    e_mail = StringField(lazy_gettext('Your Email address'),validators=[DataRequired(), Email(),RequiredLength(min=5,max=100)])
     submit = SubmitField(lazy_gettext('Submit'))
 
 class EditPersonalInformationForm(FlaskForm):

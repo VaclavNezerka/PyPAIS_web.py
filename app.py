@@ -32,7 +32,7 @@ import base64
 from matplotlib.path import Path as polygon_path
 from icecream import ic
 from rich.traceback import install
-from typing import Iterable, Literal, cast
+from typing import Iterable, Literal, cast, Any
 from flask_talisman import Talisman
 import flask_limiter
 import threading
@@ -50,6 +50,8 @@ from flask_babel import Babel, _
 # Apps
 import forms 
 from functools import wraps
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+
 
 load_dotenv(dotenv_path='.env')
 RECAPTCHA_SITE_KEY=os.getenv('RECAPTCHA_SITE_KEY')
@@ -94,6 +96,9 @@ app.config['MAIL_SUPPRESS_SEND'] = os.getenv('MAIL_SUPPRESS_SEND') == 'True'
 # app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 # app.config['TESTING'] = False
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+ADMIN_EMAIL_ADDRESSES = json.loads(os.getenv('ADMIN_EMAIL_ADDRESSES', '[]'))
+
+MAX_TOKEN_AGE = int(os.getenv('MAX_TOKEN_AGE', '3600'))  # in seconds, default to 1 hour
 
 mail = Mail(app)
 
@@ -355,6 +360,132 @@ class TemporaryStoryManager:
 
 tsm = TemporaryStoryManager()  # expire after 1 minute of inactivity    
 
+serializer = URLSafeTimedSerializer(app.secret_key)
+
+# TODO - implement a thread that will clean up expired tokens from the database periodically
+
+def send_email_confirmation(to_mails: list[str], data: dict, confirmation: Literal ['confirm_email_first', 'confirm_email_change', 'confirm_company_registration_admin', 'confirm_password_reset'], intro_text: str, request_details: dict = {}, title: str = 'AIBAL') -> bool:
+    """Send an email confirmation link to the user.
+    
+    Parameters:
+        data (dict): A dictionary containing user data, including 'e_mail'.
+        confirmation (str): The type of confirmation ('confirm_email_first', 'confirm_email_change', 'confirm_company_registration_admin', 'confirm_password_reset').
+        salt (str): The salt to use for token generation.
+        info_text (str): Introductory text to include in the email.
+        request_details (dict): Details about the request to include in the email. Defaults to an empty dictionary.
+    """
+    try:
+        token = serializer.dumps(data, salt=f'{confirmation}-salt')
+        confirm_url = url_for(confirmation, token=token, _external=True)
+        
+        template = 'mail_confirm.html'
+
+        body = render_template(
+            template, 
+            TITLE=title, 
+            INTRO_TEXT=intro_text, 
+            REQUEST_DETAILS=request_details, 
+            CONFIRMATION_URL=confirm_url, 
+            YEAR=pdl.now().year)
+        
+        msg = Message(
+            title, 
+            sender=app.config['MAIL_USERNAME'],
+            recipients=to_mails, 
+            html=body
+        )
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Failed to send email confirmation: {e}")
+        return False    
+
+def confirm_request(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except BadSignature:
+            flash(_('The confirmation link is invalid'), 'danger')
+            return redirect(url_for('home'))
+        except SignatureExpired:
+            flash(_('The confirmation link has expired.'), 'danger')
+            return redirect(url_for('home'))
+    return wrapper
+
+@app.route('/confirm_email/<token>')
+@confirm_request
+def confirm_email(token: str):
+    """Confirm the user's email address using the provided token."""
+    email = serializer.loads(token, salt='confirm_email-salt', max_age=MAX_TOKEN_AGE)['e_mail']  # token valid for 1 hour
+    db_api.confirm_user_email(email)
+    flash(_('Your email address has been confirmed. You can now log in!'), 'success')
+    return redirect(url_for('login'))
+@app.route('/confirm_email/<token>')
+
+@app.route('/confirm_company_registration_user/<token>', methods=['GET', 'POST'])
+@confirm_request
+def confirm_company_registration_user(token: str):
+    """Confirm the user's email address using the provided token."""
+    match request.method: 
+        case 'GET':
+            email = serializer.loads(token, salt='confirm_company_registration_user-salt', max_age=MAX_TOKEN_AGE)['e_mail']  # token valid for 1 hour
+            db_api.confirm_user_email(email)
+            print(f'Confirming company registration for user email: {email}')
+            form = forms.ChangeForgottenPasswordForm()
+            flash(_('Your email address has been confirmed. Please, create your password to complete the registration!'), 'success')
+            return render_template('form.html', form=forms.ChangeForgottenPasswordForm(), token=token), 200
+        case 'POST':
+            form = forms.ChangeForgottenPasswordForm()
+            if form.validate_on_submit():
+                email = serializer.loads(token, salt='confirm_company_registration_user-salt', max_age=MAX_TOKEN_AGE)['e_mail']  # token valid for 1 hour
+                password_hash = generate_password_hash(form.new_password.data)
+                user_id = db_api.get_user_id(email=email)
+                db_api.update_users_table(values_dict={'pwd': password_hash}, user_id=user_id)
+                flash(_('Your password has been set. You can now log in!'), 'success')
+            else:
+                flash(_('There was an error setting your password. Please try again.'), 'danger')
+                return render_template('form.html', form=form, token=token), 200
+            return redirect(url_for('login'))
+
+@app.route('/confirm_company_registration_admin/<token>')
+@confirm_request
+def confirm_company_registration_admin(token: str):
+    print(token)
+    """Confirm a registration of a new company using the provided token."""
+    datadict = serializer.loads(token, salt='confirm_company_registration_admin-salt', max_age=MAX_TOKEN_AGE)  # token valid for 1 hour
+    # TODO: implement logic 
+    db_api.confirm_company_registration(datadict['e_mail'])
+    
+    # create the company administrator account automatically
+    user_data = {
+        'username': 'Admin_'+ datadict['company_name'],
+        'e_mail': datadict['e_mail'],
+        'first_name': 'Admin',
+        'last_name': datadict['company_name'],
+        'company': datadict['company_id'],
+        'pwd': generate_password_hash(generate_rnd_string(12)),  
+    }
+    db_api.save_new_user_db(user_data)
+    user_id = db_api.get_user_id(email=user_data['e_mail'])
+    db_api.change_admin_privileges(user_id, True)
+    
+    # send notification to the company admin
+    print(datadict)
+    send_email_confirmation(
+        to_mails=[datadict['e_mail']],
+        data={'e_mail': datadict['e_mail']}, 
+        confirmation='confirm_company_registration_user',
+        intro_text=_('Welcome to AIBAL! Your company registration has been confirmed by the AIBAL administrator.' \
+                     'The administrator account for your company has been created automatically (with this email address currently used as a login username - you can change any credentials later).' \
+                     'Your administrator was automatically created account has been set up. ' \
+                     'Please confirm your email address and create the password to your account by clicking the button below:'),
+        title=_('AIBAL: Please confirm your ADMIN email address')
+    )
+
+    flash(_('The company has been successfully confirmed. The company administrator will be notified automatically.'), 'success')
+    return redirect(url_for('login'))
+
 
 def verify_recaptcha(response_token: str) -> bool:
     """Verify reCAPTCHA response token with Google's API."""
@@ -517,7 +648,7 @@ def home():
                 # send email to admin
                 subject =f'AIBAL: {form.subject.data}'
                 body = f'From: {form.name.data} <{form.email.data}>\n\n{form.message.data}'
-                r = send_email(subject=subject, recipients=[os.getenv('MAIL_RECIPIENT_ADDRESS'), 'david.silhanek@fsv.cvut.cz'], body=body)
+                r = send_email(subject=subject, recipients=ADMIN_EMAIL_ADDRESSES, body=body)
                 if r:
                     flash(_('Your message has been sent successfully.'), 'success')
                     return redirect(url_for('home')), 302
@@ -669,6 +800,12 @@ def login():
             form=forms.LoginForm()
             if form.validate_on_submit():
                 user_id = db_api.get_user_id(username=form.usernameXe_mail.data, email=form.usernameXe_mail.data)
+                
+                # check if the email is confirmed
+                if not db_api.is_user_email_confirmed(user_id=user_id):
+                    flash(_('Please confirm your email address before logging in.'), 'error')
+                    return redirect(url_for('login')), 302
+                
                 authenticated = is_password_correct(password=form.password.data, user_id=user_id)
                 if authenticated:
                     session['authenticated'] = True
@@ -801,8 +938,15 @@ def register():
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form=forms.RegistrationFormUser()
             if form.validate_on_submit():
+                intro_text = _('Thank you for signing up! Please confirm your email address by clicking the link below:')
+                send_email_confirmation(
+                    to_mails=[form.e_mail.data],
+                    data={'e_mail': form.e_mail.data},
+                    confirmation='confirm_email',
+                    intro_text=intro_text,
+                    title=_('AIBAL: Please confirm your email address')
+                )
                 print('Form validated successfully.')
-                # form.password.data=ws.generate_password_hash(form.password.data,method=os.environ['HASH_METHOD'],salt_length=int(os.environ['SALT_LENGTH']))
                 form.password.data=generate_password_hash(form.password.data)
                 company_id=db_api.get_company_id_by_key(form.company_key.data)
                 user_dict = {
@@ -815,7 +959,60 @@ def register():
                 }
                 result = db_api.save_new_user_db(values=user_dict)
                 if result is None:
-                    flash(message=_('Registration successful. Please log in.'),category='success')
+                    flash(message=_('Registration successful. Please confirm your email via the link sent to your email address.'),category='success')
+                    return redirect(url_for('login')), 302
+                else:
+                    flash(message=_('Database error:') + f'{result}', category='error')
+                    return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY), 500
+            else:
+                flash(message=_('Form validation failed. Please check your input.'),category='error')
+                return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+
+def generate_company_key() -> str:
+    """Generates a unique company key."""
+    while True:
+        key = uuid.uuid4().hex[:8]  # generate an 8-character hex string
+        if not db_api.check_company_key_exists(key):
+            break        
+    return key  
+        
+
+@app.route('/register-company',methods=['GET','POST'])
+def register_company():
+    logout()
+    match request.method:
+        case 'GET':
+            form=forms.RegistrationFormCompany()
+            return render_template('form.html',dynamic_content=_('Register new company'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+        case 'POST':
+            verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
+            form=forms.RegistrationFormCompany()
+            if form.validate_on_submit():
+                print('Form validated successfully.')
+                values = {
+                    'company_name': form.company_name.data,
+                    'company_address': form.company_address.data,
+                    'e_mail': form.e_mail.data,
+                    'company_key': generate_company_key(),
+                }
+                result = db_api.save_new_company_db(values=values)
+                # send email to admin for confirmation
+                intro_text = _('A new company registration with the following details has been requested:')
+                request_details = {
+                    _('Company Name'): form.company_name.data,
+                    _('Company Address'): form.company_address.data,
+                    _('Contact Email'): form.e_mail.data,
+                }
+                send_email_confirmation(
+                    to_mails=ADMIN_EMAIL_ADDRESSES,
+                    data={'e_mail': form.e_mail.data, 'company_name': form.company_name.data, 'company_id': db_api.get_company_id_by_key(values['company_key'])},
+                    confirmation='confirm_company_registration_admin',
+                    intro_text=intro_text,
+                    request_details=request_details,
+                    title=_('AIBAL: New company registration request')
+                )
+                if result is None:
+                    flash(message=_('Registration successful. Please confirm this request in your ADMIN mail account.'),category='success')
                     return redirect(url_for('login')), 302
                 else:
                     flash(message=_('Database error:') + f'{result}', category='error')

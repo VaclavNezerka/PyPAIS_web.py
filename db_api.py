@@ -5,6 +5,7 @@ from psycopg2.extras import RealDictCursor
 from functools import wraps
 from flask import flash
 from dataclasses import dataclass
+from sqlalchemy import values
 from typing_extensions import deprecated
 
 # # TODO: ***** 
@@ -283,6 +284,64 @@ def get_experiment_by_id(cur, conn, experiment_id: str) -> dict | None:
     # Convert RealDictRow to a regular dict
     result = dict(result)
     return result
+
+@db_connection
+def save_new_company_db(cur, conn , values: dict):
+    valid_keys = {'company_name', 'company_address', 'company_key', 'e_mail'}
+    filtered_values = {k: v for k, v in values.items() if k in valid_keys}
+    
+    query = f"INSERT INTO public_companies ({', '.join(filtered_values.keys())}) VALUES ({', '.join(['%s'] * len(filtered_values))})"
+    cur.execute(query, tuple(filtered_values.values()))
+    conn.commit()
+    return None  # Success
+
+@db_connection
+def check_company_key_exists(cur, conn, company_key: str) -> bool:
+    """Check if a company key already exists in the database."""
+    query = "SELECT company_id FROM public_companies WHERE company_key=%s"
+    result = execute_query(query, (str(company_key),))
+    return bool(result)
+
+@db_connection
+def confirm_user_email(cur, conn, email: str) -> None:
+    query = "UPDATE public_users SET e_mail_confirmed=True WHERE e_mail=%s"
+    cur.execute(query, (email,))
+    conn.commit()
+
+@db_connection
+def confirm_company_registration(cur, conn, email: str) -> None:
+    query = "UPDATE public_companies SET confirmed_by_admin=True WHERE e_mail=%s"
+    cur.execute(query, (email,))
+    conn.commit()
+
+@db_connection
+
+def confirm_company_email(cur, conn, email: str) -> None:
+    query = "UPDATE public_companies SET e_mail_confirmed=True WHERE e_mail=%s"
+    cur.execute(query, (email,))
+    conn.commit()
+
+@db_connection
+def is_user_email_confirmed(cur, conn, user_id: int) -> bool:
+    query = "SELECT e_mail_confirmed FROM public_users WHERE id=%s"
+    result = execute_query(query, (user_id,))
+    if not result:
+        return False
+    return result[0][0]
+
+@db_connection
+def is_company_email_confirmed(cur, conn, company_id: int) -> bool:
+    query = "SELECT e_mail_confirmed FROM public_companies WHERE company_id=%s"
+    result = execute_query(query, (company_id,))
+    if not result:
+        return False
+    return result[0][0]
+
+@db_connection
+def change_admin_privileges(cur, conn , user_id: int, is_admin: bool):
+    query = "UPDATE public_users SET is_company_admin=%s WHERE id=%s"
+    cur.execute(query, (is_admin, user_id))
+    conn.commit()
 
 @db_connection
 def save_new_user_db(cur, conn , values: dict):

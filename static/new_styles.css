@@ -5,7 +5,7 @@
     /* gap: 20px; */
     justify-content: center;
     align-items: flex-start;
-    align-items: stretch; /* ✨ ensures equal column height */
+    align-items: stretch; /* ensures equal column height */
     margin-bottom: 20px;
 }
 
