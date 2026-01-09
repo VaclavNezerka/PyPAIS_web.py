@@ -170,7 +170,14 @@ class UserTemporaryStorage:
     def __init__(self, **kwargs):
         self.user_id = None
         # values
-        self.info = None
+        # self.info = None
+        self.info_datetime = None
+        self.info_place_of_experiment = None
+        self.info_sample_collection_data = None
+        self.info_wrapping_temperature = None
+        self.info_exposing_water_temperature = None
+        self.info_test_procedure = None
+        self.info_comment = None
         self.expert_guess = None
         self.img_width = None
         self.img_height = None
@@ -199,6 +206,9 @@ class UserTemporaryStorage:
 
         for key, value in data_dict.items():
             if hasattr(self, key):
+                if key in ['info_datetime'] and not isinstance(value, str):
+                    # parse datetime string
+                    value = pdl.parse(str(value)).to_datetime_string()            
                 if isinstance(value, decimal.Decimal):
                     value = float(value)
                 if isinstance(value, bytes) or isinstance(value, memoryview):
@@ -889,7 +899,9 @@ def experiments():
     sort_by = sort_by.split(',')  
     sort_by = [x for x in sort_by if x in records[0]]
     sort_columns=[ records[0].index(x) for x in sort_by]
-    records.append(execute_query("SELECT experiment_id, time_stamp, expert_guess, asphalt_ratio FROM experiments where user_id=%s AND current_state='finished' ",(session['user_id'],)))
+    # records.append(execute_query("SELECT experiment_id, time_stamp, expert_guess, asphalt_ratio, current_state FROM experiments where user_id=%s AND current_state='finished' AND fake_deleted=false",(session['user_id'],)))
+    records.append(
+        execute_query("SELECT experiment_id, time_stamp, expert_guess, asphalt_ratio, current_state FROM experiments where user_id=%s AND fake_deleted=false",(session['user_id'],)))
     
     # data sorting and slicing
     data = records[1]   
@@ -1136,6 +1148,7 @@ def save_specific_value(value_name):
         value_name = value_name.lower()
         # value = ts[session['user_id']].values.__dict__[value_name]
         value = getattr(storage, value_name)
+        print(f'Saving value: {value_name} = {value} for experiment ID: {storage.experiment_id}')
         db_api.update_experiment_in_db(values_dict={value_name: value}, experiment_id=storage.experiment_id)
         # query = f'UPDATE experiments SET {value_name}=%s, asphalt_ratio=%s, img_mask_asphalt=%s WHERE experiment_id=%s'
         # values = (value,
@@ -1181,7 +1194,7 @@ def delete_experiment(id):
     experiment_state = execute_query('SELECT current_state FROM experiments WHERE experiment_id=%s', (id,))[0][0]
     try:
         if experiment_state == 'finished':
-            query = 'UPDATE experiments.fake_deleted=true WHERE experiment_id=%s'
+            query = 'UPDATE experiments SET fake_deleted=true WHERE experiment_id=%s'
             execute_query(query, (id,))
         else:
             query = 'DELETE FROM experiments WHERE experiment_id=%s'

@@ -34,6 +34,12 @@ body {
     overflow-x: hidden;
 }
 
+#logo-text {
+    width: 85%;
+    height: auto;
+    justify-content: center;
+}
+
 .page-container {
     min-height: 65vh; /* take full viewport height */
     display: flex;
@@ -259,7 +265,8 @@ input[type="text"] {
     color: darkred;
 }
 
-.text_area {
+.text_area,
+.sort_by {
     display: none;
 }
 
@@ -695,6 +702,8 @@ tr:nth-child(even) {
 }
 
 .btn-details,
+.btn-details-right,
+.btn-details-left,
 .btn-export {
     padding: 8px 12px;
     margin-right: 5px;
@@ -704,6 +713,21 @@ tr:nth-child(even) {
     color: white;
     cursor: pointer;
     transition: background-color 0.3s ease;
+}
+
+.btn-details-right {
+    padding-right: 32px; /* space for icon */
+    background-image: url("/static/icons/arrow-right.png");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px 12px;
+}
+.btn-details-left {
+    padding-right: 32px; /* space for icon */
+    background-image: url("/static/icons/arrow-left.png");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px 12px;
 }
 
 .btn-details:hover,

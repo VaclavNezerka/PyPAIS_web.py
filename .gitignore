@@ -1,11 +1,15 @@
 testscript.py
 try.py
+try.ipynb
 unittests
 pypais.yml
 table.html
 data
 _*
 # *.png
+test*.png
+test*.jpg
+test*.jpeg
 *static/node_modules*
 *static/openseadragon*
 *.heic

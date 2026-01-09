@@ -339,16 +339,46 @@ function replaceKeepCase(str, search, replace) {
     })
 }
 
-document.getElementById("info").addEventListener("change", function () {
-    let value = this.value
-    var formData = new FormData()
-    formData.append("info", value)
-    const uniqueQuery = "?nocache=" + new Date().getTime()
-    fetch("/update_value/info" + uniqueQuery, {
-        method: "POST",
-        body: formData,
-    })
-})
+// add event listeners to update info fields
+
+init_info_listeners()
+function init_info_listeners() {
+    for (const id of [
+        "info_sample_collection_data",
+        "info_place_of_experiment",
+        "info_test_procedure",
+        "info_wrapping_temperature",
+        "info_exposing_water_temperature",
+        "info_datetime",
+        "info_comment",
+    ]) {
+        document.getElementById(id).addEventListener("change", function () {
+            console.log("Updating info field: " + id)
+            let value = this.value
+            console.log("New value: " + value)
+            var formData = new FormData()
+            formData.append(id, value)
+            const uniqueQuery = "?nocache=" + new Date().getTime()
+            fetch("/update_value/" + id + uniqueQuery, {
+                method: "POST",
+                body: formData,
+            })
+        })
+    }
+}
+
+// document
+//     .getElementById("info_sample_collection")
+//     .addEventListener("change", function () {
+//         let value = this.value
+//         var formData = new FormData()
+//         formData.append("info", value)
+//         const uniqueQuery = "?nocache=" + new Date().getTime()
+//         fetch("/update_value/info" + uniqueQuery, {
+//             method: "POST",
+//             body: formData,
+//         })
+//     })
 
 function get_overlay_masks() {
     let formData = new FormData()
@@ -918,7 +948,19 @@ function loadExperiment(id) {
                     data.expert_guess * 100
                 )
             }
-            document.getElementById("info").value = data.info
+
+            for (const id of [
+                "info_sample_collection_data",
+                "info_place_of_experiment",
+                "info_test_procedure",
+                "info_wrapping_temperature",
+                "info_exposing_water_temperature",
+                "info_datetime",
+                "info_comment",
+            ]) {
+                document.getElementById(id).value = data[id]
+            }
+            // document.getElementById("info").value = data.info
 
             // set the image URLs
             uploadedImageURL_color = URL.createObjectURL(
@@ -1028,7 +1070,10 @@ document.getElementById("expertGuess").addEventListener("change", function () {
 })
 
 // if the user visits the page '/' and the experiment is active, load the experiment
-document.addEventListener("DOMContentLoaded", function () {
+
+initPage()
+function initPage() {
+    console.log("Running on DOMContentLoaded event")
     fetch("/is-experiment-active")
         .then((response) => response.json())
         .then((data) => {
@@ -1041,7 +1086,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 loadExperiment(data.experimentId)
             }
         })
-})
+}
 
 function changeOverlayOpacity() {
     let value = document.getElementById("opacitySlider").value
@@ -1065,6 +1110,10 @@ document.getElementById("opacityValue").addEventListener("change", function () {
 
 // keyboard shortcuts
 document.addEventListener("keydown", function (event) {
+    // Prevents an error when event.key is undefined (e.g., when confirming auto-fill prompts )
+    if (!event.key) {
+        return
+    }
     const eventKey = event.key.toLowerCase()
     // shif + ...
     switch (eventKey) {

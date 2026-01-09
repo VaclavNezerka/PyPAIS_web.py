@@ -12,14 +12,14 @@
         <link rel="stylesheet" href="/static/new_styles.css">
         <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
 
-    </head>
 
-    <!-- OpenSeadragon -->
-    <!-- <script src="../static/openseadragon_5.0/openseadragon.min.js"></script> -->
-    <!-- Konva.js -->
-    <!-- <script src="../static/node_modules/konva/konva.min.js"></script> -->
-    <!-- <script type="module" src="/static/script.js"></script> --> <!-- DEPRECATED: OLD THRESHOLDING -->
-    <script type="module" src="/static/script_automatic.js"></script>
+        <!-- OpenSeadragon -->
+        <!-- <script src="../static/openseadragon_5.0/openseadragon.min.js"></script> -->
+        <!-- Konva.js -->
+        <!-- <script src="../static/node_modules/konva/konva.min.js"></script> -->
+        <!-- <script type="module" src="/static/script.js"></script> --> <!-- DEPRECATED: OLD THRESHOLDING -->
+        <script type="module" src="/static/script_automatic.js"></script>
+    </head>
 
     <body>
         <div id="row" , class="colorbar">
@@ -38,20 +38,160 @@
         </div>
 
         <div id="row" , class="colorbar2">
-            <h3>{{ _('Basic Information') }}</h3>
+            <h3>{{ _('Basic Information') }} - ČSN 73 6161</h3>
+        </div>
+        <div id="row" , class="colorbar1">
+            <h3>{{ _('Experiment data') }}</h3>
         </div>
 
 
         <div class="row modern-row">
-            <!-- Information -->
-            <div class="column modern-column">
+            <!-- <div class="column modern-column">
                 <label for="info" class="modern-label upper">
-                    {{ _('Information (max. 1024 characters):') }}
+                    {{ _('Speciemen Number:') }}
                 </label>
-                <input type="text" id="info" class="modern-input enhanced-input"
-                    placeholder="{{ _('Information about the mixture.') }}" maxlength="1024" />
+                <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('ID') }}"
+                    maxlength="1024" />
+            </div> -->
+
+
+            <div class="column modern-column">
+                <label for="info_datetime" class="modern-label upper">
+                    {{ _('Date and Time:') }}
+                </label>
+                <input type="datetime-local" id="info_datetime" class="modern-input enhanced-input"
+                    placeholder="{{ _('YYYY-MM-DD HH:MM') }}" maxlength="1024" />
             </div>
 
+            <div class="column modern-column">
+                <label for="info_place_of_experiment" class="modern-label upper">
+                    {{ _('Place of Experiment:') }}
+                </label>
+                <input type="text" id="info_place_of_experiment" class="modern-input enhanced-input"
+                    placeholder="{{ _('Your lab Address') }}" maxlength="1024" />
+            </div>
+
+            <!-- Information -->
+            <div class="column modern-column">
+                <label for="info_sample_collection_data" class="modern-label upper">
+                    {{ _('Sample Collection Data:') }}
+                </label>
+                <input type="text" id="info_sample_collection_data" class="modern-input enhanced-input"
+                    placeholder="{{ _('Information about the mixture.') }}" maxlength="1024" />
+            </div>
+        </div>
+
+        <div class="row modern-row">
+
+            <div class="column modern-column">
+                <label for="info_wrapping_temperature" class="modern-label upper">
+                    {{ _('Wrapping Temperature [°C]:') }}
+                </label>
+                <input type="number" id="info_wrapping_temperature" class="modern-input enhanced-input"
+                    placeholder="{{ _('80') }}" />
+            </div>
+
+            <!-- Information -->
+            <div class="column modern-column">
+                <label for="info_exposing_water_temperature" class="modern-label upper">
+                    {{ _('Exposing Water Temperature [°C]:') }}
+                </label>
+                <input type="number" id="info_exposing_water_temperature" class="modern-input enhanced-input"
+                    placeholder="{{ _('20') }}" />
+            </div>
+
+            <div class="column modern-column">
+                <label for="info_test_procedure" class="modern-label upper">
+                    {{ _('Test procedure:') }}
+                </label>
+                <input type="text" id="info_test_procedure" class="modern-input enhanced-input"
+                    placeholder="{{ _('A brief description of the testing procedure') }}" maxlength="1024" />
+            </div>
+        </div>
+
+
+        <!-- <div id="row" , class="colorbar1">
+            <h3>{{ _('Ordering party details') }}</h3>
+        </div> -->
+
+
+        <!-- <div class="row modern-row">
+            <div class="column modern-column">
+                <label for="info" class="modern-label upper">
+                    {{ _('Name:') }}
+                </label>
+                <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
+                    maxlength="1024" />
+                </div>
+                
+                <div class="column modern-column">
+                    <label for="info" class="modern-label upper">
+                        {{ _('Contact:') }}
+                    </label>
+                    <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
+                    maxlength="1024" />
+                </div>
+                
+                <div class="column modern-column">
+                    <label for="info" class="modern-label upper">
+                        {{ _('Address:') }}
+                    </label>
+                    <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
+                    maxlength="1024" />
+                </div>
+            </div> -->
+        <!-- 
+                <div id="row" , class="colorbar1">
+                    <h3>{{ _('Testing Lab Details') }}</h3>
+                </div>
+                
+                <div class="row modern-row">
+                    
+            <div class="column modern-column">
+                <label for="info" class="modern-label upper">
+                    {{ _('Name:') }}
+                </label>
+                <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
+                maxlength="1024" />
+            </div>
+            
+            <div class="column modern-column">
+                <label for="info" class="modern-label upper">
+                    {{ _('Contact:') }}
+                </label>
+                <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
+                maxlength="1024" />
+            </div>
+            
+            <div class="column modern-column">
+                <label for="info" class="modern-label upper">
+                    {{ _('Address:') }}
+                </label>
+                <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
+                maxlength="1024" />
+            </div>
+            
+            <div class="column modern-column">
+                <label for="info" class="modern-label upper">
+                    {{ _('Proceeding Employee:') }}
+                </label>
+                <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
+                    maxlength="1024" />
+                </div>
+                
+                <div class="column modern-column">
+                    <label for="info" class="modern-label upper">
+                        {{ _('Controlling Employee:') }}
+                </label>
+                <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
+                    maxlength="1024" />
+            </div>
+        </div> -->
+
+        <div id="row" , class="colorbar1">
+            <h3>{{ _('Assessment') }}</h3>
+        </div>
+        <div class="row modern-row">
             <!-- Expert Guess -->
             <div class="column modern-column">
                 <label for="expertGuess" class="modern-label upper">
@@ -59,6 +199,14 @@
                 </label>
                 <input type="number" id="expertGuess" class="modern-input enhanced-input"
                     placeholder="{{ _('Expert Guess') }}" />
+            </div>
+            <!-- Comment -->
+            <div class="column modern-column">
+                <label for="info_comment" class="modern-label upper">
+                    {{ _('Comment:') }}
+                </label>
+                <input type="text" id="info_comment" class="modern-input enhanced-input"
+                    placeholder="{{ _('Optional') }}" maxlength="1024" />
             </div>
         </div>
 

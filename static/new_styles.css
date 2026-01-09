@@ -143,6 +143,7 @@ input[type="number"].enhanced-input::-webkit-inner-spin-button {
 input[type="text"],
 input[type="number"],
 input[type="email"],
+input[type="datetime-local"],
 input[type="password"],
 textarea {
     appearance: none;
