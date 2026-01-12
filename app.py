@@ -15,6 +15,7 @@ from werkzeug.local import LocalProxy
 from PIL import Image
 import numpy as np
 import io
+import imagehash
 from skimage.filters.rank import entropy
 from skimage.morphology import disk
 from skimage import img_as_ubyte
@@ -46,12 +47,13 @@ from models import discover_models, load_model, add_session_to_loaded_model, pop
 import models
 import decimal
 from flask_babel import Babel, _
-
+#Similarity controller
+import app_similarity_controller 
+similarity_controller = app_similarity_controller.ImageSimilarityController()
 # Apps
 import forms 
 from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
-
 
 load_dotenv(dotenv_path='.env')
 RECAPTCHA_SITE_KEY=os.getenv('RECAPTCHA_SITE_KEY')
@@ -192,6 +194,12 @@ class UserTemporaryStorage:
         self.asphalt_mask_manual_corrections = None # [manual] all the pixels that are asphalt and not background (defined by the user)        
         self.inference_model = None # name of the model to be used for inference
 
+        # image hashes for similarity checking
+        self.phash = None
+        self.ahash = None
+        self.dhash = None
+        self.colorhash = None
+
         self.from_dict(kwargs)
 
     def from_dict(self, data_dict: dict) -> None:
@@ -208,6 +216,8 @@ class UserTemporaryStorage:
             if hasattr(self, key):
                 if key in ['info_datetime'] and not isinstance(value, str):
                     # parse datetime string
+                    if value is None:
+                        value = pdl.now()
                     value = pdl.parse(str(value)).to_datetime_string()            
                 if isinstance(value, decimal.Decimal):
                     value = float(value)
@@ -242,6 +252,8 @@ class UserTemporaryStorage:
                     buffer = io.BytesIO()
                     np.save(buffer, value)
                     dic[key] = buffer.getvalue()  # This is what you store in SQL (e.g., BLOB column)
+                elif isinstance(value, imagehash.ImageHash):
+                    dic[key] = str(value)  # store imagehash as string
 
             dic.pop('experiment_id', None)  # remove experiment_id from the dict when saving to db  
 
@@ -1536,7 +1548,13 @@ def process_image():
         'img_height': image.shape[0],
     })
 
+    # get hash of the image for similarity check
+    img_hashes = app_similarity_controller.return_hashes(Image.fromarray(image))
+    storage.from_dict(img_hashes)
     save_experiment(state='started')
+
+    # let the background thread handle the similarity check
+    similarity_controller.controll_experiment(user_id=session['user_id'], experiment_id=storage.experiment_id)
 
     response_dict = {
         'status': 'success',
