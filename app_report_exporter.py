@@ -10,6 +10,7 @@ import io
 import uuid
 import models
 from flask import abort
+from flask_babel import _, lazy_gettext
 
 # PDF generation imports
 from reportlab.platypus import (
@@ -43,6 +44,17 @@ styles.add(ParagraphStyle(
         fontSize=11,
         leading=14,
     ))
+
+styles["Title"].fontName = "DejaVu-Bold"
+styles["Heading1"].fontName = "DejaVu-Bold"
+styles["Heading2"].fontName = "DejaVu-Bold"
+styles["Heading3"].fontName = "DejaVu-Bold"
+styles["Heading4"].fontName = "DejaVu-Bold"
+
+# styles["Heading1"].fontSize = 16
+# styles["Heading2"].fontSize = 14
+# styles["Heading3"].fontSize = 12
+# styles["Heading4"].fontSize = 11
 
 style_justify = ParagraphStyle(
     name="Justified",
@@ -196,35 +208,32 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     pdf = []
     # Title
     pdf.append(PageBreak())
-    pdf.append(Paragraph("Bitumen Adhesion Test Protocol", styles["Title"]))
+    pdf.append(Paragraph(_("Bitumen Adhesion Test Protocol"), styles["Title"]))
 
     n_samples = len(experiment_ids)
-    text = f"""
+    text = _("""
     This report provides a comprehensive overview of the bitumen adhesion test protocol,
     with all relevant information according to the CSN 73 6161 standard.
-
-    The adhesion test was performed on {n_samples} samples of asphalt mixtures. 
-    The detailes about each specimen included below, the overview is at the end of the document.
-    """
+    The adhesion test was performed on """) + f"{n_samples}" + _(""" samples of asphalt mixtures. The detailes about each specimen included below, the overview is at the end of the document.""")
     pdf.append(Paragraph(text, style_justify))
     pdf.append(Spacer(1, 0.6 * cm))
 
-    text = f"""
+    text = _("""
     Both the visual expert assesment and the AI-based quantitative analysis are included in this report.
     If this two contradict each other, the visual expert assesment is considered the final result, however,
     the AI-based visualization is included for reference. 
-    """
+    """)
     pdf.append(Paragraph(text, style_justify))
     pdf.append(Spacer(1, 0.2 * cm))
 
     op = {
-        "Caption": "Ordering Party",
+        "Caption": _("Ordering Party"),
     }
     op.update(ordering_party)
     dat1 = party_details_data(pdf, op)
 
     li = { 
-        "Caption": "Providing Laboratory",
+        "Caption": _("Providing Laboratory"),
     }
     li.update(laboratory_info)
     dat2 = party_details_data(pdf, li)
@@ -239,10 +248,8 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     assessments_automatic = []
     concerns = {"similar_images": 0, "old_images": 0}
     for experiment_id in experiment_ids:
-        print("Processing experiment ID:", experiment_id)
         experiment = db_api.get_experiment_by_id(experiment_id)
         experiment.update({"timestamp": db_api.get_experiment_timestamp_by_id(experiment_id)})
-        print(experiment)
 
         similar_dict = get_similar_experiment(experiment)
 
@@ -260,13 +267,14 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         if any(v is None for v in [experiment.get("mask_asphalt"), experiment.get("mask_aggregate")]):
             available_models = models.discover_models()
             if experiment.get("inference_model") in available_models:
-                asphalt_mask, aggregate_mask, _ = models.inference_on_numpy(
+                asphalt_mask, aggregate_mask, bg = models.inference_on_numpy(
                     np_image=original_image,
                     model_name=experiment.get("inference_model"),
                     session_id=user_id
                 )
             else:
-                abort(500, description=f"Inference model '{experiment.get('inference_model')}' not available for experiment ID {experiment_id}.")
+                model = experiment.get("inference_model", 'unknown')
+                abort(500, description=_("Inference model") + model + _(' not available for experiment ID') + {id} + '.')    
                 return None
         else:
             asphalt_mask = memory_to_np_array(experiment.get("mask_asphalt"))
@@ -311,8 +319,8 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     # PRINT FINAL SUMMARY
     # Final - table
     pdf.append(PageBreak())
-    pdf.append(Paragraph("Tabular overview", styles["Heading2"]))
-    table_data = [["Specimen ID", "Visual Expert Assessment [%]", "AI-based Assesment  [%]"]]
+    pdf.append(Paragraph(_("Tabular overview"), styles["Heading2"]))
+    table_data = [[_("Specimen ID"), _("Visual Expert Assessment [%]"), _("AI-based Assesment  [%]")]]
     table_data.extend(
         [ items for items in zip(
             experiment_ids, 
@@ -324,26 +332,26 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     pdf.append(Spacer(1, 1.0 * cm))
 
     # Final summary + issues
-    pdf.append(Paragraph("Report Conclusion", styles["Heading2"]))
-    pdf.append(Paragraph(f"Summary", styles["Heading3"]))
+    pdf.append(Paragraph(_("Report Conclusion"), styles["Heading2"]))
+    pdf.append(Paragraph(_("Summary"), styles["Heading3"]))
     items = [
-        Paragraph(f"The average adhesion rate across all samples is {stats_expert['average']:.2f} ± {stats_expert['stddev']:.2f} % according to expert visual assesment, which correspondes to calss {stats_expert['average_classification']} , ", style_justify),
-        Paragraph(f"The average adhesion rate across all samples is {stats_automatic['average']:.2f} ± {stats_automatic['stddev']:.2f} % according to AI-based analysis, which correspondes to calss {stats_automatic['average_classification']} , ", style_justify),
-        Paragraph(f"The worst adhesion rate ({stats_expert['worst']:.2f} %) observed is class {stats_expert['worst_classification']} according to expert visual assesment.", style_justify),
-        Paragraph(f"The worst adhesion rate ({stats_automatic['worst']:.2f} %) observed is class {stats_automatic['worst_classification']} according to AI-based analysis.", style_justify),
+        Paragraph(_("The average adhesion rate across all samples is") + f" {stats_expert['average']:.2f} ± {stats_expert['stddev']:.2f} % " + _("according to expert visual assesment, which correspondes to calss") + f" {stats_expert['average_classification']} , ", style_justify),
+        Paragraph(_("The average adhesion rate across all samples is") + f" {stats_automatic['average']:.2f} ± {stats_automatic['stddev']:.2f} % " + _("according to AI-based analysis, which correspondes to calss") + f" {stats_automatic['average_classification']} , ", style_justify),
+        Paragraph(_("The worst adhesion rate (") +f"{stats_expert['worst']:.2f}" + _(" %) observed is class ") + f"{stats_expert['worst_classification']} " + _("according to expert visual assesment."), style_justify),
+        Paragraph(_("The worst adhesion rate (") +f"{stats_automatic['worst']:.2f}" + _(" %) observed is class ") + f"{stats_automatic['worst_classification']} " + _("according to AI-based analysis."), style_justify),
     ]
     pdf = add_itemized_list(pdf, items)
-    pdf.append(Paragraph(f"The final considered class is {stats_expert['worst_classification']}", styles["Heading4"]))
+    pdf.append(Paragraph(_("The final considered class is ") + f"{stats_expert['worst_classification']}", styles["Heading4"]))
     
     issues = []
     if concerns["similar_images"] > 0:
-        issues.append(f"{concerns['similar_images']}/{len(experiment_ids)} images seem to highly similar with others and might not be unique specimens.")
+        issues.append(f"{concerns['similar_images']}/{len(experiment_ids)}" + _(" images seem to highly similar with others and might not be unique specimens."))
     if concerns["old_images"] > 0:
-        issues.append(f"{concerns['old_images']}/{len(experiment_ids)} have been uploaded more than 6 months ago.")
+        issues.append(f"{concerns['old_images']}/{len(experiment_ids)}" + _(" have been uploaded more than 6 months ago."))
     if len(experiment_ids) < 2:
-        issues.append(f"The report contains less than 2 samples, which is insufficient for CSN 73 6161 standard compliance.")
+        issues.append(_("The report contains less than 2 samples, which is insufficient for CSN 73 6161 standard compliance."))
     if len(issues) > 0:
-        pdf.append(Paragraph("Concerns", styles["Heading2"]))
+        pdf.append(Paragraph(_("Concerns"), styles["Heading2"]))
         items = [Paragraph(issue, style_justify) for issue in issues]
         pdf = add_itemized_list(pdf, items)
         pdf.append(Spacer(1, 1.0 * cm))
@@ -353,25 +361,25 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     if controlling_user_id:
         try:
             controlling_employee = db_api.get_user_info_by_id(controlling_user_id)
-            print("Controlling employee:", controlling_employee)
+            print(_("Controlling employee:"), controlling_employee)
         except Exception:
             controlling_employee = user_info
     
     left_column = [
-        Paragraph("The proceeding employee", styles["Heading2"]),
-        Paragraph(f"Name: {user_info.get('first_name', '-')} {user_info.get('last_name', '-')}", style_justify),
-        Paragraph(f"Contact: {user_info.get('e_mail', '-')}", style_justify),
+        Paragraph(_("The proceeding employee"), styles["Heading2"]),
+        Paragraph(_("Name:") + f" {user_info.get('first_name', '-')} {user_info.get('last_name', '-')}", style_justify),
+        Paragraph(_("Contact:") + f" {user_info.get('e_mail', '-')}", style_justify),
         Spacer(1, 1.2 * cm),
-        Paragraph(f"Signature: ...................................................", style_justify),
+        Paragraph(_("Signature: ..................................................."), style_justify),
         Spacer(1, 0.4 * cm),
     ]
 
     right_column = [
-        Paragraph("The controlling employee", styles["Heading2"]),
-        Paragraph(f"Name: {controlling_employee.get('first_name', '-')} {controlling_employee.get('last_name', '-')}", style_justify),
-        Paragraph(f"Contact: {controlling_employee.get('e_mail', '-')}", style_justify),
+        Paragraph(_("The controlling employee"), styles["Heading2"]),
+        Paragraph(_("Name:") + f" {controlling_employee.get('first_name', '-')} {controlling_employee.get('last_name', '-')}", style_justify),
+        Paragraph(_("Contact:") + f" {controlling_employee.get('e_mail', '-')}", style_justify),
         Spacer(1, 1.2 * cm),
-        Paragraph(f"Signature: ...................................................", style_justify),
+        Paragraph(_("Signature: ..................................................."), style_justify),
         Spacer(1, 0.4 * cm),
     ]
 
@@ -380,7 +388,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     pdf = two_col_text_layout(pdf, table_data, doc=doc)
 
     pdf.append(Spacer(1, 1.0 * cm))
-    pdf.append(Paragraph(f"This report was generated using AIBAL on {report_date.to_datetime_string()}.", style_justify_right))
+    pdf.append(Paragraph(_("This report was generated using AIBAL on ") + f"{report_date.to_datetime_string()}.", style_justify_right))
 
     doc.build(pdf,
         onFirstPage=lambda canvas, doc: first_page(canvas, doc, report_id=report_id),
@@ -444,7 +452,7 @@ def add_table(pdf: list, table_data: List[List[Any]], colWidths: List[float] = N
         # Header text color → white
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("GRID", (0, 0), (-1, -1), 0, colors.white),
-        # ("FONT", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONT", (0, 0), (-1, -1), "DejaVu"),
         ("FONT", (0, 0), (-1, 0), "DejaVu-Bold"),
         ("ALIGN", (0, 0), (-1, -1), "CENTER"),
     ]))
@@ -473,13 +481,11 @@ def return_similarity_warning(pdf: list, similar_dict: dict) -> list:
     similarity_method = similar_dict.get("similarity_method")
     similar_date = similar_dict.get("similar_upload_date")
 
-    warning_text = f"""
-    <<< ⚠ WARNING: The program has detected a highly similar image (on the left, experiment_id: {similar_experiment_id}, uploaded by {similar_user_e_mail} on {similar_date}) with {100*similarity_score:.2f}% confidence 
-    using {similarity_method}. 
-    Please review the samples for potential duplication.
-
-    In case the specimens clearly aren't duplicates, you can ignore this message.
-    """
+    warning_text = _("<<< ⚠ WARNING: The program has detected a highly similar image (on the left, experiment_id:") + \
+        f"{similar_experiment_id}" + _(" , uploaded by ") + f"{similar_user_e_mail}" + _(" on ") + f"{similar_date}" + \
+        _(") with") + f" {100*similarity_score:.2f}% " + _("confidence ") + \
+        _("using") + f" {similarity_method}. " + \
+        _("""Please review the samples for potential duplication. In case the specimens clearly aren't duplicates, you can ignore this message.""")
     warning_para = Paragraph(warning_text, warning_style)
 
     warning_box = Table(
@@ -514,9 +520,9 @@ def add_images(pdf: list, img_original: PIL.Image,  img_processed: PIL.Image, si
     print("img 1 prossessed")
     img2 = get_printable_image(img_processed, max_image_size_cm)
     print("img 2 prossessed")
-    table_data.append(["Original Image", "Processed Image"])
+    table_data.append([_("Original Image"), _("Processed Image")])
     table_data.append([img1, img2])
-    table_data.append(["", "(Asphalt - RED, Aggregate - BLUE)"])
+    table_data.append(["", _("(Asphalt - RED, Aggregate - BLUE)")])
     if similar_image:
         warning_box = return_similarity_warning(pdf, similar_image)
         similar_image_printable = get_printable_image(similar_image.get("similar_image"), max_image_size_cm)
@@ -588,52 +594,26 @@ def add_experiment_record(pdf: list, experiment: Dict[str, Any], similar: dict =
             experiment[key] = '-'
 
     left_column = [
-        Paragraph(f"Sample ID:  {experiment.get('experiment_id', '-')}", styles["Heading3"]),
-        Paragraph(f"Date: {experiment.get('info_datetime', '-')}", style_justify),
-        Paragraph(f"Place of Experiment: {experiment.get('info_place_of_experiment', '-')}", style_justify),
-        Paragraph(f"Sample Collection Data: {experiment.get('info_sample_collection_data', '-')}", style_justify),
-        Paragraph(f"Wrapping temperature [°C]: {experiment.get('info_wrapping_temperature', '-')}", style_justify),
-        Paragraph(f"Exposing water temperature [°C]: {experiment.get('info_exposing_water_temperature', '-')}", style_justify),
-        Paragraph(f"Test procedure:{experiment.get('info_test_procedure', '-')}", style_justify),
+        Paragraph(_("Sample ID:") + f" {experiment.get('experiment_id', '-')}", styles["Heading3"]),
+        Paragraph(_("Date:") + f" {experiment.get('info_datetime', '-')}", style_justify),
+        Paragraph(_("Place of Experiment:") + f" {experiment.get('info_place_of_experiment', '-')}", style_justify),
+        Paragraph(_("Sample Collection Data:") + f" {experiment.get('info_sample_collection_data', '-')}", style_justify),
+        Paragraph(_("Wrapping temperature [°C]:") + f" {experiment.get('info_wrapping_temperature', '-')}", style_justify),
+        Paragraph(_("Exposing water temperature [°C]:") + f" {experiment.get('info_exposing_water_temperature', '-')}", style_justify),
+        Paragraph(_("Test procedure:") + f" {experiment.get('info_test_procedure', '-')}", style_justify),
     ]
     right_column = [
-        Paragraph(f"Assessment - Adhesion Rate:", styles["Heading4"]),
-        Paragraph(f"Inference Model: {experiment.get('inference_model', '-')}", style_justify),
-        Paragraph(f"Automatic Assessment [%]: {100*experiment.get('asphalt_ratio', '-'):.2f}", style_justify),
-        Paragraph(f"Visual based Expert Guess [%]: {100*experiment.get('expert_guess', '-'):.2f}", style_justify),
-        Paragraph(f"Comment: {experiment.get('comment', '-')}", style_justify),
+        Paragraph(_("Assessment - Adhesion Rate:"), styles["Heading4"]),
+        Paragraph(_("Inference Model:") + f" {experiment.get('inference_model', '-')}", style_justify),
+        Paragraph(_("Automatic Assessment [%]:") + f" {100*experiment.get('asphalt_ratio', '-'):.2f}", style_justify),
+        Paragraph(_("Visual based Expert Guess [%]:") + f" {100*experiment.get('expert_guess', '-'):.2f}", style_justify),
+        Paragraph(_("Comment:") + f" {experiment.get('comment', '-')}", style_justify),
     ]    
     table_data = [["", ""]]
     table_data.append([left_column, right_column])
     pdf = two_col_text_layout(pdf, table_data, doc=doc)
     pdf.append(Spacer(1, 0.2 * cm))
     return pdf    
-
-def add_experiment_details(pdf: list, experiment: Dict[str, Any]) -> list:
-    """
-    Add experiment details to the PDF.
-    
-    Args:
-        pdf (list): The PDF content list to append to.
-        experiment (Dict[str, Any]): The experiment data.
-        - keys: 'id', 'date', ''
-    Returns:
-        pdf (list): The updated PDF content list.
-    """
-
-    styles = getSampleStyleSheet()
-    pdf.append(Paragraph(f"Sample ID: {experiment.get('id', '-')}", styles["Heading3"]))
-    pdf.append(Paragraph(f"Date: {experiment.get('date', '-')}", style_justify))
-    pdf.append(Paragraph(f"Sample Collection Date: {experiment.get('collection_date', '-')}", style_justify))
-    pdf.append(Paragraph(f"Assesment:", styles["Heading4"]))
-    pdf.append(Paragraph(f"Automatic Assessment:", style_justify))
-    pdf.append(Paragraph(f"Visual based Expert Guess: {experiment.get('expert_guess', '-')}", style_justify))
-    pdf.append(Paragraph(f"Comment: {experiment.get('comment', '-')}", style_justify))
-    
-    
-    pdf.append(Spacer(1, 0.2 * cm))
-    return pdf
-
 
 def first_page(canvas, doc, report_id: str):
     canvas.saveState()
@@ -682,7 +662,7 @@ def first_page(canvas, doc, report_id: str):
     # -------------------
     # Draw some text
     # -------------------
-    canvas.setFont("Helvetica-Bold", 14)
+    canvas.setFont("DejaVu-Bold", 14)
     # canvas.setFont("DejaVu-Bold", 14)
     canvas.setFillColor(colors.black)
     # canvas.drawString(50*mm, height - 70*mm, "Hello, ReportLab Drawing!")
@@ -691,7 +671,7 @@ def first_page(canvas, doc, report_id: str):
     # Draw report title (centered)
     canvas.restoreState()
     canvas.setFillColor(colors.white)
-    canvas.setFont("Helvetica-Bold", 36)
+    canvas.setFont("DejaVu-Bold", 36)
     canvas.drawCentredString(
         width / 2,
         height - 200 * mm,
@@ -732,7 +712,7 @@ def styled_header_footer(canvas, doc, report_id: str):
 
     # Header text
     canvas.setFillColor(colors.white)
-    canvas.setFont("Helvetica-Bold", 11)
+    canvas.setFont("DejaVu-Bold", 11)
     canvas.drawString(
         doc.leftMargin,
         height - header_height + 6 * mm,
@@ -753,11 +733,11 @@ def styled_header_footer(canvas, doc, report_id: str):
 
     # Footer text
     canvas.setFillColor(colors.grey)
-    canvas.setFont("Helvetica", 9)
+    canvas.setFont("DejaVu", 9)
     canvas.drawString(
         doc.leftMargin,
         footer_height - 6 * mm,
-        f"Report generated by AIBAL -Bitumen Adhesion Lab - report ID: {report_id}"  # Assuming report_id is defined elsewhere
+        _("Report generated by AIBAL -Bitumen Adhesion Lab - report ID:") + f" {report_id}"  # Assuming report_id is defined elsewhere
     )
 
     # Page number (right aligned)
@@ -785,6 +765,7 @@ def two_col_text_layout(pdf: list, table_data: List[List[str]], doc) -> list:
         ('ALIGN', (0,0), (-1,-1), 'LEFT'),
         ('INNERGRID', (0,0), (-1,-1), 0, colors.white),
         ('BOX', (0,0), (-1,-1), 0, colors.white),
+        ('FONT', (0, 0), (-1, -1), "DejaVu"),
         ("LEFTPADDING", (1, 1), (1, 1), 0),
         ("RIGHTPADDING", (1, 1), (1, 1), 0),
     ]))
@@ -797,9 +778,9 @@ def two_col_text_layout(pdf: list, table_data: List[List[str]], doc) -> list:
 def party_details_data(pdf: list, party_info: Dict[str, Any]) -> list:
     data = [
         Paragraph(f"{party_info.get('Caption', 'Party Details')}", styles["Heading2"]),
-        Paragraph(f"Name: {party_info.get('name', '-')}", style_justify),
-        Paragraph(f"Address: {party_info.get('address', '-')}", style_justify),
-        Paragraph(f"Contact: {party_info.get('contact', '-')}", style_justify),
+        Paragraph(_("Name:") + f" {party_info.get('name', '-')}", style_justify),
+        Paragraph(_("Address:") + f" {party_info.get('address', '-')}", style_justify),
+        Paragraph(_("Contact:") + f" {party_info.get('contact', '-')}", style_justify),
         Spacer(1, 0.2 * cm)
     ]
 
@@ -816,155 +797,3 @@ def add_itemized_list(pdf: list, items: List[Paragraph]) -> list:
     )
     pdf.append(itemized_list)
     return pdf
-
-
-# TESTCODE
-# TESTCODE
-# TESTCODE
-# TESTCODE
-# TESTCODE
-# TESTCODE
-
-# doc = SimpleDocTemplate("test_report.pdf", pagesize=A4,
-#                         rightMargin=20*mm, leftMargin=20*mm,
-#                         topMargin=25*mm, bottomMargin=25*mm)
-# story = []
-# story.append(PageBreak())
-
-# # Title
-# story.append(Paragraph("Bitumen Adhesion Test Protocol", styles["Title"]))
-
-# n_samples = 5
-# text = f"""
-# This report provides a comprehensive overview of the bitumen adhesion test protocol,
-# with all relevant information according to the CSN 73 6161 standard.
-
-# The adhesion test was performed on {n_samples} samples of asphalt mixtures. 
-# The detailes about each specimen included below, the overview is at the end of the document.
-# """
-# story.append(Paragraph(text, style_justify))
-# story.append(Spacer(1, 0.6 * cm))
-
-# text = f"""
-# Both the visual expert assesment and the AI-based quantitative analysis are included in this report.
-# If this two contradict each other, the visual expert assesment is considered the final result, however,
-# the AI-based visualization is included for reference. 
-# """
-# story.append(Paragraph(text, style_justify))
-# story.append(Spacer(1, 0.2 * cm))
-
-# dat1 = party_details_data(story, {
-#     "Caption": "Ordering Party",
-#     "Name": "Some Company Ltd.",
-#     "Address": "Random Street 123, 100 00 Somecity",
-#     "Contact": "random.contact@somecompany.com"
-# })
-
-# dat2 = party_details_data(story, {
-#     "Caption": "Providing Laboratory",
-#     "Name": "Some Laboratory Ltd.",
-#     "Address": "Random Street 321, 110 00 Sometown",
-#     "Contact": "random.contact@somelab.com"
-# })
-
-# list_ = ["", ""]
-# list_.append([dat1, dat2[:-2]])
-# story = two_col_text_layout(story, list_)
-
-# story = add_experiment_details(story, {
-#     "id": "EXP-001",
-#     "date": "2024-06-15",
-#     "collection_date": "2024-06-10"
-# })
-
-# # Image (placeholder drawing)
-# story.append(Spacer(1, 0.8 * cm))
-
-# img = PIL.Image.open("test_0_b.jpeg")
-# story =  add_images(story, img, img)
-# img = PIL.Image.open("Kallen_17a.jpg")
-# story = add_experiment_details(story, {
-#     "id": "EXP-002",
-#     "date": "2024-06-15",
-#     "collection_date": "2024-06-10"
-# })
-# similar_image = {
-#     "experiment_id": "EXP-0026",
-#     "similar_experiment_id": "EXP-042",
-#     "similar_user_e_mail": "similar@exmail.com",
-#     "similarity_score": 0.92,
-#     "similarity_method": "Cosine Similarity",
-#     "similar_image": PIL.Image.open("Kallen_17a.jpg")
-# }
-# story =  add_images(story, img, img, similar_image=similar_image)
-
-# # final clause
-# story.append(PageBreak())
-# user_firsname = "John"
-# user_lastname = "Doe"
-# user_e_mail = "john.doe@example.com"
-
-# left_column = [
-#     Paragraph("The proceeding employee", styles["Heading2"]),
-#     Paragraph(f"Name: {user_firsname} {user_lastname}", style_justify),
-#     Paragraph(f"Contact: {user_e_mail}", style_justify),
-#     Spacer(1, 1.2 * cm),
-#     Paragraph(f"Signature: ...................................................", style_justify),
-#     Spacer(1, 0.4 * cm),
-# ]
-
-# right_column = [
-#     Paragraph("The controlling employee", styles["Heading2"]),
-#     Paragraph(f"Name: {user_firsname} {user_lastname}", style_justify),
-#     Paragraph(f"Contact: {user_e_mail}", style_justify),
-#     Spacer(1, 1.2 * cm),
-#     Paragraph(f"Signature: ...................................................", style_justify),
-#     Spacer(1, 0.4 * cm),
-# ]
-
-# table_data = [["Specimen ID", "Visual Expert Assessment [%]", "AI-based Assesment  [%]"]]
-# for i in range(n_samples):
-#     table_data.append([f"EXP-{i+1:03d}", f"{90 - i*5}", f"{88 - i*4}"])
-# story = add_table(story, table_data, col_widths=[6, 6, 6])
-
-# average_adhesion_expert = 75
-# standard_deviation_expert = 6.2
-# class_by_expert = "C"
-# class_worst_expert = "D"
-# average_adhesion_ai = 85.0
-# standard_deviation_ai = 4.5
-# class_by_ai = "B"
-# class_worst_ai = "B"
-
-# story.append(Spacer(1, 1.0 * cm))
-# story.append(Paragraph("Report Conclusion", styles["Heading2"]))
-
-# story.append(Paragraph(f"Summary", styles["Heading3"]))
-# items = [
-#     Paragraph(f"The average adhesion rate across all samples is {average_adhesion_expert} ± {standard_deviation_expert} % according to expert visual assesment, which correspondes to calss {class_by_expert} , ", style_justify),
-#     Paragraph(f"The average adhesion rate across all samples is {average_adhesion_ai} ± {standard_deviation_ai} % according to AI-based analysis, which correspondes to calss {class_by_ai} , ", style_justify),
-#     Paragraph(f"The worst adhesion rate observed is class {class_worst_expert} according to expert visual assesment.", style_justify),
-#     Paragraph(f"The worst adhesion rate observed is class {class_worst_ai} according to AI-based analysis.", style_justify),
-# ]
-# issues = [
-#     Paragraph(f"4/5 images seem to highly similar with others and might not be unique specimens, ", style_justify),
-#     Paragraph(f"1/5 have been uploaded more than 6 months ago, ", style_justify),
-# ]
-# story = add_itemized_list(story, items)
-# story.append(Paragraph(f"The final class considered is {class_worst_expert} ", styles["Heading4"]))
-# story.append(Paragraph(f"Concerns", styles["Heading3"]))
-# story = add_itemized_list(story, issues)
-
-
-# list_ = ["", ""]
-# list_.append([left_column, right_column])
-# story = two_col_text_layout(story, list_)
-
-# story.append(Spacer(1, 1.0 * cm))
-# story.append(Paragraph(f"This report was generated using AIBAL on {pdl.now().to_datetime_string()}.", style_justify_right))
-
-# doc.build(story,
-#     onFirstPage=lambda canvas, doc: first_page(canvas, doc, report_id="12345"),
-#     onLaterPages=lambda canvas, doc: styled_header_footer(canvas, doc, report_id="12345")
-# )
-

@@ -64,6 +64,7 @@ print(f'Using reCAPTCHA site key: {RECAPTCHA_SITE_KEY}')
 app = Flask(__name__) # set debug to False for production
 # app.config['RECAPTCHA_PUBLIC_KEY'] = RECAPTCHA_SITE_KEY
 # app.config['RECAPTCHA_PRIVATE_KEY'] = RECAPTCHA_SECRET_KEY
+txt = _("Ordering Party")
 
 csp = {
     'default-src': [
