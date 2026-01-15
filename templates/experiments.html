@@ -26,7 +26,9 @@
                         <th>{{ _('Date') }}</th>
                         <th>{{ _('Asphalt coverage - ') + _('Expert guess [%%]') }}</th>
                         <th>{{ _('Asphalt coverage - ') + _('Model prediction [%%]') }}</th>
-                        <th>{{ _('Actions') }}</th>
+                        <!-- <th>{{ _('Actions') }}</th> -->
+                        <!-- <th>{{ _('Similarity Check') }}</th> -->
+                        <th>{{ _('Selected') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -51,6 +53,11 @@
                             </select>
                         </div>
                     </div>
+                    <div class="modern-row">
+                        <button class="btn-details" id="edit_selected">{{ _('Edit') }}</button>
+                        <button class="btn-export" id="export_selected"> {{ _('Export Selected') }}</button>
+                        <button class="btn-cancel" id="delete_selected">{{ _('Delete Selected') }}</button>
+                    </div>
 
 
                     <textarea class='text_area' id="current_page">1</textarea>
@@ -63,12 +70,14 @@
                         {% for column in field %}
                         <td>{{column}}</td>
                         {% endfor %}
+                        <!-- <td> -->
+                        <!-- <button class="btn-details" data-id="{{ field.0 }}">{{ _('Edit') }}</button> -->
+                        <!-- <button class="btn-cancel" id="delete_{{field.0}}" -->
+                        <!-- data-id="{{field.0}}">{{ _('Delete') }}</button> -->
+                        <!-- </td> -->
+                        <!-- </td> -->
                         <td>
-                            <button class="btn-details" data-id="{{ field.0 }}">{{ _('Edit') }}</button>
-                            <button class="btn-export" data-id="{{ field.0 }}">{{ _('Export') }}</button>
-                            <!-- <button class="btn-cancel" onclick="deleteExperimentId('{{field.0}}')">Delete</button> -->
-                            <button class="btn-cancel" id="delete_{{field.0}}"
-                                data-id="{{field.0}}">{{ _('Delete') }}</button>
+                            <input type="checkbox" class="record-checkbox" data-id="{{ field.0 }}">
                         </td>
                     </tr>
                     {% endfor %}

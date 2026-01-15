@@ -173,26 +173,30 @@ def postprocess_model_prediction(prediction: torch.Tensor):
 
     return asphalt_mask, aggregate_mask, background_mask
 
-@deprecated("get_masks_from_output is deprecated and will be removed in future versions.")
-def get_masks_from_output(output: torch.Tensor) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def inference_on_numpy(np_image: np.ndarray, model_name: str, session_id: int) -> tuple:
     """
-    Convert model output probabilities to binary masks.
-
+    Perform inference on the given numpy image using the specified model.
     Parameters:
     -----------
-    - output (torch.Tensor): Output tensor from the model. Of shape (N, C, H, W) where N is batch size, C is number of classes, H and W are height and width.
+        np_image (np.ndarray): The input image as a numpy array.
+        model_name (str): The name of the model to use for inference.
+        session_id (int): The session ID for the user.
 
     Returns:
     --------
-    - tuple[np.ndarray, np.ndarray, np.ndarray]: A tuple containing the background mask, asphalt mask, and aggregate mask.
+        tuple: A tuple containing asphalt_mask, aggregate_mask, and background_mask.
     """
-    # Get the predicted masks from the output
-    masks = output.argmax(dim=1).detach().cpu().numpy()  # Shape: (N, H, W)
+    input_data = torch.from_numpy(np_image).unsqueeze(0).float()  # Add batch channel dimension
+    input_data = input_data.permute(0, 3, 1, 2)  # Change to torch (batch_size, channels, height, width)
+    
+    print("input_data.shape")
+    print(input_data.shape)
 
-    # Create binary masks for each class
-    bg_mask = (masks == 0).astype(np.uint8)  # Background mask
-    aggregate_mask = (masks == 1).astype(np.uint8)  # Aggregate mask
-    asphalt_mask = (masks == 2).astype(np.uint8)  # Asphalt mask
-
-    return bg_mask, asphalt_mask, aggregate_mask
+    model_prediction = inference(model_name=model_name,
+                                 input_data=input_data,
+                                 session_id=session_id)
+    
+    # get model prediction and save it to the sessions
+    asphalt_mask, aggregate_mask, background_mask = postprocess_model_prediction(model_prediction)
+    return asphalt_mask, aggregate_mask, background_mask
 

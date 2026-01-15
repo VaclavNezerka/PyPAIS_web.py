@@ -44,7 +44,7 @@ class ImageSimilarityController:
     This class is responsible for controlling the image uniqueness in the background.
     """
 
-    def __init__(self, max_workers: int = 8, checks_per_hash_type: int = 50, similarity_thresholds: dict = {"histogram": 0.9, "ssim": 0.85}, n_similar: int = 10) -> None:
+    def __init__(self, max_workers: int = 8, checks_per_hash_type: int = 50, similarity_thresholds: dict = {"histogram": 0.7, "ssim": 0.7}, n_similar: int = 10) -> None:
         # self.executor = threading.ThreadPoolExecutor(max_workers=max_workers)
         self.executor = threading.ThreadPoolExecutor(max_workers=max_workers)
         self.checks_per_hash_type = checks_per_hash_type
@@ -162,7 +162,7 @@ def similarity_score_ssim(image1, image2, in_0_1_range=True):
     if gray_img1.shape != gray_img2.shape:
         gray_img2 = cv2.resize(gray_img2, (gray_img1.shape[1], gray_img1.shape[0]))
 
-    score = ssim(gray_img1, gray_img2, full=False)
+    score = ssim(gray_img1, gray_img2, full=False, gaussian_weights=True)
     if in_0_1_range:
         score = (score + 1) / 2  # Convert to range [0, 1]
     return score

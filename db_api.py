@@ -321,6 +321,62 @@ def update_company_key(cur, conn, company_id: str) -> int | None:
     return company_key
 
 @db_connection
+def get_experiment_timestamp_by_id(cur, conn, experiment_id: str) -> str:
+    query = 'SELECT time_stamp FROM experiments WHERE experiment_id=%s'
+    response = execute_query(query, (experiment_id,))
+    if not response:
+        return ""
+    return response[0][0]
+
+@db_connection
+def get_users_by_company(cur, conn, company_id: int) -> list[dict]:
+    cursor = conn.cursor(cursor_factory=RealDictCursor) 
+    query = 'SELECT id, first_name, last_name, e_mail FROM users WHERE company=%s AND e_mail_confirmed=True'
+    cursor.execute(query, (company_id,))
+    result = cursor.fetchall()
+    if not result:
+        return {}
+    # Convert RealDictRow to a regular dict
+    result = [dict(row) for row in result]
+    return result
+
+@db_connection
+def get_experiment_by_id_and_user(cur, conn, experiment_id: str, user_id: str) -> dict | None:
+    cursor = conn.cursor(cursor_factory=RealDictCursor) 
+    query = 'SELECT experiment_id FROM experiments AS e JOIN public_users AS u ON e.user_id = u.id WHERE e.experiment_id=%s AND e.user_id=%s'
+    cursor.execute(query, (experiment_id, user_id))
+    result = cursor.fetchone()
+    if not result:
+        return {}
+    # Convert RealDictRow to a regular dict
+    result = dict(result)
+    return result
+
+@db_connection
+def get_experiment_by_id_and_company(cur, conn, experiment_id: str, company_id: str) -> dict | None:
+    cursor = conn.cursor(cursor_factory=RealDictCursor) 
+    query = 'SELECT experiment_id FROM experiments AS e JOIN public_users AS u ON e.user_id = u.id WHERE e.experiment_id=%s AND u.company=%s'
+    cursor.execute(query, (experiment_id, company_id))
+    result = cursor.fetchone()
+    if not result:
+        return {}
+    # Convert RealDictRow to a regular dict
+    result = dict(result)
+    return result
+
+@db_connection
+def get_user_by_id(cur, conn, user_id: int) -> dict | None:
+    cursor = conn.cursor(cursor_factory=RealDictCursor) 
+    query = 'SELECT first_name, last_name, username, e_mail, company, is_company_admin FROM public_users WHERE id=%s'
+    cursor.execute(query, (user_id,))
+    result = cursor.fetchone()
+    if not result:
+        return None
+    # Convert RealDictRow to a regular dict
+    result = dict(result)
+    return result
+
+@db_connection
 def get_user_info_by_id(cur, conn, user_id: str) -> dict | None:
     cursor = conn.cursor(cursor_factory=RealDictCursor) 
     query = 'SELECT u.first_name, u.last_name, u.username, u.e_mail, c.company_name FROM public_users AS u JOIN public_companies AS c ON u.company = c.company_id WHERE u.id=%s'
@@ -340,6 +396,18 @@ def get_experiment_by_id(cur, conn, experiment_id: str) -> dict | None:
     result = cursor.fetchone()
     if not result:
         return None
+    # Convert RealDictRow to a regular dict
+    result = dict(result)
+    return result
+
+@db_connection
+def get_company_info_by_id(cur, conn, company_id: str) -> dict:
+    cursor = conn.cursor(cursor_factory=RealDictCursor) 
+    query = 'SELECT company_name, company_address, e_mail FROM public_companies WHERE company_id=%s'
+    cursor.execute(query, (company_id,))
+    result = cursor.fetchone()
+    if not result:
+        return {}
     # Convert RealDictRow to a regular dict
     result = dict(result)
     return result

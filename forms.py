@@ -4,7 +4,7 @@
 from flask_wtf import FlaskForm
 # RecaptchaField
 from flask import flash
-from wtforms import StringField, PasswordField, SubmitField,ValidationError,IntegerField, TextAreaField
+from wtforms import StringField, PasswordField, SubmitField,ValidationError,IntegerField, TextAreaField, SelectField, HiddenField
 from wtforms.validators import DataRequired, Email, EqualTo
 import db_api 
 from flask_babel import lazy_gettext, _
@@ -63,6 +63,13 @@ def RequiredLength(min=1,max=50):
             if len(field.data)>max:
                 raise ValidationError(lazy_gettext('The maximal allowed length is {max} characters.').format(max=max))
     return exists
+
+def EmailOrNone():
+    def email_or_none(form,field):
+        if field.data:
+            email_validator=Email()
+            email_validator(form,field)
+    return email_or_none
 
 class RegistrationFormUser(FlaskForm):  
     username = StringField(lazy_gettext('Username'),validators=[DataRequired(),IsUnique(tablename='public_users', message=messages['username_already_taken']),RequiredLength(min=1,max=50)],)    
@@ -131,6 +138,13 @@ class ContactForm(FlaskForm):
         lazy_gettext('Message'),
         validators=[DataRequired(),RequiredLength(min=1,max=2000)], 
     )
+    submit = SubmitField(lazy_gettext('Submit'))
+
+class ExportReportForm(FlaskForm):
+    ordering_party_name = StringField(lazy_gettext('Ordering Party Name'),validators=[RequiredLength(min=0,max=100)])
+    ordering_party_address = StringField(lazy_gettext('Ordering Party Address'),validators=[RequiredLength(min=0,max=200)])
+    ordering_party_e_mail = StringField(lazy_gettext('Ordering Party Email'),validators=[RequiredLength(min=0,max=100),EmailOrNone()])
+    controlling_employee = SelectField(lazy_gettext('Controller/Employee Email'),choices=[],validators=[DataRequired()])
     submit = SubmitField(lazy_gettext('Submit'))
 
 # class RegistrationFormCompany(FlaskForm):

@@ -4,7 +4,7 @@ from attrs import field
 import pendulum as pdl
 from db_api import User
 import requests
-from flask import (Flask, render_template, request, 
+from flask import (Flask, render_template, request, send_file, 
                    send_from_directory, flash, redirect,
                    session, url_for, abort)
 from flask_mail import Mail, Message
@@ -50,6 +50,7 @@ from flask_babel import Babel, _
 #Similarity controller
 import app_similarity_controller 
 similarity_controller = app_similarity_controller.ImageSimilarityController()
+from app_report_exporter import exporter_registry
 # Apps
 import forms 
 from functools import wraps
@@ -1001,6 +1002,98 @@ def generate_company_key() -> str:
     return key  
         
 
+def pick_users(session_user_id) -> list[tuple]:
+    company_id = db_api.get_user_by_id(session_user_id)['company']
+    users = db_api.get_users_by_company(company_id)
+    if not users:
+        users = [(None, 'None')]
+    else:
+        users = [(None, 'None')] + [(user['id'], f"{user['first_name']} {user['last_name']} ‹{user['e_mail']}›") for user in users]
+    return users
+
+def are_experiments_accessible_by_user(user_id: int, experiment_ids: list) -> bool:
+    """Returns a list of experiment IDs accessible by the given user."""
+    user = db_api.get_user_by_id(user_id)
+    # all user experiment ids
+    for experiment_id in experiment_ids:
+        if user['is_company_admin']:
+            company_id = user['company']
+            record = db_api.get_experiment_by_id_and_company(experiment_id=experiment_id, company_id=company_id)
+            if not record:
+                return False
+        else:
+            record = db_api.get_experiment_by_id_and_user(experiment_id=experiment_id, user_id=user_id)
+            print(experiment_id)
+            print(record)
+            if not record:
+                print('returning false for record:', record)
+                return False
+    print('All experiments are accessible by the user.')
+    return True
+
+def validate_report_experiment_ids(experiment_ids: list) -> bool:
+    """Validates the experiment IDs for report generation."""
+    try:
+        experiment_ids = [int(eid) for eid in experiment_ids.split(',')]
+    except ValueError:
+        abort(400, description=_('Invalid experiment IDs provided.'))
+    return experiment_ids
+
+@app.route('/export-report/<string:ids>',methods=['GET','POST'])
+def export_report(ids):
+    match request.method:
+        case 'GET':
+            form=forms.ExportReportForm()
+            form.controlling_employee.choices = pick_users( session['user_id'])
+            return render_template('form.html',dynamic_content=_('Export report'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+        case 'POST':
+            form=forms.ExportReportForm()
+            form.controlling_employee.choices = pick_users( session['user_id'])  
+            verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
+            if form.validate_on_submit():
+                experiment_ids = validate_report_experiment_ids(ids)
+                if not experiment_ids:
+                    flash(message=_('No experiments selected for report export.'),category='error')
+                    return render_template('form.html',dynamic_content=_('Export report'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+                if not are_experiments_accessible_by_user(session['user_id'], experiment_ids): 
+                    flash(message=_('You do not have permission to access the selected experiments.'),category='error')
+                    return render_template('form.html',dynamic_content=_('Export report'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+                print('Form validated successfully.')
+                # generate report
+                controlling_user_id = form.controlling_employee.data  # may be None
+                if controlling_user_id is None or controlling_user_id == 'None':
+                    controlling_user_id = session.get('user_id')
+                ordering_party = {
+                    'name': form.ordering_party_name.data,
+                    'address': form.ordering_party_address.data,
+                    'contact': form.ordering_party_e_mail.data,
+                }
+
+                print(ordering_party)
+
+                print()
+                print('experiment_ids')
+                print(experiment_ids)
+                print()
+                report_id = uuid.uuid4().hex[:8]
+                report_bytes = exporter_registry["CSN_73_6161"](
+                    experiment_ids=experiment_ids,
+                    report_id = report_id,
+                    user_id=session.get('user_id'),
+                    controlling_user_id=controlling_user_id,
+                    ordering_party = ordering_party,
+                )
+                return send_file(
+                    io.BytesIO(report_bytes),
+                    mimetype='application/pdf',
+                    as_attachment=True,
+                    download_name=f'AIBAL_Report_{report_id}.pdf'
+                )
+            else:
+                flash(message=_('Form validation failed. Please check your input.'),category='error')
+                return render_template('form.html',dynamic_content=_('Export report'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+
+
 @app.route('/register-company',methods=['GET','POST'])
 def register_company():
     logout()
@@ -1596,6 +1689,7 @@ def to_base64(image_array: np.ndarray) -> str:
     return base64.b64encode(encode_to_png(image_array)).decode('utf-8')
 
 # @app.route('/remove-asphalt',methods=['POST'])
+
 @app.route('/inference',methods=['POST'])
 def inference_image():
     storage.inference_model = request.form.get('model_name', None)
@@ -1604,19 +1698,24 @@ def inference_image():
     if storage.inference_model is None:
         return json.dumps({'status': 'error', 'message': 'Model name is required.'}), 400, {'Content-Type': 'application/json'}
 
-    input_data = torch.from_numpy(storage.color).unsqueeze(0).float()  # Add batch channel dimension
-    input_data = input_data.permute(0, 3, 1, 2)  # Change to torch (batch_size, channels, height, width)
+    # OLD CODE - REPLACED BY A SINGLE FUNCTION
+    # input_data = torch.from_numpy(storage.color).unsqueeze(0).float()  # Add batch channel dimension
+    # input_data = input_data.permute(0, 3, 1, 2)  # Change to torch (batch_size, channels, height, width)
     
-    print("input_data.shape")
-    print(input_data.shape)
+    # print("input_data.shape")
+    # print(input_data.shape)
 
-    model_prediction = inference(model_name=storage.inference_model,
-                                 input_data=input_data,
-                                 session_id=session['user_id'])
+    # model_prediction = inference(model_name=storage.inference_model,
+    #                              input_data=input_data,
+    #                              session_id=session['user_id'])
     
-    # get model prediction and save it to the sessions
-    asphalt_mask, aggregate_mask, background_mask = models.postprocess_model_prediction(model_prediction)
-
+    # # get model prediction and save it to the sessions
+    # asphalt_mask, aggregate_mask, background_mask = models.postprocess_model_prediction(model_prediction)
+    asphalt_mask, aggregate_mask, background_mask = models.inference_on_numpy(
+        np_image=storage.color,
+        model_name=storage.inference_model,
+        session_id=session['user_id']
+    )
     # save the masks to the storage
     storage.from_dict({
         'asphalt_mask': asphalt_mask.astype(int),
