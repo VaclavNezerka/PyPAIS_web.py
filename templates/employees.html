@@ -1,0 +1,97 @@
+<!-- login.html -->
+
+{%  extends "base.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/styles.css">
+        <link rel="stylesheet" href="/static/new_styles.css">
+        <title>{{ _('Employee Records') }}</title>
+    </head>
+
+    <body>
+        <div class="colorbar">
+            <h2>{{dynamic_content}}</h2>
+        </div>
+        <div class="container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ _('Name') }}</th>
+                        <th>{{ _('Username') }}</th>
+                        <th>{{ _('Contact') }}</th>
+                        <th>{{ _('Is Admin') }}</th>
+                        <th>{{ _('Is Blocked') }}</th>
+                        <th>{{ _('Selected') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <div class="modern-row">
+
+                        <div class="column modern-column">
+                            <h1 class="modern-label upper">
+                                {{ _('Max records on page:') }}
+                            </h1>
+                            <input type="number" id="maxRecords" class="modern-input enhanced-input" value="10" min="1"
+                                max="100">
+                        </div>
+
+                        <div class="column modern-column">
+                            <h1 class="modern-label upper">
+                                {{ _('Sort order:') }}
+                            </h1>
+                            <select id="sortOrder" class="enhanced-select">
+                                <option value="desc">{{ _('Descending') }}</option>
+                                <option value="asc">{{ _('Ascending') }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modern-row">
+                        <button class="btn-grant-admin-privileges"
+                            id="btn-grant-admin-privileges">{{ _('Grant Admin privileges') }}</button>
+                        <button class="btn-remove-admin-privileges"
+                            id="btn-remove-admin-privileges">{{ _('Remove Admin privileges') }}</button>
+                        <button class="btn-grant-admin-privileges"
+                            id="btn-unblock-user">{{ _('Unblock User') }}</button>
+                        <button class="btn-remove-admin-privileges" id="btn-block-user">{{ _('Block User') }}</button>
+                    </div>
+
+                    <textarea class='text_area' id="current_page">1</textarea>
+                    <input class='sort_by' type="text" id="sortBy" value="date,id,expert guess,asphalt ratio"
+                        maxlength=128>
+                    {% if records %}
+                    {% for record in records[1:] %}
+                    {% for field in record %}
+                    <tr>
+                        {% for column in field %}
+                        <td>{{column}}</td>
+                        {% endfor %}
+                        <td>
+                            <input type="checkbox" class="record-checkbox" data-id="{{ field.1 }}">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                    {% else %}
+                    <p>{{ _('No records found') }}</p>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="modern-row">
+            <button class="btn-details-left" id="previous_page">{{ _('Previous') }}</button>
+            <button class="btn-details-right" id="next_page">{{ _('Next') }}</button>
+        </div>
+        <script src="/static/script_tables.js"> </script>
+    </body>
+
+</html>
+
+{% endblock content %}

@@ -1,0 +1,102 @@
+<!-- login.html -->
+
+{%  extends "base.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/styles.css">
+        <link rel="stylesheet" href="/static/new_styles.css">
+        <title>{{ _('Experiment Records') }}</title>
+    </head>
+
+    <body>
+        <div class="colorbar">
+            <h2>{{dynamic_content}}</h2>
+        </div>
+        <div class="container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ _('Experiment ID') }}</th>
+                        <th>{{ _('Date') }}</th>
+                        <th>{{ _('Performed by') }}</th>
+                        <th>{{ _('Contact') }}</th>
+                        <th>{{ _('Asphalt coverage - ') + _('Expert guess [%%]') }}</th>
+                        <th>{{ _('Asphalt coverage - ') + _('Model prediction [%%]') }}</th>
+                        <!-- <th>{{ _('Actions') }}</th> -->
+                        <!-- <th>{{ _('Similarity Check') }}</th> -->
+                        <th>{{ _('Selected') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <div class="modern-row">
+
+                        <div class="column modern-column">
+                            <h1 class="modern-label upper">
+                                {{ _('Max records on page:') }}
+                            </h1>
+                            <input type="number" id="maxRecords" class="modern-input enhanced-input" value="10" min="1"
+                                max="100">
+                        </div>
+
+                        <div class="column modern-column">
+                            <h1 class="modern-label upper">
+                                {{ _('Sort order:') }}
+                            </h1>
+                            <select id="sortOrder" class="enhanced-select">
+                                <option value="desc">{{ _('Descending') }}</option>
+                                <option value="asc">{{ _('Ascending') }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modern-row">
+                        <button class="btn-details" id="edit_selected">{{ _('Edit') }}</button>
+                        <button class="btn-export" id="export_selected"> {{ _('Export Selected') }}</button>
+                        <button class="btn-cancel" id="delete_selected">{{ _('Delete Selected') }}</button>
+                    </div>
+
+                    <textarea class='text_area' id="current_page">1</textarea>
+                    <input class='sort_by' type="text" id="sortBy" value="date,id,expert guess,asphalt ratio"
+                        maxlength=128>
+                    {% if records %}
+                    {% for record in records[1:] %}
+                    {% for field in record %}
+                    <tr>
+                        {% for column in field %}
+                        <td>{{column}}</td>
+                        {% endfor %}
+                        <!-- <td> -->
+                        <!-- <button class="btn-details" data-id="{{ field.0 }}">{{ _('Edit') }}</button> -->
+                        <!-- <button class="btn-cancel" id="delete_{{field.0}}" -->
+                        <!-- data-id="{{field.0}}">{{ _('Delete') }}</button> -->
+                        <!-- </td> -->
+                        <!-- </td> -->
+                        <td>
+                            <input type="checkbox" class="record-checkbox" data-id="{{ field.0 }}">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                    {% else %}
+                    <p>{{ _('No records found') }}</p>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="modern-row">
+            <button class="btn-details-left" id="previous_page">{{ _('Previous') }}</button>
+            <button class="btn-details-right" id="next_page">{{ _('Next') }}</button>
+        </div>
+        <script src="/static/script_tables.js"> </script>
+    </body>
+
+</html>
+
+{% endblock content %}

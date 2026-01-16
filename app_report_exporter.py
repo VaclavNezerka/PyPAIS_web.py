@@ -21,7 +21,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import mm, cm
-from reportlab.lib.enums import TA_JUSTIFY, TA_RIGHT
+from reportlab.lib.enums import TA_JUSTIFY, TA_RIGHT, TA_CENTER
 from reportlab.graphics.shapes import Drawing, Rect, String
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -70,6 +70,15 @@ style_justify_right = ParagraphStyle(
     parent=style_justify,
     alignment=TA_RIGHT,
 )
+
+styles.add(ParagraphStyle(
+    name="TableHeader",
+    parent=style_justify,
+    alignment=TA_CENTER,
+    fontName="DejaVu-Bold",
+    textColor=colors.white,
+    fontSize=10,
+))
 
 warning_style = ParagraphStyle(
     name="Warning",
@@ -320,7 +329,11 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     # Final - table
     pdf.append(PageBreak())
     pdf.append(Paragraph(_("Tabular overview"), styles["Heading2"]))
-    table_data = [[_("Specimen ID"), _("Visual Expert Assessment [%]"), _("AI-based Assesment  [%]")]]
+    table_data = [[
+        Paragraph(_("Specimen ID"), styles["TableHeader"]),
+        Paragraph(_("Visual Expert Assessment [%]"), styles["TableHeader"]), 
+        Paragraph(_("AI-based Assesment  [%]"), styles["TableHeader"])
+    ]]
     table_data.extend(
         [ items for items in zip(
             experiment_ids, 
@@ -455,6 +468,7 @@ def add_table(pdf: list, table_data: List[List[Any]], colWidths: List[float] = N
         ("FONT", (0, 0), (-1, -1), "DejaVu"),
         ("FONT", (0, 0), (-1, 0), "DejaVu-Bold"),
         ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("VALIGN", (0, 0), (-1, 0), "TOP"),
     ]))
 
     pdf.append(Spacer(1, 0.2 * cm))
@@ -500,6 +514,7 @@ def return_similarity_warning(pdf: list, similar_dict: dict) -> list:
         ("RIGHTPADDING", (0, 0), (-1, -1), 6 * mm),
         ("TOPPADDING", (0, 0), (-1, -1), 4 * mm),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4 * mm),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
     ]))
     return warning_box
 
@@ -768,6 +783,7 @@ def two_col_text_layout(pdf: list, table_data: List[List[str]], doc) -> list:
         ('FONT', (0, 0), (-1, -1), "DejaVu"),
         ("LEFTPADDING", (1, 1), (1, 1), 0),
         ("RIGHTPADDING", (1, 1), (1, 1), 0),
+        ("VALIGN", (0, 0), (-1, 0), "TOP"),
     ]))
 
     table._argH[0] = 0 # first row height to 0

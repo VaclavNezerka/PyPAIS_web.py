@@ -812,6 +812,43 @@ def is_password_correct(password: str, user_id: int) -> bool:
     true_pwd_hash = db_api.get_password_hash(user_id=user_id)
     return ws.check_password_hash(pwhash=true_pwd_hash,password=password)
 
+@app.route('/change-user-blockade',methods=['POST'])
+@check_authentication
+def change_user_blockade():
+    # admin code verification  - TODO: wrap in a decorator
+    print('Changing user blockade...')
+    if db_api.get_user_by_id(user_id=session['user_id'])['is_company_admin'] is False:
+        abort(403, description=_('You do not have permission to perform this action.'))
+    # user to be altered 
+    username = request.form.get('username',None)
+    user_to_alter_id = db_api.get_user_id(username=username)
+    if user_to_alter_id is None:
+        abort(400, description=_('User with the provided username does not exist'))
+
+    # get the future status
+    will_be_blocked = request.form.get('will_be_blocked','false').lower() == 'true'
+    db_api.change_user_blockade(user_id=user_to_alter_id, is_blocked=will_be_blocked)
+    return json.dumps({'status': 'success'}), 200
+
+@app.route('/change-admin-privileges',methods=['POST'])
+@check_authentication
+def change_admin_privileges():
+    # admin code verification - TODO: wrap in a decorator
+    print('Changing admin privileges...')
+    if db_api.get_user_by_id(user_id=session['user_id'])['is_company_admin'] is False:
+        abort(403, description=_('You do not have permission to perform this action.'))
+    # user to be granted  
+    username = request.form.get('username',None)
+    user_to_alter_id = db_api.get_user_id(username=username)
+    if user_to_alter_id is None:
+        abort(400, description=_('User with the provided username does not exist'))
+
+    # get the future status
+    will_be_admin = request.form.get('will_be_admin','false').lower() == 'true'
+    db_api.change_admin_privileges(user_id=user_to_alter_id, is_admin=will_be_admin)
+    return json.dumps({'status': 'success'}), 200
+
+
 @app.route('/login',methods=['GET','POST'])
 def login():
     logout()
@@ -829,12 +866,18 @@ def login():
                 if not db_api.is_user_email_confirmed(user_id=user_id):
                     flash(_('Please confirm your email address before logging in.'), 'error')
                     return redirect(url_for('login')), 302
+                # check if the user is blocked
+                if db_api.is_user_blocked(user_id=user_id):
+                    flash(_('Your account has been blocked. In case this should not be the case, please contact your company admin.'), 'error')
+                    return redirect(url_for('login')), 302
                 
                 authenticated = is_password_correct(password=form.password.data, user_id=user_id)
                 if authenticated:
                     session['authenticated'] = True
                     session['user_id'] = user_id
                     session['user_email'] = form.usernameXe_mail.data
+                    if db_api.get_user_by_id(user_id=user_id)['is_company_admin']:
+                        session['is_admin'] = True
                     # TODO - consider removal - old approach - unused
                     # TODO - currently the ts is created dynamically when needed, so this may be redundant
                     # create a new user temporary storage for the user
@@ -900,9 +943,7 @@ def queue():
     columnames = [ _(col) for col in columnames ]
     return render_template('queue.html',records=records,session=session,dynamic_content=_('Experiment Queue'),columnames=columnames, actions = actions)
 
-@app.route('/experiments',methods=['GET','POST'])
-@check_authentication
-def experiments():
+def get_ordenary_user_experiments(request) -> list[tuple]:
     sort_order=request.args.get('sort_order','desc')
     page_limit=int(request.args.get('page_limit',10))
     start_sub_id=request.args.get('start_id',None)
@@ -941,6 +982,110 @@ def experiments():
     data = [(x[0], x[1], f"{x[2]*100:.2f}" if x[2] is not None else _('None'), f"{x[3]*100:.2f}" if x[3] is not None else _('None')) for x in data]
     records[1] = data
     return render_template('experiments.html',records=records,session=session,dynamic_content=_('Experiment Records'))
+    
+def get_admin_user_experiments(request) -> list[tuple]:
+    sort_order=request.args.get('sort_order','desc')
+    page_limit=int(request.args.get('page_limit',10))
+    start_sub_id=request.args.get('start_id',None)
+    page=int(request.args.get('page',1))
+    sort_by=request.args.get('sort_by','time_stamp,id,expert_guess,asphalt_ratio')
+    
+    records=[('id','time_stamp','name','contact','expert_guess', 'asphalt_ratio')]
+    sort_by = sort_by.split(',')  
+    sort_by = [x for x in sort_by if x in records[0]]
+    sort_columns=[records[0].index(x) for x in sort_by]
+    
+    # 
+    company_id = db_api.get_user_by_id(session['user_id'])['company']
+    records.append(db_api.get_all_company_experiments(company_id))
+    # Join the firs and last name
+    records[1] = [(
+        x['experiment_id'], 
+        x['time_stamp'].strftime('%Y-%m-%d  %H:%M:%S'), 
+        f"{x['first_name']} {x['last_name']}",
+        x['e_mail'], 
+        x['expert_guess'], 
+        x['asphalt_ratio'], 
+    ) for x in records[1]]
+
+    # data sorting and slicing
+    data = records[1]
+    # Replace None values with -1
+    data = [(x[0],x[1],x[2],x[3],x[4] if x[4] is not None else 0, x[5] if x[5] is not None else -1) for x in data]
+    data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='desc')
+    # replace -1 with None
+    data = [(x[0],x[1],x[2],x[3],x[4] if x[4] != -1 else None, x[5] if x[5] != -1 else None) for x in data]
+    records[1] = data
+    pages=len(data)//page_limit+1
+    if page>pages:
+        page=pages  
+    if start_sub_id is None:
+        start_sub_id=0+page_limit*(page-1)
+    else:
+        start_sub_id=int(start_sub_id)
+    max_sub_id = min(len(data), start_sub_id+page_limit)
+    data=data[start_sub_id:max_sub_id]
+    # convert the expert guess and asphalt_ratio to string with 2 decimal places
+    data = [(x[0], x[1], x[2], x[3], f"{x[4]*100:.2f}" if x[4] is not None else _('None'), f"{x[5]*100:.2f}" if x[5] is not None else _('None')) for x in data]
+    records[1] = data
+    return render_template('experiments_admin.html',records=records,session=session,dynamic_content=_('Experiment Records - Admin View'))
+
+@app.route('/experiments',methods=['GET','POST'])
+@check_authentication
+def experiments():
+    if db_api.get_user_by_id(session['user_id'])['is_company_admin']:
+        return get_admin_user_experiments(request)
+    return get_ordenary_user_experiments(request)
+
+def get_admin_users(request) -> list[tuple]:
+    sort_order=request.args.get('sort_order','desc')
+    page_limit=int(request.args.get('page_limit',10))
+    start_sub_id=request.args.get('start_id',None)
+    page=int(request.args.get('page',1))
+    sort_by=request.args.get('sort_by','name,contact,is_company_admin')
+    
+    records=[('name','contact','is_company_admin')]
+    sort_by = sort_by.split(',')  
+    sort_by = [x for x in sort_by if x in records[0]]
+    sort_columns=[records[0].index(x) for x in sort_by]
+    
+    # 
+    company_id = db_api.get_user_by_id(session['user_id'])['company']
+    records.append(db_api.get_all_company_employees(company_id))
+    # Join the firs and last name
+    records[1] = [(
+        f"{x['first_name']} {x['last_name']}",
+        x['username'], 
+        x['e_mail'], 
+        x['is_company_admin'], 
+        x['is_blocked'], 
+    ) for x in records[1]]
+
+    # data sorting and slicing
+    data = records[1]
+    data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='desc')
+    # replace -1 with None
+    data = [(*x,) for x in data]
+    records[1] = data
+    pages=len(data)//page_limit+1
+    if page>pages:
+        page=pages  
+    if start_sub_id is None:
+        start_sub_id=0+page_limit*(page-1)
+    else:
+        start_sub_id=int(start_sub_id)
+    max_sub_id = min(len(data), start_sub_id+page_limit)
+    data=data[start_sub_id:max_sub_id]
+    records[1] = data
+    return render_template('employees.html',records=records,session=session,dynamic_content=_('Employee Records - Admin View'))
+
+@app.route('/employees',methods=['GET','POST'])
+@check_authentication
+def employees():
+    if db_api.get_user_by_id(session['user_id'])['is_company_admin']:
+        return get_admin_users(request)
+    return abort(403, description=_('You do not have permission to access this page.'))
+
 
 @app.route('/user',methods=['GET'])
 @check_authentication
@@ -1334,7 +1479,7 @@ def deactivate_experiment(id):
 
     # deactivate the current experiment in the database
     print('Deactivating experiment.', id)
-    db_api.update_experiment_active_status(experiment_id=id, active=False)
+    db_api.update_experiment_active_status(user_id=session['user_id'], active=False)
     storage.experiment_id = None
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
@@ -1360,9 +1505,10 @@ def activate_experiment(id):
             r=deactivate_experiment(i[0])
 
     # activate the experiment
-    query = 'UPDATE experiments SET active=%s WHERE experiment_id=%s'
-    values = (True, id)
-    execute_query(query, values)
+    db_api.update_experiment_active_status(user_id=session['user_id'], active=True, experiment_id=id)
+    # query = 'UPDATE experiments SET active=%s WHERE experiment_id=%s'
+    # values = (True, id)
+    # execute_query(query, values)
     # ts [session['user_id']].experiment_id = id    
     storage.experiment_id = id    
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}

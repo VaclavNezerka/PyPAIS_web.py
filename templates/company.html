@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+{% block content %}
+
+
+<html>
+
+    <head>
+        <title>{{ _('User Information') }}</title>
+        <link rel="stylesheet" href="/static/styles.css">
+        <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
+    </head>
+
+    <body>
+        <!-- First Row: Image Upload -->
+        <div class="colorbar">
+            <h2>{{ _('Company Information') }}</h2>
+        </div>
+        <div class="container">
+            <div class="row modern-row">
+                <div class="column modern-column">
+                    <img class="profile-picture" src="/static/avatars/gorilla.png" alt="Profile Picture">
+                </div>
+                <div class="column modern-column">
+                    <table>
+                        <tr>
+                            <td>{{ _('Company Name: ') }}</td>
+                            <td>{{ dynamic_content.company_name }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('Address: ') }}</td>
+                            <td>{{ dynamic_content.address }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('Company E-mail: ') }}</td>
+                            <td>{{ dynamic_content.company_e_mail }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="column modern-column">
+                    <div class="row">
+                        <button id="editPersonalInformation" type=submit>{{ _('Edit personal information') }}</button>
+                    </div>
+                    <div class="row">
+                        <button id="changeEmailButton" type=submit>{{ _('Change e-mail address') }}</button>
+                    </div>
+                    <div class="row">
+                        <button id="changePasswordButton" type=submit>{{ _('Change password') }}</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <script src="/static/script_user.js"></script>
+    </body>
+
+</html>
+
+{% endblock content %}

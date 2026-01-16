@@ -195,7 +195,7 @@ msgid ""
 "the link below:"
 msgstr ""
 "Díky za Vaší registraci! Prosím potvrďte svou emailovou adresu "
-"kliknutímna odkaz níže:"
+"kliknutím na odkaz níže:"
 
 #: app.py:973
 msgid "AIBAL: Please confirm your email address"

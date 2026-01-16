@@ -120,7 +120,7 @@ input[type="file"] {
 }
 /* Change button background color on hover */
 .custom-file-label:hover {
-    background-color: var(--myDarkBlue);
+    background-color: var(--myPaleBlue);
 }
 
 #defaultImage,
@@ -466,7 +466,8 @@ button[type="submit"] {
 
 button[type="submit"]:hover,
 form button[type="submit"]:hover {
-    background-color: var(--myDarkBlue);
+    /* background-color: var(--myDarkBlue); */
+    background-color: var(--myPaleBlue);
 }
 
 /* footer style */
@@ -635,11 +636,12 @@ button {
 }
 
 .tool-btn:hover {
-    background-color: var(--myDarkBlue);
+    /* background-color: var(--myDarkBlue); */
+    background-color: var(--myPaleBlue);
 }
 
 .tool-btn.active {
-    background-color: var(--myDarkBlue);
+    background-color: var(--myPaleBlue);
 }
 
 #bgButton {
@@ -668,11 +670,11 @@ button {
     background-color: var(--myBlue);
 }
 #fgButton:hover {
-    background-color: var(--myDarkBlue);
+    background-color: var(--myPaleBlue);
 }
 
 #fgButton.active {
-    background-color: var(--myDarkBlue);
+    background-color: var(--myPaleBlue);
 }
 
 /* ------------------------------ */
@@ -701,6 +703,7 @@ tr:nth-child(even) {
     background-color: #f2f2f2;
 }
 
+.btn-grant-admin-privileges,
 .btn-details,
 .btn-details-right,
 .btn-details-left,
@@ -730,13 +733,18 @@ tr:nth-child(even) {
     background-size: 12px 12px;
 }
 
+.btn-grant-admin-privileges:hover,
+.btn-remove-admin-privileges:hover,
+.btn-details-right:hover,
+.btn-details-left:hover,
 .btn-details:hover,
 .btn-export:hover {
-    background-color: var(--myDarkBlue);
+    background-color: var(--myPaleBlue);
 }
 
 /*  */
 
+.btn-remove-admin-privileges,
 .btn-cancel {
     padding: 8px 12px;
     margin-right: 5px;
@@ -747,6 +755,8 @@ tr:nth-child(even) {
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
+
+.btn-remove-admin-privileges:hover,
 .btn-cancel:hover {
     background-color: var(--myPaleRed);
 }

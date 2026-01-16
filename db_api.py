@@ -189,6 +189,20 @@ def change_password(cur, conn, values):
     conn.commit()
 
 @db_connection
+def change_user_blockade(cur, conn, user_id: int, is_blocked: bool) -> None:
+    query='UPDATE users SET is_blocked=%s WHERE id=%s'
+    values=(is_blocked, user_id)
+    cur.execute(query, values)
+    conn.commit()
+    
+@db_connection
+def is_user_blocked(cur, conn, user_id: int) -> bool:
+    query='SELECT is_blocked FROM users WHERE id=%s'
+    values=(user_id,)
+    is_blocked=execute_query(query=query,values=values)[0][0]
+    return is_blocked
+
+@db_connection
 def get_password_hash(cur, conn, user_id: int) -> str:
     query='SELECT pwd FROM public_users WHERE id=%s'
     values=(user_id,)
@@ -226,6 +240,36 @@ def load_image_by_experiment_id(cur, conn, experiment_id: int) -> bytes | None:
         return None
     return response[0][0]
 
+# TODO: consider joining with get_comparing_image_hashes
+@db_connection
+def get_all_company_employees(cur, conn, company_id: int) -> list[dict]:
+    cursor = conn.cursor(cursor_factory=RealDictCursor) 
+    query = 'SELECT first_name, last_name, username, e_mail, is_company_admin, is_blocked FROM users WHERE company=%s AND e_mail_confirmed=True;'
+    cursor.execute(query, (company_id,))
+    result = cursor.fetchall()
+    if not result:
+        return []
+    # Convert RealDictRow to a regular dict
+    result = [dict(row) for row in result]
+    return result
+
+# TODO: consider joining with get_comparing_image_hashes
+@db_connection
+def get_all_company_experiments(cur, conn, company_id: int) -> list[dict]:
+    cursor = conn.cursor(cursor_factory=RealDictCursor) 
+    query = 'SELECT experiment_id, time_stamp, u.first_name, u.last_name, u.e_mail, expert_guess, asphalt_ratio  FROM experiments e JOIN users u ON e.user_id = u.id  WHERE u.company=%s AND e.fake_deleted=false;'
+    # response = execute_query(query, (company_id,))
+    # return response
+    cursor.execute(query, (company_id,))
+    result = cursor.fetchall()
+    if not result:
+        return []
+    # Convert RealDictRow to a regular dict
+    result = [dict(row) for row in result]
+    return result
+
+
+# TODO: consider joining with get_all_company_experiments
 @db_connection
 def get_comparing_image_hashes(cur, conn, user_id: int, experiment_id: int) -> tuple[list, dict]:
     query = 'SELECT experiment_id, phash, ahash, dhash, colorhash FROM experiments e JOIN users u_exp ON e.user_id = u_exp.id JOIN users u ON u_exp.company = u.company WHERE u.id=%s AND e.experiment_id !=%s'
@@ -503,10 +547,19 @@ def load_experiment_from_db(cur,conn, id):
     response = cur.fetchall()[0]
     return response
 
+# @db_connection
+# def update_experiment_active_status(cur, conn, experiment_id, active: bool):
+#     query = 'UPDATE experiments SET active=%s WHERE experiment_id=%s'
+#     execute_query(query, (active, experiment_id))
+
 @db_connection
-def update_experiment_active_status(cur, conn, experiment_id, active: bool):
-    query = 'UPDATE experiments SET active=%s WHERE experiment_id=%s'
-    execute_query(query, (active, experiment_id))
+def update_experiment_active_status(cur, conn, user_id, active: bool, experiment_id: int = None):
+    if active:
+        query = 'UPDATE users SET active_experiment_id=%s WHERE id=%s'
+        execute_query(query, (experiment_id, user_id))
+    else:
+        query = 'UPDATE users SET active_experiment_id=NULL WHERE id=%s'
+        execute_query(query, (user_id,))
 
 
 @db_connection
@@ -532,9 +585,16 @@ def update_users_table(cur,conn, values_dict: dict, user_id: int) -> None:
     execute_query(command, values)
 
 
+# @db_connection
+# def return_active_experiment_id(cur,conn, user_id) -> int | None:
+#     cur.execute('SELECT experiment_id FROM experiments WHERE user_id=%s AND active=True', (user_id,))
+#     experiment_id=cur.fetchall()
+#     experiment_id = experiment_id[0][0] if experiment_id else None
+#     return experiment_id
+
 @db_connection
 def return_active_experiment_id(cur,conn, user_id) -> int | None:
-    cur.execute('SELECT experiment_id FROM experiments WHERE user_id=%s AND active=True', (user_id,))
+    cur.execute('SELECT active_experiment_id FROM users WHERE id=%s', (user_id,))
     experiment_id=cur.fetchall()
     experiment_id = experiment_id[0][0] if experiment_id else None
     return experiment_id

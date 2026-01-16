@@ -358,6 +358,49 @@ window.addEventListener("message", function (e) {
     }
 })
 
+function changeAdminPrivileges(username, willBeAdmin) {
+    uniqueQuery = "?nocache=" + new Date().getTime()
+    form = new FormData()
+    form.append("username", username)
+    form.append("will_be_admin", willBeAdmin)
+
+    fetch("/change-admin-privileges", {
+        method: "POST",
+        body: form,
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.status === "success") {
+                window.location.reload()
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error)
+            // window.location.reload()
+        })
+}
+
+function changeUserBlockade(username, willBeBlocked) {
+    uniqueQuery = "?nocache=" + new Date().getTime()
+    form = new FormData()
+    form.append("username", username)
+    form.append("will_be_blocked", willBeBlocked)
+    fetch("/change-user-blockade", {
+        method: "POST",
+        body: form,
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.status === "success") {
+                window.location.reload()
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error)
+            // window.location.reload()
+        })
+}
+
 let checkboxes = []
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -369,6 +412,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 checkboxes = checkboxes.filter((item) => item !== id)
             }
+            console.log(checkboxes)
         })
     })
 })
@@ -432,6 +476,51 @@ function initButtons() {
             // exportExperimentPDF(checkboxes)
         })
     })
+
+    document
+        .getElementById("btn-grant-admin-privileges")
+        .addEventListener("click", () => {
+            if (checkboxes.length === 0) {
+                alert("No employees selected for intended action.")
+                return
+            }
+            for (let username of checkboxes) {
+                changeAdminPrivileges(username, true)
+            }
+        })
+
+    document
+        .getElementById("btn-remove-admin-privileges")
+        .addEventListener("click", () => {
+            if (checkboxes.length === 0) {
+                alert("No employees selected for intended action.")
+                return
+            }
+            for (let username of checkboxes) {
+                changeAdminPrivileges(username, false)
+            }
+        })
+
+    document.getElementById("btn-block-user").addEventListener("click", () => {
+        if (checkboxes.length === 0) {
+            alert("No employees selected for intended action.")
+            return
+        }
+        for (let username of checkboxes) {
+            changeUserBlockade(username, true)
+        }
+    })
+    document
+        .getElementById("btn-unblock-user")
+        .addEventListener("click", () => {
+            if (checkboxes.length === 0) {
+                alert("No employees selected for intended action.")
+                return
+            }
+            for (let username of checkboxes) {
+                changeUserBlockade(username, false)
+            }
+        })
 }
 
 initButtons()
