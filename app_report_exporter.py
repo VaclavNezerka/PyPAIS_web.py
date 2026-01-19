@@ -192,6 +192,7 @@ def compute_statistics(assessments: List[float], to_per_cents: bool = True) -> D
         "stddev": stddev,
         "worst": worst,
         "average_classification": get_CSN_73_6161_classification(average),
+        "average_word_classification": get_CSN_73_6161_word_classification(average),
         "worst_classification": get_CSN_73_6161_classification(worst),
     }
 
@@ -370,7 +371,8 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         Paragraph(_("The worst adhesion rate (") +f"{stats_automatic['worst']:.2f}" + _(" %) observed is class ") + f"{stats_automatic['worst_classification']} " + _("according to AI-based analysis."), style_justify),
     ]
     pdf = add_itemized_list(pdf, items)
-    pdf.append(Paragraph(_("The final considered class is ") + f"{stats_expert['worst_classification']}", styles["Heading4"]))
+    pdf.append(Paragraph(_("The final considered class is ") + f"{stats_expert['average_classification']}", styles["Heading4"]))
+    pdf.append(Paragraph(_("The adhesion between aggregate and binder is classified as: ") + f"{stats_expert['average_word_classification']}", styles["Heading4"]))
     
     issues = []
     if concerns["similar_images"] > 0:

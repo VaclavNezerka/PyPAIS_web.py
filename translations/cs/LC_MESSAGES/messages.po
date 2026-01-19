@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-01-19 08:25+0100\n"
+"POT-Creation-Date: 2026-01-19 10:29+0100\n"
 "PO-Revision-Date: 2025-10-21 18:40+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: cs\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: app.py:68 app_report_exporter.py:255
+#: app.py:68 app_report_exporter.py:256
 msgid "Ordering Party"
 msgstr "Objednavatel"
 
@@ -39,8 +39,8 @@ msgid ""
 "You have requested to reset your password. Please click the button below "
 "to reset your password:"
 msgstr ""
-"zadali jste požadavek na obnovu hesla. Pro změnu hesla, klikněte prosím"
-"na tlačítko níže:"
+"zadali jste požadavek na obnovu hesla. Pro změnu hesla, klikněte prosímna"
+" tlačítko níže:"
 
 #: app.py:460
 msgid "AIBAL: Password Reset Request"
@@ -50,9 +50,7 @@ msgstr "AIBAL: Požadavek na obnovení hesla"
 msgid ""
 "An email with password reset instructions has been sent to your email "
 "address."
-msgstr ""
-"Email s instrukcemi pro obnovu hesla byl zaslán na Vaši emailovou  "
-"adresu."
+msgstr "Email s instrukcemi pro obnovu hesla byl zaslán na Vaši emailovou  adresu."
 
 #: app.py:475
 msgid "You can now reset your password!"
@@ -141,124 +139,124 @@ msgstr "Vaše zpráva byla úspěšně odeslána."
 msgid "There was an error sending your message. Please try again."
 msgstr "Během odesílání Vaší zprávy došlo k chybě. Zkuste to prosím znovu."
 
-#: app.py:773
+#: app.py:774
 msgid "Change email"
 msgstr "Změnit e-mail"
 
-#: app.py:783 app.py:803
+#: app.py:784 app.py:804
 msgid "Email changed successfully."
 msgstr "E-mail úspěšně aktualizován."
 
-#: app.py:792
+#: app.py:793
 #, fuzzy
 msgid "Change company email"
 msgstr "Změnit e-mail"
 
-#: app.py:816 app.py:831 app.py:839 app.py:855
+#: app.py:817 app.py:832 app.py:840 app.py:856
 msgid "Change personal information"
 msgstr "Upravit osobní informace"
 
-#: app.py:828
+#: app.py:829
 msgid "Personal information updated successfully."
 msgstr "Osobní informace úspěšně aktualizovány."
 
-#: app.py:852
+#: app.py:853
 #, fuzzy
 msgid "Company information updated successfully."
 msgstr "Osobní informace úspěšně aktualizovány."
 
-#: app.py:860 templates/user.html:58
+#: app.py:861 templates/user.html:58
 msgid "Change password"
 msgstr "Změnit heslo"
 
-#: app.py:874
+#: app.py:875
 msgid "Password changed successfully."
 msgstr "Heslo úspěšně aktualizováno."
 
-#: app.py:877
+#: app.py:878
 msgid "The old password is incorrect."
 msgstr "Zadané staré heslo je nesprávné."
 
-#: app.py:922 app.py:940
+#: app.py:923 app.py:941
 msgid "You do not have permission to perform this action."
 msgstr "Na provedení této akce nemáte potřebná práva."
 
-#: app.py:927 app.py:945
+#: app.py:928 app.py:946
 msgid "User with the provided username does not exist"
 msgstr "Uživatel se zadaným přihlašovacím jménem neexistuje."
 
-#: app.py:959 app.py:990 app.py:993 forms.py:98 templates/navbar.html:41
+#: app.py:960 app.py:987 app.py:990 forms.py:98 templates/navbar.html:41
 msgid "Login"
 msgstr "Přihlásit se"
 
-#: app.py:968
+#: app.py:969
 msgid "Please confirm your email address before logging in."
 msgstr "Potvrďte prosím před přihlášením svou emailovou adresu."
 
-#: app.py:972
+#: app.py:973
 msgid ""
 "Your account has been blocked. In case this should not be the case, "
 "please contact your company admin."
 msgstr ""
-"Váš účet byl zablokován. Pokud se domníváte, že se jedná o omyl, "
-"prosím kontaktujte administrátora své společnosti."
+"Váš účet byl zablokován. Pokud se domníváte, že se jedná o omyl, prosím "
+"kontaktujte administrátora své společnosti."
 
-#: app.py:989 forms.py:55
+#: app.py:986 forms.py:55
 msgid "Invalid username/email or password."
 msgstr "Chybné přihlašovací údaje."
 
-#: app.py:1017
+#: app.py:1014
 msgid "id"
 msgstr "ID"
 
-#: app.py:1017
+#: app.py:1014
 msgid "date"
 msgstr "Datum"
 
-#: app.py:1017
+#: app.py:1014
 msgid "state"
 msgstr "Stav"
 
-#: app.py:1017
+#: app.py:1014
 msgid "actions"
 msgstr "Akce"
 
-#: app.py:1018 templates/experiments.html:57 templates/experiments.html:74
+#: app.py:1015 templates/experiments.html:57 templates/experiments.html:74
 #: templates/experiments_admin.html:59 templates/experiments_admin.html:75
 #: templates/queue.html:81
 msgid "Edit"
 msgstr "Upravit"
 
-#: app.py:1018
+#: app.py:1015
 msgid "Cancel"
 msgstr "Zrušit"
 
-#: app.py:1045
+#: app.py:1042
 msgid "Experiment Queue"
 msgstr "Fronta experimentů"
 
-#: app.py:1083 app.py:1130
+#: app.py:1080 app.py:1127
 msgid "None"
 msgstr "None"
 
-#: app.py:1085 templates/experiments.html:14
+#: app.py:1082 templates/experiments.html:14
 #: templates/experiments_admin.html:14 templates/queue.html:13
 msgid "Experiment Records"
 msgstr "Záznamy experimentů"
 
-#: app.py:1132
+#: app.py:1129
 msgid "Experiment Records - Admin View"
 msgstr "Záznamy experimentů - Zobrazení admina"
 
-#: app.py:1184
+#: app.py:1181
 msgid "Employee Records - Admin View"
 msgstr "Zaměstnanci - Zobrazení admina"
 
-#: app.py:1217 app.py:1247 app.py:1250 app.py:1411 app.py:1414
+#: app.py:1214 app.py:1244 app.py:1247 app.py:1408 app.py:1411
 msgid "Register new user"
 msgstr "Registrace nového uživatele"
 
-#: app.py:1222
+#: app.py:1219
 msgid ""
 "Thank you for signing up! Please confirm your email address by clicking "
 "the link below:"
@@ -266,11 +264,11 @@ msgstr ""
 "Díky za Vaší registraci! Prosím potvrďte svou emailovou adresu kliknutím "
 "na odkaz níže:"
 
-#: app.py:1228
+#: app.py:1225
 msgid "AIBAL: Please confirm your email address"
 msgstr "AIBAL: Potvrďte svou emailovou adresu"
 
-#: app.py:1243
+#: app.py:1240
 msgid ""
 "Registration successful. Please confirm your email via the link sent to "
 "your email address."
@@ -278,65 +276,65 @@ msgstr ""
 "Registrace proběhla úspěšně. Prosím, dokončete ji potvrzením emailu "
 "pomocí odkazu zaslaného na Vaši e-mailovou adresu."
 
-#: app.py:1246 app.py:1410
+#: app.py:1243 app.py:1407
 msgid "Database error:"
 msgstr "Chyba databáze:"
 
-#: app.py:1249 app.py:1368 app.py:1413
+#: app.py:1246 app.py:1365 app.py:1410
 msgid "Form validation failed. Please check your input."
 msgstr "Selhala validace formuláře, prosím, zkontrolujte zadané údaje."
 
-#: app.py:1259
+#: app.py:1256
 msgid "Company key regenerated successfully."
 msgstr "Klíč společnosti úspěšně přegenerován."
 
-#: app.py:1269 forms.py:82 templates/company_key.html:9
+#: app.py:1266 forms.py:82 templates/company_key.html:9
 msgid "Company Key"
 msgstr "Klíč společnosti"
 
-#: app.py:1314
+#: app.py:1311
 msgid "Invalid experiment IDs provided."
 msgstr "Poskytnuta chybná ID experimentu."
 
-#: app.py:1323 app.py:1332 app.py:1335 app.py:1369
+#: app.py:1320 app.py:1329 app.py:1332 app.py:1366
 msgid "Export report"
 msgstr "Exportovat report"
 
-#: app.py:1331
+#: app.py:1328
 msgid "No experiments selected for report export."
 msgstr "Není vybrán žádný experiment k exportu reportu."
 
-#: app.py:1334
+#: app.py:1331
 msgid "You do not have permission to access the selected experiments."
 msgstr "Na zobrazení těchto dat nemáte potřebná práva."
 
-#: app.py:1378
+#: app.py:1375
 msgid "Register new company"
 msgstr "Registrace nové společnosti"
 
-#: app.py:1392
+#: app.py:1389
 msgid "A new company registration with the following details has been requested:"
 msgstr ""
 "Byl vznesen nový požadavek na registraci společnosti s následujícími "
 "detaily:"
 
-#: app.py:1394 forms.py:89 forms.py:132
+#: app.py:1391 forms.py:89 forms.py:132
 msgid "Company Name"
 msgstr "Název společnosti"
 
-#: app.py:1395 forms.py:133
+#: app.py:1392 forms.py:133
 msgid "Company Address"
 msgstr "Adresa společnosti"
 
-#: app.py:1396
+#: app.py:1393
 msgid "Contact Email"
 msgstr "Kontaktní email"
 
-#: app.py:1404
+#: app.py:1401
 msgid "AIBAL: New company registration request"
 msgstr "AIBAL: Požadavek o registraci nové společnosti"
 
-#: app.py:1407
+#: app.py:1404
 msgid ""
 "Registration successful. Please confirm this request in your ADMIN mail "
 "account."
@@ -344,27 +342,27 @@ msgstr ""
 "Registrace proběhla úspěšně, prosím potvrďte ji ve svém administrátorském"
 " emailu."
 
-#: app.py:1602 app.py:1625 app.py:1664
+#: app.py:1599 app.py:1622 app.py:1661
 msgid "No active experiment found."
 msgstr "Žádný aktivní experiment nenalezen."
 
-#: app.py:2382
+#: app.py:2379
 msgid "No experiment data found."
 msgstr "Žádná data k experimentu nenalezena."
 
-#: app.py:2383
+#: app.py:2380
 msgid "Please fill the expert guess field before evaluating the experiment."
 msgstr "Prosím, vyplňte expertní odhad před vyhodnocením experimentu."
 
-#: app.py:2384
+#: app.py:2381
 msgid "Evaluation completed. Check the console for the results."
 msgstr "Vyhodnocení dokončeno. Vizte konzoli s výsledky. "
 
-#: app.py:2385
+#: app.py:2382
 msgid "Evaluation results: "
 msgstr "Vyhodnocení výsledků: "
 
-#: app.py:2386
+#: app.py:2383
 msgid ""
 "Would you like to use this app with no limitations? Store and export "
 "these results? Contact us to create an account."
@@ -372,39 +370,39 @@ msgstr ""
 "Chcete používat tuto aplikaci bez omezení? Ukládat a exportovat tyto "
 "výsledky? Kontaktujte nás pro vytvoření účtu."
 
-#: app.py:2387 forms.py:17
+#: app.py:2384 forms.py:17
 msgid "No employees selected for intended action."
 msgstr "Pro vybranou akci nejsou vybráni žádní zaměstnaci."
 
-#: app.py:2388
+#: app.py:2385
 msgid "No experiments selected for deletion."
 msgstr "Není vybrán žádný experiment ke smazaní."
 
-#: app.py:2389
+#: app.py:2386
 msgid "Are you sure you want to delete the selected experiments?"
 msgstr "Chcete opravdu smazat vybrané experimenty?"
 
-#: app.py:2390
+#: app.py:2387
 msgid "This action cannot be undone."
 msgstr "Tuto akci nelze vrátit."
 
-#: app.py:2391
+#: app.py:2388
 msgid "Please select experiments to view details."
 msgstr "Prosím vybrerte experiment, u kterého chcete zobrazit detaily."
 
-#: app.py:2392
+#: app.py:2389
 msgid "Please select only one experiment for viewing details."
 msgstr "Prosím vyberte pouze jeden experiment pro zobrazení detailů."
 
-#: app.py:2393
+#: app.py:2390
 msgid "Please select at least one experiment for export."
 msgstr "Prosím vybrete alespoň jeden experiment k exportu."
 
-#: app.py:2394
+#: app.py:2391
 msgid "For CSN 73 6161, exporting a single experiment is not allowed."
 msgstr "Dle ČSN 73 6161 jeden vzorek není dostačující pro zkoušku přilnavosti. "
 
-#: app.py:2395
+#: app.py:2392
 msgid "Do you want to proceed with exporting this single experiment?"
 msgstr "Přejete si přesto pokračovat a exportovat protokol?"
 
@@ -428,11 +426,11 @@ msgstr "Nedostačující"
 msgid "Unclassifiable"
 msgstr "Nezatříditelná"
 
-#: app_report_exporter.py:236
+#: app_report_exporter.py:237
 msgid "Bitumen Adhesion Test Protocol"
 msgstr "Protokol o zkoušce přilnavosti asfaltu"
 
-#: app_report_exporter.py:239
+#: app_report_exporter.py:240
 msgid ""
 "\n"
 "    This report provides a comprehensive overview of the bitumen adhesion"
@@ -446,7 +444,7 @@ msgstr ""
 "    se všemi informacemi požadovnanými dle ČSN 73 6161.\n"
 "    Zkouška přilnavosti byla provedena na "
 
-#: app_report_exporter.py:242
+#: app_report_exporter.py:243
 msgid ""
 " samples of asphalt mixtures. The detailes about each specimen included "
 "below, the overview is at the end of the document."
@@ -454,7 +452,7 @@ msgstr ""
 " vzorcích. Detailní informace o každém vzorku jsou obsaženy níže.Přehled "
 "se pak nachází na konci dokumentu."
 
-#: app_report_exporter.py:246
+#: app_report_exporter.py:247
 msgid ""
 "\n"
 "    Both the visual expert assesment and the AI-based quantitative "
@@ -472,75 +470,79 @@ msgstr ""
 "    pro srovnání je u každého vzorku vizualizace automatického modelu. \n"
 "    "
 
-#: app_report_exporter.py:261
+#: app_report_exporter.py:262
 msgid "Providing Laboratory"
 msgstr "Zpracovatelská laboratoř"
 
-#: app_report_exporter.py:302
+#: app_report_exporter.py:303
 msgid "Inference model"
 msgstr "AI model"
 
-#: app_report_exporter.py:302
+#: app_report_exporter.py:303
 msgid " not available for experiment ID"
 msgstr " nedostupný pro experiment ID"
 
-#: app_report_exporter.py:347
+#: app_report_exporter.py:348
 msgid "Tabular overview"
 msgstr "Přehled"
 
-#: app_report_exporter.py:349
+#: app_report_exporter.py:350
 msgid "Specimen ID"
 msgstr "ID vzorku"
 
-#: app_report_exporter.py:350
+#: app_report_exporter.py:351
 msgid "Visual Expert Assessment [%]"
 msgstr "Odborný odhad [%]"
 
-#: app_report_exporter.py:351
+#: app_report_exporter.py:352
 msgid "AI-based Assesment  [%]"
 msgstr "AI vyhodnocení [%]"
 
-#: app_report_exporter.py:364
+#: app_report_exporter.py:365
 msgid "Report Conclusion"
 msgstr "Závěr"
 
-#: app_report_exporter.py:365
+#: app_report_exporter.py:366
 msgid "Summary"
 msgstr "Shrnutí"
 
-#: app_report_exporter.py:367 app_report_exporter.py:368
+#: app_report_exporter.py:368 app_report_exporter.py:369
 msgid "The average adhesion rate across all samples is"
 msgstr "Průměrné pokrytí asfaltem přes všechny vzorky je"
 
-#: app_report_exporter.py:367
+#: app_report_exporter.py:368
 msgid "according to expert visual assesment, which correspondes to calss"
 msgstr "dle vizuálního posouzení experta, což odpovídá třídě"
 
-#: app_report_exporter.py:368
+#: app_report_exporter.py:369
 msgid "according to AI-based analysis, which correspondes to calss"
 msgstr "dle automatického vyhodnocení, což odpovídá třídě"
 
-#: app_report_exporter.py:369 app_report_exporter.py:370
+#: app_report_exporter.py:370 app_report_exporter.py:371
 msgid "The worst adhesion rate ("
 msgstr "Nejhorší pozorované pokrytí asfaltem ("
 
-#: app_report_exporter.py:369 app_report_exporter.py:370
+#: app_report_exporter.py:370 app_report_exporter.py:371
 msgid " %) observed is class "
 msgstr " %) odpovídá třídě  "
 
-#: app_report_exporter.py:369
+#: app_report_exporter.py:370
 msgid "according to expert visual assesment."
 msgstr "dle vizuálního posouzení experta."
 
-#: app_report_exporter.py:370
+#: app_report_exporter.py:371
 msgid "according to AI-based analysis."
 msgstr "dle automatického vyhodnocení."
 
-#: app_report_exporter.py:373
+#: app_report_exporter.py:374
 msgid "The final considered class is "
 msgstr "Finální uvažovaná třída asfaltové směsi je "
 
-#: app_report_exporter.py:377
+#: app_report_exporter.py:375
+msgid "The adhesion between aggregate and binder is classified as: "
+msgstr "Přilnavost zrn kameniva s asfaltovým pojivem je hodnocena jako: "
+
+#: app_report_exporter.py:379
 msgid ""
 " images seem to highly similar with others and might not be unique "
 "specimens."
@@ -548,11 +550,11 @@ msgstr ""
 " obrázků se jeví velice podobné již jindy nahraným a nemusí se jednat o "
 "unikátní  vzorky."
 
-#: app_report_exporter.py:379
+#: app_report_exporter.py:381
 msgid " have been uploaded more than 6 months ago."
 msgstr " bylo nahráno více jak před 6 měsíci. "
 
-#: app_report_exporter.py:381
+#: app_report_exporter.py:383
 msgid ""
 "The report contains less than 2 samples, which is insufficient for CSN 73"
 " 6161 standard compliance."
@@ -560,14 +562,14 @@ msgstr ""
 "Protokol obsahuje méně než 2 vzorky, což je nedostatečné pro posouzení "
 "dle ČSN 73 6161."
 
-#: app_report_exporter.py:383
+#: app_report_exporter.py:385
 msgid ""
 "Significant variance detected between expert assessments (>10%) of "
 "different samples. The CSN 73 6161 standard requires experiment "
 "repetition."
 msgstr ""
 
-#: app_report_exporter.py:385
+#: app_report_exporter.py:387
 msgid ""
 "Significant variance detected between AI-based assessments (>10%) of "
 "different samples. The CSN 73 6161 standard requires experiment "
@@ -575,41 +577,41 @@ msgid ""
 "reliable."
 msgstr ""
 
-#: app_report_exporter.py:387
+#: app_report_exporter.py:389
 msgid "Concerns"
 msgstr "Potíže"
 
-#: app_report_exporter.py:397
+#: app_report_exporter.py:399
 msgid "Controlling employee:"
 msgstr "Kontrolující zaměstnanec:"
 
-#: app_report_exporter.py:402
+#: app_report_exporter.py:404
 msgid "The proceeding employee"
 msgstr "Zkoušející zaměstnanec"
 
-#: app_report_exporter.py:403 app_report_exporter.py:412
-#: app_report_exporter.py:817 templates/index.html:121 templates/index.html:152
+#: app_report_exporter.py:405 app_report_exporter.py:414
+#: app_report_exporter.py:819 templates/index.html:121 templates/index.html:152
 msgid "Name:"
 msgstr "Jméno:"
 
-#: app_report_exporter.py:404 app_report_exporter.py:413
-#: app_report_exporter.py:819 templates/index.html:129 templates/index.html:160
+#: app_report_exporter.py:406 app_report_exporter.py:415
+#: app_report_exporter.py:821 templates/index.html:129 templates/index.html:160
 msgid "Contact:"
 msgstr "Kontakt:"
 
-#: app_report_exporter.py:406 app_report_exporter.py:415
+#: app_report_exporter.py:408 app_report_exporter.py:417
 msgid "Signature: ..................................................."
 msgstr "Podpis: ..................................................."
 
-#: app_report_exporter.py:411
+#: app_report_exporter.py:413
 msgid "The controlling employee"
 msgstr "Kontrolující zaměstnanec"
 
-#: app_report_exporter.py:424
+#: app_report_exporter.py:426
 msgid "This report was generated using AIBAL on "
-msgstr "Tento report byl vygenerován systémem AIBAL dne"
+msgstr "Tento report byl vygenerován systémem AIBAL dne "
 
-#: app_report_exporter.py:518
+#: app_report_exporter.py:520
 msgid ""
 "<<< ⚠ WARNING: The program has detected a highly similar image (on the "
 "left, experiment_id:"
@@ -617,27 +619,27 @@ msgstr ""
 "<<< ⚠ VAROVÁNÍ: Program detekoval velice podobný obrázek (nalevo , ID "
 "experimentu:"
 
-#: app_report_exporter.py:519
+#: app_report_exporter.py:521
 msgid " , uploaded by "
 msgstr ", nahráno uživatelem "
 
-#: app_report_exporter.py:519
+#: app_report_exporter.py:521
 msgid " on "
 msgstr " dne "
 
-#: app_report_exporter.py:520
+#: app_report_exporter.py:522
 msgid ") with"
 msgstr ") s "
 
-#: app_report_exporter.py:520
+#: app_report_exporter.py:522
 msgid "confidence "
 msgstr "jistotou "
 
-#: app_report_exporter.py:521
+#: app_report_exporter.py:523
 msgid "using"
 msgstr "užívaje"
 
-#: app_report_exporter.py:522
+#: app_report_exporter.py:524
 msgid ""
 "Please review the samples for potential duplication. In case the "
 "specimens clearly aren't duplicates, you can ignore this message."
@@ -645,71 +647,71 @@ msgstr ""
 "    Prosím zkontrolujte, zda se u vzorků nejedná o duplikát.\n"
 "    Pokud jsou vzorky definitivně odlišné, můžete toto varování ignorovat."
 
-#: app_report_exporter.py:558 templates/demo.html:73 templates/index.html:267
+#: app_report_exporter.py:560 templates/demo.html:73 templates/index.html:267
 msgid "Original Image"
 msgstr "Původní obrázek"
 
-#: app_report_exporter.py:558
+#: app_report_exporter.py:560
 msgid "Processed Image"
 msgstr "Zprocesovaný obrázek"
 
-#: app_report_exporter.py:560
+#: app_report_exporter.py:562
 msgid "(Asphalt - RED, Aggregate - BLUE)"
 msgstr "(Asfalt - ČERVENĚ, Kamenivo - Modře)"
 
-#: app_report_exporter.py:632
+#: app_report_exporter.py:634
 msgid "Sample ID:"
 msgstr "ID vzorku:"
 
-#: app_report_exporter.py:633
+#: app_report_exporter.py:635
 msgid "Date:"
 msgstr "Datum:"
 
-#: app_report_exporter.py:634 templates/index.html:68
+#: app_report_exporter.py:636 templates/index.html:68
 msgid "Place of Experiment:"
 msgstr "Místo konání experimentu:"
 
-#: app_report_exporter.py:635 templates/index.html:77
+#: app_report_exporter.py:637 templates/index.html:77
 msgid "Sample Collection Data:"
 msgstr "Data o odběru vzorku:"
 
-#: app_report_exporter.py:636
+#: app_report_exporter.py:638
 msgid "Wrapping temperature [°C]:"
 msgstr "Obalovací teplota [°C]:"
 
-#: app_report_exporter.py:637
+#: app_report_exporter.py:639
 msgid "Exposing water temperature [°C]:"
 msgstr "Teplota obnažovací vody [°C]:"
 
-#: app_report_exporter.py:638 templates/index.html:105
+#: app_report_exporter.py:640 templates/index.html:105
 msgid "Test procedure:"
 msgstr "Testovací procedura"
 
-#: app_report_exporter.py:641
+#: app_report_exporter.py:643
 msgid "Assessment - Adhesion Rate:"
 msgstr "Zhodnocení přilnavosti"
 
-#: app_report_exporter.py:642
+#: app_report_exporter.py:644
 msgid "Inference Model:"
 msgstr "AI model:"
 
-#: app_report_exporter.py:643
+#: app_report_exporter.py:645
 msgid "Automatic Assessment [%]:"
 msgstr "Automatické vyhodnocení [%]: "
 
-#: app_report_exporter.py:644
+#: app_report_exporter.py:646
 msgid "Visual based Expert Guess [%]:"
 msgstr "Odborný odhad [%]"
 
-#: app_report_exporter.py:645 templates/index.html:206
+#: app_report_exporter.py:647 templates/index.html:206
 msgid "Comment:"
 msgstr "Komentář:"
 
-#: app_report_exporter.py:775
+#: app_report_exporter.py:777
 msgid "Report generated by AIBAL -Bitumen Adhesion Lab - report ID:"
 msgstr "Report byl vygenerován systémem AIBAL - Bitumen Adhesion Lab - ID reportu:"
 
-#: app_report_exporter.py:818 templates/index.html:137 templates/index.html:168
+#: app_report_exporter.py:820 templates/index.html:137 templates/index.html:168
 msgid "Address:"
 msgstr "Adresa:"
 
