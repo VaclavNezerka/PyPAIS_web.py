@@ -568,6 +568,8 @@ msgid ""
 "different samples. The CSN 73 6161 standard requires experiment "
 "repetition."
 msgstr ""
+"Značné rozdíly v přilnavosti (> 10 %) detekoány mezi jednotlivými vzorky dle expertního odhadu. "
+"ČSN 730 6161 požaduje opakoání zkoušky."
 
 #: app_report_exporter.py:387
 msgid ""
@@ -576,6 +578,9 @@ msgid ""
 "repetition. Consider this in case that the AI based results seem "
 "reliable."
 msgstr ""
+"Značné rozdíly v přilnavosti (> 10 %) detekoány mezi jednotlivými vzorky dle automatického posouzení. "
+"ČSN 730 6161 požaduje opakoání zkoušky."
+"Zvažte toto v případě, že se AI klasifikace jeví jako věrohodná."
 
 #: app_report_exporter.py:389
 msgid "Concerns"
