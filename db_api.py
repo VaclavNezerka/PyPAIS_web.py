@@ -194,7 +194,7 @@ def change_user_blockade(cur, conn, user_id: int, is_blocked: bool) -> None:
     values=(is_blocked, user_id)
     cur.execute(query, values)
     conn.commit()
-    
+
 @db_connection
 def is_user_blocked(cur, conn, user_id: int) -> bool:
     query='SELECT is_blocked FROM users WHERE id=%s'
@@ -356,11 +356,11 @@ def get_company_id_by_key(cur, conn, company_key: str) -> int | None:
 
 @db_connection 
 def update_company_key(cur, conn, company_id: str) -> int | None:
-    query = 'UPDATE companies SET company_key=%s WHERE id=%s'
+    query = 'UPDATE companies SET company_key=%s WHERE company_id=%s'
     is_unique = False
     while not is_unique:
         company_key = os.urandom(4).hex()
-        is_unique = not execute_query('SELECT id FROM companies WHERE company_key=%s', (company_key,))
+        is_unique = not execute_query('SELECT company_id FROM companies WHERE company_key=%s', (company_key,))
     execute_query(query, (company_key, company_id))
     return company_key
 
@@ -418,6 +418,7 @@ def get_user_by_id(cur, conn, user_id: int) -> dict | None:
         return None
     # Convert RealDictRow to a regular dict
     result = dict(result)
+    print(result)
     return result
 
 @db_connection
@@ -465,6 +466,12 @@ def save_new_company_db(cur, conn , values: dict):
     cur.execute(query, tuple(filtered_values.values()))
     conn.commit()
     return None  # Success
+
+@db_connection
+def get_company_key(cur, conn, company_id: str) -> str:
+    query = "SELECT company_key FROM public_companies WHERE company_id=%s"
+    result = execute_query(query, (str(company_id),))
+    return result[0][0]
 
 @db_connection
 def check_company_key_exists(cur, conn, company_key: str) -> bool:
@@ -582,6 +589,12 @@ def update_experiment_in_db(cur ,conn, values_dict: dict, experiment_id: str) ->
 def update_users_table(cur,conn, values_dict: dict, user_id: int) -> None:
     command = f'UPDATE users SET ' + ', '.join([f"{key}=%s" for key in values_dict.keys()]) + ' WHERE id=%s'
     values = tuple(values_dict.values()) + (user_id,)
+    execute_query(command, values)
+
+@db_connection
+def update_companies_table(cur,conn, values_dict: dict, company_id: int) -> None:
+    command = f'UPDATE companies SET ' + ', '.join([f"{key}=%s" for key in values_dict.keys()]) + ' WHERE company_id=%s'
+    values = tuple(values_dict.values()) + (company_id,)
     execute_query(command, values)
 
 

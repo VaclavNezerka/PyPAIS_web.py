@@ -29,24 +29,29 @@
                         </tr>
                         <tr>
                             <td>{{ _('Address: ') }}</td>
-                            <td>{{ dynamic_content.address }}</td>
+                            <td>{{ dynamic_content.company_address }}</td>
                         </tr>
                         <tr>
                             <td>{{ _('Company E-mail: ') }}</td>
-                            <td>{{ dynamic_content.company_e_mail }}</td>
+                            <td>{{ dynamic_content.e_mail }}</td>
                         </tr>
                     </table>
                 </div>
 
                 <div class="column modern-column">
                     <div class="row">
-                        <button id="editPersonalInformation" type=submit>{{ _('Edit personal information') }}</button>
+                        <button id="editCompanyInformationButton"
+                            type=submit>{{ _('Edit company information') }}</button>
                     </div>
                     <div class="row">
-                        <button id="changeEmailButton" type=submit>{{ _('Change e-mail address') }}</button>
+                        <button id="changeCompanyEmailButton"
+                            type=submit>{{ _('Change company e-mail address') }}</button>
                     </div>
                     <div class="row">
-                        <button id="changePasswordButton" type=submit>{{ _('Change password') }}</button>
+                        <button id="regenerateCompanyKeyButton" type=submit>{{ _('Regenerate company key') }}</button>
+                    </div>
+                    <div class="row">
+                        <button id="viewCompanyKeyButton" type=submit>{{ _('View company key') }}</button>
                     </div>
                 </div>
             </div>

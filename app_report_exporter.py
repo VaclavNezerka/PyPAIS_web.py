@@ -146,6 +146,16 @@ def memory_to_np_array(memory: bytes) -> np.ndarray:
     return array
 
 
+def get_CSN_73_6161_word_classification(adhesion_rate: float) -> str:
+    if adhesion_rate >= 97.0:
+        return _("Excellent")
+    elif adhesion_rate >= 90.0:
+        return _("Good")
+    elif adhesion_rate >= 80.0:
+        return _("Satisfactory")
+    else:
+        return _("Unsatisfactory")
+
 def get_CSN_73_6161_classification(adhesion_rate: float) -> str:
     if adhesion_rate >= 100.0:
         return "A"
@@ -155,8 +165,14 @@ def get_CSN_73_6161_classification(adhesion_rate: float) -> str:
         return "C"
     elif adhesion_rate >= 70.0:
         return "D"
-    else:
+    elif adhesion_rate >= 50.0:
         return "E"
+    elif adhesion_rate >= 40.0:
+        return "F"
+    elif adhesion_rate >= 20.0:
+        return "G"
+    else:
+        return _("Unclassifiable")
 
 # Compute the asphalt adhesion statistics
 def compute_statistics(assessments: List[float], to_per_cents: bool = True) -> Dict[str, Union[float, str]]:
@@ -363,6 +379,10 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         issues.append(f"{concerns['old_images']}/{len(experiment_ids)}" + _(" have been uploaded more than 6 months ago."))
     if len(experiment_ids) < 2:
         issues.append(_("The report contains less than 2 samples, which is insufficient for CSN 73 6161 standard compliance."))
+    if max(assessments_expert_guess) - min(assessments_expert_guess) > 0.1:
+        issues.append(_("Significant variance detected between expert assessments (>10%) of different samples. The CSN 73 6161 standard requires experiment repetition."))
+    if max(assessments_automatic) - min(assessments_automatic) > 0.1:
+        issues.append(_("Significant variance detected between AI-based assessments (>10%) of different samples. The CSN 73 6161 standard requires experiment repetition. Consider this in case that the AI based results seem reliable."))
     if len(issues) > 0:
         pdf.append(Paragraph(_("Concerns"), styles["Heading2"]))
         items = [Paragraph(issue, style_justify) for issue in issues]

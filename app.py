@@ -55,6 +55,7 @@ from app_report_exporter import exporter_registry
 import forms 
 from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 load_dotenv(dotenv_path='.env')
 RECAPTCHA_SITE_KEY=os.getenv('RECAPTCHA_SITE_KEY')
@@ -388,7 +389,7 @@ serializer = URLSafeTimedSerializer(app.secret_key)
 
 # TODO - implement a thread that will clean up expired tokens from the database periodically
 
-def send_email_confirmation(to_mails: list[str], data: dict, confirmation: Literal ['confirm_email_first', 'confirm_email_change', 'confirm_company_registration_admin', 'confirm_password_reset'], intro_text: str, request_details: dict = {}, title: str = 'AIBAL') -> bool:
+def send_email_confirmation(to_mails: list[str], data: dict, confirmation: Literal ['confirm_email_first', 'confirm_email_change', 'confirm_company_registration_admin', 'confirm_password_reset', 'forgot_password'], intro_text: str, request_details: dict = {}, title: str = 'AIBAL') -> bool:
     """Send an email confirmation link to the user.
     
     Parameters:
@@ -437,6 +438,57 @@ def confirm_request(func):
             return redirect(url_for('home'))
     return wrapper
 
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password_form():
+    dynamic_content = _('Forgot your password? Enter your email address.')
+    form = forms.EmailForgotPasswordForm()
+    match request.method:
+        case 'GET':
+            return render_template('form.html', form=form, dynamic_content=dynamic_content), 200
+        case 'POST':
+            verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
+            if form.validate_on_submit():
+                e_mail_address = form.e_mail.data
+                user = db_api.get_user_id(email=e_mail_address)
+                if user is not None:
+                    # send email with confirmation link
+                    send_email_confirmation(
+                        to_mails=[e_mail_address],
+                        data={'e_mail': e_mail_address}, 
+                        confirmation='forgot_password',
+                        intro_text=_('You have requested to reset your password. Please click the button below to reset your password:'),
+                        title=_('AIBAL: Password Reset Request')
+                    )
+                    flash(_('An email with password reset instructions has been sent to your email address.'), 'success')
+            return render_template('form.html', form=form, dynamic_content=dynamic_content), 200
+
+
+@app.route('/forgot_password/<token>', methods=['GET', 'POST'])
+@confirm_request
+def forgot_password(token: str):
+    """Confirm the user's email address using the provided token."""
+    match request.method: 
+        case 'GET':
+            email = serializer.loads(token, salt='forgot_password-salt', max_age=MAX_TOKEN_AGE)['e_mail']  # token valid for 1 hour
+            db_api.confirm_user_email(email)
+            form = forms.ChangeForgottenPasswordForm()
+            flash(_('You can now reset your password!'), 'success')
+            return render_template('form.html', form=forms.ChangeForgottenPasswordForm(), token=token), 200
+        case 'POST':
+            verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
+            form = forms.ChangeForgottenPasswordForm()
+            if form.validate_on_submit():
+                email = serializer.loads(token, salt='forgot_password-salt', max_age=MAX_TOKEN_AGE)['e_mail']  # token valid for 1 hour
+                password_hash = generate_password_hash(form.new_password.data)
+                user_id = db_api.get_user_id(email=email)
+                db_api.update_users_table(values_dict={'pwd': password_hash}, user_id=user_id)
+                flash(_('Your password has been set. You can now log in!'), 'success')
+            else:
+                flash(_('There was an error setting your password. Please try again.'), 'danger')
+                return render_template('form.html', form=form, token=token), 200
+            return redirect(url_for('login'))
+
+
 @app.route('/confirm_email/<token>')
 @confirm_request
 def confirm_email(token: str):
@@ -445,7 +497,6 @@ def confirm_email(token: str):
     db_api.confirm_user_email(email)
     flash(_('Your email address has been confirmed. You can now log in!'), 'success')
     return redirect(url_for('login'))
-@app.route('/confirm_email/<token>')
 
 @app.route('/confirm_company_registration_user/<token>', methods=['GET', 'POST'])
 @confirm_request
@@ -460,6 +511,7 @@ def confirm_company_registration_user(token: str):
             flash(_('Your email address has been confirmed. Please, create your password to complete the registration!'), 'success')
             return render_template('form.html', form=forms.ChangeForgottenPasswordForm(), token=token), 200
         case 'POST':
+            verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form = forms.ChangeForgottenPasswordForm()
             if form.validate_on_submit():
                 email = serializer.loads(token, salt='confirm_company_registration_user-salt', max_age=MAX_TOKEN_AGE)['e_mail']  # token valid for 1 hour
@@ -641,6 +693,16 @@ def check_authentication(func):
             return redirect(url_for('login')), 302
     return wrapper
 
+def check_is_company_admin(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if db_api.get_user_by_id(session['user_id'])['is_company_admin']:
+            return func(*args, **kwargs)
+        else:
+            flash(_('You do not have permission to access this page.'), 'error')
+            return redirect(url_for('login')), 302
+    return wrapper
+
 def ignore_unauthenticated(func):
     """The decorator allows access only to authenticated users, otherwise the function is skipped."""
     @wraps(func)
@@ -701,12 +763,14 @@ def logout():
     session.pop('authenticated',None)
     session.pop('user_id',None)
     session.pop('user_email',None)
+    session.pop('is_company_admin',None)
     return redirect(url_for('login'))
 
 #TODO - consider joining with edit_personal_information (Must be done together with FE editing)
 @app.route('/change-email',methods=['GET','POST'])
 @check_authentication
 def change_email():
+    # TODO: !!! CONFIRMATION EMAIL !!!
     title = _('Change email')
     match request.method:
         case 'GET':
@@ -716,15 +780,33 @@ def change_email():
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form=forms.ChangeEmailForm()
             if form.validate_on_submit():
-                # TODO - consider removal - old approach - unused
-                # query='UPDATE public_users SET e_mail=%s WHERE id=%s'
-                # values=(form.e_mail.data,session['user_id'])
-                # execute_query(query,values)
                 db_api.update_users_table(values_dict={'e_mail': form.e_mail.data}, user_id=session['user_id'])
                 flash(_('Email changed successfully.'), 'success')
                 return redirect('/user')
             else:
                 return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+
+@app.route('/change-company-email',methods=['GET','POST'])
+@check_authentication
+def change_company_email():
+    # TODO: !!! CONFIRMATION EMAIL !!!
+    title = _('Change company email')
+    match request.method:
+        case 'GET':
+            form=forms.ChangeEmailForm()
+            return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+        case 'POST':
+            verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
+            form=forms.ChangeEmailForm()
+            if form.validate_on_submit():
+                company_id = db_api.get_user_by_id(session['user_id'])['company']
+                db_api.update_companies_table(values_dict={'e_mail': form.e_mail.data}, company_id=company_id)
+                flash(_('Email changed successfully.'), 'success')
+                return redirect('/company')
+            else:
+                return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+
+
 
 @app.route('/edit-personal-information',methods=['GET','POST'])
 @check_authentication
@@ -744,12 +826,32 @@ def edit_personal_information():
                         if field.name == 'csrf_token':
                             continue
                         db_api.update_users_table(values_dict={field.name: field.data}, user_id=session['user_id'])
-                        # TODO - consider removal - old approach - unused
-                        # query = f'UPDATE public_users SET {field.name}=%s WHERE id=%s'
-                        # values = (field.data, session['user_id'])
-                        # execute_query(query, values)
                 flash(_('Personal information updated successfully.'), 'success')
                 return redirect('/user')
+            else:
+                return render_template('form.html',dynamic_content=_('Change personal information'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+
+@app.route('/edit-company-information',methods=['GET','POST'])
+@check_authentication
+def edit_company_information():
+    match request.method:
+        case 'GET':
+            form=forms.EditCompanyInformationForm()
+            return render_template('form.html',dynamic_content=_('Change personal information'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+        case 'POST':
+            verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
+            form=forms.EditCompanyInformationForm()
+            if form.validate_on_submit():
+                print('Form validated successfully.')
+                for field in form:
+                    print(field)
+                    if field.data:
+                        if field.name == 'csrf_token':
+                            continue
+                        company_id = db_api.get_user_by_id(session['user_id'])['company']
+                        db_api.update_companies_table(values_dict={field.name: field.data}, company_id=company_id)
+                flash(_('Company information updated successfully.'), 'success')
+                return redirect('/company')
             else:
                 return render_template('form.html',dynamic_content=_('Change personal information'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
 
@@ -876,13 +978,9 @@ def login():
                     session['authenticated'] = True
                     session['user_id'] = user_id
                     session['user_email'] = form.usernameXe_mail.data
+                    session['is_admin'] = False
                     if db_api.get_user_by_id(user_id=user_id)['is_company_admin']:
                         session['is_admin'] = True
-                    # TODO - consider removal - old approach - unused
-                    # TODO - currently the ts is created dynamically when needed, so this may be redundant
-                    # create a new user temporary storage for the user
-                    # if session['user_id'] not in ts:
-                    #     ts[session['user_id']] = UserTemporaryStorage()                
                     return redirect('/'), 302   
                 else:
                     flash(_('Invalid username/email or password.'), 'error')
@@ -1037,7 +1135,10 @@ def experiments():
         return get_admin_user_experiments(request)
     return get_ordenary_user_experiments(request)
 
-def get_admin_users(request) -> list[tuple]:
+@app.route('/employees',methods=['GET','POST'])
+@check_authentication
+@check_is_company_admin
+def employees():
     sort_order=request.args.get('sort_order','desc')
     page_limit=int(request.args.get('page_limit',10))
     start_sub_id=request.args.get('start_id',None)
@@ -1078,15 +1179,7 @@ def get_admin_users(request) -> list[tuple]:
     data=data[start_sub_id:max_sub_id]
     records[1] = data
     return render_template('employees.html',records=records,session=session,dynamic_content=_('Employee Records - Admin View'))
-
-@app.route('/employees',methods=['GET','POST'])
-@check_authentication
-def employees():
-    if db_api.get_user_by_id(session['user_id'])['is_company_admin']:
-        return get_admin_users(request)
-    return abort(403, description=_('You do not have permission to access this page.'))
-
-
+    
 @app.route('/user',methods=['GET'])
 @check_authentication
 def user():
@@ -1097,6 +1190,20 @@ def user():
     """
     user_data_dict = db_api.get_user_info_by_id(user_id=session['user_id'])
     return render_template('user.html',session=session,dynamic_content=user_data_dict)
+
+@app.route('/company',methods=['GET'])
+@check_authentication
+@check_is_company_admin
+def company():
+    """"
+    Renders the user information page.
+    Returns:
+        Response: The rendered user information page.
+    """
+    company_id = db_api.get_user_by_id(session['user_id'])['company']
+    company_data_dict = db_api.get_company_info_by_id(company_id=company_id)
+    print(company_data_dict)
+    return render_template('company.html',session=session,dynamic_content=company_data_dict)
             
 @app.route('/register',methods=['GET','POST'])
 def register():
@@ -1138,6 +1245,25 @@ def register():
             else:
                 flash(message=_('Form validation failed. Please check your input.'),category='error')
                 return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+
+@app.route('/regenerate-company-key',methods=['GET'])
+@check_authentication
+@check_is_company_admin
+def regenerate_company_key():
+    # TODO - add confirmation email!
+    company_id = db_api.get_user_by_id(session['user_id'])['company']
+    db_api.update_company_key(company_id=company_id)
+    flash(message=_('Company key regenerated successfully.'), category='success')
+    return redirect('/company'), 302
+
+@app.route('/view-company-key',methods=['GET'])
+@check_authentication
+@check_is_company_admin
+def view_company_key():
+    company_id = db_api.get_user_by_id(session['user_id'])['company']
+    company_key = db_api.get_company_key(company_id=company_id)
+
+    return render_template('company_key.html',session=session,dynamic_content=_('Company Key'), company_key=company_key)
 
 def generate_company_key() -> str:
     """Generates a unique company key."""
@@ -2255,6 +2381,16 @@ def translations_alerts():
         'evaluationCompleted': _('Evaluation completed. Check the console for the results.'),
         'evaluationResults': _('Evaluation results: '),
         'evaluationDemo': _('Would you like to use this app with no limitations? Store and export these results? Contact us to create an account.'),
+        'noEmployeesSelected': _('No employees selected for intended action.'),
+        'noExperimentsSelectedforDeletion': _('No experiments selected for deletion.'),
+        'sureDeleteExperiments': _('Are you sure you want to delete the selected experiments?'),
+        'cannotBeUndone': _('This action cannot be undone.'),
+        'selectExperimetnsToViewDetails': _('Please select experiments to view details.'),
+        'selectJustOneExperimetnsToViewDetails': _("Please select only one experiment for viewing details."),
+        'selectAtLeastOneExperimentForExport': _('Please select at least one experiment for export.'),
+        'exportSingleExperimentNotAllowed': _('For CSN 73 6161, exporting a single experiment is not allowed.'),
+        'exportSingleExperimentProceeding': _('Do you want to proceed with exporting this single experiment?'),
+
     }
     return json.dumps(json_translations), 200, {'Content-Type': 'application/json'}
 

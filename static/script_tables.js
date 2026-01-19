@@ -13,7 +13,7 @@ if ("serviceWorker" in navigator) {
         .then((registration) => {
             console.log(
                 "Service Worker registered with scope:",
-                registration.scope
+                registration.scope,
             )
         })
         .catch((error) => {
@@ -22,6 +22,14 @@ if ("serviceWorker" in navigator) {
 }
 // import save from script.js
 // import {activateExperiment} from './script.js';
+
+async function fetchAlerts() {
+    const alerts = fetch("/translations-alerts", { method: "GET" }).then(
+        (response) => response.json(),
+    )
+    return alerts
+}
+const alerts = fetchAlerts()
 
 function editExperimentId(id) {
     // Get the experiment id
@@ -105,9 +113,10 @@ async function deleteExperimentId(id, skipConfirm = false) {
     if (skipConfirm === false) {
         if (
             !confirm(
-                "Are you sure you want to delete experiment ID " +
+                alerts.confirmDeleteExperiment +
                     id +
-                    "?\nThis action cannot be undone."
+                    "?\n" +
+                    alerts.actionCannotBeUndone,
             )
         ) {
             return
@@ -141,7 +150,7 @@ function excludeFromSearchQuery(queryKey) {
             queryKey +
                 "=" +
                 currentQueryString.split(queryKey + "=")[1].split("&")[0],
-            ""
+            "",
         )
         callQueryStringURL(newQueryString)
     }
@@ -165,7 +174,7 @@ function concatenateSearchQuery(queryString) {
         const currentValue = currentQueryString.split(keys[id])[1].split("&")[0]
         newQueryString = currentQueryString.replace(
             keys[id] + currentValue,
-            key + value
+            key + value,
         )
     } else {
         newQueryString = currentQueryString + "&" + queryString
@@ -324,7 +333,7 @@ document.querySelectorAll("fileInput").forEach((element) => {
                 uploadedFiles++
                 console.log(
                     "Uploading file...",
-                    (uploadedFiles / totalFiles) * 100
+                    (uploadedFiles / totalFiles) * 100,
                 )
                 progress.value = (uploadedFiles / totalFiles) * 100
                 if (uploadedFiles === totalFiles) {
@@ -422,14 +431,16 @@ function initButtons() {
     document.querySelectorAll(".btn-cancel").forEach((button) => {
         button.addEventListener("click", () => {
             if (checkboxes.length === 0) {
-                alert("No experiments selected for deletion.")
+                alert(alerts.noExperimentsSelectedforDeletion)
                 return
             }
             if (
                 !confirm(
-                    "Are you sure you want to delete the selected experiments? \n" +
+                    alerts.sureDeleteExperiments +
+                        "\n" +
                         checkboxes +
-                        "\nThis action cannot be undone."
+                        "\n" +
+                        alerts.cannotBeUndone,
                 )
             ) {
                 return
@@ -444,11 +455,11 @@ function initButtons() {
     document.querySelectorAll(".btn-details").forEach((button) => {
         button.addEventListener("click", () => {
             if (checkboxes.length === 0) {
-                alert("Please select experiments for viewing details.")
+                alert(alerts.selectExperimetnsToViewDetails)
                 return
             }
             if (checkboxes.length > 1) {
-                alert("Please select only one experiment for viewing details.")
+                alert(alerts.selectJustOneExperimetnsToViewDetails)
                 return
             }
             editExperimentId(checkboxes[0], true)
@@ -459,13 +470,15 @@ function initButtons() {
     document.querySelectorAll(".btn-export").forEach((button) => {
         button.addEventListener("click", () => {
             if (checkboxes.length === 0) {
-                alert("Please select at least one experiment for export.")
+                alert(alerts.selectAtLeastOneExperimentForExport)
                 return
             }
             if (checkboxes.length == 1) {
                 if (
                     !confirm(
-                        "For CSN 73 6161, exporting a single experiment is not allowed.\n                        Do you want to proceed with exporting this single experiment?"
+                        alerts.exportSingleExperimentNotAllowed +
+                            "\n" +
+                            alerts.exportSingleExperimentProceeding,
                     )
                 ) {
                     return
@@ -478,49 +491,56 @@ function initButtons() {
     })
 
     document
-        .getElementById("btn-grant-admin-privileges")
-        .addEventListener("click", () => {
-            if (checkboxes.length === 0) {
-                alert("No employees selected for intended action.")
-                return
-            }
-            for (let username of checkboxes) {
-                changeAdminPrivileges(username, true)
-            }
+        .querySelectorAll("#btn-grant-admin-privileges")
+        .forEach((button) => {
+            button.addEventListener("click", () => {
+                if (checkboxes.length === 0) {
+                    alert(alerts.noEmployeesSelected)
+                    return
+                }
+                for (let username of checkboxes) {
+                    changeAdminPrivileges(username, true)
+                }
+            })
         })
 
     document
-        .getElementById("btn-remove-admin-privileges")
-        .addEventListener("click", () => {
+        .querySelectorAll("#btn-remove-admin-privileges")
+        .forEach((button) => {
+            button.addEventListener("click", () => {
+                if (checkboxes.length === 0) {
+                    alert(alerts.noEmployeesSelected)
+                    return
+                }
+                for (let username of checkboxes) {
+                    changeAdminPrivileges(username, false)
+                }
+            })
+        })
+
+    document.querySelectorAll("#btn-block-user").forEach((button) => {
+        button.addEventListener("click", () => {
             if (checkboxes.length === 0) {
-                alert("No employees selected for intended action.")
+                alert(alerts.noEmployeesSelected)
                 return
             }
             for (let username of checkboxes) {
-                changeAdminPrivileges(username, false)
+                changeUserBlockade(username, true)
             }
         })
-
-    document.getElementById("btn-block-user").addEventListener("click", () => {
-        if (checkboxes.length === 0) {
-            alert("No employees selected for intended action.")
-            return
-        }
-        for (let username of checkboxes) {
-            changeUserBlockade(username, true)
-        }
     })
-    document
-        .getElementById("btn-unblock-user")
-        .addEventListener("click", () => {
+
+    document.querySelectorAll("#btn-unblock-user").forEach((button) => {
+        button.addEventListener("click", () => {
             if (checkboxes.length === 0) {
-                alert("No employees selected for intended action.")
+                alert(alerts.noEmployeesSelected)
                 return
             }
             for (let username of checkboxes) {
                 changeUserBlockade(username, false)
             }
         })
+    })
 }
 
 initButtons()

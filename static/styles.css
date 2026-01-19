@@ -40,6 +40,11 @@ body {
     justify-content: center;
 }
 
+.styled-href {
+    color: var(--myPaleBlue);
+    text-decoration: none;
+    font-weight: bold;
+}
 .page-container {
     min-height: 65vh; /* take full viewport height */
     display: flex;

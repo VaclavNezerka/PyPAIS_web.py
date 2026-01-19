@@ -28,4 +28,8 @@
         {% endif %}
         {% endfor %}
     </form>
+
+    {% if 'usernameXe_mail' in form %}
+    <p><a class='styled-href' href="/forgot_password">{{ _('Forgot your password?') }}</a></p>
+    {% endif %}
 </body>

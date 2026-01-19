@@ -12,7 +12,9 @@ from flask_babel import lazy_gettext, _
 messages={
     'email_already_used': lazy_gettext('This email address is already used. Please use a different one.'),
     'username_already_taken': lazy_gettext('This username is already taken. Please choose a different one.'),
-    'passwords_must_match': lazy_gettext('Passwords must match.')
+    'company_name_already_taken': lazy_gettext('This company name is already taken. Please choose a different one.'),
+    'passwords_must_match': lazy_gettext('Passwords must match.'),
+    'no_employees_selected': lazy_gettext('No employees selected for intended action.')
 }
 
 # TODO - define validators (especially because of desired uniqueness of mail/username)
@@ -112,7 +114,7 @@ class ForgottenPasswordForm(FlaskForm):
 
 class EditPersonalInformationForm(FlaskForm):
     # default values are taken from the database
-    username = StringField(lazy_gettext('Username'),validators=[IsUnique(tablename='public_users', message=messages['username_already_taken']),RequiredLength(min=1,max=50)])
+    username = StringField(lazy_gettext('Username'),validators=[IsUnique(tablename='public_users', message=messages['username_already_taken']),RequiredLength(min=0,max=50)])
     first_name = StringField(lazy_gettext('First name'))
     last_name = StringField(lazy_gettext('Last name'))
     submit = SubmitField(lazy_gettext('Submit'))
@@ -124,6 +126,29 @@ class EditPersonalInformationForm(FlaskForm):
             return False
             # raise ValidationError('At least one field must be filled in.')
         return super(EditPersonalInformationForm, self).validate(**kwargs)  
+
+class EditCompanyInformationForm(FlaskForm):
+    # default values are taken from the database
+    company_name = StringField(lazy_gettext('Company Name'),validators=[IsUnique(tablename='companies', message=messages['company_name_already_taken']),RequiredLength(min=0,max=100)])
+    company_address = StringField(lazy_gettext('Company Address'),validators=[RequiredLength(min=0,max=200)])
+    submit = SubmitField(lazy_gettext('Submit'))
+
+    def validate(self, **kwargs):
+        #   control that at least one field is filled in 
+        if not any([self.company_name.data,self.company_address.data]):
+            flash(_('At least one field must be filled in.'))
+            return False
+            # raise ValidationError('At least one field must be filled in.')
+        return super(EditCompanyInformationForm, self).validate(**kwargs)  
+    
+class EmailForgotPasswordForm(FlaskForm):
+    # default values are taken from the database
+    e_mail = StringField(lazy_gettext(
+        'Email address'),
+        validators=[DataRequired(), Email(),
+        Exists(tablename='public_users'), 
+        RequiredLength(min=5,max=100)])
+    submit = SubmitField(lazy_gettext('Submit'))
 
 class ChangeEmailForm(FlaskForm):
     # default values are taken from the database
