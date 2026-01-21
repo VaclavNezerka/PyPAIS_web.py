@@ -14,7 +14,7 @@ messages={
     'username_already_taken': lazy_gettext('This username is already taken. Please choose a different one.'),
     'company_name_already_taken': lazy_gettext('This company name is already taken. Please choose a different one.'),
     'passwords_must_match': lazy_gettext('Passwords must match.'),
-    'no_employees_selected': lazy_gettext('No employees selected for intended action.')
+
 }
 
 # TODO - define validators (especially because of desired uniqueness of mail/username)

@@ -24,12 +24,23 @@ if ("serviceWorker" in navigator) {
 // import {activateExperiment} from './script.js';
 
 async function fetchAlerts() {
-    const alerts = fetch("/translations-alerts", { method: "GET" }).then(
+    const alerts = await fetch("/translations-alerts", { method: "GET" }).then(
         (response) => response.json(),
     )
     return alerts
 }
-const alerts = fetchAlerts()
+
+async function main() {
+    const alerts = await fetchAlerts()
+    console.log(alerts)
+}
+
+main()
+let alerts = {}
+fetchAlerts().then((data) => {
+    alerts = data
+})
+console.log(alerts)
 
 function editExperimentId(id) {
     // Get the experiment id
