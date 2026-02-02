@@ -570,7 +570,8 @@ def verify_recaptcha(response_token: str) -> bool:
     verify_url = f"{verify_url}?secret={secret_key}&response={response_token}"
     try:
         r = requests.post(verify_url).json()
-        if r['success'] == True and r['score'] >= 0.7:
+        print(f"reCAPTCHA verification response: {r}")
+        if r['success'] == True and r['score'] >= 0.85:
             return True
         else:
             return False
@@ -1915,12 +1916,16 @@ def process_image():
     })
 
     # get hash of the image for similarity check
-    img_hashes = app_similarity_controller.return_hashes(Image.fromarray(image))
-    storage.from_dict(img_hashes)
+    authenticated = session.get('authenticated', False)
+    if authenticated:
+        print('here')
+        img_hashes = app_similarity_controller.return_hashes(Image.fromarray(image))
+        storage.from_dict(img_hashes)
     save_experiment(state='started')
 
     # let the background thread handle the similarity check
-    similarity_controller.controll_experiment(user_id=session['user_id'], experiment_id=storage.experiment_id)
+    if authenticated:
+        similarity_controller.controll_experiment(user_id=session['user_id'], experiment_id=storage.experiment_id)
 
     response_dict = {
         'status': 'success',

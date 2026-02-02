@@ -13,6 +13,9 @@
             </div>
         </div>
 
+        <div id="row" , class="colorbar">
+            <h2> {{ _('ABOUT') }}</h2>
+        </div>
         <div class="container">
             <div class="row">
                 <!-- <div class="column">
@@ -20,15 +23,18 @@
                 </div> -->
                 <div class="column">
                     <div class="home-text">
-                        <h2>{{ _('Welcome to AI BAL!') }}</h2>
+                        <!-- <h2>{{ _('ABOUT') }}</h2> -->
                         <!-- <p>{{ _('AI BAL is an advanced software tool designed for the analysis and classification of asphalt images. Utilizing state-of-the-art machine learning models, AI BAL provides accurate segmentation and classification of bitumen, aggregate, and background components in asphalt samples.') }}</p> -->
                         <!-- <p>{{ _('With an intuitive interface and powerful features, AI BAL is ideal for researchers, engineers, and professionals in the field of pavement materials.') }}</p> -->
-                        <p>{{ _('AI Bitumen Adhesion Lab is a web application for the analysis and classification of bitumen-aggregate adhesion in asphalt concrete with the support of national standards (e.g. according to ČSN 73 6161). Using a U-Net-based AI model, it precisely segments stripped and coated surfaces, delivering objective, and repeatable results. ') }}
+                        <p class="fancy-paragraph">
+                            {{ _('AI Bitumen Adhesion Lab is a web application for the analysis and classification of bitumen-aggregate adhesion in asphalt concrete with the support of national standards (e.g. according to ČSN 73 6161). Using a U-Net-based AI model, it precisely segments stripped and coated surfaces, delivering objective, and repeatable results. ') }}
                         </p>
-                        <p>{{ _('With an intuitive interface and useful features like automated reports, it provides researchers, engineers and professionals with fast, reliable, and science-based alternative to subjective visual assessment.') }}
+                        <p class="fancy-paragraph">
+                            {{ _('With an intuitive interface and useful features like automated reports, it provides researchers, engineers and professionals with fast, reliable, and science-based alternative to subjective visual assessment.') }}
                         </p>
                         <button id="TryDemoBtn" class="custom-file-label">{{ _('Try it out') }}</button>
-                        <p>{{ _('Would you like to register your company or research institute? Or does it sound interesting, but you have more questions
+                        <p class="fancy-paragraph">
+                            {{ _('Would you like to register your company or research institute? Or does it sound interesting, but you have more questions
                         or need adjustments for your optimal workflow—such as support for a different national standard?') }}
                         </p>
                         <button id='ContactUsBtn' class="custom-file-label">{{ _('Contact us!') }}</button>
