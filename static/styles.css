@@ -317,7 +317,8 @@ input[type="text"] {
 }
 
 .upper {
-    text-transform: capitalize;
+    text-transform: none;
+    /* text-transform: uppercase; */
 }
 
 .colorbar {
