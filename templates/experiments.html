@@ -77,7 +77,21 @@
                         <!-- </td> -->
                         <!-- </td> -->
                         <td>
-                            <input type="checkbox" class="record-checkbox" data-id="{{ field.0 }}">
+                            <!-- <div class="modern-column column"> -->
+                            <div for="checkbox-{{ field.0 }}" class="select-checkbox-container">
+                                <label class="overlay-label">
+                                    <input type="checkbox" id="record-checkbox" data-id="{{ field.0 }}">
+                                    <span class="overlay-custom"></span>
+                                </label>
+                            </div>
+                            <!-- </div> -->
+
+                            <!-- <div class="checkbox-container">
+                                <label for="checkbox-{{ field.0 }}" class="overlay-label">
+                                    <input type="checkbox" id="checkbox-{{ field.0 }}" data-id="{{ field.0 }}">
+                                </label>
+                            </div> -->
+                            <!-- <input type="checkbox" data-id="{{ field.0 }}"> -->
                         </td>
                     </tr>
                     {% endfor %}

@@ -417,14 +417,14 @@ function changeUserBlockade(username, willBeBlocked) {
         })
         .catch((error) => {
             console.error("Error:", error)
-            // window.location.reload()
+            window.location.reload()
         })
 }
 
 let checkboxes = []
 
 document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll(".record-checkbox").forEach((checkbox) => {
+    document.querySelectorAll("#record-checkbox").forEach((checkbox) => {
         checkbox.addEventListener("change", () => {
             const id = checkbox.getAttribute("data-id")
             if (checkbox.checked) {
