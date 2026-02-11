@@ -1,7 +1,7 @@
 import base64toBlob from "./utils.js"
 
 const alerts = await fetch("/translations-alerts", { method: "GET" }).then(
-    (response) => response.json()
+    (response) => response.json(),
 )
 // global variables
 let konvaStage
@@ -124,15 +124,15 @@ const rootStyles = getComputedStyle(document.documentElement)
 // Theme colors
 let aggregateColor = hexToRgba(
     rootStyles.getPropertyValue("--myBlue").trim(),
-    1
+    1,
 )
 let backgroundColor = hexToRgba(
     rootStyles.getPropertyValue("--myPaleGreen").trim(),
-    1
+    1,
 )
 let bitumenColor = hexToRgba(
     rootStyles.getPropertyValue("--myPaleRed").trim(),
-    1
+    1,
 )
 
 // Highcontrast colors
@@ -218,6 +218,11 @@ uploadedImage.onload = function () {
     //         // });
     // }
     magnify("imageCanvas", labelSettings.magnify)
+
+    console.log("Image loaded, fetching default experiment info...")
+    exp_info = getDefaultExperimentInfo().then((data) => {
+        populateExperimentInfo(data)
+    })
     // loadNewImage(uploadedImage.src);
     // resizeDragonRow();
     // initializeMask();
@@ -253,7 +258,7 @@ uploadedImageOverlay_bg.onload = function () {
     displayed_mask(
         "overlayCanvasBackground",
         this,
-        labelSettings.background.fill
+        labelSettings.background.fill,
     )
 }
 
@@ -388,13 +393,13 @@ function get_overlay_masks() {
         .then((response) => response.json())
         .then((data) => {
             asphaltMaskURL = URL.createObjectURL(
-                base64toBlob(data.asphalt_mask, "image/png")
+                base64toBlob(data.asphalt_mask, "image/png"),
             )
             aggregateMaskURL = URL.createObjectURL(
-                base64toBlob(data.aggregate_mask, "image/png")
+                base64toBlob(data.aggregate_mask, "image/png"),
             )
             backgroundMaskURL = URL.createObjectURL(
-                base64toBlob(data.background_mask, "image/png")
+                base64toBlob(data.background_mask, "image/png"),
             )
         })
         .catch((error) => {
@@ -407,7 +412,7 @@ function get_image_grayscale() {
         .then((response) => response.json())
         .then((data) => {
             uploadedImageURL_gray = URL.createObjectURL(
-                base64toBlob(data.gray, "image/png")
+                base64toBlob(data.gray, "image/png"),
             )
         })
         .catch((error) => {
@@ -420,7 +425,7 @@ function get_image_color() {
         .then((response) => response.json())
         .then((data) => {
             uploadedImageURL_gray = URL.createObjectURL(
-                base64toBlob(data.color, "image/png")
+                base64toBlob(data.color, "image/png"),
             )
         })
         .catch((error) => {
@@ -452,13 +457,13 @@ function inference() {
             if (data.status === "success") {
                 //    uploadedImageOverlay.src = URL.createObjectURL(base64toBlob(data.asphalt_mask, 'image/png'));
                 uploadedImageURL_mask_asphalt = URL.createObjectURL(
-                    base64toBlob(data.asphalt_mask, "image/png")
+                    base64toBlob(data.asphalt_mask, "image/png"),
                 )
                 uploadedImageURL_mask_aggregate = URL.createObjectURL(
-                    base64toBlob(data.aggregate_mask, "image/png")
+                    base64toBlob(data.aggregate_mask, "image/png"),
                 )
                 uploadedImageURL_mask_bg = URL.createObjectURL(
-                    base64toBlob(data.background_mask, "image/png")
+                    base64toBlob(data.background_mask, "image/png"),
                 )
 
                 uploadedImageOverlay_aggregate.src =
@@ -538,10 +543,10 @@ async function uploadImage() {
         .then((response) => response.json())
         .then((data) => {
             uploadedImageURL_color = URL.createObjectURL(
-                base64toBlob(data.color, "image/png")
+                base64toBlob(data.color, "image/png"),
             )
             uploadedImageURL_gray = URL.createObjectURL(
-                base64toBlob(data.gray, "image/png")
+                base64toBlob(data.gray, "image/png"),
             )
         })
         .then(() => inference())
@@ -580,14 +585,14 @@ function removeBackground(formData) {
             .then((response) => response.json())
             .then((data) => {
                 let url = URL.createObjectURL(
-                    base64toBlob(data.nobg, "image/png")
+                    base64toBlob(data.nobg, "image/png"),
                 )
                 uploadedImageURL_nobg = url
                 if (uploadedImageURL_nobg_blur == null) {
                     uploadedImageURL_nobg_blur = url
                 }
                 let url2 = URL.createObjectURL(
-                    base64toBlob(data.original_image, "image/png")
+                    base64toBlob(data.original_image, "image/png"),
                 )
                 uploadedImageURL_color = url2
                 resolve()
@@ -645,7 +650,7 @@ function fetchOriginalEntropyData() {
                         0,
                         0,
                         canvas.width,
-                        canvas.height
+                        canvas.height,
                     )
                     // drawEntropyHistogram(); // Draw the histogram using the fetched entropy data
                     resolve() // Resolve the promise after the histogram is drawn
@@ -870,7 +875,7 @@ function magnify(imgID, zoom) {
 function removeMagnifier(imgID) {
     var img = document.getElementById(imgID)
     var glass = img.parentElement.getElementsByClassName(
-        "img-magnifier-glass"
+        "img-magnifier-glass",
     )[0]
     if (glass) {
         glass.remove()
@@ -912,7 +917,7 @@ function deactivateCurrentExperiment() {
                 } else {
                     return fetch(
                         "/deactivate-experiment/" + String(data.experimentId),
-                        { method: "POST" }
+                        { method: "POST" },
                     )
                 }
             })
@@ -945,7 +950,7 @@ function loadExperiment(id) {
             }
             if (data.expertGuess !== "NaN") {
                 document.getElementById("expertGuess").value = Math.round(
-                    data.expert_guess * 100
+                    data.expert_guess * 100,
                 )
             }
 
@@ -964,10 +969,10 @@ function loadExperiment(id) {
 
             // set the image URLs
             uploadedImageURL_color = URL.createObjectURL(
-                base64toBlob(data.color, "image/png")
+                base64toBlob(data.color, "image/png"),
             )
             uploadedImageURL_gray = URL.createObjectURL(
-                base64toBlob(data.gray, "image/png")
+                base64toBlob(data.gray, "image/png"),
             )
             // set overlay mask URLs
             // uploadedImageURL_mask_asphalt = URL.createObjectURL(base64toBlob(data.asphalt_mask, 'image/png'));
@@ -1009,7 +1014,7 @@ async function evaluateExperiment() {
     if (document.getElementById("expertGuess").value === "") {
         alert(
             // "Please fill the expert guess field before evaluating the experiment."
-            alerts.expertGuessEmpty
+            alerts.expertGuessEmpty,
         )
         return
     } else {
@@ -1026,7 +1031,7 @@ async function evaluateExperiment() {
                         "\n" +
                         alerts.evaluationResults +
                         displayNum +
-                        "%"
+                        "%",
                 )
             })
             .then(() => deactivateCurrentExperiment())
@@ -1081,7 +1086,7 @@ function initPage() {
             if (data.active === true) {
                 console.log(
                     "Experiment is active. Loading experiment data...",
-                    data.experimentId
+                    data.experimentId,
                 )
                 loadExperiment(data.experimentId)
             }
@@ -1170,6 +1175,48 @@ document.querySelectorAll(".custom-select").forEach((select) => {
         })
     })
 })
+
+function getFormattedDateTime() {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, "0")
+    const day = String(now.getDate()).padStart(2, "0")
+    const hours = String(now.getHours()).padStart(2, "0")
+    const minutes = String(now.getMinutes()).padStart(2, "0")
+    return `${year}-${month}-${day} ${hours}:${minutes}`
+}
+
+async function getDefaultExperimentInfo() {
+    return new Promise((resolve, reject) => {
+        const uniqueQuery = "?nocache=" + new Date().getTime()
+        fetch("/default-experiment-info" + uniqueQuery, { method: "GET" })
+            .then((response) => response.json())
+            .then((data) => {
+                data.datetime = getFormattedDateTime()
+                console.log("Default experiment info:", data)
+                resolve(data)
+            })
+            .catch((error) => {
+                console.error("Error:", error)
+                reject(error)
+            })
+    })
+}
+
+function populateExperimentInfo(info) {
+    document.getElementById("info_datetime").value = info.datetime
+    document.getElementById("info_sample_collection_data").value =
+        info.info_sample_collection_data
+    document.getElementById("info_place_of_experiment").value =
+        info.info_place_of_experiment
+    document.getElementById("info_test_procedure").value =
+        info.info_test_procedure
+    document.getElementById("info_wrapping_temperature").value =
+        info.info_wrapping_temperature
+    document.getElementById("info_exposing_water_temperature").value =
+        info.info_exposing_water_temperature
+    document.getElementById("info_comment").value = info.info_comment
+}
 
 // import OpenSeadragon from "./openseadragon_5.0/openseadragon.min.js";
 
@@ -1404,10 +1451,10 @@ function initializeMask() {
             //   console.log('Mask data:', data);
             mask_bg = URL.createObjectURL(base64toBlob(data.bg, "image/png"))
             mask_aggregate = URL.createObjectURL(
-                base64toBlob(data.aggregate, "image/png")
+                base64toBlob(data.aggregate, "image/png"),
             )
             mask_asphalt = URL.createObjectURL(
-                base64toBlob(data.asphalt, "image/png")
+                base64toBlob(data.asphalt, "image/png"),
             )
 
             imageMaskBg.src = mask_bg

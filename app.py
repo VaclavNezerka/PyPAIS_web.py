@@ -1001,7 +1001,7 @@ def sort_records(records: list, sort_order: Literal['asc', 'desc'], sort_by: str
 @check_authentication
 def queue():
     sort_order=request.args.get('sort_order','asc')
-    page_limit=int(request.args.get('page_limit',10))
+    page_limit=int(request.args.get('page_limit') or 10)
     page=int(request.args.get('page',1))
     start_sub_id=request.args.get('start_id',None)
     sort_by=request.args.get('sort_by','time_stamp,id')
@@ -1044,7 +1044,7 @@ def queue():
 
 def get_ordenary_user_experiments(request) -> list[tuple]:
     sort_order=request.args.get('sort_order','desc')
-    page_limit=int(request.args.get('page_limit',10))
+    page_limit=int(request.args.get('page_limit') or 10)
     start_sub_id=request.args.get('start_id',None)
     page=int(request.args.get('page',1))
     sort_by=request.args.get('sort_by','time_stamp,id,expert_guess,asphalt_ratio')
@@ -1084,7 +1084,7 @@ def get_ordenary_user_experiments(request) -> list[tuple]:
     
 def get_admin_user_experiments(request) -> list[tuple]:
     sort_order=request.args.get('sort_order','desc')
-    page_limit=int(request.args.get('page_limit',10))
+    page_limit=int(request.args.get('page_limit') or 10)
     start_sub_id=request.args.get('start_id',None)
     page=int(request.args.get('page',1))
     sort_by=request.args.get('sort_by','time_stamp,id,expert_guess,asphalt_ratio')
@@ -1141,7 +1141,7 @@ def experiments():
 @check_is_company_admin
 def employees():
     sort_order=request.args.get('sort_order','desc')
-    page_limit=int(request.args.get('page_limit',10))
+    page_limit=int(request.args.get('page_limit') or 10)
     start_sub_id=request.args.get('start_id',None)
     page=int(request.args.get('page',1))
     sort_by=request.args.get('sort_by','name,contact,is_company_admin')
