@@ -1325,6 +1325,7 @@ def validate_report_experiment_ids(experiment_ids: list) -> bool:
     return experiment_ids
 
 @app.route('/export-report/<string:ids>',methods=['GET','POST'])
+@check_authentication
 def export_report(ids):
     match request.method:
         case 'GET':
