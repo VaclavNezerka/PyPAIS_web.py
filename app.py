@@ -183,6 +183,8 @@ class UserTemporaryStorage:
         self.info_exposing_water_temperature = None
         self.info_test_procedure = None
         self.info_comment = None
+        self.info_aggregate = None
+        self.info_binder = None
         self.expert_guess = None
         self.img_width = None
         self.img_height = None
@@ -1356,12 +1358,14 @@ def export_report(ids):
                     controlling_user_id=controlling_user_id,
                     ordering_party = ordering_party,
                 )
-                return send_file(
+
+                response = send_file(
                     io.BytesIO(report_bytes),
                     mimetype='application/pdf',
                     as_attachment=True,
-                    download_name=f'AIBAL_Report_{report_id}.pdf'
+                    download_name=f'AIBAL_Report_{report_id}.pdf',
                 )
+                return response
             else:
                 flash(message=_('Form validation failed. Please check your input.'),category='error')
                 return render_template('form.html',dynamic_content=_('Export report'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
@@ -2369,6 +2373,24 @@ def save_annotation():
     # encoded_bg, encoded_aggregate, encoded_asphalt = get_corrected_mask()
     # json_response = {'status': 'success', 'bg': encoded_bg, 'aggregate': encoded_aggregate, 'asphalt': encoded_asphalt}
     # return json.dumps(json_response), 200, {'Content-Type': 'application/json'}
+
+
+@app.route('/get-default-experiment-info', methods=['GET'])
+@check_authentication
+def get_default_experiment_info():
+    # Update the default experiment info in the database
+    response = db_api.get_default_experiment_info(user_id=session['user_id'])
+    return json.dumps({'status': 'success', 'data': response}), 200, {'Content-Type': 'application/json'}
+
+@app.route('/update-default-experiment-info', methods=['POST'])
+@check_authentication
+def update_default_experiment_info():
+    data = request.get_json()
+    field = data.get('field')
+    value = data.get('value')
+    # Update the default experiment info in the database
+    db_api.update_default_experiment_info(user_id=session['user_id'], field=field, value=value)
+    return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
 @app.route('/static/<path:path>')
 def send_static(path):

@@ -219,10 +219,6 @@ uploadedImage.onload = function () {
     // }
     magnify("imageCanvas", labelSettings.magnify)
 
-    console.log("Image loaded, fetching default experiment info...")
-    exp_info = getDefaultExperimentInfo().then((data) => {
-        populateExperimentInfo(data)
-    })
     // loadNewImage(uploadedImage.src);
     // resizeDragonRow();
     // initializeMask();
@@ -356,6 +352,8 @@ function init_info_listeners() {
         "info_exposing_water_temperature",
         "info_datetime",
         "info_comment",
+        "info_aggregate",
+        "info_binder",
     ]) {
         document.getElementById(id).addEventListener("change", function () {
             console.log("Updating info field: " + id)
@@ -527,6 +525,34 @@ function overlayMask(baseUrl, maskUrl) {
 async function uploadImage() {
     displayWorkingMessage()
 
+    const now = new Date()
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+
+    document.getElementById("info_datetime").value = now
+        .toISOString()
+        .slice(0, 16)
+    document.getElementById("info_datetime").dispatchEvent(new Event("change"))
+
+    fetch("/get-default-experiment-info")
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.status === "success") {
+                // loop through data and set value of input with id of key to value
+                for (const [key, value] of Object.entries(data.data)) {
+                    const input = document.getElementById(key)
+                    if (input) {
+                        input.value = value
+                        if (value) {
+                            input.classList.add("has-value")
+                        } else {
+                            input.classList.remove("has-value")
+                        }
+                        input.dispatchEvent(new Event("change"))
+                    }
+                }
+            }
+        })
+
     const fileInput = document.getElementById("fileInput")
     if (fileInput.files.length === 0) return
     const file = fileInput.files[0]
@@ -557,6 +583,12 @@ async function uploadImage() {
         .then(() => getImageType())
         .then(() => unlockControls())
         .then(() => console.log("Image processed successfully."))
+        .then(() => {
+            console.log("Image loaded, fetching default experiment info...")
+            exp_info = getDefaultExperimentInfo().then((data) => {
+                populateExperimentInfo(data)
+            })
+        })
         .catch((error) => {
             console.error("Error:", error)
             // alert("Error processing image: " + error.message)
@@ -883,7 +915,9 @@ function removeMagnifier(imgID) {
 }
 
 function redrawCanvases() {
-    getImageType()
+    if (uploadedImage.src) {
+        getImageType()
+    }
 }
 
 function activateExperiment() {
@@ -948,10 +982,18 @@ function loadExperiment(id) {
                 removeWorkingMessage()
                 return
             }
-            if (data.expertGuess !== "NaN") {
-                document.getElementById("expertGuess").value = Math.round(
-                    data.expert_guess * 100,
-                )
+            // if (data.expertGuess !== "NaN") {
+            //     document.getElementById("expertGuess").value = Math.round(
+            //         data.expert_guess * 100,
+            //     )
+            // }
+            console.log("Setting expert guess to: " + data.expert_guess)
+            if (data.expertGuess !== null && !isNaN(data.expert_guess)) {
+                if (data.expert_guess > 0) {
+                    document.getElementById("expertGuess").value = Math.round(
+                        data.expert_guess * 100,
+                    )
+                }
             }
 
             for (const id of [
@@ -962,8 +1004,12 @@ function loadExperiment(id) {
                 "info_exposing_water_temperature",
                 "info_datetime",
                 "info_comment",
+                "info_aggregate",
+                "info_binder",
             ]) {
-                document.getElementById(id).value = data[id]
+                if (data[id]) {
+                    document.getElementById(id).value = data[id]
+                }
             }
             // document.getElementById("info").value = data.info
 
@@ -1688,3 +1734,11 @@ function initializeMask() {
 // // Run on load and resize
 // window.addEventListener("resize", adjustViewerSize);
 // window.addEventListener("load", adjustViewerSize);
+document
+    .querySelector("#personalizeSettingsButton")
+    .addEventListener("click", function () {
+        window.location.href = "/useruser#personalized_settings"
+        document.getElementById("experiment_info_section").scrollIntoView({
+            behavior: "smooth",
+        })
+    })

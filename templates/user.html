@@ -8,6 +8,7 @@
     <head>
         <title>{{ _('User Information') }}</title>
         <link rel="stylesheet" href="/static/styles.css">
+        <link rel="stylesheet" href="/static/new_styles.css">
         <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
     </head>
 
@@ -60,6 +61,84 @@
                 </div>
             </div>
 
+        </div>
+
+        <div class="colorbar" id="personalized_settings">
+            <h2>{{ _('Personalised Settings') }}</h2>
+        </div>
+
+        <p>
+            {{ _('Here you can customize your app settings. The following options are automatically filled in when uploading an image of asphalt sample.') }}
+        </p>
+        <p>
+            {{ _('If some information repeats often, you can set here your default values, otherwise, keep the fields empty.') }}
+        </p>
+
+        <div class="row modern-row">
+
+            <div class="column modern-column">
+                <label for="info_place_of_experiment" class="modern-label upper">
+                    {{ _('Place of Experiment:') }}
+                </label>
+                <input type="text" id="info_place_of_experiment" class="modern-input enhanced-input"
+                    placeholder="{{ _('Your lab Address') }}" maxlength="1024" />
+            </div>
+
+            <!-- Information -->
+            <div class="column modern-column">
+                <label for="info_sample_collection_data" class="modern-label upper">
+                    {{ _('Sample Collection Data:') }}
+                </label>
+                <input type="text" id="info_sample_collection_data" class="modern-input enhanced-input"
+                    placeholder="{{ _('Information about the mixture.') }}" maxlength="1024" />
+            </div>
+
+        </div>
+        <div class="row modern-row">
+
+            <div class="column modern-column">
+                <label for="info_aggregate" class="modern-label upper">
+                    {{ _('Aggregate:') }}
+                </label>
+                <input type="text" id="info_aggregate" class="modern-input enhanced-input"
+                    placeholder="{{ _('Information about the aggregate.') }}" maxlength="1024" />
+            </div>
+
+            <div class="column modern-column">
+                <label for="info_binder" class="modern-label upper">
+                    {{ _('Binder:') }}
+                </label>
+                <input type="text" id="info_binder" class="modern-input enhanced-input"
+                    placeholder="{{ _('Information about the binder.') }}" maxlength="1024" />
+            </div>
+        </div>
+
+        <div class="row modern-row">
+
+            <div class="column modern-column">
+                <label for="info_wrapping_temperature" class="modern-label upper">
+                    {{ _('Wrapping Temperature [°C]:') }}
+                </label>
+                <input type="number" id="info_wrapping_temperature" class="modern-input enhanced-input"
+                    placeholder="{{ _('80') }}" />
+            </div>
+
+            <!-- Information -->
+            <div class="column modern-column">
+                <label for="info_exposing_water_temperature" class="modern-label upper">
+                    {{ _('Exposing Water Temperature [°C]:') }}
+                </label>
+                <input type="number" id="info_exposing_water_temperature" class="modern-input enhanced-input"
+                    placeholder="{{ _('20') }}" />
+            </div>
+
+            <div class="column modern-column">
+                <label for="info_test_procedure" class="modern-label upper">
+                    {{ _('Test Procedure:') }}
+                </label>
+                <input type="text" id="info_test_procedure" class="modern-input enhanced-input"
+                    placeholder="{{ _('A brief description of the testing procedure') }}" maxlength="1024" />
+            </div>
         </div>
 
         <script src="/static/script_user.js"></script>

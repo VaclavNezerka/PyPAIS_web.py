@@ -78,14 +78,18 @@ async function exportExperimentPDF(ids) {
         throw new Error("Export failed")
     }
 
+    // const blob = await response.blob()
+    // const url = window.URL.createObjectURL(blob)
+
     const blob = await response.blob()
-    const url = window.URL.createObjectURL(blob)
+    const url = URL.createObjectURL(blob)
 
     const a = document.createElement("a")
     a.href = url
     a.download = "experiments.pdf"
     document.body.appendChild(a)
     a.click()
+    window.open(url, "_blank")
     a.remove()
     window.URL.revokeObjectURL(url)
 }
@@ -496,8 +500,6 @@ function initButtons() {
                 }
             }
             window.location.href = "/export-report/" + checkboxes.join(",")
-            //
-            // exportExperimentPDF(checkboxes)
         })
     })
 

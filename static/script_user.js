@@ -68,3 +68,56 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 10000)
     }
 })
+
+document.addEventListener("DOMContentLoaded", function () {
+    // if page is view-company-key, show alert about security
+    fetch("/get-default-experiment-info")
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.status === "success") {
+                // loop through data and set value of input with id of key to value
+                for (const [key, value] of Object.entries(data.data)) {
+                    const input = document.getElementById(key)
+                    if (input) {
+                        input.value = value
+                        if (value) {
+                            input.classList.add("has-value")
+                        } else {
+                            input.classList.remove("has-value")
+                        }
+                    }
+                }
+            }
+        })
+})
+
+document.querySelectorAll(".modern-input").forEach(function (input) {
+    input.addEventListener("change", function () {
+        // if input is not empty, add class "has-value"
+        fetch("/update-default-experiment-info", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                field: input.id,
+                value: input.value,
+            }),
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok")
+                }
+                return response.json()
+            })
+            .then((data) => {
+                console.log(
+                    "Default experiment info updated successfully:",
+                    data,
+                )
+            })
+            .catch((error) => {
+                console.error("Error updating default experiment info:", error)
+            })
+    })
+})

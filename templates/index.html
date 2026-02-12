@@ -41,7 +41,11 @@
             <h3>{{ _('Basic Information') }} - ČSN 73 6161</h3>
         </div>
         <div id="row" , class="colorbar1">
-            <h3>{{ _('Experiment data') }}</h3>
+            <h3>{{ _('Experiment data') }}
+            </h3>
+            <a class="styled-href" id="personalizeSettingsButton" href="/user#personalized_settings">
+                {{ _('Are there repeatedly filled values? Click here to set their default for automatic filling.') }}
+            </a>
         </div>
 
 
@@ -80,21 +84,7 @@
                     placeholder="{{ _('Information about the mixture.') }}" maxlength="1024" />
             </div>
 
-            <div class="column modern-column">
-                <label for="info_aggregate" class="modern-label upper">
-                    {{ _('Aggregate:') }}
-                </label>
-                <input type="text" id="info_aggregate" class="modern-input enhanced-input"
-                    placeholder="{{ _('Information about the aggregate.') }}" maxlength="1024" />
-            </div>
 
-            <div class="column modern-column">
-                <label for="info_binder" class="modern-label upper">
-                    {{ _('Binder:') }}
-                </label>
-                <input type="text" id="info_binder" class="modern-input enhanced-input"
-                    placeholder="{{ _('Information about the binder.') }}" maxlength="1024" />
-            </div>
         </div>
 
         <div class="row modern-row">
@@ -124,85 +114,23 @@
                     placeholder="{{ _('A brief description of the testing procedure') }}" maxlength="1024" />
             </div>
         </div>
-
-
-        <!-- <div id="row" , class="colorbar1">
-            <h3>{{ _('Ordering party details') }}</h3>
-        </div> -->
-
-
-        <!-- <div class="row modern-row">
+        <div class="row modern-row">
             <div class="column modern-column">
-                <label for="info" class="modern-label upper">
-                    {{ _('Name:') }}
+                <label for="info_aggregate" class="modern-label upper">
+                    {{ _('Aggregate:') }}
                 </label>
-                <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
-                    maxlength="1024" />
-                </div>
-                
-                <div class="column modern-column">
-                    <label for="info" class="modern-label upper">
-                        {{ _('Contact:') }}
-                    </label>
-                    <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
-                    maxlength="1024" />
-                </div>
-                
-                <div class="column modern-column">
-                    <label for="info" class="modern-label upper">
-                        {{ _('Address:') }}
-                    </label>
-                    <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
-                    maxlength="1024" />
-                </div>
-            </div> -->
-        <!-- 
-                <div id="row" , class="colorbar1">
-                    <h3>{{ _('Testing Lab Details') }}</h3>
-                </div>
-                
-                <div class="row modern-row">
-                    
-            <div class="column modern-column">
-                <label for="info" class="modern-label upper">
-                    {{ _('Name:') }}
-                </label>
-                <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
-                maxlength="1024" />
+                <input type="text" id="info_aggregate" class="modern-input enhanced-input"
+                    placeholder="{{ _('Information about the aggregate.') }}" maxlength="1024" />
             </div>
-            
+
             <div class="column modern-column">
-                <label for="info" class="modern-label upper">
-                    {{ _('Contact:') }}
+                <label for="info_binder" class="modern-label upper">
+                    {{ _('Binder:') }}
                 </label>
-                <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
-                maxlength="1024" />
+                <input type="text" id="info_binder" class="modern-input enhanced-input"
+                    placeholder="{{ _('Information about the binder.') }}" maxlength="1024" />
             </div>
-            
-            <div class="column modern-column">
-                <label for="info" class="modern-label upper">
-                    {{ _('Address:') }}
-                </label>
-                <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
-                maxlength="1024" />
-            </div>
-            
-            <div class="column modern-column">
-                <label for="info" class="modern-label upper">
-                    {{ _('Proceeding Employee:') }}
-                </label>
-                <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
-                    maxlength="1024" />
-                </div>
-                
-                <div class="column modern-column">
-                    <label for="info" class="modern-label upper">
-                        {{ _('Controlling Employee:') }}
-                </label>
-                <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('Optional') }}"
-                    maxlength="1024" />
-            </div>
-        </div> -->
+        </div>
 
         <div id="row" , class="colorbar1">
             <h3>{{ _('Assessment') }}</h3>

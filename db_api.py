@@ -233,6 +233,36 @@ def store_similar_images(cur, conn, experiment_id: int, similar_by_histogram: li
     execute_query(query, (similar_by_histogram[1], similar_by_ssim[1], similar_by_histogram[0], similar_by_ssim[0], experiment_id))
 
 @db_connection
+def update_default_experiment_info(cur, conn, user_id: int, field: str, value: str) -> None:
+    valid_fields = {'info_aggregate', 'info_binder', 'info_place_of_experiment', 'info_sample_collection_data', 'info_test_procedure', 'info_exposing_water_temperature', 'info_wrapping_temperature'}
+    if field not in valid_fields:
+        raise ValueError(f"Invalid field: {field}. Valid fields are: {valid_fields}")
+    record = execute_query(f'SELECT user_id FROM default_info WHERE user_id=%s', (user_id,))
+    if not record:
+        query = f'INSERT INTO default_info (user_id, {field}) VALUES (%s, %s)'
+        execute_query(query, (user_id, value))
+    else:
+        query = f'UPDATE default_info SET {field}=%s WHERE user_id=%s'
+        execute_query(query, (value, user_id))
+
+@db_connection
+def get_default_experiment_info(cur, conn, user_id: int) -> dict:
+    # query = 'SELECT info_aggregate, info_binder, info_place_of_experiment, info_sample_collection_data, info_test_procedure, info_exposing_water_temperature, info_experiment_date FROM default_info WHERE user_id=%s'
+    # response = execute_query(query, (user_id,))
+    # if not response:
+    #     return {}
+    # row = response[0]
+    # keys = ['info_aggregate', 'info_binder', 'info_place_of_experiment', 'info_sample_collection_data', 'info_test_procedure', 'info_exposing_water_temperature', 'info_experiment_date']
+    # default_info = {key: row[i] for i, key in enumerate(keys)}
+    query = 'SELECT * FROM default_info WHERE user_id=%s'
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute(query, (user_id,))
+    response = cursor.fetchone()
+    if not response:
+        return {}
+    return dict(response)
+
+@db_connection
 def load_image_by_experiment_id(cur, conn, experiment_id: int) -> bytes | None:
     query = 'SELECT color FROM experiments WHERE experiment_id=%s'
     response = execute_query(query, (experiment_id,))
@@ -581,6 +611,7 @@ def insert_experiment_to_db(cur ,conn, values_dict: dict) -> None:
 @db_connection
 def update_experiment_in_db(cur ,conn, values_dict: dict, experiment_id: str) -> None:
     command = f'UPDATE experiments SET ' + ', '.join([f"{key}=%s" for key in values_dict.keys()]) + ' WHERE experiment_id=%s'
+    print(command)
     values = tuple(values_dict.values()) + (str(experiment_id),)
     cur.execute(command, values)
     conn.commit()
