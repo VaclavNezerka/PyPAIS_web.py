@@ -44,7 +44,7 @@ class ImageSimilarityController:
     This class is responsible for controlling the image uniqueness in the background.
     """
 
-    def __init__(self, max_workers: int = 8, checks_per_hash_type: int = 50, similarity_thresholds: dict = {"histogram": 0.7, "ssim": 0.7}, n_similar: int = 10) -> None:
+    def __init__(self, max_workers: int = 8, checks_per_hash_type: int = 50, similarity_thresholds: dict = {"histogram": 0.0, "ssim": 0.0}, n_similar: int = 10) -> None:
         # self.executor = threading.ThreadPoolExecutor(max_workers=max_workers)
         self.executor = threading.ThreadPoolExecutor(max_workers=max_workers)
         self.checks_per_hash_type = checks_per_hash_type

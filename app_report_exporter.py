@@ -1,4 +1,5 @@
 from pydoc import doc
+import os
 import numpy as np
 import db_api
 import statistics
@@ -26,6 +27,8 @@ from reportlab.graphics.shapes import Drawing, Rect, String
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
+from dotenv import load_dotenv
+
 REPORT_COLORS = {
     # "topic_color": "#4ecdc4",      # turquoise
     "topic_color": "#2b2b2b",      # light gray
@@ -36,6 +39,10 @@ REPORT_COLORS = {
     "warning_color": "#ffffff",  # white
     "warning_text_color": "#ff6b6b",   # red 
 }
+
+load_dotenv(dotenv_path='.env')
+SIMILARITY_THRESHOLD=float(os.getenv('SIMILARITY_THRESHOLD'))
+
 
 styles = getSampleStyleSheet()
 styles.add(ParagraphStyle(
@@ -436,7 +443,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         return None
 
 
-def get_similar_experiment(experiment: Dict[str, Any]) -> Dict[str, Any]:  
+def get_similar_experiment(experiment: Dict[str, Any], threshold: float = SIMILARITY_THRESHOLD) -> Dict[str, Any]:  
     similar_ssim_id = experiment.get("similar_ssim_id", None)
     similar_ssim_value = experiment.get("similar_ssim_value", 0.0)
     similar_hist_id = experiment.get("similar_hist_id", None)
@@ -446,6 +453,9 @@ def get_similar_experiment(experiment: Dict[str, Any]) -> Dict[str, Any]:
     similar_ssim_value = 0.0 if similar_ssim_value is None else similar_ssim_value
 
     similar_dict = {}
+    if all(v < threshold for v in [similar_hist_value, similar_ssim_value]):
+        return similar_dict
+    
     if any(v is not None for v in [similar_ssim_id, similar_hist_id]):
         # assume the higher value indicates more similarity
         similar_dict.update({"similar_experiment_id": similar_hist_id, "similarity_score": similar_hist_value, "similarity_method": "Histogram Comparison"})
@@ -520,8 +530,8 @@ def return_similarity_warning(pdf: list, similar_dict: dict) -> list:
     warning_text = _("<<< ⚠ WARNING: The program has detected a highly similar image (on the left, experiment_id:") + \
         f"{similar_experiment_id}" + _(" , uploaded by ") + f"{similar_user_e_mail}" + _(" on ") + f"{similar_date}" + \
         _(") with") + f" {100*similarity_score:.2f}% " + _("confidence ") + \
-        _("using") + f" {similarity_method}. " + \
         _("""Please review the samples for potential duplication. In case the specimens clearly aren't duplicates, you can ignore this message.""")
+        # _("using") + f" {similarity_method}. " + \
     warning_para = Paragraph(warning_text, warning_style)
 
     warning_box = Table(

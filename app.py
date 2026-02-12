@@ -60,7 +60,6 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 load_dotenv(dotenv_path='.env')
 RECAPTCHA_SITE_KEY=os.getenv('RECAPTCHA_SITE_KEY')
 RECAPTCHA_SECRET_KEY=os.getenv('RECAPTCHA_SECRET_KEY')
-print(f'Using reCAPTCHA site key: {RECAPTCHA_SITE_KEY}')
 
 app = Flask(__name__) # set debug to False for production
 # app.config['RECAPTCHA_PUBLIC_KEY'] = RECAPTCHA_SITE_KEY
@@ -109,15 +108,24 @@ mail = Mail(app)
 
 print(f'Mail server configured: {app.config["MAIL_SERVER"]}, \n user: {app.config["MAIL_USERNAME"]}, \n TLS: {app.config["MAIL_USE_TLS"]}, \n SSL: {app.config["MAIL_USE_SSL"]}, \n Suppress send: {app.config["MAIL_SUPPRESS_SEND"]}')
 
-def send_email(subject: str, recipients: list[str], body: str) -> bool:
+def send_email(subject: str, recipients: list[str], body: str, request_details: dict = {}) -> bool:
     """Send an email using Flask-Mail."""
     try:
+        template = 'mail_contact.html'
+
+        msgbody = render_template(
+            template, 
+            TITLE=subject, 
+            MESSAGE=body, 
+            REQUEST_DETAILS=request_details, 
+            YEAR=pdl.now().year)
+
         msg = Message(
             subject, 
             sender=app.config['MAIL_USERNAME'],
             recipients=recipients, 
-            body=body
         )
+        msg.html = msgbody
         mail.send(msg)
         return True
     except Exception as e:
@@ -736,8 +744,10 @@ def home():
             if form.validate_on_submit():
                 # send email to admin
                 subject =f'AIBAL: {form.subject.data}'
-                body = f'From: {form.name.data} <{form.email.data}>\n\n{form.message.data}'
-                r = send_email(subject=subject, recipients=ADMIN_EMAIL_ADDRESSES, body=body)
+                # body = f'From: {form.name.data} <{form.email.data}>\n\n{form.message.data}'
+                request_details = {'Name': form.name.data,  'e-mail': form.email.data,}
+                # TODO: use template
+                r = send_email(subject=subject, recipients=ADMIN_EMAIL_ADDRESSES, body=form.message.data, request_details=request_details)
                 if r:
                     flash(_('Your message has been sent successfully.'), 'success')
                     return redirect(url_for('home')), 302
@@ -1838,34 +1848,31 @@ def polish_input_image_file(file) -> np.ndarray:
     print('1')
 
     if file.filename.split('.')[-1].upper() == 'HEIC':
-        unique_query = str(request.args.get('nocache')) + '_' + str(session['user_id'])
+        unique_query = str(request.args.get('nocache'))
         path = f'temp/temp_{unique_query}.png'
         image.save(path)
         image = Image.open(path)
+        # image_io=io.BytesIO()
+        # image = Image.open(image_io)
 
         np_image = np.concatenate((np.array(image), np.ones((image.size[1], image.size[0], 1), dtype=np.uint8)*255), axis=2)
     else:
         np_image = np.array(image)
 
-    print('1.5')
     # if the image is BW image, convert it to RGB
     if len(np_image.shape) == 2:
         np_image = np.stack((np_image,)*3, axis=-1)
 
-    print('2')
     if file.filename.split('.')[-1].upper() == 'HEIC':
         # delete the temporary file
         os.remove(path)
     
-    print('3')
     # if the image has more than 4 channels, convert it to RGB
     if np_image.shape[2] > 3:
         np_image = np_image[:, :, :3]
-    print('4')
 
     # downscale the image if it is larger than 1200 pixels in any dimension
     np_image = downscale_image(np_image, scale_factor=None)
-    print('5')
 
     return np_image.astype(np.uint8)
 
