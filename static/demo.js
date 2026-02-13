@@ -2,7 +2,7 @@ import base64toBlob from "./utils.js"
 import { hexToRgba, colorizeMask } from "./utils.js"
 
 const alerts = await fetch("/translations-alerts", { method: "GET" }).then(
-    (response) => response.json()
+    (response) => response.json(),
 )
 
 // // .then((data) => data)
@@ -31,15 +31,15 @@ const rootStyles = getComputedStyle(document.documentElement)
 // Theme colors
 let aggregateColor = hexToRgba(
     rootStyles.getPropertyValue("--myBlue").trim(),
-    1
+    1,
 )
 let backgroundColor = hexToRgba(
     rootStyles.getPropertyValue("--myPaleGreen").trim(),
-    1
+    1,
 )
 let bitumenColor = hexToRgba(
     rootStyles.getPropertyValue("--myPaleRed").trim(),
-    1
+    1,
 )
 
 // Highcontrast colors
@@ -100,7 +100,7 @@ uploadedImageOverlay_bg.onload = function () {
     displayed_mask(
         "overlayCanvasBackground",
         this,
-        labelSettings.background.fill
+        labelSettings.background.fill,
     )
 }
 
@@ -152,13 +152,13 @@ function get_overlay_masks() {
         .then((response) => response.json())
         .then((data) => {
             asphaltMaskURL = URL.createObjectURL(
-                base64toBlob(data.asphalt_mask, "image/png")
+                base64toBlob(data.asphalt_mask, "image/png"),
             )
             aggregateMaskURL = URL.createObjectURL(
-                base64toBlob(data.aggregate_mask, "image/png")
+                base64toBlob(data.aggregate_mask, "image/png"),
             )
             backgroundMaskURL = URL.createObjectURL(
-                base64toBlob(data.background_mask, "image/png")
+                base64toBlob(data.background_mask, "image/png"),
             )
         })
         .catch((error) => {
@@ -171,7 +171,7 @@ function get_image_grayscale() {
         .then((response) => response.json())
         .then((data) => {
             uploadedImageURL_gray = URL.createObjectURL(
-                base64toBlob(data.gray, "image/png")
+                base64toBlob(data.gray, "image/png"),
             )
         })
         .catch((error) => {
@@ -184,7 +184,7 @@ function get_image_color() {
         .then((response) => response.json())
         .then((data) => {
             uploadedImageURL_gray = URL.createObjectURL(
-                base64toBlob(data.color, "image/png")
+                base64toBlob(data.color, "image/png"),
             )
         })
         .catch((error) => {
@@ -209,13 +209,13 @@ function inference() {
             if (data.status === "success") {
                 //    uploadedImageOverlay.src = URL.createObjectURL(base64toBlob(data.asphalt_mask, 'image/png'));
                 uploadedImageURL_mask_asphalt = URL.createObjectURL(
-                    base64toBlob(data.asphalt_mask, "image/png")
+                    base64toBlob(data.asphalt_mask, "image/png"),
                 )
                 uploadedImageURL_mask_aggregate = URL.createObjectURL(
-                    base64toBlob(data.aggregate_mask, "image/png")
+                    base64toBlob(data.aggregate_mask, "image/png"),
                 )
                 uploadedImageURL_mask_bg = URL.createObjectURL(
-                    base64toBlob(data.background_mask, "image/png")
+                    base64toBlob(data.background_mask, "image/png"),
                 )
 
                 uploadedImageOverlay_aggregate.src =
@@ -249,7 +249,7 @@ async function uploadImage() {
         .then((response) => response.json())
         .then((data) => {
             uploadedImageURL_color = URL.createObjectURL(
-                base64toBlob(data.color, "image/png")
+                base64toBlob(data.color, "image/png"),
             )
         })
         .then(() => inference())
@@ -443,7 +443,7 @@ function magnify(imgID, zoom) {
 function removeMagnifier(imgID) {
     var img = document.getElementById(imgID)
     var glass = img.parentElement.getElementsByClassName(
-        "img-magnifier-glass"
+        "img-magnifier-glass",
     )[0]
     if (glass) {
         glass.remove()
@@ -451,7 +451,9 @@ function removeMagnifier(imgID) {
 }
 
 function redrawCanvases() {
-    getImageType()
+    if (uploadedImage.src) {
+        getImageType()
+    }
 }
 
 // Global event listeners
@@ -492,7 +494,7 @@ async function evaluateExperiment() {
                         displayNum +
                         "%" +
                         "\n" +
-                        alerts.evaluationDemo
+                        alerts.evaluationDemo,
                 )
             }
         })
