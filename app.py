@@ -1219,10 +1219,27 @@ def company():
 @app.route('/register',methods=['GET','POST'])
 def register():
     logout()
+    title = _("Register new company")
+    info = _("You can use the form above to register a user for your existing company. If you wish to register a new company instead, please click the button below and contact us via email.")
+    btnstr = _("Contact us!")
+    optional_content = f"""
+        <div class="colorbar">
+            <h1>{title}</h1>
+        </div>
+        <div class="home-text">
+        <p class="fancy-paragraph">
+            {info}
+        </p>
+        <a href="\home#contact_form">
+            <button id='ContactUsBtn' class="custom-file-label">{btnstr}</button>
+        </a>
+    </div>
+    """
+
     match request.method:
         case 'GET':
             form=forms.RegistrationFormUser()
-            return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+            return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY, optional_content_below=optional_content)
         case 'POST':
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form=forms.RegistrationFormUser()
@@ -1252,10 +1269,10 @@ def register():
                     return redirect(url_for('login')), 302
                 else:
                     flash(message=_('Database error:') + f'{result}', category='error')
-                    return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY), 500
+                    return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY, optional_content_below=optional_content), 500
             else:
                 flash(message=_('Form validation failed. Please check your input.'),category='error')
-                return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+                return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY, optional_content_below=optional_content)
 
 @app.route('/regenerate-company-key',methods=['GET'])
 @check_authentication
