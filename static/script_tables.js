@@ -507,12 +507,14 @@ function initButtons() {
         .querySelectorAll("#btn-grant-admin-privileges")
         .forEach((button) => {
             button.addEventListener("click", () => {
-                if (checkboxes.length === 0) {
-                    alert(alerts.noEmployeesSelected)
-                    return
-                }
-                for (let username of checkboxes) {
-                    changeAdminPrivileges(username, true)
+                if (confirm(alerts.grantAdmin + "\n" + checkboxes)) {
+                    if (checkboxes.length === 0) {
+                        alert(alerts.noEmployeesSelected)
+                        return
+                    }
+                    for (let username of checkboxes) {
+                        changeAdminPrivileges(username, true)
+                    }
                 }
             })
         })
@@ -521,36 +523,42 @@ function initButtons() {
         .querySelectorAll("#btn-remove-admin-privileges")
         .forEach((button) => {
             button.addEventListener("click", () => {
-                if (checkboxes.length === 0) {
-                    alert(alerts.noEmployeesSelected)
-                    return
-                }
-                for (let username of checkboxes) {
-                    changeAdminPrivileges(username, false)
+                if (confirm(alerts.removeAdmin + "\n" + checkboxes)) {
+                    if (checkboxes.length === 0) {
+                        alert(alerts.noEmployeesSelected)
+                        return
+                    }
+                    for (let username of checkboxes) {
+                        changeAdminPrivileges(username, false)
+                    }
                 }
             })
         })
 
     document.querySelectorAll("#btn-block-user").forEach((button) => {
         button.addEventListener("click", () => {
-            if (checkboxes.length === 0) {
-                alert(alerts.noEmployeesSelected)
-                return
-            }
-            for (let username of checkboxes) {
-                changeUserBlockade(username, true)
+            if (confirm(alerts.blockUser + "\n" + checkboxes)) {
+                if (checkboxes.length === 0) {
+                    alert(alerts.noEmployeesSelected)
+                    return
+                }
+                for (let username of checkboxes) {
+                    changeUserBlockade(username, true)
+                }
             }
         })
     })
 
     document.querySelectorAll("#btn-unblock-user").forEach((button) => {
         button.addEventListener("click", () => {
-            if (checkboxes.length === 0) {
-                alert(alerts.noEmployeesSelected)
-                return
-            }
-            for (let username of checkboxes) {
-                changeUserBlockade(username, false)
+            if (confirm(alerts.unblockUser + "\n" + checkboxes)) {
+                if (checkboxes.length === 0) {
+                    alert(alerts.noEmployeesSelected)
+                    return
+                }
+                for (let username of checkboxes) {
+                    changeUserBlockade(username, false)
+                }
             }
         })
     })

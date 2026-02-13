@@ -106,8 +106,6 @@ MAX_TOKEN_AGE = int(os.getenv('MAX_TOKEN_AGE', '3600'))  # in seconds, default t
 
 mail = Mail(app)
 
-print(f'Mail server configured: {app.config["MAIL_SERVER"]}, \n user: {app.config["MAIL_USERNAME"]}, \n TLS: {app.config["MAIL_USE_TLS"]}, \n SSL: {app.config["MAIL_USE_SSL"]}, \n Suppress send: {app.config["MAIL_SUPPRESS_SEND"]}')
-
 def send_email(subject: str, recipients: list[str], body: str, request_details: dict = {}) -> bool:
     """Send an email using Flask-Mail."""
     try:
@@ -2425,7 +2423,10 @@ def translations_alerts():
         'selectAtLeastOneExperimentForExport': _('Please select at least one experiment for export.'),
         'exportSingleExperimentNotAllowed': _('For CSN 73 6161, exporting a single experiment is not allowed.'),
         'exportSingleExperimentProceeding': _('Do you want to proceed with exporting this single experiment?'),
-
+        'grantAdmin': _('Are you sure, you want to grant admin privileges to the following users?'),
+        'removeAdmin': _('Are you sure, you want to remove admin privileges from the following users?'),
+        'blockUser': _('Are you sure, you want to block the sign in option for the following users?'),
+        'unblockUser': _('Are you sure, you want to unblock the sign in option for the following users?'),
     }
     return json.dumps(json_translations), 200, {'Content-Type': 'application/json'}
 
