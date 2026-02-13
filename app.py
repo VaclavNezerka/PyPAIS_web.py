@@ -452,7 +452,7 @@ def forgot_password_form():
     form = forms.EmailForgotPasswordForm()
     match request.method:
         case 'GET':
-            return render_template('form.html', form=form, dynamic_content=dynamic_content), 200
+            return render_template('form.html', form=form, dynamic_content=dynamic_content, recaptcha_site_key=RECAPTCHA_SITE_KEY), 200
         case 'POST':
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             if form.validate_on_submit():
@@ -468,7 +468,7 @@ def forgot_password_form():
                         title=_('AIBAL: Password Reset Request')
                     )
                     flash(_('An email with password reset instructions has been sent to your email address.'), 'success')
-            return render_template('form.html', form=form, dynamic_content=dynamic_content), 200
+            return render_template('form.html', form=form, dynamic_content=dynamic_content, recaptcha_site_key=RECAPTCHA_SITE_KEY), 200
 
 
 @app.route('/forgot_password/<token>', methods=['GET', 'POST'])
@@ -481,7 +481,7 @@ def forgot_password(token: str):
             db_api.confirm_user_email(email)
             form = forms.ChangeForgottenPasswordForm()
             flash(_('You can now reset your password!'), 'success')
-            return render_template('form.html', form=forms.ChangeForgottenPasswordForm(), token=token), 200
+            return render_template('form.html', form=forms.ChangeForgottenPasswordForm(), token=token, recaptcha_site_key=RECAPTCHA_SITE_KEY), 200
         case 'POST':
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form = forms.ChangeForgottenPasswordForm()
@@ -493,7 +493,7 @@ def forgot_password(token: str):
                 flash(_('Your password has been set. You can now log in!'), 'success')
             else:
                 flash(_('There was an error setting your password. Please try again.'), 'danger')
-                return render_template('form.html', form=form, token=token), 200
+                return render_template('form.html', form=form, token=token, recaptcha_site_key=RECAPTCHA_SITE_KEY), 200
             return redirect(url_for('login'))
 
 
