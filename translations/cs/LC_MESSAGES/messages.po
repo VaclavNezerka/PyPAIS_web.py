@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-13 17:16+0100\n"
+"POT-Creation-Date: 2026-02-13 17:24+0100\n"
 "PO-Revision-Date: 2025-10-21 18:40+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: cs\n"
@@ -1299,9 +1299,13 @@ msgstr "Informace o pojivu."
 msgid "Assessment"
 msgstr "Vyhodnocení"
 
-#: templates/index.html:142 templates/index.html:145
+#: templates/index.html:142
 msgid "Expert Guess"
 msgstr "Odborný odhad"
+
+#: templates/index.html:145
+msgid "Expert Guess of Adhesion Rate"
+msgstr "Odborný odhad procenta obalené plochy"
 
 #: templates/index.html:153
 msgid "Optional"
