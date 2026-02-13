@@ -12,6 +12,9 @@ import uuid
 import models
 from flask import abort
 from flask_babel import _, lazy_gettext
+from typing import Literal
+# from app_energy_label import EnergyLabel
+
 
 # PDF generation imports
 from reportlab.platypus import (
@@ -26,7 +29,7 @@ from reportlab.lib.enums import TA_JUSTIFY, TA_RIGHT, TA_CENTER
 from reportlab.graphics.shapes import Drawing, Rect, String
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-
+from reportlab.platypus import Flowable
 from dotenv import load_dotenv
 
 REPORT_COLORS = {
@@ -114,6 +117,146 @@ pdfmetrics.registerFont(
 pdfmetrics.registerFont(
     TTFont('DejaVu-Bold', 'DejaVuSans-Bold.ttf')
 )
+
+
+
+
+class EnergyLabel(Flowable):
+    def __init__(self, adhesion_rate: float, width=50, spacing=0, bar_height=20, arrow_tip=20):
+        super().__init__()
+        self.rating = get_CSN_73_6161_classification(adhesion_rate) 
+        self.word_rating = get_CSN_73_6161_word_classification(adhesion_rate) 
+        self.adhesion_rate = adhesion_rate
+        self.width = width
+        self.bar_height = bar_height
+        self.spacing = spacing
+        self.arrow_tip = arrow_tip
+
+        self.classes = [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            _("Unclassifiable"),
+        ]
+
+        self.colors = [
+            colors.HexColor("#11a64a"),
+            colors.HexColor("#56b347"),
+            colors.HexColor("#b7d432"),
+            colors.HexColor("#f4e600"),
+            colors.HexColor("#f8b415"),
+            colors.HexColor("#f37021"),
+            colors.HexColor("#ed1c24"),
+            colors.HexColor("#160001"),
+        ]
+
+        self.height = len(self.classes)*(self.bar_height+self.spacing)
+
+    def draw_arrow(self, c, x, y, width, height, color, text):
+        c.setFillColor(color)
+        c.setStrokeColor(color)
+
+        arrow_tip = self.arrow_tip
+
+        path = c.beginPath()
+        path.moveTo(x, y)
+        path.lineTo(x + width - arrow_tip, y)
+        path.lineTo(x + width, y + height / 2)
+        path.lineTo(x + width - arrow_tip, y + height)
+        path.lineTo(x, y + height)
+        path.close()
+
+        c.drawPath(path, fill=1, stroke=0)
+
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(x + 15, y + height / 2 - 6, text)
+    def draw_arrow_left(self, c, x, y, width, height, color, text):
+        c.setFillColor(color)
+        c.setStrokeColor(color)
+
+        arrow_tip = self.arrow_tip
+
+        path = c.beginPath()
+        path.moveTo(x, y)
+        path.lineTo(x + width - arrow_tip, y)
+        path.lineTo(x + width - arrow_tip, y + height)
+        path.lineTo(x, y + height)
+        path.lineTo(x - arrow_tip, y + height/2)
+        path.close()
+
+        c.drawPath(path, fill=1, stroke=0)
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(x + 15, y + height / 2 - 6, text)
+
+    def draw_left_box(self, c):
+        box_width = 130
+        box_height = (self.bar_height+self.spacing)*len(self.classes)-self.spacing
+
+        c.setFillColor(colors.white)
+        c.setStrokeColor(colors.black)
+        c.rect(0, self.height - box_height, box_width, box_height, fill=1)
+
+        c.setFillColor(colors.black)
+        c.setFont("Helvetica", 12)
+        c.drawCentredString(box_width / 2,
+                            self.height - box_height * 1.25 / 5,
+                            _("Adhesion")
+        )
+        c.setFont("Helvetica-Bold", 18)
+        c.drawCentredString(box_width / 2,
+                            self.height - box_height * 2 / 5,
+                            f"{self.adhesion_rate} %")
+
+        c.setFont("Helvetica", 12)
+        c.drawCentredString(box_width / 2,
+                            self.height - box_height * 3.25 / 5,
+                            _("Rating"))
+        c.setFont("Helvetica-Bold", 16)
+        c.drawCentredString(box_width / 2,
+                            self.height - box_height * 4 / 5,
+                            self.word_rating)
+
+        return box_width + 15  # spacing before arrows
+    def draw(self):
+        c = self.canv
+
+        offset_x = self.draw_left_box(c)
+
+        bar_height = self.bar_height
+        spacing = self.spacing
+        start_y = self.height - bar_height
+
+        # dra
+
+        for i, (cls, col) in enumerate(zip(self.classes, self.colors)):
+            y = start_y - i * (bar_height + spacing)
+            width = self.width + i * 20
+            self.draw_arrow(c, offset_x, y, width, bar_height, col, cls)
+
+        # Draw highlighted rating on right
+        if self.rating in self.classes:
+            idx = self.classes.index(self.rating)
+            y = start_y - idx * (bar_height + spacing)
+            width = self.width + len(self.classes)*self.arrow_tip
+
+            self.draw_arrow_left(
+                c,
+                offset_x + width,
+                y,
+                155,
+                bar_height,
+                self.colors[idx],
+                self.rating,
+            )
+
+
+
 
 def process_image(original_image: np.ndarray, mask_asphalt: np.ndarray, mask_aggregate: np.ndarray) -> np.ndarray:
     """
@@ -203,6 +346,12 @@ def compute_statistics(assessments: List[float], to_per_cents: bool = True) -> D
         "worst_classification": get_CSN_73_6161_classification(worst),
     }
 
+
+###### 
+###### 
+###### MAIN EXPORTER
+###### 
+###### 
 @register_exporter("CSN_73_6161")
 def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id: int, controlling_user_id: int = None, ordering_party: Dict[str, Any] = {}, controlling_employee: Dict[str, Any] = {}, as_buffer=True) -> io.BytesIO | None:
     """
@@ -228,20 +377,26 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
 
     report_date = pdl.now()
     # Prepare PDF content
-    # as_buffer = False # for testing purposes
+    as_buffer = False # for testing purposes
     if as_buffer:
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=A4,
                             rightMargin=20*mm, leftMargin=20*mm,
-                            topMargin=25*mm, bottomMargin=25*mm)
+                            topMargin=30*mm, bottomMargin=25*mm)
     else:
         doc = SimpleDocTemplate(f"test_report.pdf", pagesize=A4,
                             rightMargin=20*mm, leftMargin=20*mm,
-                            topMargin=25*mm, bottomMargin=25*mm)
+                            topMargin=30*mm, bottomMargin=25*mm)
     pdf = []
+
+    # pdf.append(Spacer(0,20))
+
+
     # Title
-    pdf.append(PageBreak())
+    # pdf.append(PageBreak())
+    pdf.append(Spacer(1, 0.2 * cm))
     pdf.append(Paragraph(_("Bitumen Adhesion Test Protocol"), styles["Title"]))
+    pdf.append(Spacer(1, 0.4 * cm))
 
     n_samples = len(experiment_ids)
     text = _("""
@@ -249,7 +404,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     with all relevant information according to the CSN 73 6161 standard.
     The adhesion test was performed on """) + f"{n_samples}" + _(""" samples of asphalt mixtures. The detailes about each specimen included below, the overview is at the end of the document.""")
     pdf.append(Paragraph(text, style_justify))
-    pdf.append(Spacer(1, 0.6 * cm))
+    pdf.append(Spacer(1, 0.4 * cm))
 
     text = _("""
     Both the visual expert assesment and the AI-based quantitative analysis are included in this report.
@@ -258,6 +413,9 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     """)
     pdf.append(Paragraph(text, style_justify))
     pdf.append(Spacer(1, 0.2 * cm))
+    
+    energy_label_position = len(pdf)
+
 
     op = {
         "Caption": _("Ordering Party"),
@@ -272,8 +430,36 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     dat2 = party_details_data(pdf, li)
 
     list_ = ["", ""]
+    pdf.append(Spacer(0,25))
     list_.append([dat1, dat2])
     pdf = two_col_text_layout(pdf, list_, doc=doc)
+
+    left_column = [
+        Paragraph(_("The proceeding employee"), styles["Heading2"]),
+        Paragraph(_("Name:") + f" {user_info.get('first_name', '-')} {user_info.get('last_name', '-')}", style_justify),
+        Paragraph(_("Contact:") + f" {user_info.get('e_mail', '-')}", style_justify),
+        Spacer(1, 1.2 * cm),
+        Paragraph(_("Signature: ..................................................."), style_justify),
+        Spacer(1, 0.4 * cm),
+    ]
+
+    right_column = [
+        Paragraph(_("The controlling employee"), styles["Heading2"]),
+        Paragraph(_("Name:") + f" {controlling_employee.get('first_name', '-')} {controlling_employee.get('last_name', '-')}", style_justify),
+        Paragraph(_("Contact:") + f" {controlling_employee.get('e_mail', '-')}", style_justify),
+        Spacer(1, 1.2 * cm),
+        Paragraph(_("Signature: ..................................................."), style_justify),
+        Spacer(1, 0.4 * cm),
+    ]
+
+    table_data = ["", ""]
+    table_data.append([left_column, right_column])
+    pdf.append(Spacer(0,25))
+    pdf = two_col_text_layout(pdf, table_data, doc=doc)
+    pdf.append(PageBreak())
+
+
+
 
 
     # Insert experiment records
@@ -348,6 +534,13 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     stats_expert = compute_statistics(assessments_expert_guess)
     stats_automatic = compute_statistics(assessments_automatic)
 
+    pdf.insert(energy_label_position,EnergyLabel(stats_expert["average"]))
+    pdf.insert(energy_label_position-1,Paragraph(_("Resulting assesment"), styles["Heading2"]))
+    pdf.insert(energy_label_position+1,Spacer(0,10))
+    pdf.insert(energy_label_position-2,Spacer(1, 0.2 * cm))
+
+    # pdf.insert(energy_label_position-1,Spacer(0,20))
+
 
     # PRINT FINAL SUMMARY
     # Final - table
@@ -370,7 +563,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
 
     # Final summary + issues
     pdf.append(Paragraph(_("Report Conclusion"), styles["Heading2"]))
-    pdf.append(Paragraph(_("Summary"), styles["Heading3"]))
+    # pdf.append(Paragraph(_("Summary"), styles["Heading3"]))
     items = [
         Paragraph(_("The average adhesion rate across all samples is") + f" {stats_expert['average']:.2f} ± {stats_expert['stddev']:.2f} % " + _("according to expert visual assesment, which correspondes to calss") + f" {stats_expert['average_classification']} , ", style_justify),
         Paragraph(_("The average adhesion rate across all samples is") + f" {stats_automatic['average']:.2f} ± {stats_automatic['stddev']:.2f} % " + _("according to AI-based analysis, which correspondes to calss") + f" {stats_automatic['average_classification']} , ", style_justify),
@@ -407,33 +600,13 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         except Exception:
             controlling_employee = user_info
     
-    left_column = [
-        Paragraph(_("The proceeding employee"), styles["Heading2"]),
-        Paragraph(_("Name:") + f" {user_info.get('first_name', '-')} {user_info.get('last_name', '-')}", style_justify),
-        Paragraph(_("Contact:") + f" {user_info.get('e_mail', '-')}", style_justify),
-        Spacer(1, 1.2 * cm),
-        Paragraph(_("Signature: ..................................................."), style_justify),
-        Spacer(1, 0.4 * cm),
-    ]
-
-    right_column = [
-        Paragraph(_("The controlling employee"), styles["Heading2"]),
-        Paragraph(_("Name:") + f" {controlling_employee.get('first_name', '-')} {controlling_employee.get('last_name', '-')}", style_justify),
-        Paragraph(_("Contact:") + f" {controlling_employee.get('e_mail', '-')}", style_justify),
-        Spacer(1, 1.2 * cm),
-        Paragraph(_("Signature: ..................................................."), style_justify),
-        Spacer(1, 0.4 * cm),
-    ]
-
-    table_data = ["", ""]
-    table_data.append([left_column, right_column])
-    pdf = two_col_text_layout(pdf, table_data, doc=doc)
 
     pdf.append(Spacer(1, 1.0 * cm))
     pdf.append(Paragraph(_("This report was generated using AIBAL on ") + f"{report_date.to_datetime_string()}.", style_justify_right))
 
     doc.build(pdf,
-        onFirstPage=lambda canvas, doc: first_page(canvas, doc, report_id=report_id),
+        # onFirstPage=lambda canvas, doc: first_page(canvas, doc, report_id=report_id),
+        onFirstPage=lambda canvas, doc: styled_header_footer(canvas, doc, report_id=report_id),
         onLaterPages=lambda canvas, doc: styled_header_footer(canvas, doc, report_id=report_id)
     )
     
@@ -529,7 +702,7 @@ def return_similarity_warning(pdf: list, similar_dict: dict) -> list:
 
     warning_text = _("<<< ⚠ WARNING: The program has detected a highly similar image (on the left, experiment_id:") + \
         f"{similar_experiment_id}" + _(" , uploaded by ") + f"{similar_user_e_mail}" + _(" on ") + f"{similar_date}" + \
-        _(") with") + f" {100*similarity_score:.2f}% " + _("confidence ") + \
+        _(") with") + f" {100*similarity_score:.2f}% " + _("confidence. ") + \
         _("""Please review the samples for potential duplication. In case the specimens clearly aren't duplicates, you can ignore this message.""")
         # _("using") + f" {similarity_method}. " + \
     warning_para = Paragraph(warning_text, warning_style)
@@ -640,6 +813,8 @@ def add_experiment_record(pdf: list, experiment: Dict[str, Any], similar: dict =
         if value is None or value == 'None':
             experiment[key] = '-'
 
+    print(experiment.get('expert_guess', 0))
+
     left_column = [
         Paragraph(_("Sample ID:") + f" {experiment.get('experiment_id', '-')}", styles["Heading3"]),
         Paragraph(_("Date:") + f" {experiment.get('info_datetime', '-')}", style_justify),
@@ -655,7 +830,7 @@ def add_experiment_record(pdf: list, experiment: Dict[str, Any], similar: dict =
         Paragraph(_("Assessment - Adhesion Rate:"), styles["Heading4"]),
         Paragraph(_("Inference Model:") + f" {experiment.get('inference_model', '-')}", style_justify),
         Paragraph(_("Automatic Assessment [%]:") + f" {100*experiment.get('asphalt_ratio', '-'):.2f}", style_justify),
-        Paragraph(_("Visual based Expert Guess [%]:") + f" {100*experiment.get('expert_guess', '-'):.2f}", style_justify),
+        Paragraph(_("Visual based Expert Guess [%]:") + f" {100*experiment.get('expert_guess', 0):.2f}", style_justify),
         Paragraph(_("Comment:") + f" {experiment.get('comment', '-')}", style_justify),
     ]    
     table_data = [["", ""]]
@@ -665,6 +840,7 @@ def add_experiment_record(pdf: list, experiment: Dict[str, Any], similar: dict =
     return pdf    
 
 def first_page(canvas, doc, report_id: str):
+    styled_header_footer(canvas, doc, report_id)
     canvas.saveState()
 
     width, height = doc.pagesize
@@ -672,13 +848,14 @@ def first_page(canvas, doc, report_id: str):
     # Draw company logo (top-left)
     logo = PIL.Image.open("static/logo-text.png")
     logow, logoh = logo.size
-    logo_scale = 120 * mm / logow
+    logo_scale = 80 * mm / logow
 
     # x position to center the image
-    x = (width - logo_scale * logow) / 2
+    # x = (width - logo_scale * logow) / 4
+    x = doc.leftMargin
 
     # y position (from bottom) — here we keep your previous top margin calculation
-    y = height - 110 * mm  # adjust as needed
+    y = height - 70 * mm  # adjust as needed
 
 
     canvas.drawImage(
@@ -689,37 +866,51 @@ def first_page(canvas, doc, report_id: str):
         height=logo_scale * logoh,
         mask="auto"
     )
+    # # Draw company logo (top-left)
+    # logo = PIL.Image.open("static/logo-text.png")
+    # logow, logoh = logo.size
+    # logo_scale = 30 * mm / logow
+
+    # # x position to center the image
+    # x = (width - logo_scale * logow) / 2
+
+    # # y position (from bottom) — here we keep your previous top margin calculation
+    # y = height - 110 * mm  # adjust as needed
+
+
+    # canvas.drawImage(
+    #     "static/logo-text.png",
+    #     x,
+    #     y,
+    #     width=logo_scale * logow,
+    #     height=logo_scale * logoh,
+    #     mask="auto"
+    # )
     
 
-    canvas.setFillColor(colors.HexColor(REPORT_COLORS["topic_color"]))
-    rect_width = 210 * mm
-    rect_height = 120 * mm
-    rect_x = (width - rect_width) / 2 
-    rect_y = height - 200 * mm - rect_height / 2
-    canvas.setStrokeColor(colors.black)
-    canvas.setStrokeAlpha(0)
-    canvas.rect(rect_x, rect_y, rect_width, rect_height, fill=1)
+    # # canvas.setFillColor(colors.HexColor(REPORT_COLORS["topic_color"]))
+    # # rect_width = 210 * mm
+    # # rect_height = 120 * mm
+    # # rect_x = (width - rect_width) / 2 
+    # # rect_y = height - 200 * mm - rect_height / 2
+    # canvas.setStrokeColor(colors.black)
+    # canvas.setStrokeAlpha(0)
+    # canvas.rect(rect_x, rect_y, rect_width, rect_height, fill=1)
 
 
-    # -------------------
-    # Draw a line
-    # -------------------
-    # canvas.setStrokeColor(colors.green)
-    # canvas.setLineWidth(1.5)
-    # canvas.line(10*mm, 10*mm, width - 10*mm, 50*mm)
 
     # -------------------
     # Draw some text
     # -------------------
-    canvas.setFont("DejaVu-Bold", 14)
     # canvas.setFont("DejaVu-Bold", 14)
-    canvas.setFillColor(colors.black)
-    # canvas.drawString(50*mm, height - 70*mm, "Hello, ReportLab Drawing!")
+    # # canvas.setFont("DejaVu-Bold", 14)
+    # canvas.setFillColor(colors.black)
+    # # canvas.drawString(50*mm, height - 70*mm, "Hello, ReportLab Drawing!")
 
 
-    # Draw report title (centered)
+    # # Draw report title (centered)
     canvas.restoreState()
-    canvas.setFillColor(colors.white)
+    canvas.setFillColor(colors.black)
     canvas.setFont("DejaVu-Bold", 36)
     canvas.drawCentredString(
         width / 2,
@@ -733,7 +924,7 @@ def styled_header_footer(canvas, doc, report_id: str):
 
     width, height = doc.pagesize
 
-    header_height = 18 * mm
+    header_height = 26 * mm
     footer_height = 15 * mm
 
     # ======================
@@ -748,25 +939,78 @@ def styled_header_footer(canvas, doc, report_id: str):
         fill=1,
         stroke=0
     )
+    # canvas.rect(
+    #     0,
+    #     height - header_height,
+    #     doc.leftMargin,
+    #     header_height,
+    #     fill=1,
+    #     stroke=0
+    # )
+    # canvas.rect(
+    #     doc.leftMargin + 45* mm, 
+    #     height - header_height,
+    #     width,
+    #     header_height,
+    #     fill=1,
+    #     stroke=0
+    # )
+
+    # Draw company logo (top-left)
+    # logo = PIL.Image.open("static/logo-text.png")
+    logo = PIL.Image.open("static/logo_white.png")
+    logow, logoh = logo.size
+    logo_scale = 40 * mm / logow
+
+    # x position to center the image
+    # x = (width - logo_scale * logow) 
+    x = doc.leftMargin + 2 * mm
+    # x = 16 * mm
+
+    # y position (from bottom) — here we keep your previous top margin calculation
+    y = height - 23 * mm  
+
+    canvas.drawImage(
+        "static/logo_white.png",
+        x,
+        y,
+        width=logo_scale * logow,
+        height=logo_scale * logoh,
+        mask="auto"
+    )
 
     # Header bottom line
-    canvas.setStrokeColor(colors.white)
-    canvas.setLineWidth(0.0)
-    canvas.line(
-        doc.leftMargin,
-        height - header_height,
-        width - doc.rightMargin,
-        height - header_height
-    )
+    # canvas.setStrokeColor(colors.black)
+    color=REPORT_COLORS["topic_color"]
+    canvas.setStrokeColor(color)
+    canvas.setLineWidth(1)
+    # canvas.line(
+    #     # 65 * mm,
+    #     # doc.leftMargin,
+    #     0,
+    #     height - header_height,
+    #     width - doc.rightMargin,
+    #     height - header_height
+    # )
 
     # Header text
     canvas.setFillColor(colors.white)
-    canvas.setFont("DejaVu-Bold", 11)
+    # color = REPORT_COLORS["mask_aggregate"]
+    # canvas.setFillColor(color)
+    canvas.setFont("DejaVu-Bold", 13)
     canvas.drawString(
-        doc.leftMargin,
-        height - header_height + 6 * mm,
+        doc.leftMargin + 132 *mm,
+        # width-doc.rightMargin,
+        height - header_height +  8* mm,
         "AIBAL Report"
     )
+    # canvas.setFont("DejaVu-Bold", 10)
+    # canvas.drawString(
+    #     doc.leftMargin + 132 *mm,
+    #     # width-doc.rightMargin,
+    #     height - header_height + 1 * mm,
+    #     f"ID: {report_id}" 
+    # )
 
     # ======================
     # Footer separator line
@@ -775,6 +1019,7 @@ def styled_header_footer(canvas, doc, report_id: str):
     canvas.setLineWidth(0.5)
     canvas.line(
         doc.leftMargin,
+        # 80 * mm,
         footer_height,
         width - doc.rightMargin,
         footer_height

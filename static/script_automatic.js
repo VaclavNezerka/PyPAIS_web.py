@@ -585,7 +585,7 @@ async function uploadImage() {
         .then(() => console.log("Image processed successfully."))
         .then(() => {
             console.log("Image loaded, fetching default experiment info...")
-            exp_info = getDefaultExperimentInfo().then((data) => {
+            getDefaultExperimentInfo().then((data) => {
                 populateExperimentInfo(data)
             })
         })
@@ -1243,7 +1243,7 @@ async function getDefaultExperimentInfo() {
                 resolve(data)
             })
             .catch((error) => {
-                console.error("Error:", error)
+                // console.error("Error:", error)
                 reject(error)
             })
     })
