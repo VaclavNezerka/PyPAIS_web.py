@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-13 16:45+0100\n"
+"POT-Creation-Date: 2026-02-13 17:16+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -219,8 +219,7 @@ msgstr ""
 msgid "None"
 msgstr ""
 
-#: app.py:1093 templates/experiments.html:14
-#: templates/experiments_admin.html:14 templates/queue.html:13
+#: app.py:1093 templates/queue.html:13
 msgid "Experiment Records"
 msgstr ""
 
@@ -326,11 +325,11 @@ msgid "No active experiment found."
 msgstr ""
 
 #: app.py:2429
-msgid "No experiment data found."
+msgid "No sample data found."
 msgstr ""
 
 #: app.py:2430
-msgid "Please fill the expert guess field before evaluating the experiment."
+msgid "Please fill the expert guess field before evaluating the sample."
 msgstr ""
 
 #: app.py:2431
@@ -352,11 +351,11 @@ msgid "No employees selected for intended action."
 msgstr ""
 
 #: app.py:2435
-msgid "No experiments selected for deletion."
+msgid "No sample selected for deletion."
 msgstr ""
 
 #: app.py:2436
-msgid "Are you sure you want to delete the selected experiments?"
+msgid "Are you sure you want to delete the selected samples?"
 msgstr ""
 
 #: app.py:2437
@@ -364,23 +363,23 @@ msgid "This action cannot be undone."
 msgstr ""
 
 #: app.py:2438
-msgid "Please select experiments to view details."
+msgid "Please select sample to view details."
 msgstr ""
 
 #: app.py:2439
-msgid "Please select only one experiment for viewing details."
+msgid "Please select only one sample for viewing details."
 msgstr ""
 
 #: app.py:2440
-msgid "Please select at least one experiment for export."
+msgid "Please select at least one sample for export."
 msgstr ""
 
 #: app.py:2441
-msgid "For CSN 73 6161, exporting a single experiment is not allowed."
+msgid "For CSN 73 6161, exporting a single sample is not allowed."
 msgstr ""
 
 #: app.py:2442
-msgid "Do you want to proceed with exporting this single experiment?"
+msgid "Do you want to proceed with exporting this single sample?"
 msgstr ""
 
 #: app.py:2443
@@ -1021,8 +1020,12 @@ msgstr ""
 msgid "Next"
 msgstr ""
 
+#: templates/experiments.html:14
+msgid "Samples Records"
+msgstr ""
+
 #: templates/experiments.html:25 templates/experiments_admin.html:25
-msgid "Experiment ID"
+msgid "Sample ID"
 msgstr ""
 
 #: templates/experiments.html:26 templates/experiments_admin.html:26
@@ -1053,7 +1056,7 @@ msgid "Similarity Check"
 msgstr ""
 
 #: templates/experiments.html:57 templates/experiments_admin.html:59
-msgid "Edit Selected Experiment"
+msgid "Edit Selected Sample"
 msgstr ""
 
 #: templates/experiments.html:58 templates/experiments_admin.html:60
@@ -1067,6 +1070,10 @@ msgstr ""
 #: templates/experiments.html:76 templates/experiments_admin.html:77
 #: templates/queue.html:85
 msgid "Delete"
+msgstr ""
+
+#: templates/experiments_admin.html:14
+msgid "Sample Records"
 msgstr ""
 
 #: templates/experiments_admin.html:27

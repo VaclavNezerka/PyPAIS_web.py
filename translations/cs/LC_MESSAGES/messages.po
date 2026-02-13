@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-13 16:45+0100\n"
+"POT-Creation-Date: 2026-02-13 17:16+0100\n"
 "PO-Revision-Date: 2025-10-21 18:40+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: cs\n"
@@ -235,8 +235,7 @@ msgstr "Fronta experimentů"
 msgid "None"
 msgstr "None"
 
-#: app.py:1093 templates/experiments.html:14
-#: templates/experiments_admin.html:14 templates/queue.html:13
+#: app.py:1093 templates/queue.html:13
 msgid "Experiment Records"
 msgstr "Záznamy experimentů"
 
@@ -258,8 +257,9 @@ msgid ""
 "If you wish to register a new company instead, please click the button "
 "below and contact us via email."
 msgstr ""
-"Formulář výše můžete využít k registraci uživatele náležícího k již existující společnosti. "
-"Chcete-li registrovat novou společnost, klikněte na tlačítko níže a kontaktujte nás pomocí emailu."
+"Formulář výše můžete využít k registraci uživatele náležícího k již "
+"existující společnosti. Chcete-li registrovat novou společnost, klikněte "
+"na tlačítko níže a kontaktujte nás pomocí emailu."
 
 #: app.py:1242 app.py:1272 app.py:1275 app.py:1439 app.py:1442
 msgid "Register new user"
@@ -352,12 +352,12 @@ msgid "No active experiment found."
 msgstr "Žádný aktivní experiment nenalezen."
 
 #: app.py:2429
-msgid "No experiment data found."
-msgstr "Žádná data k experimentu nenalezena."
+msgid "No sample data found."
+msgstr "Žádná data ke vzorku nenalezena."
 
 #: app.py:2430
-msgid "Please fill the expert guess field before evaluating the experiment."
-msgstr "Prosím, vyplňte expertní odhad před vyhodnocením experimentu."
+msgid "Please fill the expert guess field before evaluating the sample."
+msgstr "Prosím, vyplňte expertní odhad před vyhodnocením vzorku."
 
 #: app.py:2431
 msgid "Evaluation completed. Check the console for the results."
@@ -380,35 +380,35 @@ msgid "No employees selected for intended action."
 msgstr "Pro vybranou akci nejsou vybráni žádní zaměstnaci."
 
 #: app.py:2435
-msgid "No experiments selected for deletion."
-msgstr "Není vybrán žádný experiment ke smazaní."
+msgid "No sample selected for deletion."
+msgstr "Není vybrán žádný vzorek ke smazaní."
 
 #: app.py:2436
-msgid "Are you sure you want to delete the selected experiments?"
-msgstr "Chcete opravdu smazat vybrané experimenty?"
+msgid "Are you sure you want to delete the selected samples?"
+msgstr "Chcete opravdu smazat vybrané vzorky?"
 
 #: app.py:2437
 msgid "This action cannot be undone."
 msgstr "Tuto akci nelze vrátit."
 
 #: app.py:2438
-msgid "Please select experiments to view details."
-msgstr "Prosím vybrerte experiment, u kterého chcete zobrazit detaily."
+msgid "Please select sample to view details."
+msgstr "Prosím vybrerte vzorek, u kterého chcete zobrazit detaily."
 
 #: app.py:2439
-msgid "Please select only one experiment for viewing details."
-msgstr "Prosím vyberte pouze jeden experiment pro zobrazení detailů."
+msgid "Please select only one sample for viewing details."
+msgstr "Prosím vyberte pouze jeden vzorek pro zobrazení detailů."
 
 #: app.py:2440
-msgid "Please select at least one experiment for export."
-msgstr "Prosím vybrete alespoň jeden experiment k exportu."
+msgid "Please select at least one sample for export."
+msgstr "Prosím vybrete alespoň jeden vzorke k exportu."
 
 #: app.py:2441
-msgid "For CSN 73 6161, exporting a single experiment is not allowed."
+msgid "For CSN 73 6161, exporting a single sample is not allowed."
 msgstr "Dle ČSN 73 6161 jeden vzorek není dostačující pro zkoušku přilnavosti. "
 
 #: app.py:2442
-msgid "Do you want to proceed with exporting this single experiment?"
+msgid "Do you want to proceed with exporting this single sample?"
 msgstr "Přejete si přesto pokračovat a exportovat protokol?"
 
 #: app.py:2443
@@ -500,8 +500,8 @@ msgstr ""
 "\n"
 "    Protokol uvádí jak vizuální posouzení experta, tak qvantitativní "
 "posouzení AI modelu.\n"
-"    Pokud jsou tyto ve zjevném rozporu, platí posouzení experta, "
-"nicméně,\n"
+"    Pokud jsou tyto ve zjevném rozporu, platí posouzení experta, nicméně,"
+"\n"
 "    pro srovnání je u každého vzorku vizualizace automatického modelu. \n"
 "    "
 
@@ -625,8 +625,8 @@ msgid ""
 "different samples. The CSN 73 6161 standard requires experiment "
 "repetition."
 msgstr ""
-"Značné rozdíly v přilnavosti (> 10 %) detekovány mezi jednotlivými vzorky "
-"dle expertního odhadu. ČSN 73 6161 požaduje opakování zkoušky."
+"Značné rozdíly v přilnavosti (> 10 %) detekovány mezi jednotlivými vzorky"
+" dle expertního odhadu. ČSN 73 6161 požaduje opakování zkoušky."
 
 #: app_report_exporter.py:587
 msgid ""
@@ -635,8 +635,8 @@ msgid ""
 "repetition. Consider this in case that the AI based results seem "
 "reliable."
 msgstr ""
-"Značné rozdíly v přilnavosti (> 10 %) detekovány mezi jednotlivými vzorky "
-"dle automatického posouzení. ČSN 73 6161 požaduje opakování "
+"Značné rozdíly v přilnavosti (> 10 %) detekovány mezi jednotlivými vzorky"
+" dle automatického posouzení. ČSN 73 6161 požaduje opakování "
 "zkoušky.Zvažte toto v případě, že se AI klasifikace jeví jako věrohodná."
 
 #: app_report_exporter.py:589
@@ -1082,9 +1082,13 @@ msgstr "Předchozí"
 msgid "Next"
 msgstr "Další"
 
+#: templates/experiments.html:14
+msgid "Samples Records"
+msgstr "Záznamy hodnocených vzorků"
+
 #: templates/experiments.html:25 templates/experiments_admin.html:25
-msgid "Experiment ID"
-msgstr "ID experimentu"
+msgid "Sample ID"
+msgstr "ID vzorku"
 
 #: templates/experiments.html:26 templates/experiments_admin.html:26
 msgid "Date"
@@ -1114,8 +1118,8 @@ msgid "Similarity Check"
 msgstr "Kontrola podobnosti"
 
 #: templates/experiments.html:57 templates/experiments_admin.html:59
-msgid "Edit Selected Experiment"
-msgstr "Upravit vybraný experiment"
+msgid "Edit Selected Sample"
+msgstr "Upravit vybraný vzorek"
 
 #: templates/experiments.html:58 templates/experiments_admin.html:60
 msgid "Export Selected"
@@ -1129,6 +1133,10 @@ msgstr "Smazat vybrané"
 #: templates/queue.html:85
 msgid "Delete"
 msgstr "Smazat"
+
+#: templates/experiments_admin.html:14
+msgid "Sample Records"
+msgstr "Záznamy hodnocených vzorků"
 
 #: templates/experiments_admin.html:27
 msgid "Performed by"
@@ -1337,7 +1345,9 @@ msgstr "Vám poslal tuto zprávu:"
 msgid ""
 "If this seems to be a reasenoble request, you can replay to the email "
 "address above."
-msgstr "Zdá-li se tento požadavek věrohodným, můžete na něj odpověděť na emailovou adresu uvedenou výše."
+msgstr ""
+"Zdá-li se tento požadavek věrohodným, můžete na něj odpověděť na "
+"emailovou adresu uvedenou výše."
 
 #: templates/navbar.html:10
 msgid "Navbar"
@@ -1432,16 +1442,16 @@ msgid ""
 "Here you can customize your app settings. The following options are "
 "automatically filled in when uploading an image of asphalt sample."
 msgstr ""
-"Zde můžete nastvavit chování Vaší aplikace. Následující možnosti jsou automaticky "
-"vyplněny po nahrání obrázku experimentu."
+"Zde můžete nastvavit chování Vaší aplikace. Následující možnosti jsou "
+"automaticky vyplněny po nahrání obrázku experimentu."
 
 #: templates/user.html:74
 msgid ""
 "If some information repeats often, you can set here your default values, "
 "otherwise, keep the fields empty."
 msgstr ""
-"Pokud se hodnoty v některých polích často opakují, můžete zde nastavit jejich základní hodnoty."
-"V opačném případě ponechte pole prázdná."
+"Pokud se hodnoty v některých polích často opakují, můžete zde nastavit "
+"jejich základní hodnoty.V opačném případě ponechte pole prázdná."
 
 #: templates/user_nav_element.html:9
 msgid "User Profile"
@@ -1515,4 +1525,7 @@ msgstr "Profil uživatele"
 
 #~ msgid "Controlling Employee:"
 #~ msgstr "Kontrolující zaměstnanec"
+
+#~ msgid "Experiment ID"
+#~ msgstr "ID experimentu"
 
