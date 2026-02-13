@@ -14,38 +14,52 @@
 
     <nav class="navbar">
       {% if session.authenticated %}
-      <ul>
-        <li><a href="/">{{ _('Current Experiment') }}</a></li>
-        <!-- <li><a href="/queue">{{ _('Queue') }}</a></li> -->
-        <li><a href="/experiments">{{ _('Experiment History') }}</a></li>
-        {% if session.is_admin == True %}
-        <li><a href="/employees">{{ _('Employees') }}</a></li>
-        <li><a href="/company">{{ _('Company') }}</a></li>
-        {% endif %}
-      </ul>
-      <ul class="navbar-right">
-        <!-- <li><a href="/user">{{ _('User') }}</a></li> -->
-        <!-- <li><a href="/user">{{ _('User') }}</a></li> -->
-        <li>
-          {% include "user_nav_element.html" %}
-        </li>
-        <!-- <li><a href="/logout">{{ _('Logout') }}</a></li> -->
-        <li>
-          {% include "language_switcher.html" %}
-        </li>
-      </ul>
+      <div class="hamburger" id="hamburger">
+        &#9776; <!-- ☰ -->
+      </div>
+      <div class="menu" id="menu">
+        <ul class="menu" id="menu">
+          <li><a href="/">{{ _('Current Experiment') }}</a></li>
+          <!-- <li><a href="/queue">{{ _('Queue') }}</a></li> -->
+          <li><a href="/experiments">{{ _('Experiment History') }}</a></li>
+          {% if session.is_admin == True %}
+          <li><a href="/employees">{{ _('Employees') }}</a></li>
+          <li><a href="/company">{{ _('Company') }}</a></li>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="antimenu" id="antimenu">
+        <ul class="navbar-right">
+          <!-- <li><a href="/user">{{ _('User') }}</a></li> -->
+          <!-- <li><a href="/user">{{ _('User') }}</a></li> -->
+          <li>
+            {% include "user_nav_element.html" %}
+          </li>
+          <!-- <li><a href="/logout">{{ _('Logout') }}</a></li> -->
+          <li>
+            {% include "language_switcher.html" %}
+          </li>
+        </ul>
+      </div>
       </ul>
       {% else %}
-      <ul>
-        <li><a href="/home">{{ _('About') }}</a></li>
-        <li><a href="/login">{{ _('Login') }}</a></li>
-        <li><a href="/register">{{ _('Register') }}</a></li>
-      </ul>
-      <ul class="navbar-right">
-        <li>
-          {% include "language_switcher.html" %}
-        </li>
-      </ul>
+      <div class="hamburger" id="hamburger">
+        &#9776; <!-- ☰ -->
+      </div>
+      <div class="menu" id="menu">
+        <ul class="menu" id="menu">
+          <li><a href="/home">{{ _('About') }}</a></li>
+          <li><a href="/login">{{ _('Login') }}</a></li>
+          <li><a href="/register">{{ _('Register') }}</a></li>
+        </ul>
+      </div>
+      <div class="antimenu" id="antimenu">
+        <ul class="navbar-right">
+          <li>
+            {% include "language_switcher.html" %}
+          </li>
+        </ul>
+      </div>
       {% endif %}
 
       <!-- 🌐 Language Switcher -->
@@ -62,5 +76,6 @@
     </nav>
 
   </body>
+  <script src="static/script_navbar.js"></script>
 
 </html>

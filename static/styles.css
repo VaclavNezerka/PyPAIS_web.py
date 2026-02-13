@@ -916,12 +916,64 @@ input[type="number"]:focus {
     background: var(--myTopicColor);
 }
 
-/* Responsive adjustment */
+.menu-mobile {
+    display: flex;
+    gap: 20px;
+}
+
+.hamburger {
+    display: none;
+    font-size: 35px;
+    cursor: pointer;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
+    .menu {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .menu.active {
+        display: flex;
+    }
+
+    .antimenu.active {
+        display: none;
+    }
+
+    .menu ul li a {
+        display: block; /* 👈 important */
+        width: 100%;
+        padding: 12px 16px;
+        /* border-top: 1px solid #ddd; */
+    }
+
+    .hamburger {
+        display: block;
+    }
     .navbar {
         flex-wrap: wrap;
     }
+    .navbar-right {
+        flex-wrap: wrap;
+        /* flex-direction: column; */
+        align-items: center;
+        /* margin-left: 18vh; */
+    }
+    .navbar-right li {
+        align-items: center;
+        /* margin-left: 18vh; */
+    }
 }
+
+/* Responsive adjustment */
+/* @media (max-width: 768px) {
+    .navbar {
+        flex-wrap: wrap;
+    }
+} */
 
 .footer-link {
     color: white;
