@@ -174,7 +174,7 @@ class EnergyLabel(Flowable):
         c.drawPath(path, fill=1, stroke=0)
 
         c.setFillColor(colors.white)
-        c.setFont("DejaVu-Bold", 16)
+        c.setFont("DejaVu-Bold", 14)
         c.drawString(x + 15, y + height / 2 - 6, text)
     def draw_arrow_left(self, c, x, y, width, height, color, text):
         c.setFillColor(color)
@@ -192,7 +192,7 @@ class EnergyLabel(Flowable):
 
         c.drawPath(path, fill=1, stroke=0)
         c.setFillColor(colors.white)
-        c.setFont("DejaVu-Bold", 16)
+        c.setFont("DejaVu-Bold", 14)
         c.drawString(x + 15, y + height / 2 - 6, text)
 
     def draw_left_box(self, c):
