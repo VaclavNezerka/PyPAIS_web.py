@@ -531,7 +531,13 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         )
 
         # Collect assessments
-        assessments_expert_guess.append(float(experiment.get("expert_guess", None)))
+        expert_guess = experiment.get("expert_guess", 0.0)
+        if isinstance(expert_guess, str):
+            try:
+                expert_guess = float(expert_guess)
+            except ValueError:
+                expert_guess = 0.0
+        assessments_expert_guess.append(expert_guess)
         assessments_automatic.append(float(experiment.get("asphalt_ratio", None)))
 
         # Count suspicious cases
@@ -568,10 +574,24 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         Paragraph(_("Visual Expert Assessment [%]"), styles["TableHeader"]), 
         Paragraph(_("AI-based Assesment  [%]"), styles["TableHeader"])
     ]]
+
+    exp_guesses = []
+    for eid in experiment_ids:
+        exp = db_api.get_experiment_by_id(eid)
+        exp_guesses.append(exp.get("expert_guess", 0.0))
+        if exp_guesses[-1] is None:
+            exp_guesses[-1] = 0.0
+        if isinstance(exp_guesses[-1], str):
+            try:
+                exp_guesses[-1] = float(exp_guesses[-1])
+            except ValueError:
+                exp_guesses[-1] = 0.0
+
     table_data.extend(
         [ items for items in zip(
             experiment_ids, 
-            [f"{100*db_api.get_experiment_by_id(eid).get('expert_guess', 0):.2f}" for eid in experiment_ids],
+            # [f"{100*db_api.get_experiment_by_id(eid).get('expert_guess', 0) ):.2f}" for eid in experiment_ids],
+            [f"{100*exp_guess:.2f}" for exp_guess in exp_guesses],
             [f"{100*db_api.get_experiment_by_id(eid).get('asphalt_ratio', 0):.2f}" for eid in experiment_ids],
         )]
     )
@@ -830,7 +850,6 @@ def add_experiment_record(pdf: list, experiment: Dict[str, Any], similar: dict =
         if value is None or value == 'None':
             experiment[key] = '-'
 
-    print(experiment.get('expert_guess', 0))
 
     left_column = [
         Paragraph(_("Sample ID:") + f" {experiment.get('experiment_id', '-')}", styles["Heading3"]),
@@ -843,11 +862,21 @@ def add_experiment_record(pdf: list, experiment: Dict[str, Any], similar: dict =
         Paragraph(_("Exposing water temperature [°C]:") + f" {experiment.get('info_exposing_water_temperature', '-')}", style_justify),
         Paragraph(_("Test procedure:") + f" {experiment.get('info_test_procedure', '-')}", style_justify),
     ]
+    expert_guess = experiment.get("expert_guess", 0.0)
+    print("Expert guess before processing:", expert_guess)
+    print("Expert guess before processing:", type(expert_guess))
+    
+    if isinstance(expert_guess, str):
+        try:
+            expert_guess = float(expert_guess)
+        except ValueError:
+            expert_guess = 0.0
+
     right_column = [
         Paragraph(_("Assessment - Adhesion Rate:"), styles["Heading4"]),
         Paragraph(_("Inference Model:") + f" {experiment.get('inference_model', '-')}", style_justify),
         Paragraph(_("Automatic Assessment [%]:") + f" {100*experiment.get('asphalt_ratio', '-'):.2f}", style_justify),
-        Paragraph(_("Visual based Expert Guess [%]:") + f" {100*experiment.get('expert_guess', 0):.2f}", style_justify),
+        Paragraph(_("Visual based Expert Guess [%]:") + f" {100*expert_guess:.2f}", style_justify),
         Paragraph(_("Comment:") + f" {experiment.get('comment', '-')}", style_justify),
     ]    
     table_data = [["", ""]]
