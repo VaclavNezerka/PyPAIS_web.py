@@ -354,6 +354,7 @@ function init_info_listeners() {
         "info_comment",
         "info_aggregate",
         "info_binder",
+        "inference_model",
     ]) {
         document.getElementById(id).addEventListener("change", function () {
             console.log("Updating info field: " + id)
@@ -444,7 +445,7 @@ function unlockControls() {
 }
 
 function inference() {
-    const model_name = document.getElementById("model").value
+    const model_name = document.getElementById("inference_model").value
     let formData = new FormData()
     formData.append("model_name", model_name)
 
@@ -1035,6 +1036,7 @@ function loadExperiment(id) {
                 "info_comment",
                 "info_aggregate",
                 "info_binder",
+                "inference_model",
             ]) {
                 if (data[id]) {
                     document.getElementById(id).value = data[id]
@@ -1065,6 +1067,15 @@ function loadExperiment(id) {
         })
         .finally(() => removeWorkingMessage())
 }
+
+document.querySelectorAll("#inference_model").forEach((element) => {
+    element.addEventListener("change", function () {
+        displayWorkingMessage()
+        inference()
+        redrawCanvases()
+        removeWorkingMessage()
+    })
+})
 
 // Global event listeners
 document
