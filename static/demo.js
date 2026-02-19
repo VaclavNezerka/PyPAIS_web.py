@@ -109,8 +109,8 @@ uploadImage.onerror = function () {
     console.error
 }
 
-let displayAsphaltMask = false
-let displayAggregateMask = false
+let displayAsphaltMask = true
+let displayAggregateMask = true
 let displayBackgroundMask = false
 
 disableControls() // Disable controls on page load
@@ -198,7 +198,7 @@ function get_images() {
 }
 
 function inference() {
-    const model_name = document.getElementById("model").value
+    const model_name = document.getElementById("inference_model").value
     let formData = new FormData()
     formData.append("model_name", model_name)
 
@@ -228,6 +228,15 @@ function inference() {
             console.error("Error during inference:", error)
         })
 }
+
+document.querySelectorAll("#inference_model").forEach((element) => {
+    element.addEventListener("change", function () {
+        displayWorkingMessage()
+        inference()
+        redrawCanvases()
+        removeWorkingMessage()
+    })
+})
 
 async function uploadImage() {
     displayWorkingMessage()

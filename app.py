@@ -2473,7 +2473,6 @@ def translations_alerts():
     return json.dumps(json_translations), 200, {'Content-Type': 'application/json'}
 
 if __name__ == "__main__":
-    # debug = True
     debug = False
     if debug:
         app.secret_key='test_secret_key'

@@ -30,7 +30,7 @@
         <h3 for="info" class="modern-label upper">
             {{ _('MODEL') }}
         </h3>
-        <select id="model" class="enhanced-select">
+        <select id="inference_model" class="enhanced-select">
             {% for model in models %}
             <option class="option" value="{{ model }}">{{ model }}</option>
             {% endfor %}
@@ -48,13 +48,13 @@
     <div class="modern-column column">
         <div class="overlay-options">
             <label class="overlay-label">
-                <input type="checkbox" id="redOverlayCheckbox">
+                <input type="checkbox" id="redOverlayCheckbox" checked>
                 <span class="overlay-custom"></span>
                 {{ _('Display mask - Bitumen') }} <span class="shortcut">(Shift + A)</span>
             </label>
 
             <label class="overlay-label">
-                <input type="checkbox" id="aggregateOverlayCheckbox">
+                <input type="checkbox" id="aggregateOverlayCheckbox" checked>
                 <span class="overlay-custom"></span>
                 {{ _('Display mask - Aggregate') }} <span class="shortcut">(Shift + S)</span>
             </label>
