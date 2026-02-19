@@ -8,6 +8,14 @@ from flask_babel import _
 
 from app_report_exporter import get_CSN_73_6161_classification
 from app_report_exporter import get_CSN_73_6161_word_classification
+
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
+pdfmetrics.registerFont(TTFont("DejaVu", "DejaVuSans.ttf"))
+pdfmetrics.registerFont(TTFont("DejaVu-Bold", "DejaVuSans-Bold.ttf"))
+
+
 class EnergyLabel(Flowable):
     def __init__(self, adhesion_rate: float, width=50, spacing=0, bar_height=20, arrow_tip=20):
         super().__init__()
@@ -60,7 +68,7 @@ class EnergyLabel(Flowable):
         c.drawPath(path, fill=1, stroke=0)
 
         c.setFillColor(colors.white)
-        c.setFont("Helvetica-Bold", 16)
+        c.setFont("DejaVu-Bold", 16)
         c.drawString(x + 15, y + height / 2 - 6, text)
     def draw_arrow_left(self, c, x, y, width, height, color, text):
         c.setFillColor(color)
@@ -78,7 +86,7 @@ class EnergyLabel(Flowable):
 
         c.drawPath(path, fill=1, stroke=0)
         c.setFillColor(colors.white)
-        c.setFont("Helvetica-Bold", 16)
+        c.setFont("DejaVu-Bold", 16)
         c.drawString(x + 15, y + height / 2 - 6, text)
 
     def draw_left_box(self, c):
@@ -90,21 +98,21 @@ class EnergyLabel(Flowable):
         c.rect(0, self.height - box_height, box_width, box_height, fill=1)
 
         c.setFillColor(colors.black)
-        c.setFont("Helvetica", 12)
+        c.setFont("DejaVu", 12)
         c.drawCentredString(box_width / 2,
                             self.height - box_height * 1.25 / 5,
                             _("Adhesion")
         )
-        c.setFont("Helvetica-Bold", 18)
+        c.setFont("DejaVu-Bold", 18)
         c.drawCentredString(box_width / 2,
                             self.height - box_height * 2 / 5,
                             f"{self.adhesion_rate} %")
 
-        c.setFont("Helvetica", 12)
+        c.setFont("DejaVu", 12)
         c.drawCentredString(box_width / 2,
                             self.height - box_height * 3.25 / 5,
                             _("Rating"))
-        c.setFont("Helvetica-Bold", 16)
+        c.setFont("DejaVu-Bold", 16)
         c.drawCentredString(box_width / 2,
                             self.height - box_height * 4 / 5,
                             self.word_rating)

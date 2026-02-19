@@ -528,30 +528,31 @@ async function uploadImage() {
     const now = new Date()
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
 
-    document.getElementById("info_datetime").value = now
-        .toISOString()
-        .slice(0, 16)
-    document.getElementById("info_datetime").dispatchEvent(new Event("change"))
+    // if the loaders are here, the dont have to have an experiment ID
+    // document.getElementById("info_datetime").value = now
+    //     .toISOString()
+    //     .slice(0, 16)
+    // document.getElementById("info_datetime").dispatchEvent(new Event("change"))
 
-    fetch("/get-default-experiment-info")
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.status === "success") {
-                // loop through data and set value of input with id of key to value
-                for (const [key, value] of Object.entries(data.data)) {
-                    const input = document.getElementById(key)
-                    if (input) {
-                        input.value = value
-                        if (value) {
-                            input.classList.add("has-value")
-                        } else {
-                            input.classList.remove("has-value")
-                        }
-                        input.dispatchEvent(new Event("change"))
-                    }
-                }
-            }
-        })
+    // fetch("/get-default-experiment-info")
+    //     .then((response) => response.json())
+    //     .then((data) => {
+    //         if (data.status === "success") {
+    //             // loop through data and set value of input with id of key to value
+    //             for (const [key, value] of Object.entries(data.data)) {
+    //                 const input = document.getElementById(key)
+    //                 if (input) {
+    //                     input.value = value
+    //                     if (value) {
+    //                         input.classList.add("has-value")
+    //                     } else {
+    //                         input.classList.remove("has-value")
+    //                     }
+    //                     input.dispatchEvent(new Event("change"))
+    //                 }
+    //             }
+    //         }
+    //     })
 
     const fileInput = document.getElementById("fileInput")
     if (fileInput.files.length === 0) return
@@ -568,6 +569,34 @@ async function uploadImage() {
         // .then(response => console.log(response))
         .then((response) => response.json())
         .then((data) => {
+            // after processing the image, we get the default experiment info and populate the fields
+            document.getElementById("info_datetime").value = now
+                .toISOString()
+                .slice(0, 16)
+            document
+                .getElementById("info_datetime")
+                .dispatchEvent(new Event("change"))
+            fetch("/get-default-experiment-info")
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.status === "success") {
+                        // loop through data and set value of input with id of key to value
+                        for (const [key, value] of Object.entries(data.data)) {
+                            const input = document.getElementById(key)
+                            if (input) {
+                                input.value = value
+                                if (value) {
+                                    input.classList.add("has-value")
+                                } else {
+                                    input.classList.remove("has-value")
+                                }
+                                input.dispatchEvent(new Event("change"))
+                            }
+                        }
+                    }
+                })
+            //
+
             uploadedImageURL_color = URL.createObjectURL(
                 base64toBlob(data.color, "image/png"),
             )
@@ -583,12 +612,12 @@ async function uploadImage() {
         .then(() => getImageType())
         .then(() => unlockControls())
         .then(() => console.log("Image processed successfully."))
-        .then(() => {
-            console.log("Image loaded, fetching default experiment info...")
-            getDefaultExperimentInfo().then((data) => {
-                populateExperimentInfo(data)
-            })
-        })
+        // .then(() => {
+        //     console.log("Image loaded, fetching default experiment info...")
+        //     getDefaultExperimentInfo().then((data) => {
+        //         populateExperimentInfo(data)
+        //     })
+        // })
         .catch((error) => {
             console.error("Error:", error)
             // alert("Error processing image: " + error.message)
@@ -1235,7 +1264,7 @@ function getFormattedDateTime() {
 async function getDefaultExperimentInfo() {
     return new Promise((resolve, reject) => {
         const uniqueQuery = "?nocache=" + new Date().getTime()
-        fetch("/default-experiment-info" + uniqueQuery, { method: "GET" })
+        fetch("/get-default-experiment-info" + uniqueQuery, { method: "GET" })
             .then((response) => response.json())
             .then((data) => {
                 data.datetime = getFormattedDateTime()
@@ -1243,7 +1272,7 @@ async function getDefaultExperimentInfo() {
                 resolve(data)
             })
             .catch((error) => {
-                // console.error("Error:", error)
+                console.error("Error:", error)
                 reject(error)
             })
     })

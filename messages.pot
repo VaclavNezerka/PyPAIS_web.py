@@ -8,70 +8,70 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-13 17:24+0100\n"
+"POT-Creation-Date: 2026-02-16 21:03+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.16.0\n"
+"Generated-By: Babel 2.18.0\n"
 
-#: app.py:67 app_report_exporter.py:421
+#: app.py:69 app_report_exporter.py:421
 msgid "Ordering Party"
 msgstr ""
 
-#: app.py:442
+#: app.py:448
 msgid "The confirmation link is invalid"
 msgstr ""
 
-#: app.py:445
+#: app.py:451
 msgid "The confirmation link has expired."
 msgstr ""
 
-#: app.py:451
+#: app.py:457
 msgid "Forgot your password? Enter your email address."
 msgstr ""
 
-#: app.py:467
+#: app.py:473
 msgid ""
 "You have requested to reset your password. Please click the button below "
 "to reset your password:"
 msgstr ""
 
-#: app.py:468
+#: app.py:474
 msgid "AIBAL: Password Reset Request"
 msgstr ""
 
-#: app.py:470
+#: app.py:476
 msgid ""
 "An email with password reset instructions has been sent to your email "
 "address."
 msgstr ""
 
-#: app.py:483
+#: app.py:489
 msgid "You can now reset your password!"
 msgstr ""
 
-#: app.py:493 app.py:529
+#: app.py:499 app.py:535
 msgid "Your password has been set. You can now log in!"
 msgstr ""
 
-#: app.py:495 app.py:531
+#: app.py:501 app.py:537
 msgid "There was an error setting your password. Please try again."
 msgstr ""
 
-#: app.py:506
+#: app.py:512
 msgid "Your email address has been confirmed. You can now log in!"
 msgstr ""
 
-#: app.py:519
+#: app.py:525
 msgid ""
 "Your email address has been confirmed. Please, create your password to "
 "complete the registration!"
 msgstr ""
 
-#: app.py:563
+#: app.py:569
 msgid ""
 "Welcome to AIBAL! Your company registration has been confirmed by the "
 "AIBAL administrator.The administrator account for your company has been "
@@ -82,323 +82,333 @@ msgid ""
 "below:"
 msgstr ""
 
-#: app.py:567
+#: app.py:573
 msgid "AIBAL: Please confirm your ADMIN email address"
 msgstr ""
 
-#: app.py:570
+#: app.py:576
 msgid ""
 "The company has been successfully confirmed. The company administrator "
 "will be notified automatically."
 msgstr ""
 
-#: app.py:595
+#: app.py:601
 msgid "reCAPTCHA verification failed. Please try again."
 msgstr ""
 
-#: app.py:606
+#: app.py:612
 msgid "Your session has expired. Please refresh the page and try again."
 msgstr ""
 
-#: app.py:691
+#: app.py:697
 msgid "You do not have permission to access this data."
 msgstr ""
 
-#: app.py:701
+#: app.py:707
 msgid "You must be logged in to access this page."
 msgstr ""
 
-#: app.py:711
+#: app.py:717
 msgid "You do not have permission to access this page."
 msgstr ""
 
-#: app.py:734 app.py:1224 templates/home.html:40
+#: app.py:740 app.py:1238 templates/home.html:40
 msgid "Contact us!"
 msgstr ""
 
-#: app.py:750
+#: app.py:756
 msgid "Your message has been sent successfully."
 msgstr ""
 
-#: app.py:753 app.py:756
+#: app.py:759 app.py:762
 msgid "There was an error sending your message. Please try again."
 msgstr ""
 
-#: app.py:785
+#: app.py:791
 msgid "Change email"
 msgstr ""
 
-#: app.py:795 app.py:815
+#: app.py:804
+msgid ""
+"You have requested a change of an email address.Please confirm your new "
+"email address by clicking the button below:"
+msgstr ""
+
+#: app.py:806
+msgid "AIBAL: Confirm your new email address"
+msgstr ""
+
+#: app.py:809 app.py:829
 msgid "Email changed successfully."
 msgstr ""
 
-#: app.py:804
+#: app.py:818
 msgid "Change company email"
 msgstr ""
 
-#: app.py:828 app.py:843 app.py:851 app.py:867
+#: app.py:842 app.py:857 app.py:865 app.py:881
 msgid "Change personal information"
 msgstr ""
 
-#: app.py:840
+#: app.py:854
 msgid "Personal information updated successfully."
 msgstr ""
 
-#: app.py:864
+#: app.py:878
 msgid "Company information updated successfully."
 msgstr ""
 
-#: app.py:872 templates/user.html:59
+#: app.py:886 templates/user.html:59
 msgid "Change password"
 msgstr ""
 
-#: app.py:886
+#: app.py:900
 msgid "Password changed successfully."
 msgstr ""
 
-#: app.py:889
+#: app.py:903
 msgid "The old password is incorrect."
 msgstr ""
 
-#: app.py:934 app.py:952
+#: app.py:948 app.py:966
 msgid "You do not have permission to perform this action."
 msgstr ""
 
-#: app.py:939 app.py:957
+#: app.py:953 app.py:971
 msgid "User with the provided username does not exist"
 msgstr ""
 
-#: app.py:971 app.py:998 app.py:1001 forms.py:98 templates/navbar.html:52
+#: app.py:985 app.py:1012 app.py:1015 forms.py:98 templates/navbar.html:54
 msgid "Login"
 msgstr ""
 
-#: app.py:980
+#: app.py:994
 msgid "Please confirm your email address before logging in."
 msgstr ""
 
-#: app.py:984
+#: app.py:998
 msgid ""
 "Your account has been blocked. In case this should not be the case, "
 "please contact your company admin."
 msgstr ""
 
-#: app.py:997 forms.py:55
+#: app.py:1011 forms.py:55
 msgid "Invalid username/email or password."
 msgstr ""
 
-#: app.py:1025
+#: app.py:1039
 msgid "id"
 msgstr ""
 
-#: app.py:1025
+#: app.py:1039
 msgid "date"
 msgstr ""
 
-#: app.py:1025
+#: app.py:1039
 msgid "state"
 msgstr ""
 
-#: app.py:1025
+#: app.py:1039
 msgid "actions"
 msgstr ""
 
-#: app.py:1026 templates/experiments.html:74
+#: app.py:1040 templates/experiments.html:74
 #: templates/experiments_admin.html:75 templates/queue.html:81
 msgid "Edit"
 msgstr ""
 
-#: app.py:1026
+#: app.py:1040
 msgid "Cancel"
 msgstr ""
 
-#: app.py:1053
+#: app.py:1067
 msgid "Experiment Queue"
 msgstr ""
 
-#: app.py:1091 app.py:1138
+#: app.py:1105 app.py:1152
 msgid "None"
 msgstr ""
 
-#: app.py:1093 templates/queue.html:13
-msgid "Experiment Records"
+#: app.py:1107 templates/experiments_admin.html:14 templates/navbar.html:26
+msgid "Sample Records"
 msgstr ""
 
-#: app.py:1140
-msgid "Experiment Records - Admin View"
+#: app.py:1154
+msgid "Sample Records - Admin View"
 msgstr ""
 
-#: app.py:1192
+#: app.py:1206
 msgid "Employee Records - Admin View"
 msgstr ""
 
-#: app.py:1222 app.py:1406
+#: app.py:1236 app.py:1420
 msgid "Register new company"
 msgstr ""
 
-#: app.py:1223
+#: app.py:1237
 msgid ""
 "You can use the form above to register a user for your existing company. "
 "If you wish to register a new company instead, please click the button "
 "below and contact us via email."
 msgstr ""
 
-#: app.py:1242 app.py:1272 app.py:1275 app.py:1439 app.py:1442
+#: app.py:1256 app.py:1286 app.py:1289 app.py:1453 app.py:1456
 msgid "Register new user"
 msgstr ""
 
-#: app.py:1247
+#: app.py:1261
 msgid ""
 "Thank you for signing up! Please confirm your email address by clicking "
 "the link below:"
 msgstr ""
 
-#: app.py:1253
+#: app.py:1267
 msgid "AIBAL: Please confirm your email address"
 msgstr ""
 
-#: app.py:1268
+#: app.py:1282
 msgid ""
 "Registration successful. Please confirm your email via the link sent to "
 "your email address."
 msgstr ""
 
-#: app.py:1271 app.py:1438
+#: app.py:1285 app.py:1452
 msgid "Database error:"
 msgstr ""
 
-#: app.py:1274 app.py:1396 app.py:1441
+#: app.py:1288 app.py:1410 app.py:1455
 msgid "Form validation failed. Please check your input."
 msgstr ""
 
-#: app.py:1284
+#: app.py:1298
 msgid "Company key regenerated successfully."
 msgstr ""
 
-#: app.py:1294 forms.py:82 templates/company_key.html:9
+#: app.py:1308 forms.py:82 templates/company_key.html:9
 msgid "Company Key"
 msgstr ""
 
-#: app.py:1339
+#: app.py:1353
 msgid "Invalid experiment IDs provided."
 msgstr ""
 
-#: app.py:1349 app.py:1358 app.py:1361 app.py:1397
+#: app.py:1363 app.py:1372 app.py:1375 app.py:1411
 msgid "Export report"
 msgstr ""
 
-#: app.py:1357
+#: app.py:1371
 msgid "No experiments selected for report export."
 msgstr ""
 
-#: app.py:1360
+#: app.py:1374
 msgid "You do not have permission to access the selected experiments."
 msgstr ""
 
-#: app.py:1420
+#: app.py:1434
 msgid "A new company registration with the following details has been requested:"
 msgstr ""
 
-#: app.py:1422 forms.py:89 forms.py:132
+#: app.py:1436 forms.py:89 forms.py:132
 msgid "Company Name"
 msgstr ""
 
-#: app.py:1423 forms.py:133
+#: app.py:1437 forms.py:133
 msgid "Company Address"
 msgstr ""
 
-#: app.py:1424
+#: app.py:1438
 msgid "Contact Email"
 msgstr ""
 
-#: app.py:1432
+#: app.py:1446
 msgid "AIBAL: New company registration request"
 msgstr ""
 
-#: app.py:1435
+#: app.py:1449
 msgid ""
 "Registration successful. Please confirm this request in your ADMIN mail "
 "account."
 msgstr ""
 
-#: app.py:1630 app.py:1653 app.py:1692
+#: app.py:1644 app.py:1667 app.py:1706
 msgid "No active experiment found."
 msgstr ""
 
-#: app.py:2429
+#: app.py:2443
 msgid "No sample data found."
 msgstr ""
 
-#: app.py:2430
+#: app.py:2444
 msgid "Please fill the expert guess field before evaluating the sample."
 msgstr ""
 
-#: app.py:2431
+#: app.py:2445
 msgid "Evaluation completed. Check the console for the results."
 msgstr ""
 
-#: app.py:2432
+#: app.py:2446
 msgid "Evaluation results: "
 msgstr ""
 
-#: app.py:2433
+#: app.py:2447
 msgid ""
 "Would you like to use this app with no limitations? Store and export "
 "these results? Contact us to create an account."
 msgstr ""
 
-#: app.py:2434
+#: app.py:2448
 msgid "No employees selected for intended action."
 msgstr ""
 
-#: app.py:2435
+#: app.py:2449
 msgid "No sample selected for deletion."
 msgstr ""
 
-#: app.py:2436
+#: app.py:2450
 msgid "Are you sure you want to delete the selected samples?"
 msgstr ""
 
-#: app.py:2437
+#: app.py:2451
 msgid "This action cannot be undone."
 msgstr ""
 
-#: app.py:2438
+#: app.py:2452
 msgid "Please select sample to view details."
 msgstr ""
 
-#: app.py:2439
+#: app.py:2453
 msgid "Please select only one sample for viewing details."
 msgstr ""
 
-#: app.py:2440
+#: app.py:2454
 msgid "Please select at least one sample for export."
 msgstr ""
 
-#: app.py:2441
+#: app.py:2455
 msgid "For CSN 73 6161, exporting a single sample is not allowed."
 msgstr ""
 
-#: app.py:2442
+#: app.py:2456
 msgid "Do you want to proceed with exporting this single sample?"
 msgstr ""
 
-#: app.py:2443
+#: app.py:2457
 msgid "Are you sure, you want to grant admin privileges to the following users?"
 msgstr ""
 
-#: app.py:2444
+#: app.py:2458
 msgid ""
 "Are you sure, you want to remove admin privileges from the following "
 "users?"
 msgstr ""
 
-#: app.py:2445
+#: app.py:2459
 msgid ""
 "Are you sure, you want to block the sign in option for the following "
 "users?"
 msgstr ""
 
-#: app.py:2446
+#: app.py:2460
 msgid ""
 "Are you sure, you want to unblock the sign in option for the following "
 "users?"
@@ -627,7 +637,7 @@ msgid ""
 "specimens clearly aren't duplicates, you can ignore this message."
 msgstr ""
 
-#: app_report_exporter.py:743 templates/demo.html:73 templates/index.html:211
+#: app_report_exporter.py:743 templates/demo.html:73 templates/index.html:212
 msgid "Original Image"
 msgstr ""
 
@@ -647,19 +657,19 @@ msgstr ""
 msgid "Date:"
 msgstr ""
 
-#: app_report_exporter.py:821 templates/index.html:72 templates/user.html:81
+#: app_report_exporter.py:821 templates/index.html:73 templates/user.html:81
 msgid "Place of Experiment:"
 msgstr ""
 
-#: app_report_exporter.py:822 templates/index.html:81 templates/user.html:90
+#: app_report_exporter.py:822 templates/index.html:82 templates/user.html:90
 msgid "Sample Collection Data:"
 msgstr ""
 
-#: app_report_exporter.py:823 templates/index.html:120 templates/user.html:101
+#: app_report_exporter.py:823 templates/index.html:121 templates/user.html:101
 msgid "Aggregate:"
 msgstr ""
 
-#: app_report_exporter.py:824 templates/index.html:128 templates/user.html:109
+#: app_report_exporter.py:824 templates/index.html:129 templates/user.html:109
 msgid "Binder:"
 msgstr ""
 
@@ -691,7 +701,7 @@ msgstr ""
 msgid "Visual based Expert Guess [%]:"
 msgstr ""
 
-#: app_report_exporter.py:834 templates/index.html:150
+#: app_report_exporter.py:834 templates/index.html:151
 msgid "Comment:"
 msgstr ""
 
@@ -719,7 +729,7 @@ msgstr ""
 msgid "Passwords must match."
 msgstr ""
 
-#: forms.py:39
+#: forms.py:40
 #, python-format
 msgid ""
 "No record \"%(field_name)s\" with value \"%(field_data)s\" exists. "
@@ -727,10 +737,12 @@ msgid ""
 msgstr ""
 
 #: forms.py:63
+#, python-brace-format
 msgid "The minimal allowed length is {min} characters."
 msgstr ""
 
 #: forms.py:66
+#, python-brace-format
 msgid "The maximal allowed length is {max} characters."
 msgstr ""
 
@@ -738,7 +750,7 @@ msgstr ""
 msgid "Username"
 msgstr ""
 
-#: forms.py:78 forms.py:90 forms.py:146 forms.py:160
+#: forms.py:78 forms.py:90 forms.py:147 forms.py:160
 msgid "Email address"
 msgstr ""
 
@@ -832,7 +844,7 @@ msgid "Page not found"
 msgstr ""
 
 #: templates/base.html:41
-msgid "2025 Václav Nežerka, David Šilhánek."
+msgid "2025 David Šilhánek, Václav Nežerka."
 msgstr ""
 
 #: templates/base.html:44
@@ -897,50 +909,50 @@ msgstr ""
 msgid "DEMO"
 msgstr ""
 
-#: templates/demo.html:13 templates/index.html:33
+#: templates/demo.html:13 templates/index.html:34
 msgid "Upload Image"
 msgstr ""
 
-#: templates/demo.html:16 templates/index.html:36
+#: templates/demo.html:16 templates/index.html:37
 msgid ""
 "By uploading an image, you agree that it may be stored in the application"
 " repository and potentially used by the authors for training future "
 "models."
 msgstr ""
 
-#: templates/demo.html:21 templates/index.html:159
+#: templates/demo.html:21 templates/index.html:160
 msgid "Automatic Phase Detection"
 msgstr ""
 
-#: templates/demo.html:24 templates/index.html:162
+#: templates/demo.html:24 templates/index.html:163
 msgid "Working..."
 msgstr ""
 
-#: templates/demo.html:31 templates/index.html:169
+#: templates/demo.html:31 templates/index.html:170
 msgid "MODEL"
 msgstr ""
 
-#: templates/demo.html:41 templates/index.html:179
+#: templates/demo.html:41 templates/index.html:180
 msgid "Mask Opacity:"
 msgstr ""
 
-#: templates/demo.html:53 templates/index.html:191
+#: templates/demo.html:53 templates/index.html:192
 msgid "Display mask - Bitumen"
 msgstr ""
 
-#: templates/demo.html:59 templates/index.html:197
+#: templates/demo.html:59 templates/index.html:198
 msgid "Display mask - Aggregate"
 msgstr ""
 
-#: templates/demo.html:65 templates/index.html:203
+#: templates/demo.html:65 templates/index.html:204
 msgid "Display mask - Background"
 msgstr ""
 
-#: templates/demo.html:75 templates/index.html:213
+#: templates/demo.html:75 templates/index.html:214
 msgid "Grayscale Image"
 msgstr ""
 
-#: templates/demo.html:94 templates/index.html:232
+#: templates/demo.html:94 templates/index.html:233
 msgid "Evaluate"
 msgstr ""
 
@@ -1072,10 +1084,6 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
-#: templates/experiments_admin.html:14
-msgid "Sample Records"
-msgstr ""
-
 #: templates/experiments_admin.html:27
 msgid "Performed by"
 msgstr ""
@@ -1143,89 +1151,93 @@ msgstr ""
 msgid "Current Experiment"
 msgstr ""
 
-#: templates/index.html:41
+#: templates/index.html:27 templates/navbar.html:25
+msgid "Current Sample"
+msgstr ""
+
+#: templates/index.html:42
 msgid "Basic Information"
 msgstr ""
 
-#: templates/index.html:44
+#: templates/index.html:45
 msgid "Experiment data"
 msgstr ""
 
-#: templates/index.html:47
+#: templates/index.html:48
 msgid ""
 "Are there repeatedly filled values? Click here to set their default for "
 "automatic filling."
 msgstr ""
 
-#: templates/index.html:55
+#: templates/index.html:56
 msgid "Speciemen Number:"
 msgstr ""
 
-#: templates/index.html:57
+#: templates/index.html:58
 msgid "ID"
 msgstr ""
 
-#: templates/index.html:64
+#: templates/index.html:65
 msgid "Date and Time:"
 msgstr ""
 
-#: templates/index.html:67
+#: templates/index.html:68
 msgid "YYYY-MM-DD HH:MM"
 msgstr ""
 
-#: templates/index.html:75 templates/user.html:84
+#: templates/index.html:76 templates/user.html:84
 msgid "Your lab Address"
 msgstr ""
 
-#: templates/index.html:84 templates/user.html:93
+#: templates/index.html:85 templates/user.html:93
 msgid "Information about the mixture."
 msgstr ""
 
-#: templates/index.html:94 templates/user.html:120
+#: templates/index.html:95 templates/user.html:120
 msgid "Wrapping Temperature [°C]:"
 msgstr ""
 
-#: templates/index.html:97 templates/user.html:123
+#: templates/index.html:98 templates/user.html:123
 msgid "80"
 msgstr ""
 
-#: templates/index.html:103 templates/user.html:129
+#: templates/index.html:104 templates/user.html:129
 msgid "Exposing Water Temperature [°C]:"
 msgstr ""
 
-#: templates/index.html:106 templates/user.html:132
+#: templates/index.html:107 templates/user.html:132
 msgid "20"
 msgstr ""
 
-#: templates/index.html:111 templates/user.html:137
+#: templates/index.html:112 templates/user.html:137
 msgid "Test Procedure:"
 msgstr ""
 
-#: templates/index.html:114 templates/user.html:140
+#: templates/index.html:115 templates/user.html:140
 msgid "A brief description of the testing procedure"
 msgstr ""
 
-#: templates/index.html:123 templates/user.html:104
+#: templates/index.html:124 templates/user.html:104
 msgid "Information about the aggregate."
 msgstr ""
 
-#: templates/index.html:131 templates/user.html:112
+#: templates/index.html:132 templates/user.html:112
 msgid "Information about the binder."
 msgstr ""
 
-#: templates/index.html:136
+#: templates/index.html:137
 msgid "Assessment"
 msgstr ""
 
-#: templates/index.html:142
+#: templates/index.html:143
 msgid "Expert Guess"
 msgstr ""
 
-#: templates/index.html:145
+#: templates/index.html:146
 msgid "Expert Guess of Adhesion Rate"
 msgstr ""
 
-#: templates/index.html:153
+#: templates/index.html:154
 msgid "Optional"
 msgstr ""
 
@@ -1277,28 +1289,32 @@ msgstr ""
 msgid "Experiment History"
 msgstr ""
 
-#: templates/navbar.html:26
+#: templates/navbar.html:28
 msgid "Employees"
 msgstr ""
 
-#: templates/navbar.html:27
+#: templates/navbar.html:29
 msgid "Company"
 msgstr ""
 
-#: templates/navbar.html:33 templates/navbar.html:34
+#: templates/navbar.html:35 templates/navbar.html:36
 msgid "User"
 msgstr ""
 
-#: templates/navbar.html:38 templates/user_nav_element.html:10
+#: templates/navbar.html:40 templates/user_nav_element.html:10
 msgid "Logout"
 msgstr ""
 
-#: templates/navbar.html:51
+#: templates/navbar.html:53
 msgid "About"
 msgstr ""
 
-#: templates/navbar.html:53
+#: templates/navbar.html:55
 msgid "Register"
+msgstr ""
+
+#: templates/queue.html:13
+msgid "Experiment Records"
 msgstr ""
 
 #: templates/queue.html:19

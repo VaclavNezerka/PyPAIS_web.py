@@ -1,4 +1,5 @@
 # Packages
+# import gunicorn
 import uuid
 from attrs import field
 import pendulum as pdl
@@ -25,7 +26,7 @@ from datetime import timedelta
 import secrets
 import string
 import os
-from rembg import remove
+# from rembg import remove
 from db_api import *
 import db_api
 import json
@@ -37,6 +38,7 @@ from typing import Iterable, Literal, cast, Any
 from flask_talisman import Talisman
 import flask_limiter
 import threading
+from werkzeug.middleware.proxy_fix import ProxyFix
 install()
 
 from dotenv import load_dotenv
@@ -78,7 +80,9 @@ csp = {
      ],
     'img-src': ["'self'", "data:", "blob:"],
 }
-Talisman(app, content_security_policy=csp) # for security headers, force https
+# TODO - check this configuration on the server
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # if behind a proxy, e.g., nginx, apache
+Talisman(app, content_security_policy=csp, force_https=False) # for security headers, force https
 
 
 
@@ -134,6 +138,7 @@ def get_locale():
     lang = session.get('lang', None) 
     if lang is None:
         lang = request.accept_languages.best_match(app.config['BABEL_SUPPORTED_LOCALES'])
+        session['lang'] = lang
     return lang
 
 babel = Babel(app, locale_selector=get_locale)
@@ -153,14 +158,17 @@ limiter = flask_limiter.Limiter(
 # app.config['MAIL_DEFAULT_SENDER'] = ('Your Name', 'your-email@example.com')
 # app.config['ES6_MODULES'] = True
 
+SECRET_KEY_LENGTH = os.getenv('SECRET_KEY_LENGTH', '32')
+HASH_METHOD = os.getenv('HASH_METHOD', 'pbkdf2:sha256')
+SALT_LENGTH = os.getenv('SALT_LENGTH', '16')
 def generate_rnd_string(length):
     possible_chars=string.ascii_letters+string.digits+string.punctuation
     return ''.join(secrets.choice(possible_chars) for _ in range(int(length))) 
 # if in production, use the environment variable, otherwise use the default value
-app.secret_key=generate_rnd_string(os.environ['SECRET_KEY_LENGTH'])
+app.secret_key=generate_rnd_string(int(SECRET_KEY_LENGTH))
 
 def generate_password_hash(password: str) -> str:
-    return ws.generate_password_hash(password,method=os.environ['HASH_METHOD'],salt_length=int(os.environ['SALT_LENGTH']))
+    return ws.generate_password_hash(password,method=HASH_METHOD,salt_length=int(SALT_LENGTH))
 ts = {} # temporary storages for the users... ts[user_id] = UserTemporaryStorage()
 
 class UserTemporaryStorage:
@@ -357,7 +365,7 @@ class UserTemporaryStorage:
         return float(asphalt_pixels / non_bg_pixels) if non_bg_pixels > 0 else 0.0
 
 class TemporaryStoryManager:
-    def __init__(self, expire_after_seconds: int = 900):
+    def __init__(self, expire_after_seconds: int = 1200): 
         self._storages: dict[str, UserTemporaryStorage] = {}
         self.expire_after = expire_after_seconds  # in seconds
         self._lock = threading.Lock()
@@ -391,7 +399,7 @@ class TemporaryStoryManager:
             storage = self._storages[user_id]
             return storage
 
-tsm = TemporaryStoryManager()  # expire after 1 minute of inactivity    
+tsm = TemporaryStoryManager()  # expire after 20 minutes of inactivity    
 
 serializer = URLSafeTimedSerializer(app.secret_key)
 
@@ -501,7 +509,7 @@ def forgot_password(token: str):
 @confirm_request
 def confirm_email(token: str):
     """Confirm the user's email address using the provided token."""
-    email = serializer.loads(token, salt='confirm_email-salt', max_age=MAX_TOKEN_AGE)['e_mail']  # token valid for 1 hour
+    email = serializer.loads(token, salt='confirm_email-salt', max_age=MAX_TOKEN_AGE)['e_mail']  # token valid for ... hours
     db_api.confirm_user_email(email)
     flash(_('Your email address has been confirmed. You can now log in!'), 'success')
     return redirect(url_for('login'))
@@ -517,7 +525,7 @@ def confirm_company_registration_user(token: str):
             print(f'Confirming company registration for user email: {email}')
             form = forms.ChangeForgottenPasswordForm()
             flash(_('Your email address has been confirmed. Please, create your password to complete the registration!'), 'success')
-            return render_template('form.html', form=forms.ChangeForgottenPasswordForm(), token=token), 200
+            return render_template('form.html', form=forms.ChangeForgottenPasswordForm(), token=token, recaptcha_site_key=RECAPTCHA_SITE_KEY), 200
         case 'POST':
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form = forms.ChangeForgottenPasswordForm()
@@ -529,7 +537,7 @@ def confirm_company_registration_user(token: str):
                 flash(_('Your password has been set. You can now log in!'), 'success')
             else:
                 flash(_('There was an error setting your password. Please try again.'), 'danger')
-                return render_template('form.html', form=form, token=token), 200
+                return render_template('form.html', form=form, token=token, recaptcha_site_key=RECAPTCHA_SITE_KEY), 200
             return redirect(url_for('login'))
 
 @app.route('/confirm_company_registration_admin/<token>')
@@ -684,8 +692,12 @@ def dict_to_json(data_dict: dict, features: Iterable[str] = None) -> str:
 def check_data_ownership(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        user_id = db_api.get_user_id_of_experiment(id=kwargs['id'])
-        if user_id == session['user_id']:
+        owner_user_id = db_api.get_user_id_of_experiment(id=kwargs['id'])
+        # allow acces to the data for the company admin as well
+        is_company_admin = db_api.get_user_by_id(session['user_id'])['is_company_admin']
+        admin_company_id = db_api.get_user_by_id(session['user_id'])['company']
+
+        if owner_user_id == session['user_id'] or (is_company_admin and db_api.get_user_by_id(owner_user_id)['company'] == admin_company_id):
             return func(id=kwargs['id'])
         else:
             flash(_('You do not have permission to access this data.'), 'error')
@@ -791,6 +803,14 @@ def change_email():
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form=forms.ChangeEmailForm()
             if form.validate_on_submit():
+                send_email_confirmation(
+                    to_mails=[form.e_mail.data],
+                    data={'e_mail': form.e_mail.data}, 
+                    confirmation='confirm_change_email_user',
+                    intro_text=_('You have requested a change of an email address.' 
+                                'Please confirm your new email address by clicking the button below:'),
+                    title=_('AIBAL: Confirm your new email address')
+                )
                 db_api.update_users_table(values_dict={'e_mail': form.e_mail.data}, user_id=session['user_id'])
                 flash(_('Email changed successfully.'), 'success')
                 return redirect('/user')
@@ -1090,7 +1110,7 @@ def get_ordenary_user_experiments(request) -> list[tuple]:
     # convert the expert guess and asphalt_ratio to string with 2 decimal places
     data = [(x[0], x[1], f"{x[2]*100:.2f}" if x[2] is not None else _('None'), f"{x[3]*100:.2f}" if x[3] is not None else _('None')) for x in data]
     records[1] = data
-    return render_template('experiments.html',records=records,session=session,dynamic_content=_('Experiment Records'))
+    return render_template('experiments.html',records=records,session=session,dynamic_content=_('Sample Records'))
     
 def get_admin_user_experiments(request) -> list[tuple]:
     sort_order=request.args.get('sort_order','desc')
@@ -1137,7 +1157,7 @@ def get_admin_user_experiments(request) -> list[tuple]:
     # convert the expert guess and asphalt_ratio to string with 2 decimal places
     data = [(x[0], x[1], x[2], x[3], f"{x[4]*100:.2f}" if x[4] is not None else _('None'), f"{x[5]*100:.2f}" if x[5] is not None else _('None')) for x in data]
     records[1] = data
-    return render_template('experiments_admin.html',records=records,session=session,dynamic_content=_('Experiment Records - Admin View'))
+    return render_template('experiments_admin.html',records=records,session=session,dynamic_content=_('Sample Records - Admin View'))
 
 @app.route('/experiments',methods=['GET','POST'])
 @check_authentication
@@ -1375,6 +1395,7 @@ def export_report(ids):
                 print()
                 print('experiment_ids')
                 print(experiment_ids)
+                print('controlling_user_id:', controlling_user_id)
                 print()
                 report_id = uuid.uuid4().hex[:8]
                 report_bytes = exporter_registry["CSN_73_6161"](
@@ -1544,6 +1565,8 @@ def grayscale_image(image: np.ndarray) -> np.ndarray:
 def update_specific_value(value_name):
     # ts[session['user_id']].values.__dict__[value_name] = value
     # setattr(ts[session['user_id']], value_name, value)
+    if storage.experiment_id is None:
+        return json.dumps({'status': 'error', 'message': 'No active experiment found'}), 404, {'Content-Type': 'application/json'}
     value = request.form.get(value_name)
     storage.from_dict({value_name: value})
     response = save_specific_value(value_name)
@@ -1948,10 +1971,12 @@ def process_image():
         print('here')
         img_hashes = app_similarity_controller.return_hashes(Image.fromarray(image))
         storage.from_dict(img_hashes)
+
     save_experiment(state='started')
 
     # let the background thread handle the similarity check
     if authenticated:
+        print('Checking image similarity in the background thread.')
         similarity_controller.controll_experiment(user_id=session['user_id'], experiment_id=storage.experiment_id)
 
     response_dict = {
@@ -2451,4 +2476,7 @@ if __name__ == "__main__":
     debug = True
     if debug:
         app.secret_key='test_secret_key'
-    app.run(debug=debug)
+        app.run(debug=debug)
+    else:
+        # app.run(host='127.0.0.1', port=5011, debug=debug)
+        app.run(host='0.0.0.0', port=5011, debug=debug)

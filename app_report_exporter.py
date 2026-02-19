@@ -44,8 +44,9 @@ REPORT_COLORS = {
 }
 
 load_dotenv(dotenv_path='.env')
-SIMILARITY_THRESHOLD=float(os.getenv('SIMILARITY_THRESHOLD'))
-
+SIMILARITY_THRESHOLD=os.getenv('SIMILARITY_THRESHOLD', 0.9)
+SIMILARITY_THRESHOLD=float(SIMILARITY_THRESHOLD)
+print("Using similarity threshold:", SIMILARITY_THRESHOLD)
 
 styles = getSampleStyleSheet()
 styles.add(ParagraphStyle(
@@ -173,7 +174,7 @@ class EnergyLabel(Flowable):
         c.drawPath(path, fill=1, stroke=0)
 
         c.setFillColor(colors.white)
-        c.setFont("Helvetica-Bold", 16)
+        c.setFont("DejaVu-Bold", 16)
         c.drawString(x + 15, y + height / 2 - 6, text)
     def draw_arrow_left(self, c, x, y, width, height, color, text):
         c.setFillColor(color)
@@ -191,7 +192,7 @@ class EnergyLabel(Flowable):
 
         c.drawPath(path, fill=1, stroke=0)
         c.setFillColor(colors.white)
-        c.setFont("Helvetica-Bold", 16)
+        c.setFont("DejaVu-Bold", 16)
         c.drawString(x + 15, y + height / 2 - 6, text)
 
     def draw_left_box(self, c):
@@ -203,21 +204,21 @@ class EnergyLabel(Flowable):
         c.rect(0, self.height - box_height, box_width, box_height, fill=1)
 
         c.setFillColor(colors.black)
-        c.setFont("Helvetica", 12)
+        c.setFont("DejaVu", 12)
         c.drawCentredString(box_width / 2,
                             self.height - box_height * 1.25 / 5,
                             _("Adhesion")
         )
-        c.setFont("Helvetica-Bold", 18)
+        c.setFont("DejaVu-Bold", 18)
         c.drawCentredString(box_width / 2,
                             self.height - box_height * 2 / 5,
-                            f"{self.adhesion_rate} %")
+                            f"{self.adhesion_rate:.0f} %")
 
-        c.setFont("Helvetica", 12)
+        c.setFont("DejaVu", 12)
         c.drawCentredString(box_width / 2,
                             self.height - box_height * 3.25 / 5,
                             _("Rating"))
-        c.setFont("Helvetica-Bold", 16)
+        c.setFont("DejaVu-Bold", 16)
         c.drawCentredString(box_width / 2,
                             self.height - box_height * 4 / 5,
                             self.word_rating)
@@ -377,16 +378,23 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
 
     report_date = pdl.now()
     # Prepare PDF content
-    as_buffer = False # for testing purposes
+    # as_buffer = False # for testing purposes
+    metadata = {
+        "title": _("AIBAL Report"),
+        "author": user_info.get("first_name", "-") + " " + user_info.get("last_name", "-"),
+        "subject": _("AIBAL Report ID:") + f" {report_id}",
+        "keywords": _("bitumen, adhesion, test, CSN 73 6161"),
+        "application": "AIBAL - AI Bitumen Adhesion Lab",
+    }
     if as_buffer:
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=A4,
                             rightMargin=20*mm, leftMargin=20*mm,
-                            topMargin=30*mm, bottomMargin=25*mm)
+                            topMargin=30*mm, bottomMargin=25*mm, **metadata)
     else:
         doc = SimpleDocTemplate(f"test_report.pdf", pagesize=A4,
                             rightMargin=20*mm, leftMargin=20*mm,
-                            topMargin=30*mm, bottomMargin=25*mm)
+                            topMargin=30*mm, bottomMargin=25*mm, **metadata)
     pdf = []
 
     # pdf.append(Spacer(0,20))
@@ -442,6 +450,15 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         Paragraph(_("Signature: ..................................................."), style_justify),
         Spacer(1, 0.4 * cm),
     ]
+
+    # Responsible Employees
+    controlling_employee = user_info
+    if controlling_user_id:
+        try:
+            controlling_employee = db_api.get_user_info_by_id(controlling_user_id)
+            print(_("Controlling employee:"), controlling_employee)
+        except Exception:
+            controlling_employee = user_info
 
     right_column = [
         Paragraph(_("The controlling employee"), styles["Heading2"]),

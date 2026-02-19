@@ -1,6 +1,6 @@
 # !/bin/bash
 # Script to manage translations for PyPAIS
-pybabel extract -F babel.cfg -o messages.pot -k lazy_gettext -k _  -k lazy_pgettext:1c,2 .
+pybabel extract -F babel.cfg -o messages.pot -k lazy_gettext -k _  -k lazy_pgettext:1c,2 . --ignore-dirs=venv_aibal
 
 # For each language you want to support, run the following command once
 # replace 'cs' with the appropriate language code

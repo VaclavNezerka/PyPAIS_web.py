@@ -15,7 +15,9 @@
     <title>AIBAL</title>
   </head>
 
-  <body>
+  <body data-current-lang="{{ session.get('lang', 'en') }}">
+
+    <!-- <body> -->
     <div class="page-container">
       <div>
         {% include 'navbar.html' %}
@@ -38,7 +40,7 @@
 
     <footer class="footer">
       <div class="container">
-        <p>&copy; {{ _('2025 Václav Nežerka, David Šilhánek.') }}
+        <p>&copy; {{ _('2025 David Šilhánek, Václav Nežerka.') }}
         </p>
         <br>
         <p>{{ _('All rights reserved excluding icons which are where created by artists on the') }}

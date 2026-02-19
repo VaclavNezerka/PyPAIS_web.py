@@ -1,9 +1,15 @@
+gunicorn
+cryptography
+reportlab
+dotenv
+imagehash
 attrs
 Flask
 flask_babel
 flask_mail
 flask_talisman
 flask_wtf
+flask_limiter
 icecream
 matplotlib
 numpy
@@ -13,7 +19,7 @@ pendulum
 Pillow
 psycopg2
 pytest
-rembg
+# rembg
 Requests
 rich
 segmentation_models_pytorch

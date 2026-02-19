@@ -1,5 +1,11 @@
+venv_aibal/
+venv_aibal/*
+venv_aibal/*/*
+cert.pem
+cert.pem
 testscript.py
 try.py
+try2.py
 try.ipynb
 unittests
 pypais.yml

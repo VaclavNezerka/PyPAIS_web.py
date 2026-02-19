@@ -19,9 +19,11 @@
       </div>
       <div class="menu" id="menu">
         <ul class="menu" id="menu">
-          <li><a href="/">{{ _('Current Experiment') }}</a></li>
+          <!-- <li><a href="/">{{ _('Current Experiment') }}</a></li> -->
           <!-- <li><a href="/queue">{{ _('Queue') }}</a></li> -->
-          <li><a href="/experiments">{{ _('Experiment History') }}</a></li>
+          <!-- <li><a href="/experiments">{{ _('Experiment History') }}</a></li> -->
+          <li><a href="/">{{ _('Current Sample') }}</a></li>
+          <li><a href="/experiments">{{ _('Sample Records') }}</a></li>
           {% if session.is_admin == True %}
           <li><a href="/employees">{{ _('Employees') }}</a></li>
           <li><a href="/company">{{ _('Company') }}</a></li>
