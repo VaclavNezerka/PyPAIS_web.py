@@ -298,8 +298,8 @@ uploadImage.onerror = function () {
 
 let requestedImage = null
 let displayImageBlur = false
-let displayAsphaltMask = false
-let displayAggregateMask = false
+let displayAsphaltMask = true
+let displayAggregateMask = true
 let displayBackgroundMask = false
 
 disableControls() // Disable controls on page load
@@ -841,13 +841,19 @@ function getImageType() {
 
 // this function displays a "working" message on the page while the image is being processed
 function displayWorkingMessage() {
-    let workingMessage = document.getElementById("workingMessage")
-    workingMessage.style.display = "block"
+    // let workingMessage = document.getElementById("workingMessage")
+    // workingMessage.style.display = "block"
+    document.querySelectorAll("#workingMessage").forEach((el) => {
+        el.style.display = "block"
+    })
 }
 // this function removes the "working" message from the page
 function removeWorkingMessage() {
-    let workingMessage = document.getElementById("workingMessage")
-    workingMessage.style.display = "none"
+    // let workingMessage = document.getElementById("workingMessage")
+    // workingMessage.style.display = "none"
+    document.querySelectorAll(".loading").forEach((el) => {
+        el.style.display = "none"
+    })
 }
 
 async function validateAndUpdate() {

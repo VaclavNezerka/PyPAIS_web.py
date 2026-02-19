@@ -2473,10 +2473,12 @@ def translations_alerts():
     return json.dumps(json_translations), 200, {'Content-Type': 'application/json'}
 
 if __name__ == "__main__":
-    debug = True
+    # debug = True
+    debug = False
     if debug:
         app.secret_key='test_secret_key'
         app.run(debug=debug)
     else:
-        # app.run(host='127.0.0.1', port=5011, debug=debug)
-        app.run(host='0.0.0.0', port=5011, debug=debug)
+        app.secret_key='test_secret_key'
+        app.run(host='127.0.0.1', port=5000, debug=debug)
+        # app.run(host='0.0.0.0', port=5011, debug=debug)

@@ -41,6 +41,9 @@
         <div id="row" , class="colorbar2">
             <h3>{{ _('Basic Information') }} - ČSN 73 6161</h3>
         </div>
+        <div class="loading" id="workingMessage">
+            {{ _('Working...') }}
+        </div>
         <div id="row" , class="colorbar1">
             <h3>{{ _('Experiment data') }}
             </h3>
@@ -187,13 +190,13 @@
             <div class="modern-column column">
                 <div class="overlay-options">
                     <label class="overlay-label">
-                        <input type="checkbox" id="redOverlayCheckbox">
+                        <input type="checkbox" id="redOverlayCheckbox" checked>
                         <span class="overlay-custom"></span>
                         {{ _('Display mask - Bitumen') }} <span class="shortcut">(Shift + A)</span>
                     </label>
 
                     <label class="overlay-label">
-                        <input type="checkbox" id="aggregateOverlayCheckbox">
+                        <input type="checkbox" id="aggregateOverlayCheckbox" checked>
                         <span class="overlay-custom"></span>
                         {{ _('Display mask - Aggregate') }} <span class="shortcut">(Shift + S)</span>
                     </label>

@@ -218,7 +218,7 @@ class EnergyLabel(Flowable):
         c.drawCentredString(box_width / 2,
                             self.height - box_height * 3.25 / 5,
                             _("Rating"))
-        c.setFont("DejaVu-Bold", 16)
+        c.setFont("DejaVu-Bold", 14)
         c.drawCentredString(box_width / 2,
                             self.height - box_height * 4 / 5,
                             self.word_rating)
@@ -327,9 +327,9 @@ def get_CSN_73_6161_classification(adhesion_rate: float) -> str:
 
 # Compute the asphalt adhesion statistics
 def compute_statistics(assessments: List[float], to_per_cents: bool = True) -> Dict[str, Union[float, str]]:
-    average = np.mean(assessments)
-    worst = min(assessments)
-    stddev = np.std(assessments) if len(assessments) > 1 else 0.0
+    average = float(np.mean(assessments))
+    worst = float(np.min(assessments))
+    stddev = float(np.std(assessments) if len(assessments) > 1 else 0.0)
     
     if to_per_cents:
         print("Converting to percents")
@@ -602,13 +602,13 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     pdf.append(Paragraph(_("Report Conclusion"), styles["Heading2"]))
     # pdf.append(Paragraph(_("Summary"), styles["Heading3"]))
     items = [
-        Paragraph(_("The average adhesion rate across all samples is") + f" {stats_expert['average']:.2f} ± {stats_expert['stddev']:.2f} % " + _("according to expert visual assesment, which correspondes to calss") + f" {stats_expert['average_classification']} , ", style_justify),
-        Paragraph(_("The average adhesion rate across all samples is") + f" {stats_automatic['average']:.2f} ± {stats_automatic['stddev']:.2f} % " + _("according to AI-based analysis, which correspondes to calss") + f" {stats_automatic['average_classification']} , ", style_justify),
+        Paragraph(_("The average adhesion rate across all samples is") + f" {stats_expert['average']:.2f} ± {stats_expert['stddev']:.2f} % " + _("according to expert visual assesment, which correspondes to calss") + f" {stats_expert['average_classification']}. ", style_justify),
+        Paragraph(_("The average adhesion rate across all samples is") + f" {stats_automatic['average']:.2f} ± {stats_automatic['stddev']:.2f} % " + _("according to AI-based analysis, which correspondes to calss") + f" {stats_automatic['average_classification']}. ", style_justify),
         Paragraph(_("The worst adhesion rate (") +f"{stats_expert['worst']:.2f}" + _(" %) observed is class ") + f"{stats_expert['worst_classification']} " + _("according to expert visual assesment."), style_justify),
         Paragraph(_("The worst adhesion rate (") +f"{stats_automatic['worst']:.2f}" + _(" %) observed is class ") + f"{stats_automatic['worst_classification']} " + _("according to AI-based analysis."), style_justify),
     ]
     pdf = add_itemized_list(pdf, items)
-    pdf.append(Paragraph(_("The final considered class is ") + f"{stats_expert['average_classification']}", styles["Heading4"]))
+    pdf.append(Paragraph(_("The final considered class is: ") + f"{stats_expert['average_classification']}", styles["Heading4"]))
     pdf.append(Paragraph(_("The adhesion between aggregate and binder is classified as: ") + f"{stats_expert['average_word_classification']}", styles["Heading4"]))
     
     issues = []
