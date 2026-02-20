@@ -6,20 +6,20 @@ if ("serviceWorker" in navigator) {
         }
     })
 }
-// register the service worker worker_0.js
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker
-        .register("/static/worker_0.js", { scope: "/static/" })
-        .then((registration) => {
-            console.log(
-                "Service Worker registered with scope:",
-                registration.scope,
-            )
-        })
-        .catch((error) => {
-            console.error("Service Worker registration failed:", error)
-        })
-}
+// // register the service worker worker_0.js
+// if ("serviceWorker" in navigator) {
+//     navigator.serviceWorker
+//         .register("/static/worker_0.js", { scope: "/static/" })
+//         .then((registration) => {
+//             console.log(
+//                 "Service Worker registered with scope:",
+//                 registration.scope,
+//             )
+//         })
+//         .catch((error) => {
+//             console.error("Service Worker registration failed:", error)
+//         })
+// }
 // import save from script.js
 // import {activateExperiment} from './script.js';
 
@@ -32,7 +32,7 @@ async function fetchAlerts() {
 
 async function main() {
     const alerts = await fetchAlerts()
-    console.log(alerts)
+    // console.log(alerts)
 }
 
 main()
@@ -40,7 +40,7 @@ let alerts = {}
 fetchAlerts().then((data) => {
     alerts = data
 })
-console.log(alerts)
+// console.log(alerts)
 
 function editExperimentId(id) {
     // Get the experiment id
@@ -436,7 +436,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 checkboxes = checkboxes.filter((item) => item !== id)
             }
-            console.log(checkboxes)
+            // console.log(checkboxes)
         })
     })
 })

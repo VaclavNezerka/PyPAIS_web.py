@@ -101,8 +101,6 @@ app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
 app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
 app.config['MAIL_SUPPRESS_SEND'] = os.getenv('MAIL_SUPPRESS_SEND') == 'True'
 # the mail password must be provided via environment variable for security reasons 
-# app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-# app.config['TESTING'] = False
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 ADMIN_EMAIL_ADDRESSES = json.loads(os.getenv('ADMIN_EMAIL_ADDRESSES', '[]'))
 
@@ -149,15 +147,6 @@ limiter = flask_limiter.Limiter(
     default_limits=["500 per day", "100 per hour"]   
 )
 
-# configuration of the mail server
-# app.config['MAIL_SERVER'] = 'smtp.example.com'
-# app.config['MAIL_PORT'] = 587
-# app.config['MAIL_USE_TLS'] = True
-# app.config['MAIL_USERNAME'] = 'your-email@example.com'
-# app.config['MAIL_PASSWORD'] = 'your-email-password'
-# app.config['MAIL_DEFAULT_SENDER'] = ('Your Name', 'your-email@example.com')
-# app.config['ES6_MODULES'] = True
-
 SECRET_KEY_LENGTH = os.getenv('SECRET_KEY_LENGTH', '32')
 HASH_METHOD = os.getenv('HASH_METHOD', 'pbkdf2:sha256')
 SALT_LENGTH = os.getenv('SALT_LENGTH', '16')
@@ -165,7 +154,7 @@ def generate_rnd_string(length):
     possible_chars=string.ascii_letters+string.digits+string.punctuation
     return ''.join(secrets.choice(possible_chars) for _ in range(int(length))) 
 # if in production, use the environment variable, otherwise use the default value
-app.secret_key=generate_rnd_string(int(SECRET_KEY_LENGTH))
+app.secret_key=os.getenv('SECRET_KEY', generate_rnd_string(int(SECRET_KEY_LENGTH)))
 
 def generate_password_hash(password: str) -> str:
     return ws.generate_password_hash(password,method=HASH_METHOD,salt_length=int(SALT_LENGTH))

@@ -981,7 +981,7 @@ function deactivateCurrentExperiment() {
         fetch("is-experiment-active", { method: "GET" })
             .then((response) => response.json())
             .then((data) => {
-                console.log(data)
+                // console.log(data)
                 if (data.active === false) {
                     resolve()
                 } else {
