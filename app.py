@@ -1876,44 +1876,48 @@ def downscale_image(image: np.ndarray, scale_factor: float = None) -> np.ndarray
     downscaled_image = cv2.resize(image, new_size, interpolation=cv2.INTER_AREA)
     return downscaled_image
 
-def polish_input_image_file(file) -> np.ndarray: 
-    """
-    This function processes the input image file and returns the image as a numpy array.
-    It handles HEIC files by converting them to PNG format and ensures the image has no alpha channel.
-    """
-
-    print('Polishing input image file.')
-    image = Image.open(file.stream)
-    print('1')
-
-    if file.filename.split('.')[-1].upper() == 'HEIC':
-        unique_query = str(request.args.get('nocache'))
-        path = f'temp/temp_{unique_query}.png'
-        image.save(path)
-        image = Image.open(path)
-        # image_io=io.BytesIO()
-        # image = Image.open(image_io)
-
-        np_image = np.concatenate((np.array(image), np.ones((image.size[1], image.size[0], 1), dtype=np.uint8)*255), axis=2)
-    else:
-        np_image = np.array(image)
-
-    # if the image is BW image, convert it to RGB
-    if len(np_image.shape) == 2:
-        np_image = np.stack((np_image,)*3, axis=-1)
-
-    if file.filename.split('.')[-1].upper() == 'HEIC':
-        # delete the temporary file
-        os.remove(path)
-    
-    # if the image has more than 4 channels, convert it to RGB
-    if np_image.shape[2] > 3:
-        np_image = np_image[:, :, :3]
-
-    # downscale the image if it is larger than 1200 pixels in any dimension
+def polish_input_image_file(file) -> np.ndarray:
+    image = Image.open(file.stream).convert("RGB")
+    np_image = np.array(image)
     np_image = downscale_image(np_image, scale_factor=None)
-
     return np_image.astype(np.uint8)
+
+# def polish_input_image_file(file) -> np.ndarray: 
+#     """
+#     This function processes the input image file and returns the image as a numpy array.
+#     It handles HEIC files by converting them to PNG format and ensures the image has no alpha channel.
+#     """
+
+#     print('Polishing input image file.')
+#     image = Image.open(file.stream)
+#     print('1')
+
+#     if file.filename.split('.')[-1].upper() == 'HEIC':
+#         unique_query = str(request.args.get('nocache'))
+#         path = f'temp/temp_{unique_query}.png'
+#         image.save(path)
+#         image = Image.open(path)
+
+#         np_image = np.concatenate((np.array(image), np.ones((image.size[1], image.size[0], 1), dtype=np.uint8)*255), axis=2)
+#     else:
+#         np_image = np.array(image)
+
+#     # if the image is BW image, convert it to RGB
+#     if len(np_image.shape) == 2:
+#         np_image = np.stack((np_image,)*3, axis=-1)
+
+#     if file.filename.split('.')[-1].upper() == 'HEIC':
+#         # delete the temporary file
+#         os.remove(path)
+    
+#     # if the image has more than 4 channels, convert it to RGB
+#     if np_image.shape[2] > 3:
+#         np_image = np_image[:, :, :3]
+
+#     # downscale the image if it is larger than 1200 pixels in any dimension
+#     np_image = downscale_image(np_image, scale_factor=None)
+
+#     return np_image.astype(np.uint8)
 
 
 @deprecated("currently used directly in process_image function")
