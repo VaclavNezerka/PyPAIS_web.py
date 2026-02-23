@@ -30,3 +30,7 @@ typing_extensions
 Werkzeug
 WTForms
 email-validator
+apscheduler
+flask_session
+flask_sqlalchemy
+sqlalchemy

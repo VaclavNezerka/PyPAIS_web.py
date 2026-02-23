@@ -20,10 +20,11 @@ load_dotenv()
 dbpwd = os.getenv('DB_PASSWORD')
 db_user = os.getenv('DB_USERNAME')
 db_name = os.getenv('DB_NAME')
+db_host = os.getenv('DB_HOST')
 def open_db_connection() -> object:
     # Opens a connection and its cursor
     connection=psql.connect(
-        host='localhost',
+        host=db_host,
         database=db_name,
         user=db_user,
         password=dbpwd)

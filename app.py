@@ -59,6 +59,13 @@ from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+from db_api import db_name, db_user, dbpwd, db_host
+from flask_session import Session
+from sqlalchemy import create_engine
+from flask_sqlalchemy import SQLAlchemy
+import pickle, zlib
+
+
 load_dotenv(dotenv_path='.env')
 RECAPTCHA_SITE_KEY=os.getenv('RECAPTCHA_SITE_KEY')
 RECAPTCHA_SECRET_KEY=os.getenv('RECAPTCHA_SECRET_KEY')
@@ -66,7 +73,30 @@ RECAPTCHA_SECRET_KEY=os.getenv('RECAPTCHA_SECRET_KEY')
 app = Flask(__name__) # set debug to False for production
 # app.config['RECAPTCHA_PUBLIC_KEY'] = RECAPTCHA_SITE_KEY
 # app.config['RECAPTCHA_PRIVATE_KEY'] = RECAPTCHA_SECRET_KEY
-txt = _("Ordering Party")
+
+
+# SESSION CONFIGURATION - FOR MULTIPLE WORKERS AND PERSISTENT SESSIONS
+SESSION_LIFETIME_UNAUTHENTICATED = timedelta(minutes=int(os.getenv('SESSION_LIFETIME_UNAUTHENTICATED', 20)))  # session lifetime for unauthenticated users
+SESSION_LIFETIME_AUTHENTICATED = timedelta(hours=int(os.getenv('SESSION_LIFETIME_AUTHENTICATED', 8)))  # session lifetime for authenticated users
+
+app.config['SESSION_TYPE'] = 'sqlalchemy'
+# Flask-SQLAlchemy config
+app.config['SQLALCHEMY_DATABASE_URI'] =  f"postgresql://{db_user}:{dbpwd}@{db_host}/{db_name}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+# Flask-Session config
+app.config['SESSION_TYPE'] = 'sqlalchemy'
+app.config['SESSION_SQLALCHEMY'] = db  # pass the SQLAlchemy instance
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = SESSION_LIFETIME_UNAUTHENTICATED
+Session(app)
+
+@app.before_request
+def update_session_lifetime():
+    if 'authenticated' in session and session['authenticated']:
+        app.permanent_session_lifetime = SESSION_LIFETIME_AUTHENTICATED
+    else:
+        app.permanent_session_lifetime = SESSION_LIFETIME_UNAUTHENTICATED
 
 csp = {
     'default-src': [
@@ -210,6 +240,16 @@ class UserTemporaryStorage:
 
         self.from_dict(kwargs)
 
+    def _self_to_session(self):
+        """
+        Saves the current state of the object to the session.
+        Necessary to ensure that the changes are refrected in every request / worker.
+        """
+        session['storage'] = zlib.compress(pickle.dumps(self))
+    def __setattr__(self, name: str, value):
+        super().__setattr__(name, value)
+        self._self_to_session()
+        
     def from_dict(self, data_dict: dict) -> None:
         """
         Loads the attributes of the class from a dictionary.
@@ -234,6 +274,8 @@ class UserTemporaryStorage:
                     buffer = io.BytesIO(value)
                     value = np.load(buffer, allow_pickle=True)
                 setattr(self, key, value)
+
+        self._self_to_session()  # update the session after loading the data
 
     def to_dict(self, features: Iterable[str] = None, for_save: bool = False) -> dict:
         """
@@ -388,7 +430,7 @@ class TemporaryStoryManager:
             storage = self._storages[user_id]
             return storage
 
-tsm = TemporaryStoryManager()  # expire after 20 minutes of inactivity    
+# tsm = TemporaryStoryManager()  # expire after 20 minutes of inactivity    
 
 serializer = URLSafeTimedSerializer(app.secret_key)
 
@@ -596,8 +638,10 @@ def check_session_timeout(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
 
-        uid = session.get('user_id', None)
-        if (uid in ts) or (uid in tsm._storages):
+        # uid = session.get('user_id', None)
+        # if (uid in ts) or (uid in tsm._storages):
+        #     return func(*args, **kwargs)
+        if "storage" in session or session.get('authenticated', False) == True:
             return func(*args, **kwargs)
         else:
             message = _('Your session has expired. Please refresh the page and try again.')
@@ -606,17 +650,49 @@ def check_session_timeout(func):
 
 
 
+
+
+# def _get_storage() -> UserTemporaryStorage:
+#     if 'user_id' not in session: 
+#         session['user_id'] = str(uuid.uuid4())
+
+#     if ('authenticated' not in session or not session['authenticated']):
+#         # unathenticated user - no session 
+#         tsm.create_storage(session['user_id'])
+#         return tsm.get(session['user_id'])
+#     elif 'authenticated' in session and session['authenticated']:
+#         # authenticated user - ensure storage exists
+#         return ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id']))
+
 def _get_storage() -> UserTemporaryStorage:
-    if 'user_id' not in session: 
+    # Ensure session has a user_id
+    if 'user_id' not in session:
         session['user_id'] = str(uuid.uuid4())
 
-    if ('authenticated' not in session or not session['authenticated']):
-        # unathenticated user - no session 
-        tsm.create_storage(session['user_id'])
-        return tsm.get(session['user_id'])
-    elif 'authenticated' in session and session['authenticated']:
-        # authenticated user - ensure storage exists
-        return ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id']))
+    # Attempt to load storage from session
+    storage_data = session.get('storage')
+    if storage_data:
+        # decompress + unpickle
+        storage_obj: UserTemporaryStorage = pickle.loads(zlib.decompress(storage_data))
+    else:
+        # Create new storage if none exists
+        if ('authenticated' not in session or not session['authenticated']):
+            # tsm.create_storage(session['user_id'])
+            # storage_obj = tsm.get(session['user_id'])
+            storage_obj = ts.setdefault(
+                session['user_id'],
+                UserTemporaryStorage(user_id=session['user_id'])
+            )
+        else:
+            storage_obj = ts.setdefault(
+                session['user_id'],
+                UserTemporaryStorage(user_id=session['user_id'])
+            )
+
+    # Save back into session
+    session['storage'] = zlib.compress(pickle.dumps(storage_obj))
+    
+    return storage_obj
 
 # storage = LocalProxy(lambda: ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id'])))
 storage = LocalProxy(lambda: _get_storage())
