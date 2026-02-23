@@ -203,7 +203,7 @@ function inference() {
     formData.append("model_name", model_name)
 
     const uniqueQuery = "?nocache=" + new Date().getTime()
-    fetch("/inference" + uniqueQuery, { method: "POST", body: formData })
+    return fetch("/inference" + uniqueQuery, { method: "POST", body: formData })
         .then((response) => response.json())
         .then((data) => {
             if (data.status === "success") {
