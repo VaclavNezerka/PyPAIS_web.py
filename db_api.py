@@ -18,13 +18,14 @@ load_dotenv()
 # dbpwd = getpass("Enter database password: ")
 # dbpwd = os.environ['DB_PASSWORD']
 dbpwd = os.getenv('DB_PASSWORD')
-
+db_user = os.getenv('DB_USERNAME')
+db_name = os.getenv('DB_NAME')
 def open_db_connection() -> object:
     # Opens a connection and its cursor
     connection=psql.connect(
         host='localhost',
-        database="pypais",
-        user=os.environ['DB_USERNAME'],
+        database=db_name,
+        user=db_user,
         password=dbpwd)
     return connection, connection.cursor()
 

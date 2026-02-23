@@ -5,10 +5,10 @@
     <title>OpenSeadragon with Konva - Drawing Annotations</title>
 
     <!-- OpenSeadragon -->
-    <script src="../static/openseadragon_5.0/openseadragon.min.js"></script>
+    <script src="{{ url_for('static', filename='openseadragon_5.0/openseadragon.min.js') }}"></script>
 
     <!-- Konva.js -->
-    <script src="../static/node_modules/konva/konva.min.js"></script>
+    <script src="{{ url_for('static', filename='node_modules/konva/konva.min.js') }}"></script>
 
     <style>
       #toolbar {
@@ -117,7 +117,7 @@
       </div>
     </div>
 
-    <script type="module" , src="../static/manual_corrections.js"></script>
+    <script type="module" , src="{{ url_for('static', filename='manual_corrections.js') }}"></script>
 
 
 

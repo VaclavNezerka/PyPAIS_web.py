@@ -8,9 +8,9 @@
 
     <head>
         <title>{{ _('Image Processing with NN') }}</title>
-        <link rel="stylesheet" href="/static/styles.css">
-        <link rel="stylesheet" href="/static/new_styles.css">
-        <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='new_styles.css') }}">
+        <link rel="icon" type="image/vnd.icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
 
         <!-- OpenSeadragon -->
@@ -18,7 +18,7 @@
         <!-- Konva.js -->
         <!-- <script src="../static/node_modules/konva/konva.min.js"></script> -->
         <!-- <script type="module" src="/static/script.js"></script> --> <!-- DEPRECATED: OLD THRESHOLDING -->
-        <script type="module" src="/static/script_automatic.js"></script>
+        <script type="module" src="{{ url_for('static', filename='script_automatic.js') }}"></script>
     </head>
 
     <body>
@@ -220,7 +220,7 @@
         <!-- Second Row: Intensity Image and Controls -->
         <div class="row">
             <div class="column">
-                <img id="defaultImage" src="/static/logo.png" alt="Default Image">
+                <img id="defaultImage" src="{{ url_for('static', filename='logo.png') }}" alt="Default Image">
                 <div class="img-magnifier-container">
                     <canvas id="imageCanvas"></canvas>
                     <canvas class="overlayCanvas" id="overlayCanvasAsphalt"></canvas>

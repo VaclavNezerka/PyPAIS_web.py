@@ -1,7 +1,7 @@
 <div class="nav-dropdown">
   <button id="user_button" class="lang-btn">
     <span class="user-email"> {{ session.user_email }}</span>
-    <img id="user-icon" src="/static/avatars/gorilla.png" alt="User" class="current-lang">
+    <img id="user-icon" src="{{ url_for('static', filename='avatars/gorilla.png') }}" alt="User" class="current-lang">
     <span class="arrow">▼</span>
   </button>
 
@@ -11,4 +11,4 @@
   </div>
 </div>
 
-<script src="/static/script_lang.js"></script>
+<script src="{{ url_for('static', filename='script_lang.js') }}"></script>

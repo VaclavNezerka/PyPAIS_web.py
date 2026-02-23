@@ -1,3 +1,5 @@
+<!-- TODO CONSIDER REMOVING THIS FILE -->
+
 <!-- REMBG_manual -->
 <!DOCTYPE html>
 
@@ -10,8 +12,8 @@
 
     <head>
         <title>REMBG_manual</title>
-        <link rel="stylesheet" href="/static/styles.css">
-        <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <link rel="icon" type="image/vnd.icon" href="{{ url_for('static', filename='favicon.ico') }}">
     </head>
 
     <body>
@@ -23,7 +25,7 @@
 
             <div class="row">
                 <div class="column">
-                    <img id="defaultImage" src="/static/logo.png" alt="Default Image">
+                    <img id="defaultImage" src="{{ url_for('static', filename='logo.png') }}" alt="Default Image">
                     <div class="img-magnifier-container">
                         <img id="uploadedImage" style="display:none;">
                     </div>
@@ -36,7 +38,7 @@
             </div>
         </div>
 
-        <script src="/static/script.js"></script>
+        <script src="{{ url_for('static', filename='script.js') }}"></script>
     </body>
 
 </html>

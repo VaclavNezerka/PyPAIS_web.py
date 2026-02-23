@@ -9,8 +9,8 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="/static/styles.css">
-        <link rel="stylesheet" href="/static/new_styles.css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='new_styles.css') }}">
         <title>{{ _('Sample Records') }}</title>
     </head>
 
@@ -101,7 +101,7 @@
             <button class="btn-details-left" id="previous_page">{{ _('Previous') }}</button>
             <button class="btn-details-right" id="next_page">{{ _('Next') }}</button>
         </div>
-        <script src="/static/script_tables.js"> </script>
+        <script src="{{ url_for('static', filename='script_tables.js') }}"> </script>
     </body>
 
 </html>

@@ -7,14 +7,14 @@
 
     <head>
         <title>{{ _('404 Not Found - AIBAL') }}</title>
-        <link rel="stylesheet" href="/static/styles.css">
-        <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <link rel="icon" type="image/vnd.icon" href="{{ url_for('static', filename='favicon.ico') }}">
     </head>
 
     <body>
         <h1>{{ _('Page not found') }}</h1>
         <div class="column">
-            <img id="defaultImage" src="/static/logo.png" alt="Default Image">
+            <img id="defaultImage" src="{{ url_for('static', filename='logo.png') }}" alt="Default Image">
         </div>
     </body>
 

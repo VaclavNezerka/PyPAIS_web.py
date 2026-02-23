@@ -9,7 +9,8 @@
     <body>
         <div class="homebg">
             <div class="row modern-row">
-                <img class="logo-container" id="logo-text" src="/static/logo-text.png" alt="AI BAL Logo">
+                <img class="logo-container" id="logo-text" src="{{ url_for('static', filename='logo-text.png') }}"
+                    alt="AI BAL Logo">
             </div>
         </div>
 
@@ -19,7 +20,7 @@
         <div class="container">
             <div class="row">
                 <!-- <div class="column">
-                    <img id="homeImage" src="/static/home_image.png" alt="Home Image">
+                    <img id="homeImage" src="{{ url_for('static', filename='home_image.png') }}" alt="Home Image">
                 </div> -->
                 <div class="column">
                     <div class="home-text">
@@ -54,5 +55,5 @@
     </body>
 
 </html>
-<script src="/static/script_home.js"></script>
+<script src="{{ url_for('static', filename='script_home.js') }}"> </script>
 {% endblock content %}

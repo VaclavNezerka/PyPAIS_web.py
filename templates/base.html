@@ -7,10 +7,10 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/styles.css">
-    <link rel="stylesheet" href="/static/new_styles.css">
-    <link rel="icon" type="image/vnd.icon" href="/static/favicon.ico">
-    <script src="/static/script_base.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='new_styles.css') }}">
+    <link rel="icon" type="image/vnd.icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <script src="{{ url_for('static', filename='script_base.js') }}"></script>
     <script src="https://www.google.com/recaptcha/api.js"></script>
     <title>AIBAL</title>
   </head>
@@ -62,8 +62,8 @@
             {{ _('Technology Agency of the Czech Republic') }}</a>, {{ _('project CL02000145.') }}<br>
         </p>
 
-        <img src="/static/CVUT_logo_white.png" alt="CVUT Logo" class="footer-logo">
-        <img src="/static/TACR_logo_white.png" alt="TACR Logo" class="footer-logo">
+        <img src="{{ url_for('static', filename='CVUT_logo_white.png') }}" alt="CVUT Logo" class="footer-logo">
+        <img src="{{ url_for('static', filename='TACR_logo_white.png') }}" alt="TACR Logo" class="footer-logo">
       </div>
     </footer>
   </body>

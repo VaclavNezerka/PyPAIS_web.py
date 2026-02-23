@@ -9,7 +9,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="/static/styles.css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
         <title>{{ _('Experiment Records') }}</title>
     </head>
     <div class="colorbar">
@@ -94,7 +94,7 @@
             </tbody>
         </table>
 
-        <script src="/static/script_tables.js"> </script>
+        <script src="{{ url_for('static', filename='script_tables.js') }}"> </script>
         </body>
 
 </html>
