@@ -86,7 +86,7 @@ class RegistrationFormUser(FlaskForm):
     # recaptcha = RecaptchaField()
 
 class RegistrationFormCompany(FlaskForm):  
-    company_name = StringField(lazy_gettext('Company Name'),validators=[DataRequired(),IsUnique(tablename='public_companies', message=messages['username_already_taken']),RequiredLength(min=1,max=50)],)    
+    company_name = StringField(lazy_gettext('Company Name'),validators=[DataRequired(),IsUnique(tablename='public_companies', message=messages['username_already_taken']),RequiredLength(min=1,max=256)],)    
     e_mail = StringField(lazy_gettext('Email address'),
                          validators=[DataRequired(), Email(),IsUnique(tablename='public_companies', message=messages['email_already_used']),RequiredLength(min=5,max=100)])
     company_address = StringField(lazy_gettext('Company address'),validators=[DataRequired()])

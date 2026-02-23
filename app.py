@@ -188,7 +188,7 @@ app.secret_key=os.getenv('SECRET_KEY', generate_rnd_string(int(SECRET_KEY_LENGTH
 
 def generate_password_hash(password: str) -> str:
     return ws.generate_password_hash(password,method=HASH_METHOD,salt_length=int(SALT_LENGTH))
-ts = {} # temporary storages for the users... ts[user_id] = UserTemporaryStorage()
+# ts = {} # temporary storages for the users... ts[user_id] = UserTemporaryStorage()
 
 class UserTemporaryStorage:
     """
@@ -676,18 +676,19 @@ def _get_storage() -> UserTemporaryStorage:
         storage_obj: UserTemporaryStorage = pickle.loads(zlib.decompress(storage_data))
     else:
         # Create new storage if none exists
-        if ('authenticated' not in session or not session['authenticated']):
-            # tsm.create_storage(session['user_id'])
-            # storage_obj = tsm.get(session['user_id'])
-            storage_obj = ts.setdefault(
-                session['user_id'],
-                UserTemporaryStorage(user_id=session['user_id'])
-            )
-        else:
-            storage_obj = ts.setdefault(
-                session['user_id'],
-                UserTemporaryStorage(user_id=session['user_id'])
-            )
+        storage_obj = UserTemporaryStorage(user_id=session['user_id'])
+        # if ('authenticated' not in session or not session['authenticated']):
+        #     # tsm.create_storage(session['user_id'])
+        #     # storage_obj = tsm.get(session['user_id'])
+        #     storage_obj = ts.setdefault(
+        #         session['user_id'],
+        #         UserTemporaryStorage(user_id=session['user_id'])
+        #     )
+        # else:
+        #     storage_obj = ts.setdefault(
+        #         session['user_id'],
+        #         UserTemporaryStorage(user_id=session['user_id'])
+        #     )
 
     # Save back into session
     session['storage'] = zlib.compress(pickle.dumps(storage_obj))
@@ -1661,7 +1662,7 @@ def save_specific_value(value_name):
 @deprecated("Use storage.get_asphalt_ratio() instead.")
 def evaluate_asphalt():
     non_bg_pixels = np.sum(return_foreground_mask())
-    asphalt_pixels = np.sum(ts[session['user_id']].asphalt_mask + ts[session['user_id']].asphalt_mask_manual_corrections) 
+    asphalt_pixels = np.sum(storage.asphalt_mask + storage.asphalt_mask_manual_corrections) 
     ic(return_asphalt_mask())
     print('Asphalt pixels:', asphalt_pixels)
     print('Non bg pixels:', non_bg_pixels)
@@ -1889,30 +1890,34 @@ def save_experiment(**kwargs):
         if state.lower() == 'finished':
             # delete temporary storage and create a new one
             print('Experiment finished.')
-            ts.pop(session['user_id'])
+            # ts.pop(session['user_id'])
             # storage = UserTemporaryStorage() # TODO: check if this is needed >>> should be created dynamically when needed by lambda function in storage definition
         return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
     # except Exception as e:
     #     return json.dumps({'status': 'error', 'message': str(e)}), 500, {'Content-Type': 'application/json'}
 
 
-@app.route('/backup-storage',methods=['POST', 'GET'])
-@check_authentication
-def backup_temporal_storage():
-    # This function bacups the temporary storage of the user and creates a new one
-    # it should be called when the user wants to upload new images without harming the current experiment
-    ts[str(session['user_id'])+"&backup"] = ts[session['user_id']]
-    ts[session['user_id']] = UserTemporaryStorage()
-    return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
+# @app.route('/backup-storage',methods=['POST', 'GET'])
+# @check_authentication
+# def backup_temporal_storage():
+#     # This function bacups the temporary storage of the user and creates a new one
+#     # it should be called when the user wants to upload new images without harming the current experiment
+    
+#     # ts[str(session['user_id'])+"&backup"] = ts[session['user_id']]
+#     # ts[session['user_id']] = UserTemporaryStorage()
+    
+#     storage_backup = UserTemporaryStorage().from_dict(storage.to_dict())  # create a copy of the current storage
 
-@app.route('/restore-storage',methods=['POST', 'GET'])
-@check_authentication
-def restore_temporal_storage():
-    # This function restores the temporary storage of the user from the backup
-    # it should be called when the user wants to restore the previous experiment
-    ts[session['user_id']] = ts[str(session['user_id'])+"&backup"]
-    ts.pop(str(session['user_id'])+"&backup")
-    return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
+#     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
+
+# @app.route('/restore-storage',methods=['POST', 'GET'])
+# @check_authentication
+# def restore_temporal_storage():
+#     # This function restores the temporary storage of the user from the backup
+#     # it should be called when the user wants to restore the previous experiment
+#     ts[session['user_id']] = ts[str(session['user_id'])+"&backup"]
+#     ts.pop(str(session['user_id'])+"&backup")
+#     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
 
 def downscale_image(image: np.ndarray, scale_factor: float = None) -> np.ndarray:

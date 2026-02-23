@@ -68,27 +68,37 @@ def change_user_blockade(cur, conn, user_id: int, is_blocked: bool) -> None:
 def is_user_blocked(cur, conn, user_id: int) -> bool:
     query='SELECT is_blocked FROM users WHERE id=%s'
     values=(user_id,)
-    is_blocked=execute_query(query=query,values=values)[0][0]
+    response=execute_query(query=query,values=values)
+    if not response:
+        return False
+    is_blocked=response[0][0]
     return is_blocked
 
 @db_connection
 def get_password_hash(cur, conn, user_id: int) -> str:
     query='SELECT pwd FROM public_users WHERE id=%s'
     values=(user_id,)
-    pwd_hash=execute_query(query=query,values=values)[0][0]
+    response=execute_query(query=query,values=values)
+    if not response:
+        return None
+    pwd_hash=response[0][0]
     return pwd_hash
 
 @db_connection
 def get_user_id(cur, conn, username: str = None, email: str = None) -> int | None:
     query = 'SELECT id FROM public_users WHERE username=%s OR e_mail=%s'
-    user_id = execute_query(query, (username, email))[0][0]
-    return user_id
+    response = execute_query(query, (username, email))
+    if not response:
+        return None
+    return response[0][0]
 
 @db_connection
 def get_user_id_of_experiment(cur, conn, id: str) -> int | None:
     query = 'SELECT user_id FROM experiments WHERE experiment_id=%s'
-    user_id = execute_query(query, (id,))[0][0]
-    return user_id
+    response = execute_query(query, (id,))
+    if not response:
+        return None
+    return response[0][0]
 
 def hex_to_colorhash(colorhash:str, nbits=42, nbins=3):
     """Convert a hexadecimal string to an ImageHash object representing a colorhash."""
