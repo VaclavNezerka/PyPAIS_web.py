@@ -233,8 +233,10 @@ document.querySelectorAll("#inference_model").forEach((element) => {
     element.addEventListener("change", function () {
         displayWorkingMessage()
         inference()
-        redrawCanvases()
-        removeWorkingMessage()
+            .then(() => {
+                redrawCanvases()
+            })
+            .then(() => removeWorkingMessage())
     })
 })
 
