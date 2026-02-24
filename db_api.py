@@ -494,7 +494,6 @@ def insert_experiment_to_db(cur ,conn, values_dict: dict) -> None:
 @db_connection
 def update_experiment_in_db(cur ,conn, values_dict: dict, experiment_id: str) -> None:
     command = f'UPDATE experiments SET ' + ', '.join([f"{key}=%s" for key in values_dict.keys()]) + ' WHERE experiment_id=%s'
-    print(command)
     # values = tuple(values_dict.values()) + (str(experiment_id),)
     values = tuple((v if v else None) for v in values_dict.values()) + (str(experiment_id),)
     cur.execute(command, values)

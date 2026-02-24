@@ -577,16 +577,19 @@ async function uploadImage() {
             document
                 .getElementById("info_datetime")
                 .dispatchEvent(new Event("change"))
+            document
+                .getElementById("inference_model")
+                .dispatchEvent(new Event("change"))
             fetch("/get-default-experiment-info")
                 .then((response) => response.json())
                 .then((data) => {
-                    document
-                        .getElementById("inference_model")
-                        .dispatchEvent(new Event("change"))
                     if (data.status === "success") {
                         // loop through data and set value of input with id of key to value
                         for (const [key, value] of Object.entries(data.data)) {
                             const input = document.getElementById(key)
+                            console.log(
+                                "Setting value of " + key + " to " + value,
+                            )
                             if (input) {
                                 input.value = value
                                 if (value) {
@@ -1009,6 +1012,27 @@ function deactivateCurrentExperiment() {
     })
 }
 
+async function dispatchEvents() {
+    return new Promise((resolve) => {
+        for (const id of [
+            "info_sample_collection_data",
+            "info_place_of_experiment",
+            "info_test_procedure",
+            "info_wrapping_temperature",
+            "info_exposing_water_temperature",
+            "info_datetime",
+            "info_comment",
+            "info_aggregate",
+            "info_binder",
+            "inference_model",
+            "expertGuess",
+        ]) {
+            document.getElementById(id).dispatchEvent(new Event("change"))
+        }
+        resolve()
+    })
+}
+
 function loadExperiment(id) {
     displayWorkingMessage()
     fetch("/load-experiment/" + String(id), { method: "GET" })
@@ -1026,6 +1050,7 @@ function loadExperiment(id) {
             //         data.expert_guess * 100,
             //     )
             // }
+            console.log("Data", data)
             console.log("Setting expert guess to: " + data.expert_guess)
             if (data.expertGuess !== null && !isNaN(data.expert_guess)) {
                 if (data.expert_guess > 0) {
@@ -1108,6 +1133,7 @@ document.getElementById("imageType").addEventListener("change", redrawCanvases)
 
 async function evaluateExperiment() {
     console.log("Starting evaluation...")
+    // await dispatchEvents() // Ensure all change events are dispatched - i.e. values saved to db and processed before evaluation
     if (document.getElementById("expertGuess").value === "") {
         alert(
             // "Please fill the expert guess field before evaluating the experiment."
