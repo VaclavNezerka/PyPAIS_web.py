@@ -580,6 +580,9 @@ async function uploadImage() {
             fetch("/get-default-experiment-info")
                 .then((response) => response.json())
                 .then((data) => {
+                    document
+                        .getElementById("inference_model")
+                        .dispatchEvent(new Event("change"))
                     if (data.status === "success") {
                         // loop through data and set value of input with id of key to value
                         for (const [key, value] of Object.entries(data.data)) {

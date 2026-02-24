@@ -64,7 +64,7 @@ from flask_session import Session
 from sqlalchemy import create_engine
 from flask_sqlalchemy import SQLAlchemy
 import pickle, zlib
-
+import time
 
 load_dotenv(dotenv_path='.env')
 RECAPTCHA_SITE_KEY=os.getenv('RECAPTCHA_SITE_KEY')
@@ -87,7 +87,7 @@ db = SQLAlchemy(app)
 # Flask-Session config
 app.config['SESSION_TYPE'] = 'sqlalchemy'
 app.config['SESSION_SQLALCHEMY'] = db  # pass the SQLAlchemy instance
-app.config['SESSION_PERMANENT'] = True
+app.config['SESSION_PERMANENT'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = SESSION_LIFETIME_UNAUTHENTICATED
 Session(app)
 
@@ -174,7 +174,7 @@ babel = Babel(app, locale_selector=get_locale)
 limiter = flask_limiter.Limiter(
     app=app,
     key_func=lambda: session.get('user_id', request.remote_addr),
-    default_limits=["500 per day", "100 per hour"]   
+    default_limits=["500 per day", "500 per hour"]   
 )
 
 SECRET_KEY_LENGTH = os.getenv('SECRET_KEY_LENGTH', '32')
@@ -690,8 +690,8 @@ def _get_storage() -> UserTemporaryStorage:
         #         UserTemporaryStorage(user_id=session['user_id'])
         #     )
 
-    # Save back into session
-    session['storage'] = zlib.compress(pickle.dumps(storage_obj))
+        # Save back into session
+        session['storage'] = zlib.compress(pickle.dumps(storage_obj))
     
     return storage_obj
 
@@ -758,6 +758,7 @@ def dict_to_json(data_dict: dict, features: Iterable[str] = None) -> str:
 def check_data_ownership(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
+        print(f'OWNERSHIP CHECK for user_id: {session.get("user_id", None)} and experiment_id: {kwargs.get("id", None)}')
         owner_user_id = db_api.get_user_id_of_experiment(id=kwargs['id'])
         # allow acces to the data for the company admin as well
         is_company_admin = db_api.get_user_by_id(session['user_id'])['is_company_admin']
@@ -1704,7 +1705,8 @@ def delete_experiment(id):
 @app.route('/deactivate-current-experiment',methods=['GET', 'POST'])
 @check_authentication
 def deactivate_current_experiment():
-    return deactivate_experiment(None)
+    id = storage.experiment_id
+    return deactivate_experiment(id)
 
 @app.route('/deactivate-experiment/<int:id>',methods=['GET', 'POST'])
 @check_authentication
@@ -1713,18 +1715,16 @@ def deactivate_experiment_caller(id):
     return deactivate_experiment(id)
 
 def deactivate_experiment(id):
+    print('Deactivating experiment.', id)
     if id is None:
-        id = storage.experiment_id
-        if id is None:
-            flash(_('No active experiment found.'), 'error')
-            return redirect('/queue'), 302
+        flash(_('No active experiment found.'), 'error')
+        return redirect('/'), 302
     
     # query = 'UPDATE experiments SET active=%s WHERE experiment_id=%s'
     # values = (False, id)
     # execute_query(query, values)
 
     # deactivate the current experiment in the database
-    print('Deactivating experiment.', id)
     db_api.update_experiment_active_status(user_id=session['user_id'], active=False)
     storage.experiment_id = None
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
@@ -1846,51 +1846,11 @@ def save_experiment(**kwargs):
             ts_dict = storage.to_dict(for_save=True)
             ts_dict['current_state'] = state
             db_api.update_experiment_in_db(values_dict=ts_dict, experiment_id=storage.experiment_id)
-            # print('state', state)
-            # print(storage.experiment_id)
-            # query = """ 
-            # UPDATE experiments SET img_width = %s, 
-            # img_height = %s, 
-            # img_mask_asphalt=%s, 
-            # img_mask_aggregate=%s,
-            # expert_guess=%s, 
-            # info=%s, 
-            # current_state=%s, 
-            # asphalt_ratio=%s,
-            # entropy_min_threshold=%s, 
-            # entropy_max_threshold=%s, 
-            # intensity_min_threshold_0=%s, 
-            # intensity_max_threshold_0=%s, 
-            # intensity_min_threshold_1=%s, 
-            # intensity_max_threshold_1=%s,
-            # blur=%s, 
-            # img_mask_asphalt_manual_correction = %s, 
-            # img_mask_aggregate_manual_correction=%s
-            # WHERE id=%s"""
-            # values = (ts[session['user_id']].color_original.shape[1],
-            #           ts[session['user_id']].color_original.shape[0],
-            #           ts[session['user_id']].asphalt_mask.tobytes(),
-            #           ts[session['user_id']].aggregate_mask.tobytes(),
-            #           ts[session['user_id']].values.expert_guess,
-            #           ts[session['user_id']].values.info,
-            #           state,
-            #           evaluate_asphalt(),
-            #           ts[session['user_id']].values.entropy_min_threshold,
-            #           ts[session['user_id']].values.entropy_max_threshold,
-            #           ts[session['user_id']].values.intensity_min_threshold_0,
-            #           ts[session['user_id']].values.intensity_max_threshold_0,
-            #           ts[session['user_id']].values.intensity_min_threshold_1,
-            #           ts[session['user_id']].values.intensity_max_threshold_1,
-            #           ts[session['user_id']].values.blur,
-            #           ts[session['user_id']].asphalt_mask_manual_corrections.tobytes(),
-            #           ts[session['user_id']].aggregate_mask_manual_corrections.tobytes(),
-            #           ts[session['user_id']].experiment_id)
-            # execute_query(query, values)
-        
         if state.lower() == 'finished':
             # delete temporary storage and create a new one
             print('Experiment finished.')
             # ts.pop(session['user_id'])
+            session.pop('storage', None)  # remove storage from session
             # storage = UserTemporaryStorage() # TODO: check if this is needed >>> should be created dynamically when needed by lambda function in storage definition
         return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
     # except Exception as e:
@@ -2547,7 +2507,7 @@ def translations_alerts():
     return json.dumps(json_translations), 200, {'Content-Type': 'application/json'}
 
 if __name__ == "__main__":
-    debug = False
+    debug = True
     if debug:
         app.secret_key='test_secret_key'
         app.run(debug=debug)

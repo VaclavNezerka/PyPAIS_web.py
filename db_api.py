@@ -119,6 +119,8 @@ def update_default_experiment_info(cur, conn, user_id: int, field: str, value: s
     if field not in valid_fields:
         raise ValueError(f"Invalid field: {field}. Valid fields are: {valid_fields}")
     record = execute_query(f'SELECT user_id FROM default_info WHERE user_id=%s', (user_id,))
+    if not value:
+        value = None
     if not record:
         query = f'INSERT INTO default_info (user_id, {field}) VALUES (%s, %s)'
         execute_query(query, (user_id, value))
@@ -493,7 +495,8 @@ def insert_experiment_to_db(cur ,conn, values_dict: dict) -> None:
 def update_experiment_in_db(cur ,conn, values_dict: dict, experiment_id: str) -> None:
     command = f'UPDATE experiments SET ' + ', '.join([f"{key}=%s" for key in values_dict.keys()]) + ' WHERE experiment_id=%s'
     print(command)
-    values = tuple(values_dict.values()) + (str(experiment_id),)
+    # values = tuple(values_dict.values()) + (str(experiment_id),)
+    values = tuple((v if v else None) for v in values_dict.values()) + (str(experiment_id),)
     cur.execute(command, values)
     conn.commit()
 
