@@ -404,7 +404,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     # pdf.append(PageBreak())
     pdf.append(Spacer(1, 0.2 * cm))
     pdf.append(Paragraph(_("Bitumen Adhesion Test Protocol"), styles["Title"]))
-    pdf.append(Spacer(1, 0.4 * cm))
+    pdf.append(Spacer(1, 0.3 * cm))
 
     n_samples = len(experiment_ids)
     text = _("""
@@ -412,7 +412,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     with all relevant information according to the CSN 73 6161 standard.
     The adhesion test was performed on """) + f"{n_samples}" + _(""" samples of asphalt mixtures. The detailes about each specimen included below, the overview is at the end of the document.""")
     pdf.append(Paragraph(text, style_justify))
-    pdf.append(Spacer(1, 0.4 * cm))
+    pdf.append(Spacer(1, 0.3 * cm))
 
     text = _("""
     Both the visual expert assesment and the AI-based quantitative analysis are included in this report.
@@ -446,9 +446,9 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         Paragraph(_("The proceeding employee"), styles["Heading2"]),
         Paragraph(_("Name:") + f" {user_info.get('first_name', '-')} {user_info.get('last_name', '-')}", style_justify),
         Paragraph(_("Contact:") + f" {user_info.get('e_mail', '-')}", style_justify),
-        Spacer(1, 1.2 * cm),
+        Spacer(1, 1.0 * cm),
         Paragraph(_("Signature: ..................................................."), style_justify),
-        Spacer(1, 0.4 * cm),
+        Spacer(1, 0.3 * cm),
     ]
 
     # Responsible Employees
@@ -464,9 +464,9 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         Paragraph(_("The controlling employee"), styles["Heading2"]),
         Paragraph(_("Name:") + f" {controlling_employee.get('first_name', '-')} {controlling_employee.get('last_name', '-')}", style_justify),
         Paragraph(_("Contact:") + f" {controlling_employee.get('e_mail', '-')}", style_justify),
-        Spacer(1, 1.2 * cm),
+        Spacer(1, 1.0 * cm),
         Paragraph(_("Signature: ..................................................."), style_justify),
-        Spacer(1, 0.4 * cm),
+        Spacer(1, 0.3 * cm),
     ]
 
     table_data = ["", ""]
