@@ -7,7 +7,7 @@ from db_api import User
 import requests
 from flask import (Flask, render_template, request, send_file, 
                    send_from_directory, flash, redirect,
-                   session, url_for, abort)
+                   session, url_for, abort, g)
 from flask_mail import Mail, Message
 from wtforms import StringField
 # from flask_login import login_manager, UserMixin, login_required,
@@ -240,6 +240,7 @@ class UserTemporaryStorage:
 
         self.from_dict(kwargs)
 
+    # REPLACED BY flask g
     def _self_to_session(self):
         """
         Saves the current state of the object to the session.
@@ -275,7 +276,7 @@ class UserTemporaryStorage:
                     value = np.load(buffer, allow_pickle=True)
                 setattr(self, key, value)
 
-        self._self_to_session()  # update the session after loading the data
+        # self._self_to_session()  # update the session after loading the data
 
     def to_dict(self, features: Iterable[str] = None, for_save: bool = False) -> dict:
         """
@@ -664,6 +665,36 @@ def check_session_timeout(func):
 #         # authenticated user - ensure storage exists
 #         return ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id']))
 
+# @app.teardown_request
+# def save_storage(exception=None):
+#     if hasattr(g, "storage"):
+#         session["storage"] = zlib.compress(pickle.dumps(g.storage))
+
+# @app.teardown_request
+# def save_storage(exception=None):
+#     if hasattr(g, "storage"):
+#         session["storage"] = zlib.compress(pickle.dumps(storage))
+
+# def _get_storage() -> UserTemporaryStorage:
+#     # If already loaded during this request → reuse it
+#     if hasattr(g, "storage"):
+#         return g.storage
+
+#     # Ensure user_id exists
+#     if "user_id" not in session:
+#         session["user_id"] = str(uuid.uuid4())
+
+#     storage_data = session.get("storage")
+
+#     if storage_data:
+#         storage_obj = pickle.loads(zlib.decompress(storage_data))
+#     else:
+#         storage_obj = UserTemporaryStorage(user_id=session["user_id"])
+
+#     # Cache in request context
+#     g.storage = storage_obj
+#     return storage_obj
+
 def _get_storage() -> UserTemporaryStorage:
     # Ensure session has a user_id
     if 'user_id' not in session:
@@ -677,25 +708,13 @@ def _get_storage() -> UserTemporaryStorage:
     else:
         # Create new storage if none exists
         storage_obj = UserTemporaryStorage(user_id=session['user_id'])
-        # if ('authenticated' not in session or not session['authenticated']):
-        #     # tsm.create_storage(session['user_id'])
-        #     # storage_obj = tsm.get(session['user_id'])
-        #     storage_obj = ts.setdefault(
-        #         session['user_id'],
-        #         UserTemporaryStorage(user_id=session['user_id'])
-        #     )
-        # else:
-        #     storage_obj = ts.setdefault(
-        #         session['user_id'],
-        #         UserTemporaryStorage(user_id=session['user_id'])
-        #     )
-
         # Save back into session
         session['storage'] = zlib.compress(pickle.dumps(storage_obj))
     
     return storage_obj
 
 # storage = LocalProxy(lambda: ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id'])))
+# storage = LocalProxy(lambda: _get_storage())
 storage = LocalProxy(lambda: _get_storage())
 storage: UserTemporaryStorage = cast(UserTemporaryStorage, storage)
 # storage... it behaves like a global variable, but it is actually a proxy to the user-specific storage
@@ -764,7 +783,14 @@ def check_data_ownership(func):
         is_company_admin = db_api.get_user_by_id(session['user_id'])['is_company_admin']
         admin_company_id = db_api.get_user_by_id(session['user_id'])['company']
 
-        if owner_user_id == session['user_id'] or (is_company_admin and db_api.get_user_by_id(owner_user_id)['company'] == admin_company_id):
+        print(f'Owner user ID: {owner_user_id}')
+        print(f'session user ID: {session.get("user_id", None)}')
+
+        can_access = (owner_user_id == session['user_id']) or (is_company_admin and db_api.get_user_by_id(owner_user_id)['company'] == admin_company_id)
+        print(owner_user_id == session['user_id'])
+        print(can_access)
+        print()
+        if can_access:
             return func(id=kwargs['id'])
         else:
             flash(_('You do not have permission to access this data.'), 'error')
@@ -849,11 +875,12 @@ def page_not_found(error):
 @app.route('/logout')
 def logout():
     print('Logging out user.')
-    session.pop('username',None)
-    session.pop('authenticated',None)
-    session.pop('user_id',None)
-    session.pop('user_email',None)
-    session.pop('is_company_admin',None)
+    # session.pop('username',None)
+    # session.pop('authenticated',None)
+    # session.pop('user_id',None)
+    # session.pop('user_email',None)
+    # session.pop('is_company_admin',None)
+    session.clear()  # Clear all session data to ensure complete logout
     return redirect(url_for('login'))
 
 #TODO - consider joining with edit_personal_information (Must be done together with FE editing)
@@ -1051,9 +1078,9 @@ def change_admin_privileges():
 
 @app.route('/login',methods=['GET','POST'])
 def login():
-    logout()
     match request.method:
         case 'GET':
+            logout()
             form=forms.LoginForm()
             return render_template('form.html',dynamic_content=_('Login'),form=form, session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
@@ -1629,12 +1656,15 @@ def grayscale_image(image: np.ndarray) -> np.ndarray:
 
 @app.route('/update_value/<string:value_name>',methods=['POST'])
 @check_authentication
+@limiter.exempt 
 def update_specific_value(value_name):
     # ts[session['user_id']].values.__dict__[value_name] = value
-    # setattr(ts[session['user_id']], value_name, value)
+    # setattr(ts[session['user_id']], value_name, value)    
     if storage.experiment_id is None:
         return json.dumps({'status': 'error', 'message': 'No active experiment found'}), 404, {'Content-Type': 'application/json'}
     value = request.form.get(value_name)
+    if value is None or value.lower() == 'null':
+        value = None
     storage.from_dict({value_name: value})
     response = save_specific_value(value_name)
     return response    
@@ -1646,15 +1676,7 @@ def save_specific_value(value_name):
         value_name = value_name.lower()
         # value = ts[session['user_id']].values.__dict__[value_name]
         value = getattr(storage, value_name)
-        print(f'Saving value: {value_name} = {value} for experiment ID: {storage.experiment_id}')
         db_api.update_experiment_in_db(values_dict={value_name: value}, experiment_id=storage.experiment_id)
-        # query = f'UPDATE experiments SET {value_name}=%s, asphalt_ratio=%s, img_mask_asphalt=%s WHERE experiment_id=%s'
-        # values = (value,
-        #         #   evaluate_asphalt(),
-        #           storage.get_asphalt_ratio(),
-        #         #   ts[session['user_id']].asphalt_mask.copy().tobytes(),
-        #           ts[session['user_id']].experiment_id)
-        # execute_query(query, values)
         return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
     except Exception as e:
         return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
@@ -1705,7 +1727,8 @@ def delete_experiment(id):
 @app.route('/deactivate-current-experiment',methods=['GET', 'POST'])
 @check_authentication
 def deactivate_current_experiment():
-    id = storage.experiment_id
+    id = db_api.return_active_experiment_id(user_id=session['user_id'])
+    storage = None
     return deactivate_experiment(id)
 
 @app.route('/deactivate-experiment/<int:id>',methods=['GET', 'POST'])
@@ -1832,10 +1855,18 @@ def save_experiment(**kwargs):
         print('Saving record.')
         print('state', state)
     # try:        
+        print()
+        print()
+        print('Current experiment ID:', storage.experiment_id)
+        print('Storeage user ID:', storage.user_id)
+        print('Current user ID:', session['user_id'])
+        print()
+        print()
         if storage.experiment_id is None:
             print('Inserting new record.')
             ts_dict = storage.to_dict(for_save=True)
             ts_dict['current_state'] = state 
+            ts_dict['user_id'] = session['user_id']
             # ts_dict.pop('experiment_id', None)  # ensure that the experiment_id is not in the dict
             storage.experiment_id = db_api.insert_experiment_to_db(values_dict=ts_dict)
             activate_experiment(storage.experiment_id)
@@ -1845,6 +1876,7 @@ def save_experiment(**kwargs):
             print('Updating record.')
             ts_dict = storage.to_dict(for_save=True)
             ts_dict['current_state'] = state
+            ts_dict['user_id'] = session['user_id']
             db_api.update_experiment_in_db(values_dict=ts_dict, experiment_id=storage.experiment_id)
         if state.lower() == 'finished':
             # delete temporary storage and create a new one
@@ -2057,6 +2089,10 @@ def to_base64(image_array: np.ndarray) -> str:
 @app.route('/inference',methods=['POST'])
 def inference_image():
     storage.inference_model = request.form.get('model_name', None)
+    print()
+    print('Inference should be model set to:', request.form.get('model_name', None))
+    print('Inference model set to:', storage.inference_model)
+    print()
 
 
     if storage.inference_model is None:
@@ -2462,6 +2498,13 @@ def save_annotation():
 def get_default_experiment_info():
     # Update the default experiment info in the database
     response = db_api.get_default_experiment_info(user_id=session['user_id'])
+    # experiment_id = db_api.return_active_experiment_id(user_id=session['user_id'])
+    # print('Experiment ID:', experiment_id)
+    # print('response:', response)
+    # if experiment_id:
+    #     for key, value in response.items(): 
+    #         db_api.update_experiment_in_db(values_dict={key: value}, experiment_id=experiment_id)
+    #     # db_api.update_experiment_in_db(values_dict=response, experiment_id=experiment_id)
     return json.dumps({'status': 'success', 'data': response}), 200, {'Content-Type': 'application/json'}
 
 @app.route('/update-default-experiment-info', methods=['POST'])

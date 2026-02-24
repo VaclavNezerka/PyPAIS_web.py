@@ -3,7 +3,7 @@ import os
 import psycopg2 as psql
 from psycopg2.extras import RealDictCursor
 from functools import wraps
-from flask import flash
+from flask import app, flash
 from dataclasses import dataclass
 from sqlalchemy import values
 from typing_extensions import deprecated

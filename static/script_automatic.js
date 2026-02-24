@@ -523,125 +523,274 @@ function overlayMask(baseUrl, maskUrl) {
     })
 }
 
+async function createImageURLs(data) {
+    return new Promise((resolve) => {
+        uploadedImageURL_color = URL.createObjectURL(
+            base64toBlob(data.color, "image/png"),
+        )
+        uploadedImageURL_gray = URL.createObjectURL(
+            base64toBlob(data.gray, "image/png"),
+        )
+        resolve()
+    })
+}
+
 async function uploadImage() {
     displayWorkingMessage()
 
-    const now = new Date()
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
-
-    // if the loaders are here, the dont have to have an experiment ID
-    // document.getElementById("info_datetime").value = now
-    //     .toISOString()
-    //     .slice(0, 16)
-    // document.getElementById("info_datetime").dispatchEvent(new Event("change"))
-
-    // fetch("/get-default-experiment-info")
-    //     .then((response) => response.json())
-    //     .then((data) => {
-    //         if (data.status === "success") {
-    //             // loop through data and set value of input with id of key to value
-    //             for (const [key, value] of Object.entries(data.data)) {
-    //                 const input = document.getElementById(key)
-    //                 if (input) {
-    //                     input.value = value
-    //                     if (value) {
-    //                         input.classList.add("has-value")
-    //                     } else {
-    //                         input.classList.remove("has-value")
-    //                     }
-    //                     input.dispatchEvent(new Event("change"))
-    //                 }
-    //             }
-    //         }
-    //     })
-
+    // get the file from the input
     const fileInput = document.getElementById("fileInput")
     if (fileInput.files.length === 0) return
     const file = fileInput.files[0]
 
-    var formData = new FormData()
+    // get upload time
+    const now = new Date()
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+
+    let formData = new FormData()
     formData.append("file", file)
 
-    const uniqueQuery = "?nocache=" + new Date().getTime()
-    const url = URL.createObjectURL(file)
-    uploadedImageURL_color = url
+    // 1️⃣ Wait for image processing
+    const data_image = await fetch("/process-image", {
+        method: "POST",
+        body: formData,
+    })
 
-    fetch("/process-image" + uniqueQuery, { method: "POST", body: formData })
-        // .then(response => console.log(response))
-        .then((response) => response.json())
-        .then((data) => {
-            // after processing the image, we get the default experiment info and populate the fields
-            document.getElementById("info_datetime").value = now
-                .toISOString()
-                .slice(0, 16)
-            document
-                .getElementById("info_datetime")
-                .dispatchEvent(new Event("change"))
-            document
-                .getElementById("inference_model")
-                .dispatchEvent(new Event("change"))
-            fetch("/get-default-experiment-info")
-                .then((response) => response.json())
-                .then((data) => {
-                    if (data.status === "success") {
-                        // loop through data and set value of input with id of key to value
-                        for (const [key, value] of Object.entries(data.data)) {
-                            const input = document.getElementById(key)
-                            console.log(
-                                "Setting value of " + key + " to " + value,
-                            )
-                            if (input) {
-                                input.value = value
-                                if (value) {
-                                    input.classList.add("has-value")
-                                } else {
-                                    input.classList.remove("has-value")
-                                }
-                                input.dispatchEvent(new Event("change"))
-                            }
-                        }
-                    }
+    const data = await data_image.json()
+
+    document.getElementById("info_datetime").value = now
+        .toISOString()
+        .slice(0, 16)
+    // update the info_datetime field in the database
+    formData = new FormData()
+    formData.append(
+        "info_datetime",
+        document.getElementById("info_datetime").value,
+    )
+    await fetch("/update_value/info_datetime", {
+        method: "POST",
+        body: formData,
+    })
+    // update the inference_model field in the database
+    formData = new FormData()
+    formData.append(
+        "inference_model",
+        document.getElementById("inference_model").value,
+    )
+    await fetch("/update_value/inference_model", {
+        method: "POST",
+        body: formData,
+    })
+
+    await createImageURLs(data)
+
+    // 2️⃣ Wait for default experiment info
+    const defaultResponse = await fetch("/get-default-experiment-info")
+    const defaultData = await defaultResponse.json()
+    if (defaultData.status === "success") {
+        for (const [key, value] of Object.entries(defaultData.data)) {
+            const input = document.getElementById(key)
+            if (input) {
+                input.value = value
+                const fromData = new FormData()
+                fromData.append(key, value)
+                await fetch(`/update_value/${key}`, {
+                    method: "POST",
+                    body: fromData,
                 })
-            //
+            }
+        }
+    }
 
-            uploadedImageURL_color = URL.createObjectURL(
-                base64toBlob(data.color, "image/png"),
-            )
-            uploadedImageURL_gray = URL.createObjectURL(
-                base64toBlob(data.gray, "image/png"),
-            )
-        })
-        .then(() => inference())
-        .then(() => removeWorkingMessage())
+    // 3️⃣ Only now continue with inference
+    inference()
         .then(() => {
             document.getElementById("defaultImage").style.display = "none"
         })
         .then(() => getImageType())
         .then(() => unlockControls())
+        .then(() => removeWorkingMessage())
         .then(() => console.log("Image processed successfully."))
-        // .then(() => {
-        //     console.log("Image loaded, fetching default experiment info...")
-        //     getDefaultExperimentInfo().then((data) => {
-        //         populateExperimentInfo(data)
-        //     })
-        // })
-        .catch((error) => {
-            console.error("Error:", error)
-            // alert("Error processing image: " + error.message)
-            removeWorkingMessage()
-        })
-
-    // await removeBackground(formData)
-    // await fetchGrayscaleData(formData)
-    // .then(() => processImage())
-    // .then(() => getImageType())
-    // .then(() => enableControls()) // Enable controls after everything is loaded
-    // .then(() => removeWorkingMessage())
-    // .then(() => fetch('/save' + uniqueQuery, { method: 'POST' }))
-    // .catch(error => {
-    //     console.error('Error:', error);
-    // });
 }
+// async function uploadImage() {
+//     displayWorkingMessage()
+
+//     const fileInput = document.getElementById("fileInput")
+//     if (fileInput.files.length === 0) return
+//     const file = fileInput.files[0]
+
+//     const formData = new FormData()
+//     formData.append("file", file)
+
+//     // 1️⃣ Wait for image processing
+//     const response = await fetch("/process-image", {
+//         method: "POST",
+//         body: formData,
+//     })
+
+//     const data = await response.json()
+
+//     // 2️⃣ Wait for default experiment info
+//     const defaultResponse = await fetch("/get-default-experiment-info")
+//     const defaultData = await defaultResponse.json()
+
+//     if (defaultData.status === "success") {
+//         for (const [key, value] of Object.entries(defaultData.data)) {
+//             const input = document.getElementById(key)
+//             if (input) {
+//                 console.log("Setting value of " + key + " to " + value)
+//                 input.value = value
+//                 const fromData = new FormData()
+//                 fromData.append(key, value)
+//                 await fetch(`/update_value/${key}`, {
+//                     method: "POST",
+//                     body: fromData,
+//                 })
+//             }
+//         }
+//     }
+
+//     // 3️⃣ Only now continue
+//     await inference()
+
+//     document.getElementById("defaultImage").style.display = "none"
+//     .then(() => getImageType())
+
+//     removeWorkingMessage()
+//     unlockControls()
+// }
+
+// async function uploadImage() {
+//     displayWorkingMessage()
+
+//     const now = new Date()
+//     now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+
+//     // if the loaders are here, the dont have to have an experiment ID
+//     // document.getElementById("info_datetime").value = now
+//     //     .toISOString()
+//     //     .slice(0, 16)
+//     // document.getElementById("info_datetime").dispatchEvent(new Event("change"))
+
+//     // fetch("/get-default-experiment-info")
+//     //     .then((response) => response.json())
+//     //     .then((data) => {
+//     //         if (data.status === "success") {
+//     //             // loop through data and set value of input with id of key to value
+//     //             for (const [key, value] of Object.entries(data.data)) {
+//     //                 const input = document.getElementById(key)
+//     //                 if (input) {
+//     //                     input.value = value
+//     //                     if (value) {
+//     //                         input.classList.add("has-value")
+//     //                     } else {
+//     //                         input.classList.remove("has-value")
+//     //                     }
+//     //                     input.dispatchEvent(new Event("change"))
+//     //                 }
+//     //             }
+//     //         }
+//     //     })
+
+//     const fileInput = document.getElementById("fileInput")
+//     if (fileInput.files.length === 0) return
+//     const file = fileInput.files[0]
+
+//     const formData = new FormData()
+//     formData.append("file", file)
+
+//     const uniqueQuery = "?nocache=" + new Date().getTime()
+//     const url = URL.createObjectURL(file)
+//     uploadedImageURL_color = url
+
+//     fetch("/process-image" + uniqueQuery, {
+//         method: "POST",
+//         body: formData,
+//     })
+//         // .then(response => console.log(response))
+//         .then((response) => response.json())
+//         .then(async (data) => {
+//             // after processing the image, we get the default experiment info and populate the fields
+//             document.getElementById("info_datetime").value = now
+//                 .toISOString()
+//                 .slice(0, 16)
+//             let formData = new FormData()
+//             formData.append(
+//                 "info_datetime",
+//                 document.getElementById("info_datetime").value,
+//             )
+//             await fetch("/update_value/info_datetime", {
+//                 method: "POST",
+//                 body: formData,
+//             })
+//             formData = new FormData()
+//             formData.append(
+//                 "inference_model",
+//                 document.getElementById("inference_model").value,
+//             )
+//             await fetch("/update_value/inference_model", {
+//                 method: "POST",
+//                 body: formData,
+//             })
+//             uploadedImageURL_color = URL.createObjectURL(
+//                 base64toBlob(data.color, "image/png"),
+//             )
+//             uploadedImageURL_gray = URL.createObjectURL(
+//                 base64toBlob(data.gray, "image/png"),
+//             )
+//         })
+//         .then(() => {
+//             fetch("/get-default-experiment-info")
+//                 .then((response) => response.json())
+//                 .then(async (data) => {
+//                     if (data.status === "success") {
+//                         // loop through data and set value of input with id of key to value
+//                         for (const [key, value] of Object.entries(data.data)) {
+//                             const input = document.getElementById(key)
+//                             if (input) {
+//                                 input.value = value
+//                                 const formData = new FormData()
+//                                 formData.append(key, value)
+//                                 await fetch(`/update_value/${key}`, {
+//                                     method: "POST",
+//                                     body: formData,
+//                                 })
+//                             }
+//                         }
+//                     }
+//                 })
+//         })
+//         .then(() => inference())
+//         .then(() => removeWorkingMessage())
+//         .then(() => {
+//             document.getElementById("defaultImage").style.display = "none"
+//         })
+//         .then(() => getImageType())
+//         .then(() => unlockControls())
+//         .then(() => console.log("Image processed successfully."))
+//         // .then(() => {
+//         //     console.log("Image loaded, fetching default experiment info...")
+//         //     getDefaultExperimentInfo().then((data) => {
+//         //         populateExperimentInfo(data)
+//         //     })
+//         // })
+//         .catch((error) => {
+//             console.error("Error:", error)
+//             // alert("Error processing image: " + error.message)
+//             removeWorkingMessage()
+//         })
+
+//     // await removeBackground(formData)
+//     // await fetchGrayscaleData(formData)
+//     // .then(() => processImage())
+//     // .then(() => getImageType())
+//     // .then(() => enableControls()) // Enable controls after everything is loaded
+//     // .then(() => removeWorkingMessage())
+//     // .then(() => fetch('/save' + uniqueQuery, { method: 'POST' }))
+//     // .catch(error => {
+//     //     console.error('Error:', error);
+//     // });
+// }
 
 function removeBackground(formData) {
     return new Promise((resolve, reject) => {
@@ -1012,26 +1161,26 @@ function deactivateCurrentExperiment() {
     })
 }
 
-async function dispatchEvents() {
-    return new Promise((resolve) => {
-        for (const id of [
-            "info_sample_collection_data",
-            "info_place_of_experiment",
-            "info_test_procedure",
-            "info_wrapping_temperature",
-            "info_exposing_water_temperature",
-            "info_datetime",
-            "info_comment",
-            "info_aggregate",
-            "info_binder",
-            "inference_model",
-            "expertGuess",
-        ]) {
-            document.getElementById(id).dispatchEvent(new Event("change"))
-        }
-        resolve()
-    })
-}
+// async function dispatchEvents() {
+//     return new Promise((resolve) => {
+//         for (const id of [
+//             "info_sample_collection_data",
+//             "info_place_of_experiment",
+//             "info_test_procedure",
+//             "info_wrapping_temperature",
+//             "info_exposing_water_temperature",
+//             "info_datetime",
+//             "info_comment",
+//             "info_aggregate",
+//             "info_binder",
+//             "inference_model",
+//             "expertGuess",
+//         ]) {
+//             document.getElementById(id).dispatchEvent(new Event("change"))
+//         }
+//         resolve()
+//     })
+// }
 
 function loadExperiment(id) {
     displayWorkingMessage()
@@ -1141,6 +1290,15 @@ async function evaluateExperiment() {
         )
         return
     } else {
+        const formData = new FormData()
+        formData.append(
+            "expert_guess",
+            document.getElementById("expertGuess").value / 100,
+        )
+        await fetch("/update_value/expert_guess", {
+            method: "POST",
+            body: formData,
+        })
         const uniqueQuery = "?nocache=" + new Date().getTime()
         console.log("Evaluating the experiment...")
         fetch("/evaluate-asphalt" + uniqueQuery, { method: "POST" })
