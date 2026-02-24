@@ -9,7 +9,7 @@ from models import TorchModel
 
 TORCH_DEVICE = os.environ.get('TORCH_DEVICE', 'cuda' if torch.cuda.is_available() else 'cpu')
 
-VN_specific_models = ["unet_mixed_300ep.pth"]
+VN_specific_models = ["unet_mixed_new_300ep.pth"]
 
 handled_model = VN_specific_models[0]
 
