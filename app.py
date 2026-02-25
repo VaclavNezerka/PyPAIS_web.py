@@ -1332,7 +1332,7 @@ def company():
             
 @app.route('/register',methods=['GET','POST'])
 def register():
-    logout()
+    # logout()
     title = _("Register new company")
     info = _("You can use the form above to register a user for your existing company. If you wish to register a new company instead, please click the button below and contact us via email.")
     btnstr = _("Contact us!")
@@ -1349,10 +1349,13 @@ def register():
         </a>
     </div>
     """
+    if session.get('authenticated', False):
+        optional_content = f""
 
     match request.method:
         case 'GET':
             form=forms.RegistrationFormUser()
+
             return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY, optional_content_below=optional_content)
         case 'POST':
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))

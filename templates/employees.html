@@ -95,6 +95,17 @@
             <button class="btn-details-left" id="previous_page">{{ _('Previous') }}</button>
             <button class="btn-details-right" id="next_page">{{ _('Next') }}</button>
         </div>
+
+        <div id="row" , class="colorbar">
+            <h3> {{ _('Register New Employee') }}</h3>
+        </div>
+        <p> {{ _('Click the button below to register a new employee. For registration, you need to know the company key, which can be viewed')}}
+            <a class='styled-href' href="/view-company-key"> {{ _('here') }} </a>.
+        </p>
+        <a href="{{ url_for('register') }}">
+            <button id='registerNewEmployee' class="custom-file-label">{{ _('Register New Employee') }}</button>
+        </a>
+
         <script src="{{ url_for('static', filename='script_tables.js') }}"> </script>
     </body>
 
