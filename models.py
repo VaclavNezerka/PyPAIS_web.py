@@ -167,9 +167,13 @@ def postprocess_model_prediction(prediction: torch.Tensor):
     prediction = prediction.squeeze(0).cpu().numpy()  # Remove batch dimension and convert to numpy array
     boolean_prediction = np.argmax(prediction, axis=0)  # Get the class with the highest probability
 
-    background_mask = boolean_prediction == 2
+    # BUG: OLD 
+    # background_mask = boolean_prediction == 2
+    # asphalt_mask = boolean_prediction == 1
+    # aggregate_mask = boolean_prediction == 0
+    background_mask = boolean_prediction == 0
     asphalt_mask = boolean_prediction == 1
-    aggregate_mask = boolean_prediction == 0
+    aggregate_mask = boolean_prediction == 2
 
     return asphalt_mask, aggregate_mask, background_mask
 

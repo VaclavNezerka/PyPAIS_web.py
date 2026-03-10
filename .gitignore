@@ -30,3 +30,6 @@ initialize_app_linux.sh
 .env
 test*.pdf
 to_server.sh
+models_train.py
+models_train_inference.py
+push_to_server.sh
