@@ -28,6 +28,10 @@ def open_db_connection() -> object:
         database=db_name,
         user=db_user,
         password=dbpwd)
+    
+    # Disable autocommit to allow for FOR UPDATE queries (lock) and manual transaction control
+    connection.autocommit = False
+    
     return connection, connection.cursor()
 
 def close_all(*args):
@@ -54,11 +58,13 @@ def db_connection(func):
 
 @db_connection
 def change_password(cur, conn, values):
+    cur.execute('SELECT 1 FROM users WHERE username=%s FOR UPDATE', (values[1],))
     cur.execute('UPDATE users SET pwd=%s WHERE username=%s', values)
     conn.commit()
 
 @db_connection
 def change_user_blockade(cur, conn, user_id: int, is_blocked: bool) -> None:
+    cur.execute('SELECT 1 FROM users WHERE id=%s FOR UPDATE', (user_id,))
     query='UPDATE users SET is_blocked=%s WHERE id=%s'
     values=(is_blocked, user_id)
     cur.execute(query, values)
@@ -108,6 +114,7 @@ def hex_to_colorhash(colorhash:str, nbits=42, nbins=3):
 
 @db_connection
 def store_similar_images(cur, conn, experiment_id: int, similar_by_histogram: list[int, float], similar_by_ssim: list[int, float]) -> None:
+    cur.execute('SELECT 1 FROM experiments WHERE experiment_id=%s FOR UPDATE', (experiment_id,))
     query = 'UPDATE experiments SET similarity_controll_done=True, similar_hist_id=%s, similar_ssim_id=%s, similar_hist_value=%s, similar_ssim_value=%s WHERE experiment_id=%s'
     execute_query(query, (
         int(similar_by_histogram[1]), int(similar_by_ssim[1]), 
@@ -125,6 +132,7 @@ def update_default_experiment_info(cur, conn, user_id: int, field: str, value: s
         query = f'INSERT INTO default_info (user_id, {field}) VALUES (%s, %s)'
         execute_query(query, (user_id, value))
     else:
+        cur.execute('SELECT 1 FROM default_info WHERE user_id=%s FOR UPDATE', (user_id,))
         query = f'UPDATE default_info SET {field}=%s WHERE user_id=%s'
         execute_query(query, (value, user_id))
 
@@ -202,6 +210,7 @@ def get_comparing_image_hashes(cur, conn, user_id: int, experiment_id: int) -> t
 def save_image_hash_by_experiment_id(cur, conn, experiment_id: int, values: dict) -> None:
     valid_keys = {'phash', 'ahash', 'dhash', 'colorhash'}
     filtered_values = {k: v for k, v in values.items() if k in valid_keys}
+    cur.execute('SELECT 1 FROM experiments WHERE experiment_id=%s FOR UPDATE', (experiment_id,))
     query = 'UPDATE experiments SET phash=%s, ahash=%s, dhash=%s, colorhash=%s WHERE experiment_id=%s '
     execute_query(query, (filtered_values.get('phash'), filtered_values.get('ahash'), filtered_values.get('dhash'), filtered_values.get('colorhash'), experiment_id))
 
@@ -269,6 +278,7 @@ def get_company_id_by_key(cur, conn, company_key: str) -> int | None:
 
 @db_connection 
 def update_company_key(cur, conn, company_id: str) -> int | None:
+    cur.execute('SELECT 1 FROM companies WHERE company_id=%s FOR UPDATE', (company_id,))
     query = 'UPDATE companies SET company_key=%s WHERE company_id=%s'
     is_unique = False
     while not is_unique:
@@ -395,12 +405,14 @@ def check_company_key_exists(cur, conn, company_key: str) -> bool:
 
 @db_connection
 def confirm_user_email(cur, conn, email: str) -> None:
+    cur.execute('SELECT 1 FROM public_users WHERE e_mail=%s FOR UPDATE', (email,))
     query = "UPDATE public_users SET e_mail_confirmed=True WHERE e_mail=%s"
     cur.execute(query, (email,))
     conn.commit()
 
 @db_connection
 def confirm_company_registration(cur, conn, email: str) -> None:
+    cur.execute('SELECT 1 FROM public_companies WHERE e_mail=%s FOR UPDATE', (email,))
     query = "UPDATE public_companies SET confirmed_by_admin=True WHERE e_mail=%s"
     cur.execute(query, (email,))
     conn.commit()
@@ -408,6 +420,7 @@ def confirm_company_registration(cur, conn, email: str) -> None:
 @db_connection
 
 def confirm_company_email(cur, conn, email: str) -> None:
+    cur.execute('SELECT 1 FROM public_companies WHERE e_mail=%s FOR UPDATE', (email,))
     query = "UPDATE public_companies SET e_mail_confirmed=True WHERE e_mail=%s"
     cur.execute(query, (email,))
     conn.commit()
@@ -430,12 +443,14 @@ def is_company_email_confirmed(cur, conn, company_id: int) -> bool:
 
 @db_connection
 def change_admin_privileges(cur, conn , user_id: int, is_admin: bool):
+    cur.execute('SELECT 1 FROM public_users WHERE id=%s FOR UPDATE', (user_id,))
     query = "UPDATE public_users SET is_company_admin=%s WHERE id=%s"
     cur.execute(query, (is_admin, user_id))
     conn.commit()
 
 @db_connection
 def save_new_user_db(cur, conn , values: dict):
+    cur.execute('SELECT 1 FROM public_users WHERE username=%s OR e_mail=%s FOR UPDATE', (values.get('username'), values.get('e_mail')))
     # cur.execute('INSERT INTO users (username, e_mail, first_name, last_name, company, pwd) '
     #             'VALUES (%s,%s,%s,%s,%s,%s)', values)
     # conn.commit()
@@ -474,6 +489,7 @@ def load_experiment_from_db(cur,conn, id):
 
 @db_connection
 def update_experiment_active_status(cur, conn, user_id, active: bool, experiment_id: int = None):
+    cur.execute('SELECT 1 FROM users WHERE id=%s FOR UPDATE', (user_id,))   
     if active:
         query = 'UPDATE users SET active_experiment_id=%s WHERE id=%s'
         execute_query(query, (experiment_id, user_id))
@@ -493,20 +509,26 @@ def insert_experiment_to_db(cur ,conn, values_dict: dict) -> None:
 
 @db_connection
 def update_experiment_in_db(cur ,conn, values_dict: dict, experiment_id: str) -> None:
+    cur.execute('SELECT 1 FROM experiments WHERE experiment_id=%s FOR UPDATE', (experiment_id,))
     command = f'UPDATE experiments SET ' + ', '.join([f"{key}=%s" for key in values_dict.keys()]) + ' WHERE experiment_id=%s'
     # values = tuple(values_dict.values()) + (str(experiment_id),)
-    values = tuple((v if v else None) for v in values_dict.values()) + (str(experiment_id),)
+    
+    #  
+    # values = tuple((v if v is not None else None) for v in values_dict.values()) + (str(experiment_id),)
+    values = tuple(values_dict.values()) + (str(experiment_id),)
     cur.execute(command, values)
     conn.commit()
 
 @db_connection
 def update_users_table(cur,conn, values_dict: dict, user_id: int) -> None:
+    cur.execute('SELECT 1 FROM users WHERE id=%s FOR UPDATE', (user_id,))
     command = f'UPDATE users SET ' + ', '.join([f"{key}=%s" for key in values_dict.keys()]) + ' WHERE id=%s'
     values = tuple(values_dict.values()) + (user_id,)
     execute_query(command, values)
 
 @db_connection
 def update_companies_table(cur,conn, values_dict: dict, company_id: int) -> None:
+    cur.execute('SELECT 1 FROM companies WHERE company_id=%s FOR UPDATE', (company_id,))
     command = f'UPDATE companies SET ' + ', '.join([f"{key}=%s" for key in values_dict.keys()]) + ' WHERE company_id=%s'
     values = tuple(values_dict.values()) + (company_id,)
     execute_query(command, values)
