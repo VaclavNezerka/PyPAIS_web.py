@@ -250,7 +250,14 @@ class UserTemporaryStorage:
     def __setattr__(self, name: str, value):
         super().__setattr__(name, value)
         self._self_to_session()
-        
+    
+    # def __getattribute__(self, name: str) -> Any:
+    #     value = super().__getattribute__(name)
+    #     if name in ['color']:  
+    #         # get the image from the DB 
+    #         value 
+    #     return value
+            
     def from_dict(self, data_dict: dict) -> None:
         """
         Loads the attributes of the class from a dictionary.
@@ -277,6 +284,7 @@ class UserTemporaryStorage:
                 setattr(self, key, value)
 
         # self._self_to_session()  # update the session after loading the data
+   
 
     def to_dict(self, features: Iterable[str] = None, for_save: bool = False) -> dict:
         """
@@ -1078,9 +1086,10 @@ def change_admin_privileges():
 
 @app.route('/login',methods=['GET','POST'])
 def login():
+    if 'authenticated' in session and session['authenticated']:
+        logout()
     match request.method:
         case 'GET':
-            logout()
             form=forms.LoginForm()
             return render_template('form.html',dynamic_content=_('Login'),form=form, session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
@@ -1928,12 +1937,13 @@ def downscale_image(image: np.ndarray, scale_factor: float = None) -> np.ndarray
     --------
         np.ndarray: The downscaled image as a numpy array.
     """
+    max_size = 1920
     if scale_factor is None:
         # compute scale factor based on the image size such that the maximum dimension is 1200 pixels
         scale_factor = 1.0
         max_dimension = max(image.shape[:2])
-        if max_dimension > 1200:
-            scale_factor = max_dimension / 1200.0
+        if max_dimension > max_size:
+            scale_factor = max_dimension / max_size
     elif scale_factor <= 0:
         raise ValueError("Scale factor must be greater than 0.")
 
@@ -2411,6 +2421,7 @@ def get_inner_shape(shape_object):
             mask = (((x - center[0]) / radius_x) ** 2 + ((y - center[1]) / radius_y) ** 2 ) <= 1
     return np.array(mask, dtype=bool).T
 
+@deprecated("used in thresholding approach, but not in the current one.")
 def correct_mask(mask: np.ndarray, label: str) -> None:
     match label:
         case "asphalt":
@@ -2445,7 +2456,9 @@ def correct_mask(mask: np.ndarray, label: str) -> None:
     return None
 
 
+
 @app.route('/get-corrected-mask', methods=['GET'])
+@deprecated("used in thresholding approach, but not in the current one.")
 def get_corrected_mask() -> tuple[dict, int, dict]:
     # choose intensity for drawing the masks
     intensity = 51 
