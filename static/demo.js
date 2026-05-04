@@ -43,8 +43,8 @@ let bitumenColor = hexToRgba(
 )
 
 // Highcontrast colors
-bitumenColor = "rgba(255, 0, 0, 1)"
-aggregateColor = "rgba(0, 0, 225, 1)"
+bitumenColor = "rgba(0, 0, 255, 1)"
+aggregateColor = "rgba(255, 0, 0, 1)"
 backgroundColor = "rgba(0, 255, 0, 1)"
 
 const labelSettings = {

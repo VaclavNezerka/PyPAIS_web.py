@@ -1,84 +1,40 @@
-// // Save the choice locally
-// async function switchLanguage(lang) {
-//     document.getElementById("current-lang-icon").src =
-//         "/static/language_icons/icon_" + lang + ".png"
-//     await fetch("/switch-language/" + lang, { method: "POST" })
-//     localStorage.setItem("preferredLang", lang)
-// }
-
-// document.addEventListener("DOMContentLoaded", () => {
-//     const currentIcon = document.getElementById("current-lang-icon")
-//     const currentLang = document.body.dataset.currentLang
-//     if (localStorage.getItem("preferredLang")) {
-//         switchLanguage(localStorage.getItem("preferredLang", currentLang))
-//     }
-
-//     document.querySelectorAll(".lang-menu a").forEach((link) => {
-//         link.addEventListener("click", async (e) => {
-//             // e.preventDefault();
-//             const langBtn = document.getElementById("current-lang-btn")
-//             const selectedLang = link.id
-//             // const selectedIcon = '/static/language_icons/icon_' + selectedLang + '.png';
-//             const currentLang = langBtn.value
-//             langBtn.value = selectedLang
-//             switchLanguage(selectedLang).then(() => {
-//                 location.reload()
-//             })
-//         })
-//     })
-
-//     currentIcon.src =
-//         "/static/language_icons/icon_" +
-//         localStorage.getItem("preferredLang") +
-//         ".png"
-// })
-
-// Save the choice locally
-async function switchLanguage(lang) {
-    document.getElementById("current-lang-icon").src =
-        "/static/language_icons/icon_" + lang + ".png"
-    await fetch("/switch-language/" + lang, { method: "POST" })
-    localStorage.setItem("preferredLang", lang)
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    const currentIcon = document.getElementById("current-lang-icon")
+document.addEventListener("DOMContentLoaded", async () => {
     const currentLang = document.body.dataset.currentLang
-    selected_lang = localStorage.getItem("preferredLang") || currentLang
-    console.log("Current language:", selected_lang)
-    if (selected_lang) {
-        if (selected_lang !== currentLang) {
-            switchLanguage(selected_lang).then(() => {
-                location.reload()
-            })
-        }
-    }
-    // if (currentLang) {
-    //     switchLanguage(currentLang).then(() => {
-    //         location.reload()
-    //     })
-    // }
-    // if (localStorage.getItem("preferredLang")) {
-    //     switchLanguage(localStorage.getItem("preferredLang", currentLang))
-    // }
+    const preferredLang = localStorage.getItem("preferredLang")
 
-    currentIcon.src =
-        "/static/language_icons/icon_" +
-        // localStorage.getItem("preferredLang") +
-        document.body.dataset.currentLang +
-        ".png"
+    console.log("Report :")
+    console.log("Current language:", currentLang)
+    console.log("Preferred language:", preferredLang)
+    console.log("Preferred language:", preferredLang)
+    if (preferredLang && preferredLang !== currentLang) {
+        await fetch(`/switch-language/${preferredLang}`, { method: "POST" })
+        console.log("Language switched to:", preferredLang)
+        document.body.dataset.currentLang = preferredLang
+        location.reload()
+    }
+
+    document.getElementById("current-lang-icon").src =
+        "/static/language_icons/icon_" + currentLang + ".png"
 
     document.querySelectorAll(".lang-menu a").forEach((link) => {
         link.addEventListener("click", async (e) => {
             // e.preventDefault();
             const langBtn = document.getElementById("current-lang-btn")
             const selectedLang = link.id
-            // const selectedIcon = '/static/language_icons/icon_' + selectedLang + '.png';
-            const currentLang = langBtn.value
             langBtn.value = selectedLang
-            switchLanguage(selectedLang).then(() => {
-                location.reload()
-            })
+            if (selectedLang !== currentLang) {
+                switchLanguage(selectedLang).then(() => {
+                    location.reload()
+                })
+            }
         })
     })
 })
+
+// // Save the choice locally
+async function switchLanguage(lang) {
+    document.getElementById("current-lang-icon").src =
+        "/static/language_icons/icon_" + lang + ".png"
+    await fetch("/switch-language/" + lang, { method: "POST" })
+    localStorage.setItem("preferredLang", lang)
+}
