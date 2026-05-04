@@ -14,6 +14,8 @@ from wtforms import StringField
 import werkzeug.security as ws
 from werkzeug.local import LocalProxy
 from PIL import Image
+import pillow_heif
+pillow_heif.register_heif_opener()
 import numpy as np
 import io
 import imagehash
