@@ -510,7 +510,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
                 )
             else:
                 model = experiment.get("inference_model", 'unknown')
-                abort(500, description=_("Inference model") + model + _(' not available for experiment ID') + {id} + '.')    
+                abort(500, description=_("Inference model") + model + _(' not available for experiment ID') + str(experiment_id) + '. ' + _("Please use newer model for this specimen or contact us to resolve this issue."))    
                 return None
         else:
             asphalt_mask = memory_to_np_array(experiment.get("mask_asphalt"))
