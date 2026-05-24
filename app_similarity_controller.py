@@ -51,24 +51,27 @@ class ImageSimilarityController:
         self.similarity_thresholds = similarity_thresholds
         self.n_similar = n_similar
 
-    def _check_image_uniqness(self, user_id: int, experiment_id: int) -> None:
+    def _check_image_uniqness(self, user_id: int, experiment_id: int, target_image: np.ndarray) -> None:
         """
         Check whether the image has been uploaded before by the user or someone in the same organization.
         """   
+        print(f"SIMILARITY CHECK - Starting similarity check for Experiment ID: {experiment_id} by User ID: {user_id}")
         experiment_ids, hashes = db_api.get_comparing_image_hashes(user_id, experiment_id)
         target_hashes = db_api.get_image_hashes_by_experiment_id(experiment_id)
-
+        print(f"SIMILARITY CHECK - Experiment ID: {experiment_id} - Retrieved {len(experiment_ids)} images for comparison.")
         similar_image_indices = get_kNN_images(
             target_image_hashes=target_hashes,
             compare_images_hashes=hashes,
             n_max_per_hash_type=self.checks_per_hash_type
         )
+        print(f"SIMILARITY CHECK - Experiment ID: {experiment_id} - Found {len(similar_image_indices)} similar images.")
         similar_experiment_ids = [experiment_ids[i] for i in similar_image_indices]
 
         # Compute the similarity score on kNN (suspicious) images
         # TODO: continue...
         # load target image from DB
-        target_image = db_api.load_image_by_experiment_id(experiment_id)
+        # target_image = db_api.load_image_by_experiment_id(experiment_id)
+        # target_image =np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8) #TODO: remove this line after testing
         target_image = cv2_image_from_bytes(target_image)
 
         # heap to store the most similar images
@@ -103,19 +106,20 @@ class ImageSimilarityController:
         )
 
 
-    def controll_experiment(self, user_id: str, experiment_id: int) -> None:
+    def controll_experiment(self, user_id: str, experiment_id: int, target_image: np.ndarray) -> None:
         """
         Add a new thread to check the image uniqness in the background.
 
         Parameters:
             user_id (str): The ID of the user.
             experiment_id (int): The ID of the experiment.
+            target_image (np.ndarray): The image to check for uniqueness.
         """
         self.executor.submit(
             self._check_image_uniqness, 
-            user_id, experiment_id
+            user_id, experiment_id, target_image
         )
-        self._check_image_uniqness(user_id, experiment_id)
+        # self._check_image_uniqness(user_id, experiment_id)
 
 
 def similarity_score_histogram(image1, image2):

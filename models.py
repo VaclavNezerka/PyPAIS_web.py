@@ -4,6 +4,10 @@ import numpy as np
 import torch
 import segmentation_models_pytorch as smp
 from typing_extensions import deprecated
+import cv2
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
+import time
 
 # Default
 TORCH_DEVICE = os.environ.get('TORCH_DEVICE', 'cuda' if torch.cuda.is_available() else 'cpu')
@@ -43,6 +47,56 @@ def add_session_to_loaded_model(model_name: str,session_id: str) -> None:
     """
     torch_loaded_models[model_name]["active_users"].add(session_id)
 
+normalize_tf = A.Compose([A.Normalize(), ToTensorV2()])
+# def sliding_window_inference(image, model, device, patch_size=512, stride=256, normalize_transform=None,
+#                              stripped_threshold=0.2):
+def sliding_window_inference(image, model, device, patch_size=1024, stride=512, normalize_transform=None,
+                             stripped_threshold=0.2):
+    H, W = image.shape[:2]
+
+    # Pad image to be cleanly divisible by patch_size and stride
+    pad_h = (patch_size - H % patch_size) % patch_size
+    pad_w = (patch_size - W % patch_size) % patch_size
+    img_pad = cv2.copyMakeBorder(image, 0, pad_h, 0, pad_w, cv2.BORDER_REFLECT)
+    H_pad, W_pad = img_pad.shape[:2]
+
+    prob_map = np.zeros((3, H_pad, W_pad), dtype=np.float32)
+    count_map = np.zeros((H_pad, W_pad), dtype=np.float32)
+
+    for y in range(0, H_pad - patch_size + 1, stride):
+        for x in range(0, W_pad - patch_size + 1, stride):
+            patch = img_pad[y:y + patch_size, x:x + patch_size]
+
+            if normalize_transform:
+                aug = normalize_transform(image=patch)
+                inp = aug['image'].unsqueeze(0).to(device)
+            else:
+                inp = torch.from_numpy(patch).permute(2, 0, 1).unsqueeze(0).float().to(device) / 255.0
+
+            with torch.no_grad():
+                logits = model(inp)
+                # Softmax converts raw logits into probabilities (0.0 to 1.0) for each class
+                probs = torch.softmax(logits, dim=1).cpu().numpy()[0]
+
+            prob_map[:, y:y + patch_size, x:x + patch_size] += probs
+            count_map[y:y + patch_size, x:x + patch_size] += 1
+
+    # Average overlapping patches
+    np.maximum(count_map, 1, out=count_map)
+    prob_map /= count_map[None, ...]
+    prob_map = prob_map[:, :H, :W]
+
+    # --- THRESHOLD LOGIC ---
+    # First, get the standard argmax prediction (the class with the highest probability wins)
+    preds = np.argmax(prob_map, axis=0).astype(np.uint8)
+
+    # If a custom threshold is provided, override the prediction for the Stripped class (Index 2)
+    if stripped_threshold:
+        # If the probability for 'Stripped' is greater than our threshold, force it to be 'Stripped'
+        # This overrides the background or aggregate classes if stripped probability is high enough
+        preds[prob_map[2, :, :] > stripped_threshold] = 2
+
+    return preds
 
 class TorchModel(torch.nn.Module):
     """
@@ -147,7 +201,22 @@ def inference(model_name: str, input_data: torch.Tensor, session_id: str) -> tor
 
     # Perform inference with the loaded model
     model = torch_loaded_models[model_name]["model"]
-    return model.evaluate(input_data.to(TORCH_DEVICE))
+    # return model.evaluate(input_data.to(TORCH_DEVICE))
+    print(type(input_data))
+    input_data = input_data.transpose(1, 0, 2) 
+    # input_data = cv2.cvtColor(input_data, cv2.COLOR_BGR2RGB)
+    t = time.time()
+    prediction: np.ndarray = sliding_window_inference(
+        image=input_data,
+        model=model.model, 
+        normalize_transform=normalize_tf,
+        device=TORCH_DEVICE
+    )
+    prediction = prediction.T
+    print(prediction[0])
+    t = time.time() - t
+    print(f"Inference time: {t:.2f} seconds")
+    return prediction
 
 def postprocess_model_prediction(prediction: torch.Tensor):
     """
@@ -164,16 +233,20 @@ def postprocess_model_prediction(prediction: torch.Tensor):
         - 2 is background
 
     """
-    prediction = prediction.squeeze(0).cpu().numpy()  # Remove batch dimension and convert to numpy array
-    boolean_prediction = np.argmax(prediction, axis=0)  # Get the class with the highest probability
+    # try:
+    #     prediction = prediction.squeeze(0).cpu().numpy()  # Remove batch dimension and convert to numpy array
+    #     prediction = prediction.squeeze(0).cpu().numpy()  # Remove batch dimension and convert to numpy array
+    # except:
+    #     pass
+    # boolean_prediction = np.argmax(prediction, axis=0)  # Get the class with the highest probability
 
     # BUG: OLD 
     # background_mask = boolean_prediction == 2
     # asphalt_mask = boolean_prediction == 1
     # aggregate_mask = boolean_prediction == 0
-    background_mask = boolean_prediction == 0
-    asphalt_mask = boolean_prediction == 1
-    aggregate_mask = boolean_prediction == 2
+    background_mask = prediction == 0
+    asphalt_mask = prediction == 1
+    aggregate_mask = prediction == 2
 
     return asphalt_mask, aggregate_mask, background_mask
 
@@ -190,16 +263,17 @@ def inference_on_numpy(np_image: np.ndarray, model_name: str, session_id: int) -
     --------
         tuple: A tuple containing asphalt_mask, aggregate_mask, and background_mask.
     """
-    input_data = torch.from_numpy(np_image).unsqueeze(0).float()  # Add batch channel dimension
-    input_data = input_data.permute(0, 3, 1, 2)  # Change to torch (batch_size, channels, height, width)
-    
+    # input_data = torch.from_numpy(np_image).unsqueeze(0).float()  # Add batch channel dimension
+    # input_data = input_data.permute(0, 3, 1, 2)  # Change to torch (batch_size, channels, height, width)
+    # input_data = input_data.permute(0, 3, 2, 1)  # Change to torch (batch_size, channels, height, width)
+    input_data = np_image
     print("input_data.shape")
     print(input_data.shape)
 
     model_prediction = inference(model_name=model_name,
                                  input_data=input_data,
                                  session_id=session_id)
-    
+    # model_prediction= model_prediction.permute(0, 1, 3, 2 )  # Change back to (batch_size, height, width, channels)
     # get model prediction and save it to the sessions
     asphalt_mask, aggregate_mask, background_mask = postprocess_model_prediction(model_prediction)
     return asphalt_mask, aggregate_mask, background_mask

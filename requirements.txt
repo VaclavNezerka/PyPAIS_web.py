@@ -34,3 +34,4 @@ apscheduler
 flask_session
 flask_sqlalchemy
 sqlalchemy
+pillow_heif

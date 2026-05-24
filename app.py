@@ -251,6 +251,7 @@ class UserTemporaryStorage:
         session['storage'] = zlib.compress(pickle.dumps(self))
     def __setattr__(self, name: str, value):
         super().__setattr__(name, value)
+        print(f'Setting attribute {name} to value of type {type(value)}')
         self._self_to_session()
     
     # def __getattribute__(self, name: str) -> Any:
@@ -1686,6 +1687,9 @@ def update_specific_value(value_name):
 @app.route('/save_value/<string:value_name>',methods=['POST','GET'])
 @ignore_unauthenticated
 def save_specific_value(value_name):
+    # if value_name is 'oexpert_guess' and storage.expert_guess is not None:
+    #     print('Saving expert guess:', storage.expert_guess)
+    #     qqq
     try:
         value_name = value_name.lower()
         # value = ts[session['user_id']].values.__dict__[value_name]
@@ -1787,13 +1791,16 @@ def activate_experiment(id):
             print(i[0])
             r=deactivate_experiment(i[0])
 
+    print('before activating experiment.')
     # activate the experiment
     db_api.update_experiment_active_status(user_id=session['user_id'], active=True, experiment_id=id)
     # query = 'UPDATE experiments SET active=%s WHERE experiment_id=%s'
+    print('after db update for activating experiment.')
     # values = (True, id)
     # execute_query(query, values)
     # ts [session['user_id']].experiment_id = id    
     storage.experiment_id = id    
+    print('3')
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
 # TODO: consider removal - of 'POST' method - unused
@@ -1882,7 +1889,9 @@ def save_experiment(**kwargs):
             ts_dict['current_state'] = state 
             ts_dict['user_id'] = session['user_id']
             # ts_dict.pop('experiment_id', None)  # ensure that the experiment_id is not in the dict
+            print('before db write.')
             storage.experiment_id = db_api.insert_experiment_to_db(values_dict=ts_dict)
+            print('after    db write.')
             activate_experiment(storage.experiment_id)
             print('New experiment ID:', storage.experiment_id)
             # storage.from_dict(ts_dict)  # to ensure consistency
@@ -2054,11 +2063,14 @@ def process_image():
         storage.from_dict(img_hashes)
 
     save_experiment(state='started')
+    print('Exp saved')
 
     # let the background thread handle the similarity check
     if authenticated:
-        print('Checking image similarity in the background thread.')
-        similarity_controller.controll_experiment(user_id=session['user_id'], experiment_id=storage.experiment_id)
+        print('Checking image similarity')
+        similarity_controller.controll_experiment(user_id=session['user_id'], experiment_id=storage.experiment_id, target_image=Image.fromarray(image))
+        print('in the background thread.')
+    print('Similarity check should be running in the background thread.')
 
     response_dict = {
         'status': 'success',
@@ -2104,14 +2116,12 @@ def to_base64(image_array: np.ndarray) -> str:
 @app.route('/inference',methods=['POST'])
 def inference_image():
     storage.inference_model = request.form.get('model_name', None)
-    print()
-    print('Inference should be model set to:', request.form.get('model_name', None))
-    print('Inference model set to:', storage.inference_model)
-    print()
-
 
     if storage.inference_model is None:
         return json.dumps({'status': 'error', 'message': 'Model name is required.'}), 400, {'Content-Type': 'application/json'}
+    
+    if storage.color is None:
+        return json.dumps({'status': 'error', 'message': 'No color image provided.'}), 200, {'Content-Type': 'application/json'}
 
     # OLD CODE - REPLACED BY A SINGLE FUNCTION
     # input_data = torch.from_numpy(storage.color).unsqueeze(0).float()  # Add batch channel dimension

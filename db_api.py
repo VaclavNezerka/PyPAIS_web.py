@@ -492,10 +492,16 @@ def update_experiment_active_status(cur, conn, user_id, active: bool, experiment
     cur.execute('SELECT 1 FROM users WHERE id=%s FOR UPDATE', (user_id,))   
     if active:
         query = 'UPDATE users SET active_experiment_id=%s WHERE id=%s'
-        execute_query(query, (experiment_id, user_id))
+        values=(experiment_id, user_id)
+        cur.execute(query, values)
+        conn.commit()        
+        # execute_query(query, (experiment_id, user_id))
     else:
         query = 'UPDATE users SET active_experiment_id=NULL WHERE id=%s'
-        execute_query(query, (user_id,))
+        values=(user_id,)
+        cur.execute(query, values)
+        conn.commit()
+        # execute_query(query, (user_id,))
 
 
 @db_connection
