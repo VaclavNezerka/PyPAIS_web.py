@@ -356,7 +356,8 @@ function init_info_listeners() {
         "info_binder",
         "inference_model",
     ]) {
-        document.getElementById(id).addEventListener("change", function () {
+        // document.getElementById(id).addEventListener("change", function () {
+        document.getElementById(id).addEventListener("input", function () {
             console.log("Updating info field: " + id)
             let value = this.value
             console.log("New value: " + value)
@@ -609,6 +610,7 @@ async function uploadImage() {
         })
         .then(() => getImageType())
         .then(() => unlockControls())
+        .then(() => enableInputFields())
         .then(() => removeWorkingMessage())
         .then(() => console.log("Image processed successfully."))
 }
@@ -1182,6 +1184,38 @@ function deactivateCurrentExperiment() {
 //     })
 // }
 
+function disableInputFields() {
+    for (const id of [
+        "info_sample_collection_data",
+        "info_place_of_experiment",
+        "info_test_procedure",
+        "info_wrapping_temperature",
+        "info_exposing_water_temperature",
+        "info_datetime",
+        "info_comment",
+        "info_aggregate",
+        "info_binder",
+    ]) {
+        document.getElementById(id).disabled = true
+    }
+}
+
+function enableInputFields() {
+    for (const id of [
+        "info_sample_collection_data",
+        "info_place_of_experiment",
+        "info_test_procedure",
+        "info_wrapping_temperature",
+        "info_exposing_water_temperature",
+        "info_datetime",
+        "info_comment",
+        "info_aggregate",
+        "info_binder",
+    ]) {
+        document.getElementById(id).disabled = false
+    }
+}
+
 function loadExperiment(id) {
     displayWorkingMessage()
     fetch("/load-experiment/" + String(id), { method: "GET" })
@@ -1244,6 +1278,7 @@ function loadExperiment(id) {
         })
         .then(() => inference())
         .then(() => getImageType())
+        .then(() => enableInputFields()) // Enable controls after everything is loaded
         .then(() => enableControls()) // Enable controls after everything is loaded
         .catch((error) => {
             console.error("Error:", error)
@@ -1332,8 +1367,8 @@ document
 window.addEventListener("resize", redrawCanvases) // this ensures the magnifying glass is redrawn when the window is resized
 
 // when the user leaves the expertGuess field and the value is not empty, the min and max values will be updated
-document.getElementById("expertGuess").addEventListener("change", function () {
-    let value = this.value
+document.getElementById("expertGuess").addEventListener("input", function () {
+    let value = Number(this.value)
     if (value !== "") {
         // convert to number
         value = Number(value)
@@ -1357,7 +1392,8 @@ document.getElementById("expertGuess").addEventListener("change", function () {
 
 // if the user visits the page '/' and the experiment is active, load the experiment
 
-initPage()
+disableInputFields()
+initPage() // Disable controls until we know if there's an active experiment
 function initPage() {
     console.log("Running on DOMContentLoaded event")
     fetch("/is-experiment-active")

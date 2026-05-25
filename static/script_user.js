@@ -93,6 +93,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 document.querySelectorAll(".modern-input").forEach(function (input) {
     input.addEventListener("change", function () {
+        // input.addEventListener("input", function () {
+        console.log("Input changed: " + input.id + " = " + input.value)
         // if input is not empty, add class "has-value"
         fetch("/update-default-experiment-info", {
             method: "POST",

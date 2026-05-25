@@ -8,6 +8,7 @@ import cv2
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 import time
+import gc
 
 # Default
 TORCH_DEVICE = os.environ.get('TORCH_DEVICE', 'cuda' if torch.cuda.is_available() else 'cpu')
@@ -34,9 +35,16 @@ def pop_session_from_loaded_models(session_id: str) -> None:
             model_info["active_users"].remove(session_id)
             if not model_info["active_users"]:
                 keys_to_remove.append(model_name)
-
+    
+    print(len(torch_loaded_models))
     for key in keys_to_remove:
+        del torch_loaded_models[key]["model"]  # Delete the model from memory
         del torch_loaded_models[key]
+        gc.collect()  # Force garbage collection to free up memory
+        torch.cuda.empty_cache()  # Clear GPU memory after removing the model
+
+    print(f"Removing session {session_id} from models: {keys_to_remove}")
+    print(len(torch_loaded_models))
 
 def add_session_to_loaded_model(model_name: str,session_id: str) -> None:
     """
@@ -95,6 +103,15 @@ def sliding_window_inference(image, model, device, patch_size=1024, stride=512, 
         # If the probability for 'Stripped' is greater than our threshold, force it to be 'Stripped'
         # This overrides the background or aggregate classes if stripped probability is high enough
         preds[prob_map[2, :, :] > stripped_threshold] = 2
+
+    # delete the unused variables to free up memory
+    print(f"Allocated memory: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")
+    print(f"Cached memory: {torch.cuda.memory_reserved() / 1024**2:.2f} MB")
+    del prob_map, count_map, probs, logits, inp, patch
+    # gc.collect()  # Force garbage collection
+    torch.cuda.empty_cache()  # Clear GPU memory after inference
+    print(f"Allocated memory: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")
+    print(f"Cached memory: {torch.cuda.memory_reserved() / 1024**2:.2f} MB")
 
     return preds
 
@@ -194,6 +211,8 @@ def inference(model_name: str, input_data: torch.Tensor, session_id: str) -> tor
     Returns:
     - torch.Tensor: Output from the model after inference. Of shape (N, C, H, W) where N is batch size, C is number of classes, H and W are height and width.
     """
+    print("len(torch_loaded_models)")
+    print(len(torch_loaded_models))
     if model_name not in torch_loaded_models:
         load_model(os.path.join(os.path.dirname(__file__), 'models', model_name), session_id)
     if session_id not in torch_loaded_models[model_name]["active_users"]:
@@ -201,11 +220,12 @@ def inference(model_name: str, input_data: torch.Tensor, session_id: str) -> tor
 
     # Perform inference with the loaded model
     model = torch_loaded_models[model_name]["model"]
+    print(torch_loaded_models)
     # return model.evaluate(input_data.to(TORCH_DEVICE))
     print(type(input_data))
     input_data = input_data.transpose(1, 0, 2) 
     # input_data = cv2.cvtColor(input_data, cv2.COLOR_BGR2RGB)
-    t = time.time()
+    
     prediction: np.ndarray = sliding_window_inference(
         image=input_data,
         model=model.model, 
@@ -213,9 +233,11 @@ def inference(model_name: str, input_data: torch.Tensor, session_id: str) -> tor
         device=TORCH_DEVICE
     )
     prediction = prediction.T
-    print(prediction[0])
-    t = time.time() - t
-    print(f"Inference time: {t:.2f} seconds")
+    
+    # delete the unused model
+    print(len(torch_loaded_models))
+    pop_session_from_loaded_models(session_id)
+    print(len(torch_loaded_models))
     return prediction
 
 def postprocess_model_prediction(prediction: torch.Tensor):

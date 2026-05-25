@@ -45,7 +45,6 @@ install()
 
 from dotenv import load_dotenv
 from warnings import warn,WarningMessage
-import torch
 from typing_extensions import deprecated
 from models import discover_models, load_model, add_session_to_loaded_model, pop_session_from_loaded_models, inference
 import models
@@ -2123,7 +2122,7 @@ def inference_image():
     if storage.color is None:
         return json.dumps({'status': 'error', 'message': 'No color image provided.'}), 200, {'Content-Type': 'application/json'}
 
-    # OLD CODE - REPLACED BY A SINGLE FUNCTION
+    # OLD CODE - REPLACED BY pop_session_from_loaded_modelsA SINGLE FUNCTION
     # input_data = torch.from_numpy(storage.color).unsqueeze(0).float()  # Add batch channel dimension
     # input_data = input_data.permute(0, 3, 1, 2)  # Change to torch (batch_size, channels, height, width)
     
@@ -2537,10 +2536,12 @@ def get_default_experiment_info():
 
 @app.route('/update-default-experiment-info', methods=['POST'])
 @check_authentication
+@limiter.exempt
 def update_default_experiment_info():
     data = request.get_json()
     field = data.get('field')
     value = data.get('value')
+    print(f'Updating default experiment info: {field} = {value}')
     # Update the default experiment info in the database
     db_api.update_default_experiment_info(user_id=session['user_id'], field=field, value=value)
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
