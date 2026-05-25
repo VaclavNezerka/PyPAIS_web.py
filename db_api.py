@@ -132,10 +132,11 @@ def update_default_experiment_info(cur, conn, user_id: int, field: str, value: s
     
     if not record:
         query = f'INSERT INTO default_info (user_id, {field}) VALUES (%s, %s)'
+        cur.execute(query, (user_id, value))
     else:
         cur.execute('SELECT 1 FROM default_info WHERE user_id=%s FOR UPDATE', (user_id,))
         query = f'UPDATE default_info SET {field}=%s WHERE user_id=%s'
-    cur.execute(query, (value, user_id))
+        cur.execute(query, (value, user_id))
     conn.commit()
     
 
