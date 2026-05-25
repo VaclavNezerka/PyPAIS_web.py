@@ -807,6 +807,7 @@ def check_data_ownership(func):
             return redirect('/'), 302
     return wrapper
 
+
 def check_authentication(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -843,6 +844,19 @@ def index():
     models = discover_models()
     return render_template('index.html', session=session, models=models), 200
 
+@app.route('/is-admins-experiment/<int:experiment_id>', methods=['GET'])
+@check_authentication
+@check_is_company_admin
+def is_admins_experiment(experiment_id: int):
+    if 'user_id' not in session:
+        return json.dumps({'is_admins': False}), 200
+    admin_id = session['user_id']
+    experiment_user_id = db_api.get_user_id_of_experiment(id=experiment_id)
+    is_admins = (experiment_user_id == admin_id)
+    return json.dumps({'is_admins': is_admins}), 200
+    
+    
+    
 @app.route('/home', methods=['GET','POST'])
 def home():
     models = discover_models()
@@ -1393,7 +1407,7 @@ def register():
                 }
                 result = db_api.save_new_user_db(values=user_dict)
                 if result is None:
-                    flash(message=_('Registration successful. Please confirm your email via the link sent to your email address.'),category='success')
+                    flash(message=_('Registration successful. Please confirm your email via the link sent to your email address (the process may take a few minutes).'),category='success')
                     return redirect(url_for('login')), 302
                 else:
                     flash(message=_('Database error:') + f'{result}', category='error')
@@ -2575,6 +2589,7 @@ def translations_alerts():
         'removeAdmin': _('Are you sure, you want to remove admin privileges from the following users?'),
         'blockUser': _('Are you sure, you want to block the sign in option for the following users?'),
         'unblockUser': _('Are you sure, you want to unblock the sign in option for the following users?'),
+        'elsesExperiment': _('You have selected experiment of another user for editing. This action will transfer the ownership of the experiment to you (the original owner will not be able to access it). Do you want to proceed?'),
     }
     return json.dumps(json_translations), 200, {'Content-Type': 'application/json'}
 

@@ -469,6 +469,16 @@ function initButtons() {
     // Edit button listener
     document.querySelectorAll(".btn-details").forEach((button) => {
         button.addEventListener("click", () => {
+            // If admin selects to view details of an experiment, show alert about security    if (
+            is_admins_experiment = fetch("/is-admin")
+                .then((response) => response.json())
+                .then((data) => data.is_admin)
+            if (!is_admins_experiment) {
+                if (!confirm(alerts.elsesExperiment)) {
+                    return
+                }
+            }
+
             if (checkboxes.length === 0) {
                 alert(alerts.selectExperimetnsToViewDetails)
                 return

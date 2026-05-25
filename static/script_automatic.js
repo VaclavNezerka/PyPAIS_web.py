@@ -7,33 +7,6 @@ const alerts = await fetch("/translations-alerts", { method: "GET" }).then(
 let konvaStage
 let staticUrl
 let isDrawing = false
-// let konvaLayer = new Konva.Layer();
-// let konvaLayerMaskBg = new Konva.Layer();
-// let konvaLayerMaskAsphalt = new Konva.Layer();
-// let konvaLayerMaskAggregate = new Konva.Layer();
-
-// let viewer = OpenSeadragon({
-//     id: "viewer",
-//     tileSize: 256,
-//     minZoomLevel: 1,
-//     maxZoomLevel: 8,
-//     zoomInButton: "zoom-in",
-//     zoomOutButton: "zoom-out",
-//     homeButton: "home",
-//     rotateLeftButton: "rotate-left",
-//     rotateRightButton: "rotate-right",
-//     showNavigator: true,
-//     animationTime: 0.2,
-//     preserveViewport: true,
-//     // tileSources: {
-//     //     type: 'image',
-//     //     url: staticUrl
-//     //   },
-//       gestureSettingsMouse: {
-//         scrollToZoom: true,
-//         clickToZoom: false,
-//       },
-// });
 
 function loadNewImage(newImageUrl) {
     viewer.open({
@@ -41,44 +14,6 @@ function loadNewImage(newImageUrl) {
         url: newImageUrl,
     })
 }
-
-// Initialize Konva.js overlay
-// konvaStage = new Konva.Stage({
-// container: 'viewer_konva',
-// width: viewer.container.clientWidth,
-// height: viewer.container.clientHeight,
-// draggable: false,
-// backgroundColor: 'transparent'
-// });
-// konvaStage.add(konvaLayer);
-
-// Wait for the OpenSeadragon viewer to fully open the image
-// viewer.addHandler('open', function() {
-//     // Get the image dimensions from the OpenSeadragon world
-//     const tiledImage = viewer.world.getItemAt(0); // Assuming only one image
-//     const imageWidth = tiledImage.getContentSize().x; // Image width in pixels
-//     const imageHeight = tiledImage.getContentSize().y; // Image height in pixels
-
-//     // Now set the viewer container to match the image dimensions
-//     const viewerElement = document.getElementById('viewer');
-//     viewerElement.style.width = imageWidth + 'px';
-//     viewerElement.style.height = imageHeight + 'px';
-
-//     // Optionally resize the Konva container to match the viewer
-//     const konvaContainer = document.getElementById('viewer_konva');
-//     konvaContainer.style.width = imageWidth + 'px';
-//     konvaContainer.style.height = imageHeight + 'px';
-
-//     // Adjust Konva stage size accordingly
-//     konvaStage.width(imageWidth);
-//     konvaStage.height(imageHeight);
-//     konvaLayer.batchDraw();
-// });
-
-// Trigger initial sync
-// viewer.viewport.zoomTo(1);
-// viewer.viewport.panTo(new OpenSeadragon.Point(0, 0));
-// konvaStage.scale({ x: 1, y: 1 });
 
 let uploadedImageURL_color = null
 let uploadedImageURL_gray = null
@@ -156,38 +91,6 @@ const labelSettings = {
 let grayscaleImageData = null
 let originalEntropyImageData = null
 
-// function getOpenseadragonSize() {
-//     let viewer = document.getElementById('viewer_konva');
-//     let viewerWidth = viewer.clientWidth;
-//     let viewerHeight = viewer.clientHeight;
-//     console.log('Width: ' + viewerWidth + ' Height: ' + viewerHeight);
-//     return [viewerWidth, viewerHeight];
-// }
-
-// function resizeDragonRow() {
-//     const shape = getOpenseadragonSize();
-//     console.log('Width: ' + shape[0] + ' Height: ' + shape[1]);
-//     let row = document.getElementById('dragon_row');
-//     row.style.height = shape[0] + 'px';
-// }
-
-// function reshapeDragonAndCanvas() {
-//     let shape = getOpenseadragonSize();
-//     let konva = document.getElementById('viewer_konva');
-//     let ctx = canvas.getContext('2d');
-//     canvas.width = shape[0];
-//     canvas.height = shape[1];
-//     ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
-//     if (displayAsphaltMask) {
-//         ctx.drawImage(uploadedImageOverlay, 0, 0, canvas.width, canvas.height);
-//     }
-//     magnify('imageCanvas', 4);
-//     resizeDragonRow();
-//     initializeMask();
-// }
-
-// window.addEventListener('resize', reshapeDragonAndCanvas);
-
 uploadedImage.onload = function () {
     var canvas = document.getElementById("imageCanvas")
     var ctx = canvas.getContext("2d", { willReadFrequently: true })
@@ -196,32 +99,8 @@ uploadedImage.onload = function () {
     canvas.width = this.width
     canvas.height = this.height
     ctx.drawImage(this, 0, 0, canvas.width, canvas.height)
-    // if (displayAsphaltMask) {
-    //     // ctx.drawImage(uploadedImageOverlay, 0, 0, canvas.width, canvas.height);
-    //         // Get the image array from the mask URL
-    //         const img = new Image();
-    //         img.src = uploadedImageURL_mask_asphalt;
-    //         img.onload = function() {
-    //             // create an array from the string
-    //             const color = labelSettings.asphalt.fill; //rgba(0,255,0,0.2)
-    //             let colorArray = color.match(/[\d.]+/g).map(Number);
-    //             const maskImageData = colorizeMask(imgArray, colorArray);
-    //             createImageBitmap(maskImageData).then((bitmap) => {
-    //                 ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    //             });
-    //         };
-    //         // // const maskImageData = createImageBitmap(colorizeMask(imgArray, colorArray));
-    //         // const maskImageData = colorizeMask(imgArray, colorArray);
-    //         // // const data = maskImageData.data; // Uint8ClampedArray [r,g,b,a, r,g,b,a, ...]
-    //         // createImageBitmap(maskImageData).then((bitmap) => {
-    //         //     ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    //         // });
-    // }
-    magnify("imageCanvas", labelSettings.magnify)
 
-    // loadNewImage(uploadedImage.src);
-    // resizeDragonRow();
-    // initializeMask();
+    magnify("imageCanvas", labelSettings.magnify)
 }
 
 function displayed_mask(canvasId, image, color) {
@@ -358,9 +237,9 @@ function init_info_listeners() {
     ]) {
         // document.getElementById(id).addEventListener("change", function () {
         document.getElementById(id).addEventListener("input", function () {
-            console.log("Updating info field: " + id)
+            // console.log("Updating info field: " + id)
             let value = this.value
-            console.log("New value: " + value)
+            // console.log("New value: " + value)
             var formData = new FormData()
             formData.append(id, value)
             const uniqueQuery = "?nocache=" + new Date().getTime()
@@ -612,187 +491,8 @@ async function uploadImage() {
         .then(() => unlockControls())
         .then(() => enableInputFields())
         .then(() => removeWorkingMessage())
-        .then(() => console.log("Image processed successfully."))
+    // .then(() => console.log("Image processed successfully."))
 }
-// async function uploadImage() {
-//     displayWorkingMessage()
-
-//     const fileInput = document.getElementById("fileInput")
-//     if (fileInput.files.length === 0) return
-//     const file = fileInput.files[0]
-
-//     const formData = new FormData()
-//     formData.append("file", file)
-
-//     // 1️⃣ Wait for image processing
-//     const response = await fetch("/process-image", {
-//         method: "POST",
-//         body: formData,
-//     })
-
-//     const data = await response.json()
-
-//     // 2️⃣ Wait for default experiment info
-//     const defaultResponse = await fetch("/get-default-experiment-info")
-//     const defaultData = await defaultResponse.json()
-
-//     if (defaultData.status === "success") {
-//         for (const [key, value] of Object.entries(defaultData.data)) {
-//             const input = document.getElementById(key)
-//             if (input) {
-//                 console.log("Setting value of " + key + " to " + value)
-//                 input.value = value
-//                 const fromData = new FormData()
-//                 fromData.append(key, value)
-//                 await fetch(`/update_value/${key}`, {
-//                     method: "POST",
-//                     body: fromData,
-//                 })
-//             }
-//         }
-//     }
-
-//     // 3️⃣ Only now continue
-//     await inference()
-
-//     document.getElementById("defaultImage").style.display = "none"
-//     .then(() => getImageType())
-
-//     removeWorkingMessage()
-//     unlockControls()
-// }
-
-// async function uploadImage() {
-//     displayWorkingMessage()
-
-//     const now = new Date()
-//     now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
-
-//     // if the loaders are here, the dont have to have an experiment ID
-//     // document.getElementById("info_datetime").value = now
-//     //     .toISOString()
-//     //     .slice(0, 16)
-//     // document.getElementById("info_datetime").dispatchEvent(new Event("change"))
-
-//     // fetch("/get-default-experiment-info")
-//     //     .then((response) => response.json())
-//     //     .then((data) => {
-//     //         if (data.status === "success") {
-//     //             // loop through data and set value of input with id of key to value
-//     //             for (const [key, value] of Object.entries(data.data)) {
-//     //                 const input = document.getElementById(key)
-//     //                 if (input) {
-//     //                     input.value = value
-//     //                     if (value) {
-//     //                         input.classList.add("has-value")
-//     //                     } else {
-//     //                         input.classList.remove("has-value")
-//     //                     }
-//     //                     input.dispatchEvent(new Event("change"))
-//     //                 }
-//     //             }
-//     //         }
-//     //     })
-
-//     const fileInput = document.getElementById("fileInput")
-//     if (fileInput.files.length === 0) return
-//     const file = fileInput.files[0]
-
-//     const formData = new FormData()
-//     formData.append("file", file)
-
-//     const uniqueQuery = "?nocache=" + new Date().getTime()
-//     const url = URL.createObjectURL(file)
-//     uploadedImageURL_color = url
-
-//     fetch("/process-image" + uniqueQuery, {
-//         method: "POST",
-//         body: formData,
-//     })
-//         // .then(response => console.log(response))
-//         .then((response) => response.json())
-//         .then(async (data) => {
-//             // after processing the image, we get the default experiment info and populate the fields
-//             document.getElementById("info_datetime").value = now
-//                 .toISOString()
-//                 .slice(0, 16)
-//             let formData = new FormData()
-//             formData.append(
-//                 "info_datetime",
-//                 document.getElementById("info_datetime").value,
-//             )
-//             await fetch("/update_value/info_datetime", {
-//                 method: "POST",
-//                 body: formData,
-//             })
-//             formData = new FormData()
-//             formData.append(
-//                 "inference_model",
-//                 document.getElementById("inference_model").value,
-//             )
-//             await fetch("/update_value/inference_model", {
-//                 method: "POST",
-//                 body: formData,
-//             })
-//             uploadedImageURL_color = URL.createObjectURL(
-//                 base64toBlob(data.color, "image/png"),
-//             )
-//             uploadedImageURL_gray = URL.createObjectURL(
-//                 base64toBlob(data.gray, "image/png"),
-//             )
-//         })
-//         .then(() => {
-//             fetch("/get-default-experiment-info")
-//                 .then((response) => response.json())
-//                 .then(async (data) => {
-//                     if (data.status === "success") {
-//                         // loop through data and set value of input with id of key to value
-//                         for (const [key, value] of Object.entries(data.data)) {
-//                             const input = document.getElementById(key)
-//                             if (input) {
-//                                 input.value = value
-//                                 const formData = new FormData()
-//                                 formData.append(key, value)
-//                                 await fetch(`/update_value/${key}`, {
-//                                     method: "POST",
-//                                     body: formData,
-//                                 })
-//                             }
-//                         }
-//                     }
-//                 })
-//         })
-//         .then(() => inference())
-//         .then(() => removeWorkingMessage())
-//         .then(() => {
-//             document.getElementById("defaultImage").style.display = "none"
-//         })
-//         .then(() => getImageType())
-//         .then(() => unlockControls())
-//         .then(() => console.log("Image processed successfully."))
-//         // .then(() => {
-//         //     console.log("Image loaded, fetching default experiment info...")
-//         //     getDefaultExperimentInfo().then((data) => {
-//         //         populateExperimentInfo(data)
-//         //     })
-//         // })
-//         .catch((error) => {
-//             console.error("Error:", error)
-//             // alert("Error processing image: " + error.message)
-//             removeWorkingMessage()
-//         })
-
-//     // await removeBackground(formData)
-//     // await fetchGrayscaleData(formData)
-//     // .then(() => processImage())
-//     // .then(() => getImageType())
-//     // .then(() => enableControls()) // Enable controls after everything is loaded
-//     // .then(() => removeWorkingMessage())
-//     // .then(() => fetch('/save' + uniqueQuery, { method: 'POST' }))
-//     // .catch(error => {
-//     //     console.error('Error:', error);
-//     // });
-// }
 
 function removeBackground(formData) {
     return new Promise((resolve, reject) => {
@@ -967,7 +667,7 @@ function getImageType() {
     // });
 
     if (displayAsphaltMask) {
-        console.log("Displaying asphalt mask")
+        // console.log("Displaying asphalt mask")
         uploadedImageOverlay_asphalt.src = uploadedImageURL_mask_asphalt
         document.getElementById("overlayCanvasAsphalt").style.display = "block"
         document.getElementById("overlayCanvasAsphalt").style.opacity =
@@ -1222,7 +922,7 @@ function loadExperiment(id) {
         .then((response) => response.json())
         // .then(data => console.log(data))
         .then((data) => {
-            console.log(data)
+            // console.log(data)
             if (data.status === "error") {
                 alert(alerts.noExperiment)
                 removeWorkingMessage()
@@ -1233,8 +933,8 @@ function loadExperiment(id) {
             //         data.expert_guess * 100,
             //     )
             // }
-            console.log("Data", data)
-            console.log("Setting expert guess to: " + data.expert_guess)
+            // console.log("Data", data)
+            // console.log("Setting expert guess to: " + data.expert_guess)
             if (data.expertGuess !== null && !isNaN(data.expert_guess)) {
                 if (data.expert_guess > 0) {
                     document.getElementById("expertGuess").value = Math.round(
@@ -1335,7 +1035,7 @@ async function evaluateExperiment() {
             body: formData,
         })
         const uniqueQuery = "?nocache=" + new Date().getTime()
-        console.log("Evaluating the experiment...")
+        // console.log("Evaluating the experiment...")
         fetch("/evaluate-asphalt" + uniqueQuery, { method: "POST" })
             .then((response) => response.json())
             .then((response) => {
@@ -1387,7 +1087,7 @@ document.getElementById("expertGuess").addEventListener("input", function () {
             body: formData,
         })
     }
-    console.log("Expert guess changed to: " + value)
+    // console.log("Expert guess changed to: " + value)
 })
 
 // if the user visits the page '/' and the experiment is active, load the experiment
@@ -1395,11 +1095,11 @@ document.getElementById("expertGuess").addEventListener("input", function () {
 disableInputFields()
 initPage() // Disable controls until we know if there's an active experiment
 function initPage() {
-    console.log("Running on DOMContentLoaded event")
+    // console.log("Running on DOMContentLoaded event")
     fetch("/is-experiment-active")
         .then((response) => response.json())
         .then((data) => {
-            console.log(data)
+            // console.log(data)
             if (data.active === true) {
                 console.log(
                     "Experiment is active. Loading experiment data...",
@@ -1510,7 +1210,7 @@ async function getDefaultExperimentInfo() {
             .then((response) => response.json())
             .then((data) => {
                 data.datetime = getFormattedDateTime()
-                console.log("Default experiment info:", data)
+                // console.log("Default experiment info:", data)
                 resolve(data)
             })
             .catch((error) => {
@@ -1535,226 +1235,6 @@ function populateExperimentInfo(info) {
     document.getElementById("info_comment").value = info.info_comment
 }
 
-// import OpenSeadragon from "./openseadragon_5.0/openseadragon.min.js";
-
-// let pointHistory = [];
-// let waitingForApproval = false;
-
-// allocate the urls for the masks bg, aggregate, and asphalt
-// let mask_bg = null;
-// let mask_aggregate = null;
-// let mask_asphalt = null;
-// let displayed_mask = null;
-
-// Initialize OpenSeadragon viewer
-// const viewer = OpenSeadragon({
-//     id: "viewer",
-//     tileSize: 256,
-//     minZoomLevel: 1,
-//     maxZoomLevel: 8,
-//     zoomInButton: "zoom-in",
-//     zoomOutButton: "zoom-out",
-//     homeButton: "home",
-//     rotateLeftButton: "rotate-left",
-//     rotateRightButton: "rotate-right",
-//     showNavigator: true,
-//     animationTime: 0.2,
-//     preserveViewport: true,
-//     tileSources: {
-//         type: 'image',
-//         url: staticUrl
-//       },
-//       gestureSettingsMouse: {
-//         scrollToZoom: true,
-//         clickToZoom: false,
-//       },
-// });
-
-/*
-const viewerMask = document.createElement('canvas');
-viewerMask.id = 'viewerMaskCanvas';
-viewerMask.width = viewer.container.clientWidth;
-viewerMask.height = viewer.container.clientHeight;
-document.getElementById('viewer_mask').appendChild(viewerMask);
-
-const maskContext = viewerMask.getContext('2d');
-const maskImage = new Image();
-// maskImage.src = mask_bg;
-maskImage.onload = function() {
-    maskContext.drawImage(maskImage, 0, 0, viewerMask.width, viewerMask.height);
-}; */
-
-// // Wait for the OpenSeadragon viewer to fully open the image
-//   viewer.addHandler('open', function() {
-//     // Get the image dimensions from the OpenSeadragon world
-//     const tiledImage = viewer.world.getItemAt(0); // Assuming only one image
-//     const imageWidth = tiledImage.getContentSize().x; // Image width in pixels
-//     const imageHeight = tiledImage.getContentSize().y; // Image height in pixels
-
-//     // Now set the viewer container to match the image dimensions
-//     const viewerElement = document.getElementById('viewer');
-//     viewerElement.style.width = imageWidth + 'px';
-//     viewerElement.style.height = imageHeight + 'px';
-
-//     // Optionally resize the Konva container to match the viewer
-//     const konvaContainer = document.getElementById('viewer_konva');
-//     konvaContainer.style.width = imageWidth + 'px';
-//     konvaContainer.style.height = imageHeight + 'px';
-
-//     // Adjust Konva stage size accordingly
-//     konvaStage.width(imageWidth);
-//     konvaStage.height(imageHeight);
-//     konvaLayer.batchDraw();
-//   });
-
-// // Initialize Konva.js overlay
-// let konvaStage = new Konva.Stage({
-//   container: 'viewer_konva',
-//   width: viewer.container.clientWidth,
-//   height: viewer.container.clientHeight,
-//   draggable: false,
-//   backgroundColor: 'transparent'
-// });
-// let isDrawing = false;
-// let konvaLayer = new Konva.Layer();
-// konvaStage.add(konvaLayer);
-// let konvaLayerMaskBg = new Konva.Layer();
-// let konvaLayerMaskAsphalt = new Konva.Layer();
-// let konvaLayerMaskAggregate = new Konva.Layer();
-
-// function setMaskFilter (kl, img, rgba) {
-//   let konvaImage= new Konva.Image({
-//     x: 0,
-//     y: 0,
-//     image: img,
-//     width: document.getElementById('viewer').clientWidth,
-//     height: document.getElementById('viewer').clientHeight
-//   });
-//   konvaImage.cache();
-//   konvaImage.filters([Konva.Filters.RGBA]);
-//   konvaImage.red(rgba[0]);
-//   konvaImage.green(rgba[1]);
-//   konvaImage.blue(rgba[2]);
-//   konvaImage.alpha(rgba[3]);
-
-//   konvaStage.add(kl);
-//   kl.destroyChildren();
-//   kl.add(konvaImage);
-
-// }
-
-// imageMaskBg.onload = function() {
-//   //const rgba = labelSettings.background.fill.match(/\d+/g).map(Number);
-//   let rgba = labelSettings.background.fill.match(/[\d.]+/g).map(Number);
-//   rgba[3] = 1;
-//   console.log(rgba);
-//   setMaskFilter(konvaLayerMaskBg, imageMaskBg, rgba);
-// };
-// imageMaskAsphalt.onload = function() {
-//   let rgba = labelSettings.asphalt.fill.match(/[\d.]+/g).map(Number);
-//   rgba[3] = 1;
-//   console.log(rgba);
-//   setMaskFilter(konvaLayerMaskAsphalt, imageMaskAsphalt, rgba);
-// };
-// imageMaskAggregate.onload = function() {
-//   let rgba = labelSettings.aggregate.fill.match(/[\d.]+/g).map(Number);
-//   rgba[3] = 1;
-//   console.log(rgba);
-//   setMaskFilter(konvaLayerMaskAggregate,imageMaskAggregate, rgba);
-// };
-
-// // Draw polygons, rectangles, ellipses based on active tool
-// let activeTool = 'polygon';  // Default tool
-// let activeLabel = 'background';
-// let startPoint = null;  // Track the start point of the shape
-// let currentShape = null;
-
-//   function flattenPoints(points) {
-//     return points.map(point => {
-//       return [point.x, point.y];
-//     }).flat();
-//   }
-
-//   // Helper to create and draw shapes
-//   function drawShape(points) {
-//     if (waitingForApproval) {
-//       return;
-//     }
-//     let shape;
-
-//     points = flattenPoints(points);
-
-//     switch (activeTool) {
-//       case 'polygon':
-//       shape = new Konva.Line({
-//         points: points,
-//         closed: true,
-//         fill: labelSettings[activeLabel].fill,
-//         stroke: labelSettings[activeLabel].stroke,
-//         strokeWidth: labelSettings[activeLabel].strokeWidth,
-//         lineJoin: 'round',
-//         draggable: true
-//       });
-//       break;
-//       case 'rectangle':
-//             const width = Math.abs(points[0] - points[2]);
-//             const height = Math.abs(points[1] - points[3]);
-//             const x = Math.min(points[0], points[2]);
-//             const y = Math.min(points[1], points[3]);
-//             shape = new Konva.Rect({
-//                 x: x,
-//                 y: y,
-//                 width: width,
-//                 height: height,
-//                 fill: labelSettings[activeLabel].fill,
-//                 stroke: labelSettings[activeLabel].stroke,
-//                 strokeWidth: labelSettings[activeLabel].strokeWidth,
-//                 draggable: true
-//                 });
-//             break;
-//         case 'ellipse':
-//             if (points.length < 4) {
-//               return;
-//             }
-//             let x_center = (points[0]+points[2])/2;
-//             let y_center = (points[1]+points[3])/2;
-//             let x_radius = Math.abs(points[0] - points[2])/2;
-//             let y_radius = Math.abs(points[1] - points[3])/2;
-//             if (points.length==6) {
-//               y_radius = Math.abs(y_center - points[5]);
-//             }
-//               shape = new Konva.Ellipse({
-//                 x: x_center,
-//                 y: y_center,
-//                 radius: {
-//                   x: x_radius,
-//                   y: y_radius,
-//                   },
-//                 fill: labelSettings[activeLabel].fill,
-//                 stroke: labelSettings[activeLabel].stroke,
-//                 strokeWidth: labelSettings[activeLabel].strokeWidth,
-//                 draggable: true
-//               });
-//             break;
-//             }
-
-//             konvaLayer.add(shape);
-//             konvaLayer.draw();
-//             return shape;
-// }
-
-// function getImagePoint(position) {
-//   const viewportPoint = viewer.viewport.pointFromPixel(position);
-//   return viewer.viewport.viewportToImageCoordinates(viewportPoint);
-// }
-
-// function cancelAnnotation() {
-//   pointHistory = [];
-//   setTimeout(() => {
-//     konvaLayer.destroyChildren();
-//   }, 100);
-// }
-
 function initializeMask() {
     fetch("/get-corrected-mask", {
         method: "POST",
@@ -1765,7 +1245,6 @@ function initializeMask() {
     })
         .then((response) => response.json())
         .then((data) => {
-            //   console.log('Mask data:', data);
             mask_bg = URL.createObjectURL(base64toBlob(data.bg, "image/png"))
             mask_aggregate = URL.createObjectURL(
                 base64toBlob(data.aggregate, "image/png"),
@@ -1783,228 +1262,6 @@ function initializeMask() {
         })
 }
 
-// function saveAnnotation() {
-//   // Save the annotation data to a server
-//   const annotationData = {
-//     label: activeLabel,
-//     shape: {
-//       type: activeTool,
-//       points: flattenPoints(pointHistory)
-//     }
-//   };
-
-//   fetch('/save-annotation', {
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json'
-//     },
-//     body: JSON.stringify(annotationData)
-//   }).then(response => response.json())
-//     .then(data => {
-//       mask_bg = URL.createObjectURL(base64toBlob(data.bg, 'image/png'));
-//       mask_aggregate = URL.createObjectURL(base64toBlob(data.aggregate, 'image/png'));
-//       mask_asphalt = URL.createObjectURL(base64toBlob(data.asphalt, 'image/png'));
-
-//       imageMaskBg.src = mask_bg;
-//       imageMaskAsphalt.src = mask_asphalt;
-//       imageMaskAggregate.src = mask_aggregate;
-
-//       /*
-//       let canvas = document.getElementById('viewerMaskCanvas');
-//       image.onload = function() {
-//         console.log('Image loaded:', image);
-//         canvas.width = image.width;
-//         canvas.height = image.height;
-//         canvas.getContext('2d').drawImage(image, 0, 0);
-//       };
-//       console.log(mask_bg);
-//       image.src = mask_aggregate;
-//       */
-
-//       console.log('Annotation saved:', data);
-//     })
-//     .catch(error => {
-//       console.error('Error saving annotation:', error);
-//     });
-
-//   // clean out the annotation
-//   pointHistory = [];
-//   setTimeout(() => {
-//     konvaLayer.destroyChildren();
-//   }, 200);
-// }
-
-// // Click event to handle shape drawing
-// viewer.addHandler('canvas-click', function (event) {
-//   if (waitingForApproval) {
-//     return;
-//   }
-//   const imagePoint = getImagePoint(event.position);
-
-//   pointHistory.push({ x: imagePoint.x, y: imagePoint.y });
-//   if (pointHistory.length==1) {
-//     startPoint = pointHistory[0];
-//     isDrawing = true;
-//   }
-
-//   if (pointHistory.length > 1) {
-//     if (currentShape) {
-//       currentShape.destroy();
-//     }
-//     switch (activeTool) {
-//       case 'rectangle':
-//           currentShape=drawShape(pointHistory);
-//           startPoint = null;  // Reset after drawing
-//           isDrawing = false;
-//           waitingForApproval = true;
-//           break;
-//       case 'polygon':
-//           currentShape=drawShape(pointHistory);
-//           break;
-//       case 'ellipse':
-//           if (pointHistory.length==3) {
-//             currentShape=drawShape(pointHistory);
-//             startPoint = null;  // Reset after drawing
-//             isDrawing = false;
-//             waitingForApproval = true;
-//             break;
-//           }
-//       break;
-
-//     }
-//   }
-// });
-
-// // Handle Enter key to finish the shape
-// document.addEventListener('keydown', function (event) {
-//   if (event.key === 'Enter' ) {
-//     if (waitingForApproval) {
-//       saveAnnotation();
-//       waitingForApproval = false;
-//     } else if (activeTool === 'polygon' && startPoint) {
-//       // Finish the polygon by connecting the last point to the first point
-//       konvaLayer.destroyChildren();
-//       pointHistory.push(startPoint);
-//       drawShape(pointHistory);
-//       startPoint = null;  // Reset after finishing the shape
-//       isDrawing = false;
-//       waitingForApproval = true;
-//     }
-//   }
-//   if (event.key === 'Escape') {
-//     // Cancel the current shape drawing
-//     currentShape.destroy();
-//     konvaLayer.batchDraw();
-//     startPoint = null;
-//     isDrawing = false;
-//     pointHistory = [];
-//     if (waitingForApproval) {
-//       cancelAnnotation();
-//       waitingForApproval = false;
-//     }
-//   }
-// });
-
-// // Button Click Handlers for Tool Switching
-// document.getElementById('polygon-btn').addEventListener('click', function () {
-//     activeTool = 'polygon';
-//     updateActiveButton('polygon-btn');
-// });
-
-// document.getElementById('rectangle-btn').addEventListener('click', function () {
-//   activeTool = 'rectangle';
-//   updateActiveButton('rectangle-btn');
-//   });
-
-//   document.getElementById('ellipse-btn').addEventListener('click', function () {
-//     activeTool = 'ellipse';
-//     updateActiveButton('ellipse-btn');
-//     });
-
-// document.getElementById('bgButton').addEventListener('click', () => {
-// // Button Click Handlers for Labeling
-//     const currentSettings = labelSettings['background'];
-//     activeLabel = 'background';
-//     const activeStroke = currentSettings.stroke;
-//     const activeFill = currentSettings.fill;
-// });
-
-// document.getElementById('fgButton').addEventListener('click', () => {
-//     activeLabel = 'aggregate';
-//     });
-
-// document.getElementById('asphaltButton').addEventListener('click', () => {
-//       activeLabel = 'asphalt';
-// });
-
-// // Helper to activate a tool
-// function updateActiveButton(activeBtnId) {
-//   var buttons = document.querySelectorAll('.tool-btn');
-//   buttons.forEach(button => button.classList.remove('active'));
-//   document.getElementById(activeBtnId).classList.add('active');
-//   }
-
-// viewer.addHandler('viewport-change', function() {
-// const zoom = viewer.viewport.getZoom();  // Get current zoom level from OpenSeadragon
-
-// // Set scale for the Konva stage based on OpenSeadragon zoom level
-// konvaStage.scale({ x: zoom, y: zoom });
-
-// // Get the center of the OSD viewport (in viewport coordinates)
-// const center = viewer.viewport.getCenter();
-
-// // Convert OpenSeadragon center point (viewport coordinates) to Konva coordinates
-// const imageCenter = viewer.viewport.viewportToImageCoordinates(center.x, center.y);
-
-// // Adjust Konva stage position to match OSD viewport panning
-// konvaStage.position({
-//   x: -imageCenter.x * zoom + konvaStage.width() / 2,
-//   y: -imageCenter.y * zoom + konvaStage.height() / 2
-// });
-
-// // Redraw the Konva layer efficiently after transformations
-// konvaLayer.batchDraw();
-// });
-
-// // // Trigger initial sync
-// // viewer.viewport.zoomTo(1);
-// // viewer.viewport.panTo(new OpenSeadragon.Point(0, 0));
-// // konvaStage.scale({ x: 1, y: 1 });
-
-// function drawPreview(imagePoint) {
-// if (currentShape) {
-// currentShape.destroy();
-// konvaLayer.batchDraw();
-// }
-// const pointSuggestions = pointHistory.concat({ x: imagePoint.x, y: imagePoint.y });
-// currentShape = drawShape(pointSuggestions);
-// }
-
-// // Event handler for starting to draw
-// addEventListener('mousemove', function (e) {
-// if (isDrawing) {
-// const offset = viewer.container.getBoundingClientRect();
-// const position = new OpenSeadragon.Point(e.clientX-offset.left, e.clientY-offset.top);
-// const imagePoint = getImagePoint(position);
-// drawPreview(imagePoint);
-// }
-// });
-
-// function adjustViewerSize() {
-//     const viewerBox = document.getElementById("viewer_box");
-//     const viewer = document.getElementById("viewer");
-//     const konvaLayer = document.getElementById("viewer_konva");
-
-//     // Set viewer and Konva layer width dynamically
-//     const newWidth = viewerBox.clientWidCth;
-
-//     viewer.style.width = `${newWidth}px`;
-//     konvaLayer.style.width = `${newWidth}px`;
-// }
-
-// // Run on load and resize
-// window.addEventListener("resize", adjustViewerSize);
-// window.addEventListener("load", adjustViewerSize);
 document
     .querySelector("#personalizeSettingsButton")
     .addEventListener("click", function () {
