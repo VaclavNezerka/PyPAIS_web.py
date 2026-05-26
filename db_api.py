@@ -363,6 +363,10 @@ def get_experiment_by_id(cur, conn, experiment_id: str) -> dict | None:
         return None
     # Convert RealDictRow to a regular dict
     result = dict(result)
+    # for key in ['mask_asphalt', 'mask_aggregate', 'mask_asphalt_manual_correction', 'mask_aggregate_manual_correction']:
+    #     print(f"Checking field {key} with value {result.get(key)} and type {type(result.get(key))}")
+    #     if isinstance(result.get(key), str):
+    #         result[key] = None
     return result
 
 @db_connection

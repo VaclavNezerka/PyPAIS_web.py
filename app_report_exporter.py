@@ -2,6 +2,7 @@ import decimal
 from pydoc import doc
 import os
 import numpy as np
+from sympy import re
 import db_api
 import statistics
 from typing import Iterable, List, Dict, Any, Annotated, Union
@@ -14,6 +15,9 @@ import models
 from flask import abort
 from flask_babel import _, lazy_gettext
 from typing import Literal
+import time
+import concurrent.futures as cf
+
 # from app_energy_label import EnergyLabel
 
 
@@ -47,7 +51,6 @@ REPORT_COLORS = {
 load_dotenv(dotenv_path='.env')
 SIMILARITY_THRESHOLD=os.getenv('SIMILARITY_THRESHOLD', 0.9)
 SIMILARITY_THRESHOLD=float(SIMILARITY_THRESHOLD)
-print("Using similarity threshold:", SIMILARITY_THRESHOLD)
 
 styles = getSampleStyleSheet()
 styles.add(ParagraphStyle(
@@ -259,6 +262,10 @@ class EnergyLabel(Flowable):
 
 
 
+def to_byetarray(np_array: np.ndarray) -> bytes:
+    buffer = io.BytesIO()
+    np.save(buffer, np_array)
+    return buffer.getvalue()
 
 def process_image(original_image: np.ndarray, mask_asphalt: np.ndarray, mask_aggregate: np.ndarray) -> np.ndarray:
     """
@@ -292,9 +299,9 @@ def register_exporter(name: str):
     return decorator
 
 def memory_to_np_array(memory: bytes) -> np.ndarray:
-    buffer = io.BytesIO(memory)
-    print("Loading array from memory buffer of size:", len(memory))
+    buffer = io.BytesIO(bytes(memory))
     array = np.load(buffer, allow_pickle=True)  
+    # array = np.load(buffer)  
     return array
 
 
@@ -334,8 +341,6 @@ def compute_statistics(assessments: List[float], to_per_cents: bool = True) -> D
     stddev = float(np.std(assessments) if len(assessments) > 1 else 0.0)
     
     if to_per_cents:
-        print("Converting to percents")
-        print(average, worst, stddev)
         average *= 100.0
         worst *= 100.0
         stddev *= 100.0
@@ -355,6 +360,7 @@ def compute_statistics(assessments: List[float], to_per_cents: bool = True) -> D
 ###### MAIN EXPORTER
 ###### 
 ###### 
+
 @register_exporter("CSN_73_6161")
 def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id: int, controlling_user_id: int = None, ordering_party: Dict[str, Any] = {}, controlling_employee: Dict[str, Any] = {}, as_buffer=True) -> io.BytesIO | None:
     """
@@ -367,7 +373,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     Returns:
         None
     """
-
+    T = time.time()
     # Fetch experiment data from the database
     user_info = db_api.get_user_by_id(user_id)
     company_id = user_info.get("company", None)
@@ -379,6 +385,8 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     }
 
     report_date = pdl.now()
+    
+        # pdf.append(line)
     # Prepare PDF content
     # as_buffer = False # for testing purposes
     metadata = {
@@ -398,6 +406,12 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
                             rightMargin=20*mm, leftMargin=20*mm,
                             topMargin=30*mm, bottomMargin=25*mm, **metadata)
     pdf = []
+
+    # REUSE THE SAME SEPARATOR THROUGHOUT THE DOCUMENT
+    separator = Drawing(doc.width ,1 * mm)
+    separator.add(Rect(0, 0, doc.width, 1 * mm, fillColor=colors.HexColor(REPORT_COLORS["topic_color"]), strokeWidth=0, strokeColor=colors.HexColor(REPORT_COLORS["topic_color"])))
+
+
 
     # pdf.append(Spacer(0,20))
 
@@ -421,6 +435,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     If this two contradict each other, the visual expert assesment is considered the final result, however,
     the AI-based visualization is included for reference. 
     """)
+
     pdf.append(Paragraph(text, style_justify))
     pdf.append(Spacer(1, 0.2 * cm))
     
@@ -458,7 +473,6 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     if controlling_user_id:
         try:
             controlling_employee = db_api.get_user_info_by_id(controlling_user_id)
-            print(_("Controlling employee:"), controlling_employee)
         except Exception:
             controlling_employee = user_info
 
@@ -485,9 +499,21 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     assessments_expert_guess = []
     assessments_automatic = []
     concerns = {"similar_images": 0, "old_images": 0}
-    for experiment_id in experiment_ids:
-        experiment = db_api.get_experiment_by_id(experiment_id)
-        experiment.update({"timestamp": db_api.get_experiment_timestamp_by_id(experiment_id)})
+    print("time taken for fetching user and company info:", time.time() - T, "seconds")
+    T = time.time()
+    available_models = models.discover_models()
+    deprecated_models = models.discover_models(deprecated=True)
+    t=time.time()
+    experiments = {id: db_api.get_experiment_by_id(id) for id in experiment_ids}
+    timesteps = {id: db_api.get_experiment_timestamp_by_id(id) for id in experiment_ids}
+    print("Time taken for fetching experiments for final table:", time.time() - t, "seconds")
+    # def process_single_image(experiment, eid):
+        
+    for experiment, experiment_id, timestep in zip(experiments.values(), experiment_ids, timesteps.values()):
+        # experiment = db_api.get_experiment_by_id(experiment_id)
+        mask_asphalt = experiment.get("mask_asphalt", None)
+        mask_aggregate = experiment.get("mask_aggregate", None)
+        experiment.update({"timestamp": timestep})
 
         similar_dict = get_similar_experiment(experiment)
 
@@ -495,35 +521,46 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         # pdf.append(PageBreak())
         # draw a line
         pdf.append(Spacer(1, 0.4 * cm))
-        line = Drawing(doc.width ,1 * mm)
-        line.add(Rect(0, 0, doc.width, 1 * mm, fillColor=colors.HexColor(REPORT_COLORS["topic_color"]), strokeWidth=0, strokeColor=colors.HexColor(REPORT_COLORS["topic_color"])))
-        pdf.append(line)
+        
+        # line = Drawing(doc.width ,1 * mm)
+        # line.add(Rect(0, 0, doc.width, 1 * mm, fillColor=colors.HexColor(REPORT_COLORS["topic_color"]), strokeWidth=0, strokeColor=colors.HexColor(REPORT_COLORS["topic_color"])))
+        # pdf.append(line)
+        pdf.append(separator)
+        
         pdf.append(Spacer(1, 0.2 * cm))
         pdf = add_experiment_record(pdf, experiment, similar=similar_dict, doc=doc)
         
         original_image = memory_to_np_array(experiment.get("color"))
-        if any(v is None for v in [experiment.get("mask_asphalt"), experiment.get("mask_aggregate")]):
-            available_models = models.discover_models()
+        if any(v is None for v in [mask_asphalt, mask_aggregate]):
             if experiment.get("inference_model") in available_models:
                 asphalt_mask, aggregate_mask, bg = models.inference_on_numpy(
                     np_image=original_image,
                     model_name=experiment.get("inference_model"),
                     session_id=user_id
                 )
-            elif experiment.get("inference_model") in models.discover_models(deprecated=True):
-                print(_("Using deprecated model for experiment ID") + str(experiment_id) + ". " + _("Consider using newer model for this specimen or contact us to resolve this issue."))
+                db_api.update_experiment_in_db(values_dict={
+                    "mask_asphalt": to_byetarray(asphalt_mask),
+                    "mask_aggregate": to_byetarray(aggregate_mask)
+                }, experiment_id=experiment_id)
+            elif experiment.get("inference_model") in deprecated_models:
                 asphalt_mask, aggregate_mask, bg = models.inference_on_numpy(
                     np_image=original_image,
                     model_name=os.path.join("deprecated", experiment.get("inference_model")),
                     session_id=user_id
                 )
+                # save the masks to the database for future reference
+                
+                db_api.update_experiment_in_db(values_dict={
+                    "mask_asphalt": to_byetarray(asphalt_mask),
+                    "mask_aggregate": to_byetarray(aggregate_mask)
+                }, experiment_id=experiment_id)
             else:
                 model = experiment.get("inference_model", 'unknown')
                 abort(500, description=_("Inference model ") + model + _(' not available for experiment ID') + str(experiment_id) + '. ' + _("Please use newer model for this specimen or contact us to resolve this issue."))    
                 return None
         else:
-            asphalt_mask = memory_to_np_array(experiment.get("mask_asphalt"))
-            aggregate_mask = memory_to_np_array(experiment.get("mask_aggregate"))
+            asphalt_mask = memory_to_np_array(mask_asphalt)
+            aggregate_mask = memory_to_np_array(mask_aggregate)
 
         processed_image = process_image(
             original_image,
@@ -532,7 +569,8 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         )
         pdf = add_images(
             pdf, 
-            img_original=memory_to_np_array(experiment.get("color")), 
+            # img_original=memory_to_np_array(experiment.get("color")), 
+            img_original=original_image, 
             img_processed=processed_image,
             similar_image=similar_dict if similar_dict else {},
             max_image_size_cm=[doc.width/2, doc.width/2],
@@ -555,13 +593,14 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
 
         experiment_date_str = str(experiment.get("timestamp", ''))
         experiment_date = pdl.parse(experiment_date_str) 
-        print(experiment_date)
-        print(report_date)
         if (report_date - experiment_date).days > 180:
             concerns["old_images"] += 1
 
 
-
+    print("")
+    print("Time taken for processing experiments and generating PDF content:", time.time() - T, "seconds")
+    print("")
+    T = time.time()
     # Compute statistics
     stats_expert = compute_statistics(assessments_expert_guess)
     stats_automatic = compute_statistics(assessments_automatic)
@@ -584,9 +623,10 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         Paragraph(_("AI-based Assesment  [%]"), styles["TableHeader"])
     ]]
 
+
     exp_guesses = []
-    for eid in experiment_ids:
-        exp = db_api.get_experiment_by_id(eid)
+    for exp in experiments.values():
+        # exp = db_api.get_experiment_by_id(eid)
         exp_guesses.append(exp.get("expert_guess", 0.0))
         if exp_guesses[-1] is None:
             exp_guesses[-1] = 0.0
@@ -601,7 +641,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
             experiment_ids, 
             # [f"{100*db_api.get_experiment_by_id(eid).get('expert_guess', 0) ):.2f}" for eid in experiment_ids],
             [f"{100*exp_guess:.2f}" for exp_guess in exp_guesses],
-            [f"{100*db_api.get_experiment_by_id(eid).get('asphalt_ratio', 0):.2f}" for eid in experiment_ids],
+            [f"{100*exp.get('asphalt_ratio', 0):.2f}" for exp in experiments.values()],
         )]
     )
     pdf = add_table(pdf, table_data, colWidths=[doc.width/3]*3)
@@ -642,20 +682,23 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     if controlling_user_id:
         try:
             controlling_employee = db_api.get_user_info_by_id(controlling_user_id)
-            print(_("Controlling employee:"), controlling_employee)
         except Exception:
             controlling_employee = user_info
     
 
     pdf.append(Spacer(1, 1.0 * cm))
     pdf.append(Paragraph(_("This report was generated using AIBAL on ") + f"{report_date.to_datetime_string()}.", style_justify_right))
-
+    
+    print("Time taken for computing statistics and generating final summary:", time.time() - T, "seconds")
+    T = time.time()
+    
     doc.build(pdf,
         # onFirstPage=lambda canvas, doc: first_page(canvas, doc, report_id=report_id),
         onFirstPage=lambda canvas, doc: styled_header_footer(canvas, doc, report_id=report_id),
         onLaterPages=lambda canvas, doc: styled_header_footer(canvas, doc, report_id=report_id)
     )
     
+    print("Time taken for building PDF and computing statistics:", time.time() - T, "seconds")
     if as_buffer:
         return buffer.getvalue()
     else:
@@ -783,9 +826,7 @@ def add_images(pdf: list, img_original: PIL.Image,  img_processed: PIL.Image, si
     """
     table_data = []
     img1 = get_printable_image(img_original, max_image_size_cm)
-    print("img 1 prossessed")
     img2 = get_printable_image(img_processed, max_image_size_cm)
-    print("img 2 prossessed")
     table_data.append([_("Original Image"), _("Processed Image")])
     table_data.append([img1, img2])
     table_data.append(["", _("(Asphalt - RED, Aggregate - BLUE)")])
@@ -831,7 +872,8 @@ def get_printable_image(img: PIL.Image.Image | np.ndarray, max_image_size_cm: li
     if isinstance(img, np.ndarray):
         img = PIL.Image.fromarray(img)
     buf = io.BytesIO()
-    img.save(buf, format="PNG")
+    # img.save(buf, format="PNG")
+    img.save(buf, format="JPEG", quality=85, optimize=True)
     buf.seek(0)
     rlimg = RLImage(buf, width=img_width, height=img_height)
     return rlimg
@@ -872,8 +914,6 @@ def add_experiment_record(pdf: list, experiment: Dict[str, Any], similar: dict =
         Paragraph(_("Test procedure:") + f" {experiment.get('info_test_procedure', '-')}", style_justify),
     ]
     expert_guess = experiment.get("expert_guess", 0.0)
-    print("Expert guess before processing:", expert_guess)
-    print("Expert guess before processing:", type(expert_guess))
     
     if isinstance(expert_guess, str):
         try:

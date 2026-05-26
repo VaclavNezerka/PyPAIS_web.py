@@ -312,7 +312,7 @@ class UserTemporaryStorage:
                     # NP.SAVE APPROACH - KEEPS THE METADATA LIKE SHAPE AND DTYPE
                     buffer = io.BytesIO()
                     np.save(buffer, value)
-                    dic[key] = buffer.getvalue()  # This is what you store in SQL (e.g., BLOB column)
+                    dic[key] = buffer.getvalue()  # This is what you store in SQL (e.g., BLOB/BYTEA column)
                 elif isinstance(value, imagehash.ImageHash):
                     dic[key] = str(value)  # store imagehash as string
 
