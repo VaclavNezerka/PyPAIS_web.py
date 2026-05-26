@@ -1,3 +1,4 @@
+import decimal
 from pydoc import doc
 import os
 import numpy as np
@@ -327,6 +328,7 @@ def get_CSN_73_6161_classification(adhesion_rate: float) -> str:
 
 # Compute the asphalt adhesion statistics
 def compute_statistics(assessments: List[float], to_per_cents: bool = True) -> Dict[str, Union[float, str]]:
+    assessments = [float(a) for a in assessments if a is not None]
     average = float(np.mean(assessments))
     worst = float(np.min(assessments))
     stddev = float(np.std(assessments) if len(assessments) > 1 else 0.0)
@@ -508,9 +510,16 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
                     model_name=experiment.get("inference_model"),
                     session_id=user_id
                 )
+            elif experiment.get("inference_model") in models.discover_models(deprecated=True):
+                print(_("Using deprecated model for experiment ID") + str(experiment_id) + ". " + _("Consider using newer model for this specimen or contact us to resolve this issue."))
+                asphalt_mask, aggregate_mask, bg = models.inference_on_numpy(
+                    np_image=original_image,
+                    model_name=os.path.join("deprecated", experiment.get("inference_model")),
+                    session_id=user_id
+                )
             else:
                 model = experiment.get("inference_model", 'unknown')
-                abort(500, description=_("Inference model") + model + _(' not available for experiment ID') + str(experiment_id) + '. ' + _("Please use newer model for this specimen or contact us to resolve this issue."))    
+                abort(500, description=_("Inference model ") + model + _(' not available for experiment ID') + str(experiment_id) + '. ' + _("Please use newer model for this specimen or contact us to resolve this issue."))    
                 return None
         else:
             asphalt_mask = memory_to_np_array(experiment.get("mask_asphalt"))
@@ -532,7 +541,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
 
         # Collect assessments
         expert_guess = experiment.get("expert_guess", 0.0)
-        if isinstance(expert_guess, str):
+        if isinstance(expert_guess, str) or isinstance(expert_guess, decimal.Decimal):
             try:
                 expert_guess = float(expert_guess)
             except ValueError:

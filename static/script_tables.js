@@ -470,14 +470,18 @@ function initButtons() {
     document.querySelectorAll(".btn-details").forEach((button) => {
         button.addEventListener("click", () => {
             // If admin selects to view details of an experiment, show alert about security    if (
-            is_admins_experiment = fetch("/is-admin")
+            fetch("/is-admins-experiment/" + checkboxes[0])
                 .then((response) => response.json())
-                .then((data) => data.is_admin)
-            if (!is_admins_experiment) {
-                if (!confirm(alerts.elsesExperiment)) {
-                    return
-                }
-            }
+                .then((data) => {
+                    if (!data.is_admins) {
+                        if (!confirm(alerts.elsesExperiment)) {
+                            return
+                        }
+                    }
+                })
+                .catch((err) => {
+                    console.error("Error checking admin status:", err)
+                })
 
             if (checkboxes.length === 0) {
                 alert(alerts.selectExperimetnsToViewDetails)

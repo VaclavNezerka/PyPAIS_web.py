@@ -480,6 +480,7 @@ async function uploadImage() {
                 })
             }
         }
+        enableInputFields()
     }
 
     // 3️⃣ Only now continue with inference
@@ -489,7 +490,7 @@ async function uploadImage() {
         })
         .then(() => getImageType())
         .then(() => unlockControls())
-        .then(() => enableInputFields())
+        // .then(() => enableInputFields())
         .then(() => removeWorkingMessage())
     // .then(() => console.log("Image processed successfully."))
 }
@@ -976,9 +977,9 @@ function loadExperiment(id) {
         .then(() => {
             document.getElementById("defaultImage").style.display = "none"
         })
+        .then(() => enableInputFields()) // Enable controls after everything is loaded
         .then(() => inference())
         .then(() => getImageType())
-        .then(() => enableInputFields()) // Enable controls after everything is loaded
         .then(() => enableControls()) // Enable controls after everything is loaded
         .catch((error) => {
             console.error("Error:", error)

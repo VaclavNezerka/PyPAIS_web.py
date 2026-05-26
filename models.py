@@ -14,9 +14,12 @@ import gc
 TORCH_DEVICE = os.environ.get('TORCH_DEVICE', 'cuda' if torch.cuda.is_available() else 'cpu')
 torch_loaded_models = {}
 
-def discover_models() -> list[str]:
+def discover_models(deprecated=False) -> list[str]:
     """Discover all model files in the models directory."""
-    model_files = glob.glob(os.path.join(os.path.dirname(__file__), 'models', '*.pth'))
+    if deprecated:
+        model_files = glob.glob(os.path.join(os.path.dirname(__file__), 'models','deprecated', '*.pth'))
+    else:
+        model_files = glob.glob(os.path.join(os.path.dirname(__file__), 'models', '*.pth'))
     models = [os.path.basename(file) for file in model_files]
     return models
 
@@ -36,15 +39,11 @@ def pop_session_from_loaded_models(session_id: str) -> None:
             if not model_info["active_users"]:
                 keys_to_remove.append(model_name)
     
-    print(len(torch_loaded_models))
     for key in keys_to_remove:
         del torch_loaded_models[key]["model"]  # Delete the model from memory
         del torch_loaded_models[key]
         gc.collect()  # Force garbage collection to free up memory
         torch.cuda.empty_cache()  # Clear GPU memory after removing the model
-
-    print(f"Removing session {session_id} from models: {keys_to_remove}")
-    print(len(torch_loaded_models))
 
 def add_session_to_loaded_model(model_name: str,session_id: str) -> None:
     """
@@ -154,7 +153,7 @@ class TorchModel(torch.nn.Module):
 #     model.to(torch.device(TORCH_DEVICE)).eval()
 #     return model
 
-def load_model(model_path: str, session_id: str) -> None:
+def load_model(model_path: str, model_name: str, session_id: str) -> None:
     """
     Safely load a model and track its usage by session ID.
 
@@ -164,10 +163,10 @@ def load_model(model_path: str, session_id: str) -> None:
 
     Parameters:
     - model_path (str): Path to the model file.
+    - model_name (str): Name of the model.
     - session_id (str): Unique identifier for the session using the model.
     """
     
-    model_name = os.path.basename(model_path)
     # Check if the model is already loaded for this session
     if model_name in torch_loaded_models:
         # session ids are stored in a set to avoid duplicates
@@ -211,18 +210,19 @@ def inference(model_name: str, input_data: torch.Tensor, session_id: str) -> tor
     Returns:
     - torch.Tensor: Output from the model after inference. Of shape (N, C, H, W) where N is batch size, C is number of classes, H and W are height and width.
     """
-    print("len(torch_loaded_models)")
-    print(len(torch_loaded_models))
-    if model_name not in torch_loaded_models:
-        load_model(os.path.join(os.path.dirname(__file__), 'models', model_name), session_id)
+    print(list(torch_loaded_models.keys()))
+    if model_name not in list(torch_loaded_models.keys()):
+        print(f"Model {model_name} not loaded for session {session_id}. Loading now...")
+        print(os.path.join(os.path.dirname(__file__), 'models', model_name))
+        load_model(os.path.join(os.path.dirname(__file__), 'models', model_name), model_name, session_id)
+    
+    print(list(torch_loaded_models.keys()))
     if session_id not in torch_loaded_models[model_name]["active_users"]:
         add_session_to_loaded_model(model_name, session_id)
 
     # Perform inference with the loaded model
     model = torch_loaded_models[model_name]["model"]
-    print(torch_loaded_models)
     # return model.evaluate(input_data.to(TORCH_DEVICE))
-    print(type(input_data))
     input_data = input_data.transpose(1, 0, 2) 
     # input_data = cv2.cvtColor(input_data, cv2.COLOR_BGR2RGB)
     

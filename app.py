@@ -849,11 +849,12 @@ def index():
 @check_is_company_admin
 def is_admins_experiment(experiment_id: int):
     if 'user_id' not in session:
-        return json.dumps({'is_admins': False}), 200
+        return json.dumps({'is_admins': False}), 200, {'Content-Type': 'application/json'}
     admin_id = session['user_id']
     experiment_user_id = db_api.get_user_id_of_experiment(id=experiment_id)
     is_admins = (experiment_user_id == admin_id)
-    return json.dumps({'is_admins': is_admins}), 200
+    print(f'Checking if user {admin_id} is admin of experiment {experiment_id} with owner {experiment_user_id}: {is_admins}')
+    return json.dumps({'is_admins': is_admins}), 200, {'Content-Type': 'application/json'}
     
     
     
