@@ -477,7 +477,8 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
             controlling_employee = user_info
 
     right_column = [
-        Paragraph(_("The controlling employee"), styles["Heading2"]),
+        # Paragraph(_("The controlling employee"), styles["Heading2"]),
+        Paragraph(_("The controll performed by"), styles["Heading2"]),
         Paragraph(_("Name:") + f" {controlling_employee.get('first_name', '-')} {controlling_employee.get('last_name', '-')}", style_justify),
         Paragraph(_("Contact:") + f" {controlling_employee.get('e_mail', '-')}", style_justify),
         Spacer(1, 1.0 * cm),

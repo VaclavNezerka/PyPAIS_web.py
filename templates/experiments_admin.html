@@ -98,8 +98,10 @@
         </div>
 
         <div class="modern-row">
-            <button class="btn-details-left" id="previous_page">{{ _('Previous') }}</button>
-            <button class="btn-details-right" id="next_page">{{ _('Next') }}</button>
+            <button class="btn-details-left" id="previous_page"
+                {{ 'disabled' if deactivate_prev else '' }}>{{ _('Previous') }}</button>
+            <button class="btn-details-right" id="next_page"
+                {{ 'disabled' if deactivate_next else '' }}>{{ _('Next') }}</button>
         </div>
         <script src="{{ url_for('static', filename='script_tables.js') }}"> </script>
     </body>

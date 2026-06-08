@@ -474,10 +474,15 @@ async function uploadImage() {
                 input.value = value
                 const fromData = new FormData()
                 fromData.append(key, value)
-                await fetch(`/update_value/${key}`, {
+                console.log("Updating default value for " + key + ": " + value)
+                fetch(`/update_value/${key}`, {
                     method: "POST",
                     body: fromData,
                 })
+                // await fetch(`/update_value/${key}`, {
+                //     method: "POST",
+                //     body: fromData,
+                // })
             }
         }
         enableInputFields()

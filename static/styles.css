@@ -748,6 +748,13 @@ tr:nth-child(even) {
     background-color: var(--myPaleBlue);
 }
 
+.btn-details-right:disabled,
+.btn-details-left:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    background-image: none; /* Remove the arrow icon when disabled */
+}
+
 /*  */
 
 .btn-remove-admin-privileges,

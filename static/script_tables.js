@@ -248,12 +248,22 @@ document.getElementById("sortBy").addEventListener("change", function () {
 })
 
 document.getElementById("maxRecords").addEventListener("change", function () {
-    const maxRecords = this.value
-    concatenateSearchQuery("page_limit=" + maxRecords)
+    let maxRecords = this.value
+    console.log(maxRecords)
+    if (maxRecords == "") {
+        excludeFromSearchQuery("page_limit")
+    } else if (maxRecords <= 0) {
+        maxRecords = 1
+        this.value = 1
+        concatenateSearchQuery("page_limit=" + maxRecords)
+    } else {
+        concatenateSearchQuery("page_limit=" + maxRecords)
+    }
 })
 
 document.getElementById("sortOrder").addEventListener("change", function () {
     const sortOrder = this.value
+    console.log(sortOrder)
     concatenateSearchQuery("sort_order=" + sortOrder)
 })
 
