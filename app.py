@@ -95,8 +95,11 @@ Session(app)
 
 @app.before_request
 def update_session_lifetime():
+    print(f"Before request: {session}")
     if 'authenticated' in session and session['authenticated']:
+        print("User is authenticated. Setting session lifetime to authenticated duration.")
         app.permanent_session_lifetime = SESSION_LIFETIME_AUTHENTICATED
+        print(f"updated {session}")
     else:
         app.permanent_session_lifetime = SESSION_LIFETIME_UNAUTHENTICATED
 
@@ -192,7 +195,7 @@ def generate_password_hash(password: str) -> str:
     return ws.generate_password_hash(password,method=HASH_METHOD,salt_length=int(SALT_LENGTH))
 # ts = {} # temporary storages for the users... ts[user_id] = UserTemporaryStorage()
 
-class UserTemporaryStorage:
+class GuestTemporaryStorage:
     """
     A class for storing temporary data for the user.
     This ensures that the user can only access their own data.
@@ -291,7 +294,6 @@ class UserTemporaryStorage:
                 setattr(self, key, value)
 
         # self._self_to_session()  # update the session after loading the data
-   
 
     def to_dict(self, features: Iterable[str] = None, for_save: bool = False) -> dict:
         """
@@ -411,6 +413,7 @@ class UserTemporaryStorage:
         non_bg_pixels = np.sum(aggregate_mask + asphalt_mask)
         asphalt_pixels = np.sum(asphalt_mask)
         return float(asphalt_pixels / non_bg_pixels) if non_bg_pixels > 0 else 0.0
+from app_uts import UserTemporaryStorage
 
 class TemporaryStoryManager:
     def __init__(self, expire_after_seconds: int = 1200): 
@@ -711,25 +714,72 @@ def check_session_timeout(func):
 #     g.storage = storage_obj
 #     return storage_obj
 
+
+@app.teardown_request
+def save_storage(exception=None):
+    storage = getattr(g, "storage", None)
+    conn = getattr(g, "db", None)
+
+    if storage is None or conn is None:
+        return
+
+    try:
+        # only persist if something changed
+        if getattr(storage, "_dirty_fields", None):
+            if storage._dirty_fields:
+                storage.save()
+
+    except Exception as e:
+        # never crash teardown (Flask will already be unwinding)
+        app.logger.exception("Failed to save storage: %s", e)
+
 def _get_storage() -> UserTemporaryStorage:
     # Ensure session has a user_id
     if 'user_id' not in session:
         session['user_id'] = str(uuid.uuid4())
 
+    # OLD APPROACH - USING A GLOBAL DICTIONARY (OUTDATED - OUT OF FUNCTION)
+    # # Attempt to load storage from session
+    # storage_data = session.get('storage')
+    # if storage_data:
+    #     # decompress + unpickle
+    #     storage_obj: UserTemporaryStorage = pickle.loads(zlib.decompress(storage_data))
+    # else:
+    #     # Create new storage if none exists
+    #     storage_obj = UserTemporaryStorage(user_id=session['user_id'])
+    #     # Save back into session
+    #     session['storage'] = zlib.compress(pickle.dumps(storage_obj))
+    
+    # return storage_obj
+
     # Attempt to load storage from session
-    storage_data = session.get('storage')
-    if storage_data:
-        # decompress + unpickle
-        storage_obj: UserTemporaryStorage = pickle.loads(zlib.decompress(storage_data))
+    if session.get('authenticated', False) == True:
+        if not hasattr(g, "storage") or g.storage is None:
+            
+            experiment_id = session.get('experiment_id', None)
+            print(f'Loading storage for experiment_id: {experiment_id}')
+            g.storage =  UserTemporaryStorage.load(experiment_id)
+            storage_obj = g.storage
+            # conn.close()
+        else:
+            storage_obj = g.storage
     else:
-        # Create new storage if none exists
-        storage_obj = UserTemporaryStorage(user_id=session['user_id'])
-        # Save back into session
-        session['storage'] = zlib.compress(pickle.dumps(storage_obj))
+        storage_data = session.get('storage')
+        if storage_data:
+            # decompress + unpickle
+            storage_obj: GuestTemporaryStorage = pickle.loads(zlib.decompress(storage_data))
+        else:
+            # Create new storage if none exists
+            storage_obj = GuestTemporaryStorage(user_id=session['user_id'])
+            # Save back into session
+            session['storage'] = zlib.compress(pickle.dumps(storage_obj))
     
     return storage_obj
 
+
+
 # storage = LocalProxy(lambda: ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id'])))
+# storage = LocalProxy(lambda: _get_storage())
 # storage = LocalProxy(lambda: _get_storage())
 storage = LocalProxy(lambda: _get_storage())
 storage: UserTemporaryStorage = cast(UserTemporaryStorage, storage)
@@ -793,19 +843,12 @@ def dict_to_json(data_dict: dict, features: Iterable[str] = None) -> str:
 def check_data_ownership(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        print(f'OWNERSHIP CHECK for user_id: {session.get("user_id", None)} and experiment_id: {kwargs.get("id", None)}')
         owner_user_id = db_api.get_user_id_of_experiment(id=kwargs['id'])
         # allow acces to the data for the company admin as well
         is_company_admin = db_api.get_user_by_id(session['user_id'])['is_company_admin']
         admin_company_id = db_api.get_user_by_id(session['user_id'])['company']
-
-        print(f'Owner user ID: {owner_user_id}')
-        print(f'session user ID: {session.get("user_id", None)}')
-
         can_access = (owner_user_id == session['user_id']) or (is_company_admin and db_api.get_user_by_id(owner_user_id)['company'] == admin_company_id)
-        print(owner_user_id == session['user_id'])
-        print(can_access)
-        print()
+        
         if can_access:
             return func(id=kwargs['id'])
         else:
@@ -817,10 +860,13 @@ def check_data_ownership(func):
 def check_authentication(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
+        print(f'Checking authentication for user_id: {session.get("user_id", None)}')
+        print(session)
         if 'authenticated' in session and session['authenticated']:
             return func(*args, **kwargs)
         else:
             flash(_('You must be logged in to access this page.'), 'error')
+            print('User not authenticated. Redirecting to login page.')
             return redirect(url_for('login')), 302
     return wrapper
 
@@ -850,17 +896,14 @@ def index():
     models = discover_models()
     return render_template('index.html', session=session, models=models), 200
 
-@app.route('/is-admins-experiment/<int:experiment_id>', methods=['GET'])
+@app.route('/is-users-experiment/<int:id>', methods=['GET'])
 @check_authentication
-@check_is_company_admin
-def is_admins_experiment(experiment_id: int):
-    if 'user_id' not in session:
-        return json.dumps({'is_admins': False}), 200, {'Content-Type': 'application/json'}
-    admin_id = session['user_id']
-    experiment_user_id = db_api.get_user_id_of_experiment(id=experiment_id)
-    is_admins = (experiment_user_id == admin_id)
-    print(f'Checking if user {admin_id} is admin of experiment {experiment_id} with owner {experiment_user_id}: {is_admins}')
-    return json.dumps({'is_admins': is_admins}), 200, {'Content-Type': 'application/json'}
+@check_data_ownership
+def is_users_experiment(id: int):
+    user_id = session.get('user_id', None)
+    experiment_user_id = db_api.get_user_id_of_experiment(id=id)
+    is_users = (experiment_user_id == user_id)
+    return json.dumps({'is_users': is_users}), 200, {'Content-Type': 'application/json'}
     
     
     
@@ -1151,13 +1194,17 @@ def login():
                     return redirect(url_for('login')), 302
                 
                 authenticated = is_password_correct(password=form.password.data, user_id=user_id)
+                print(f'User {user_id} authenticated {authenticated}.')
                 if authenticated:
                     session['authenticated'] = True
+                    print(f'User {user_id} authenticated successfully.')
                     session['user_id'] = user_id
                     session['user_email'] = form.usernameXe_mail.data
                     session['is_admin'] = False
                     if db_api.get_user_by_id(user_id=user_id)['is_company_admin']:
                         session['is_admin'] = True
+                    print(' Session after login:')
+                    print(session)
                     return redirect('/'), 302   
                 else:
                     flash(_('Invalid username/email or password.'), 'error')
@@ -1174,62 +1221,50 @@ def sort_records(records: list, sort_order: Literal['asc', 'desc'], sort_by: str
     return records[:page_limit]
 
 
-@app.route('/queue',methods=['GET','POST'])
-@check_authentication
-@deprecated("This endpoint is no longer used and will be removed in future versions.")
-def queue():
-    # sort_order=request.args.get('sort_order','asc')
-    # page_limit=min(1,int(request.args.get('page_limit') or 10))
-    # page=int(request.args.get('page',1))
-    # start_sub_id=request.args.get('start_id',None)
-    # sort_by=request.args.get('sort_by','time_stamp,id')
-    sort_order, page_limit, start_sub_id, page, sort_by = get_query_args(**kwargs)
+# @app.route('/queue',methods=['GET','POST'])
+# @check_authentication
+# @deprecated("This endpoint is no longer used and will be removed in future versions.")
+# def queue():
+#     sort_order, page_limit, start_sub_id, page, sort_by = get_query_args(**kwargs)
     
-    records=[('id','time_stamp','current_state')]
-    sort_by = sort_by.split(',')  
-    sort_by = [x for x in sort_by if x in records[0]]
+#     records=[('id','time_stamp','current_state')]
+#     sort_by = sort_by.split(',')  
+#     sort_by = [x for x in sort_by if x in records[0]]
     
-    sort_columns=[ records[0].index(x) for x in sort_by]
+#     sort_columns=[ records[0].index(x) for x in sort_by]
 
-    columnames=[_('id'),_('date'),_('state'),_('actions')]
-    actions=[_('Edit'),_('Cancel')]
-    records.append(execute_query("SELECT experiment_id, time_stamp, current_state FROM experiments where user_id=%s AND current_state!='finished' ",(session['user_id'],)))
-    data = records[1]
+#     columnames=[_('id'),_('date'),_('state'),_('actions')]
+#     actions=[_('Edit'),_('Cancel')]
+#     records.append(execute_query("SELECT experiment_id, time_stamp, current_state FROM experiments where user_id=%s AND current_state!='finished' ",(session['user_id'],)))
+#     data = records[1]
 
-    # Data sorting and slicing
-    current_state_order={'finished':0,'current_experiment': 1, 'started':2,'prepared':3,'processing':4,'pending':5}
-    reversed_current_state_order={v:k for k,v in current_state_order.items()}
-    data = [(x[0], x[1].strftime('%Y-%m-%d  %H:%M:%S'), x[2]) for x in data]
-    data=list(map(lambda x: (x[0],x[1],current_state_order[x[2]]),data))
-    data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='desc')
-    # now we have to remap the data back to strings
-    data=list(map(lambda x: (x[0],x[1],reversed_current_state_order[x[2]]),data))
+#     # Data sorting and slicing
+#     current_state_order={'finished':0,'current_experiment': 1, 'started':2,'prepared':3,'processing':4,'pending':5}
+#     reversed_current_state_order={v:k for k,v in current_state_order.items()}
+#     data = [(x[0], x[1].strftime('%Y-%m-%d  %H:%M:%S'), x[2]) for x in data]
+#     data=list(map(lambda x: (x[0],x[1],current_state_order[x[2]]),data))
+#     data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='desc')
+#     # now we have to remap the data back to strings
+#     data=list(map(lambda x: (x[0],x[1],reversed_current_state_order[x[2]]),data))
         
-    pages = get_num_pages(len(data), page_limit)
+#     pages = get_num_pages(len(data), page_limit)
     
-    if page>pages:
-        page=pages
-    if start_sub_id is None:
-        start_sub_id=0+page_limit*(page-1)
-    else:
-        start_sub_id=int(start_sub_id)
+#     if page>pages:
+#         page=pages
+#     if start_sub_id is None:
+#         start_sub_id=0+page_limit*(page-1)
+#     else:
+#         start_sub_id=int(start_sub_id)
     
-    max_sub_id = min(len(data), start_sub_id+page_limit)
-    data=data[start_sub_id:max_sub_id]
-    records[1] = data
+#     max_sub_id = min(len(data), start_sub_id+page_limit)
+#     data=data[start_sub_id:max_sub_id]
+#     records[1] = data
 
-    # translate_column_names
-    columnames = [ _(col) for col in columnames ]
-    return render_template('queue.html',records=records,session=session,dynamic_content=_('Experiment Queue'),columnames=columnames, actions = actions)
+#     # translate_column_names
+#     columnames = [ _(col) for col in columnames ]
+#     return render_template('queue.html',records=records,session=session,dynamic_content=_('Experiment Queue'),columnames=columnames, actions = actions)
 
-
-# def get_ordenary_user_experiments(request) -> list[tuple]:
-def get_ordenary_user_experiments(**kwargs) -> tuple[list[tuple], list[tuple], int]:
-#     sort_order=kwargs.get('sort_order','desc')
-#     page_limit=min(1,int(kwargs.get('page_limit') or 10))
-#     start_sub_id=kwargs.get('start_id',None)
-#     page=int(kwargs.get('page',1))
-#     sort_by=kwargs.get('sort_by','time_stamp,id,expert_guess,asphalt_ratio')
+def get_ordenary_user_experiments(**kwargs) -> tuple[list[tuple], int]:
     sort_order, page_limit, start_sub_id, page, sort_by = get_query_args(**kwargs)
     records=[('id','time_stamp','expert_guess', 'asphalt_ratio')]
     sort_by = sort_by.split(',')  
@@ -1246,29 +1281,14 @@ def get_ordenary_user_experiments(**kwargs) -> tuple[list[tuple], list[tuple], i
     # Replace None values with -1
     data = [(x[0],x[1],x[2] if x[2] is not None else 0, x[3] if x[3] is not None else -1) for x in data]
     data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='desc')
-    # data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='asc')
     # replace -1 with None
-    data = [(x[0],x[1],x[2] if x[2] != -1 else None, x[3] if x[3] != -1 else None) for x in data]
+    data = [(x[0],x[1], f"{x[2]*100:.2f}" if x[2]  != -1 else None, f"{x[3]*100:.2f}" if x[3] != -1 else None) for x in data]
         
     pages = get_num_pages(len(data), page_limit)
-    # return_max_page(pages, 'experiments', kwargs=request.args.to_dict().update({'page': page}))
-    return  data, records, pages
-    # 
-    # if page>pages:
-    #     page=pages
-    # if start_sub_id is None:
-    #     start_sub_id=0+page_limit*(page-1)
-    # else:
-    #     start_sub_id=int(start_sub_id)
-    
-    # deactivate_next, deactivate_prev, page = deactivation_pages(page, pages)
-    
-    # max_sub_id = min(len(data), start_sub_id+page_limit)
-    # data=data[start_sub_id:max_sub_id]
-    # # convert the expert guess and asphalt_ratio to string with 2 decimal places
-    # data = [(x[0], x[1], f"{x[2]*100:.2f}" if x[2] is not None else _('None'), f"{x[3]*100:.2f}" if x[3] is not None else _('None')) for x in data]
-    # records[1] = data
-    # return render_template('experiments.html',records=records,session=session,dynamic_content=_('Sample Records'), deactivate_next=deactivate_next, deactivate_prev=deactivate_prev, page=page)
+    start_sub_id, max_sub_id = get_start_and_max_sub_id(page, page_limit, len(data), start_sub_id)
+    data=data[start_sub_id:max_sub_id]
+    records[1] = data
+    return  records, pages
     
 def deactivation_pages(page: int, pages: int) -> tuple[bool, bool, int]:
     # deactivating pages 
@@ -1302,13 +1322,7 @@ def get_query_args(**kwargs) -> dict:
     
     return [value for value in dt.values()]
 
-# def get_admin_user_experiments(request, kwargs=None) -> list[tuple]:
-def get_admin_user_experiments(**kwargs) -> tuple[list[tuple], list[tuple], int]:
-    # sort_order=kwargs.get('sort_order','desc')
-    # page_limit=min(1, int(kwargs.get('page_limit') or 10))
-    # start_sub_id=kwargs.get('start_id',None)
-    # page=int(kwargs.get('page',1))
-    # sort_by=kwargs.get('sort_by','time_stamp,id,expert_guess,asphalt_ratio')
+def get_admin_user_experiments(**kwargs) -> tuple[list[tuple], int]:
     sort_order, page_limit, start_sub_id, page, sort_by = get_query_args(**kwargs)
     
     records=[('id','time_stamp','name','contact','expert_guess', 'asphalt_ratio')]
@@ -1340,24 +1354,10 @@ def get_admin_user_experiments(**kwargs) -> tuple[list[tuple], list[tuple], int]
 
     pages = get_num_pages(len(data), page_limit)
     kwargs = request.args.to_dict() if kwargs is None else kwargs
-    # return_max_page(pages, 'experiments', **kwargs)
-    # if page>pages:
-    #     page=pages  
-    # if start_sub_id is None:
-    #     start_sub_id=0+page_limit*(page-1)
-    # else:
-    #     start_sub_id=int(start_sub_id)
-    # max_sub_id = min(len(data), start_sub_id+page_limit)
     start_sub_id, max_sub_id = get_start_and_max_sub_id(page, page_limit, len(data), start_sub_id)
     data=data[start_sub_id:max_sub_id]
-
-
-        
-    # convert the expert guess and asphalt_ratio to string with 2 decimal places
-    # data = [(x[0], x[1], x[2], x[3], f"{x[4]*100:.2f}" if x[4] is not None else _('None'), f"{x[5]*100:.2f}" if x[5] is not None else _('None')) for x in data]
     records[1] = data
     return records, pages
-    # return render_template('experiments_admin.html',records=records,session=session,dynamic_content=_('Sample Records - Admin View'), deactivate_next=deactivate_next, deactivate_prev=deactivate_prev)
 
 def get_start_and_max_sub_id(page: int, page_limit: int, len_data: int, start_sub_id: int = None) -> tuple[int, int]:
     start_sub_id = page_limit * (page - 1)
@@ -1486,7 +1486,6 @@ def company():
             
 @app.route('/register',methods=['GET','POST'])
 def register():
-    # logout()
     title = _("Register new company")
     info = _("You can use the form above to register a user for your existing company. If you wish to register a new company instead, please click the button below and contact us via email.")
     btnstr = _("Contact us!")
@@ -1498,7 +1497,7 @@ def register():
         <p class="fancy-paragraph">
             {info}
         </p>
-        <a href="\home#contact_form">
+        <a href="home#contact_form">
             <button id='ContactUsBtn' class="custom-file-label">{btnstr}</button>
         </a>
     </div>
@@ -1536,8 +1535,13 @@ def register():
                 }
                 result = db_api.save_new_user_db(values=user_dict)
                 if result is None:
-                    flash(message=_('Registration successful. Please confirm your email via the link sent to your email address (the process may take a few minutes).'),category='success')
-                    return redirect(url_for('login')), 302
+                    if session.get('authenticated', False) and session.get('is_admin', False):
+                        # do not log out the admin user who is registering a new user
+                        flash(message=_('User registered successfully. The user will be notified via the provided email address.'), category='success')
+                        return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY, optional_content_below=optional_content), 200
+                    else:
+                        flash(message=_('Registration successful. Please confirm your email via the link sent to your email address (the process may take a few minutes).'),category='success')
+                        return redirect(url_for('login')), 302
                 else:
                     flash(message=_('Database error:') + f'{result}', category='error')
                     return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY, optional_content_below=optional_content), 500
@@ -1630,7 +1634,7 @@ def export_report(ids):
                 if not are_experiments_accessible_by_user(session['user_id'], experiment_ids): 
                     flash(message=_('You do not have permission to access the selected experiments.'),category='error')
                     return render_template('form.html',dynamic_content=_('Export report'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
-                print('Form validated successfully.')
+
                 # generate report
                 controlling_user_id = form.controlling_employee.data  # may be None
                 if controlling_user_id is None or controlling_user_id == 'None':
@@ -1641,13 +1645,6 @@ def export_report(ids):
                     'contact': form.ordering_party_e_mail.data,
                 }
 
-                print(ordering_party)
-
-                print()
-                print('experiment_ids')
-                print(experiment_ids)
-                print('controlling_user_id:', controlling_user_id)
-                print()
                 report_id = uuid.uuid4().hex[:8]
                 report_bytes = exporter_registry["CSN_73_6161"](
                     experiment_ids=experiment_ids,
@@ -1671,7 +1668,6 @@ def export_report(ids):
 
 @app.route('/register-company',methods=['GET','POST'])
 def register_company():
-    logout()
     match request.method:
         case 'GET':
             form=forms.RegistrationFormCompany()
@@ -1680,7 +1676,6 @@ def register_company():
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form=forms.RegistrationFormCompany()
             if form.validate_on_submit():
-                print('Form validated successfully.')
                 values = {
                     'company_name': form.company_name.data,
                     'company_address': form.company_address.data,
@@ -1789,6 +1784,7 @@ def grayscale_image(image: np.ndarray) -> np.ndarray:
 def update_specific_value(value_name):
     # ts[session['user_id']].values.__dict__[value_name] = value
     # setattr(ts[session['user_id']], value_name, value)    
+    print(f'Updating value: {value_name}')
     if storage.experiment_id is None:
         return json.dumps({'status': 'error', 'message': 'No active experiment found'}), 404, {'Content-Type': 'application/json'}
     value = request.form.get(value_name)
@@ -1801,9 +1797,6 @@ def update_specific_value(value_name):
 @app.route('/save_value/<string:value_name>',methods=['POST','GET'])
 @ignore_unauthenticated
 def save_specific_value(value_name):
-    # if value_name is 'oexpert_guess' and storage.expert_guess is not None:
-    #     print('Saving expert guess:', storage.expert_guess)
-    #     qqq
     try:
         value_name = value_name.lower()
         # value = ts[session['user_id']].values.__dict__[value_name]
@@ -1846,6 +1839,7 @@ def delete_experiment(id):
 @check_authentication
 def deactivate_current_experiment():
     id = db_api.return_active_experiment_id(user_id=session['user_id'])
+    session['experiment_id'] = None
     storage = None
     return deactivate_experiment(id)
 
@@ -1868,6 +1862,7 @@ def deactivate_experiment(id):
 @check_authentication
 @check_data_ownership
 def activate_experiment_caller(id):
+    session['experiment_id'] = id
     return activate_experiment(id)
 
 def activate_experiment(id):
@@ -1885,20 +1880,14 @@ def activate_experiment(id):
             print(i[0])
             r=deactivate_experiment(i[0])
 
-    print('before activating experiment.')
     # activate the experiment
+    print('before activating experiment:', id)
     db_api.update_experiment_active_status(user_id=session['user_id'], active=True, experiment_id=id)
-    # query = 'UPDATE experiments SET active=%s WHERE experiment_id=%s'
-    print('after db update for activating experiment.')
-    # values = (True, id)
-    # execute_query(query, values)
-    # ts [session['user_id']].experiment_id = id    
-    storage.experiment_id = id    #**
-    print('3')
+    storage.experiment_id = id   
+    print('Experiment activated:', id)
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
-# TODO: consider removal - of 'POST' method - unused
-# @app.route('/load-experiment/<int:id>',methods=['GET', 'POST'])
+
 @app.route('/load-experiment/<int:id>',methods=['GET'])
 @check_authentication
 def load_experiment(id):
@@ -1929,26 +1918,19 @@ def load_experiment(id):
     dict_response.update(storage.to_dict())
     return dict_to_json(dict_response), 200, {'Content-Type': 'application/json'}
 
-    #     print('Experiment loaded.')
-    #     redirect('/')
-    # return json.dumps(json_response), 200, {'Content-Type': 'application/json'}      
 
 # export the images folder
 @app.route('/images/<path:filename>')
 def download_file(filename):
     return send_from_directory('images', filename, as_attachment=True)
 
-# manual corrections
-# @app.route('/manual-corrections',methods=['GET'])
-# @check_authentication
-# def manual_corrections():
-#     return render_template('manual_corrections.html')
 
 @app.route('/is-experiment-active',methods=['GET'])
 def is_active():
     print('Checking if experiment is active.')
     storage.experiment_id = db_api.return_active_experiment_id(user_id=session['user_id']) #**
     print(storage.experiment_id)
+    session['experiment_id'] = storage.experiment_id #** ensure that the session is updated with the active experiment ID
     if storage.experiment_id is not None:
         return json.dumps({'status': 'success', 'active': True, 'experimentId': storage.experiment_id}), 200, {'Content-Type': 'application/json'}
     else:
@@ -1967,40 +1949,25 @@ def save_experiment(**kwargs):
             state = request.args.get('state') or request.form.get('state') or 'started'
             # state = 'started'    
 
-        print('Saving record.')
-        print('state', state)
+
     # try:        
-        print()
-        print()
-        print('Current experiment ID:', storage.experiment_id)
-        print('Storeage user ID:', storage.user_id)
-        print('Current user ID:', session['user_id'])
-        print()
-        print()
+        ts_dict = storage.to_dict(for_save=True)
+        ts_dict['current_state'] = state 
+        if session.get('authenticated', False):
+            ts_dict['user_id'] = session['user_id']
+        
         if storage.experiment_id is None:
-            print('Inserting new record.')
-            ts_dict = storage.to_dict(for_save=True)
-            ts_dict['current_state'] = state 
-            ts_dict['user_id'] = session['user_id']
-            # ts_dict.pop('experiment_id', None)  # ensure that the experiment_id is not in the dict
-            print('before db write.')
             storage.experiment_id = db_api.insert_experiment_to_db(values_dict=ts_dict) #**
-            print('after    db write.')
+            session['experiment_id'] = storage.experiment_id #** ensure that the session is updated with the new experiment ID
             activate_experiment(storage.experiment_id)
-            print('New experiment ID:', storage.experiment_id)
-            # storage.from_dict(ts_dict)  # to ensure consistency
         else:
-            print('Updating record.')
-            ts_dict = storage.to_dict(for_save=True)
-            ts_dict['current_state'] = state
-            ts_dict['user_id'] = session['user_id']
+            # ts_dict = storage.to_dict(for_save=True)
+            # ts_dict['current_state'] = state
+            # if session.get('authenticated', False):
+            #     ts_dict['user_id'] = session['user_id']
             db_api.update_experiment_in_db(values_dict=ts_dict, experiment_id=storage.experiment_id)
         if state.lower() == 'finished':
-            # delete temporary storage and create a new one
-            print('Experiment finished.')
-            # ts.pop(session['user_id'])
             session.pop('storage', None)  # remove storage from session
-            # storage = UserTemporaryStorage() # TODO: check if this is needed >>> should be created dynamically when needed by lambda function in storage definition
         return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
     # except Exception as e:
     #     return json.dumps({'status': 'error', 'message': str(e)}), 500, {'Content-Type': 'application/json'}
@@ -2108,7 +2075,6 @@ def inference_image():
         return json.dumps({'status': 'error', 'message': 'No color image provided.'}), 200, {'Content-Type': 'application/json'}
     
     # # get model prediction and save it to the sessions
-    # asphalt_mask, aggregate_mask, background_mask = models.postprocess_model_prediction(model_prediction)
     asphalt_mask, aggregate_mask, background_mask = models.inference_on_numpy(
         np_image=storage.color,
         model_name=storage.inference_model,
@@ -2125,14 +2091,6 @@ def inference_image():
 
     # return the masks with manual corrections
     asphalt_mask, aggregate_mask, background_mask = storage.get_masks_with_manual_corrections()
-    # asphalt_mask = ts[session['user_id']].get_asphalt_mask()
-    # aggregate_mask = ts[session['user_id']].get_aggregate_mask()
-    # background_mask = ts[session['user_id']].get_background_mask()
-
-    # save the masks to the session
-    # ts[session['user_id']].asphalt_mask = asphalt_mask.astype(int)
-    # ts[session['user_id']].aggregate_mask = aggregate_mask.astype(int)
-    # ts[session['user_id']].background_mask = background_mask.astype(int)
 
     json_response = {
         'status': 'success',
@@ -2154,11 +2112,11 @@ def encode_to_png(image):
     image_io.seek(0)
     return image_io.getvalue()
   
-
+@deprecated("Manual corrections are currently not supported.")
 def get_inner_shape(shape_object):
     # TODO: consider REMOVAL - UNUSED - NO MANUAL CORRECTIONS IN THE CURRENT APPROACH 
     # raise NotImplementedError
-    grid_size_x, grid_size_y = ts[session['user_id']].color_original.shape[:2]
+    grid_size_x, grid_size_y = storage.color.shape[:2]
     y, x = np.meshgrid(np.arange(grid_size_x), np.arange(grid_size_y))
     points = np.vstack((x.ravel(), y.ravel())).T
     match shape_object["type"]:
@@ -2184,13 +2142,6 @@ def get_inner_shape(shape_object):
 def get_default_experiment_info():
     # Update the default experiment info in the database
     response = db_api.get_default_experiment_info(user_id=session['user_id'])
-    # experiment_id = db_api.return_active_experiment_id(user_id=session['user_id'])
-    # print('Experiment ID:', experiment_id)
-    # print('response:', response)
-    # if experiment_id:
-    #     for key, value in response.items(): 
-    #         db_api.update_experiment_in_db(values_dict={key: value}, experiment_id=experiment_id)
-    #     # db_api.update_experiment_in_db(values_dict=response, experiment_id=experiment_id)
     return json.dumps({'status': 'success', 'data': response}), 200, {'Content-Type': 'application/json'}
 
 @app.route('/update-default-experiment-info', methods=['POST'])

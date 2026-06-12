@@ -874,7 +874,7 @@ def get_printable_image(img: PIL.Image.Image | np.ndarray, max_image_size_cm: li
         img = PIL.Image.fromarray(img)
     buf = io.BytesIO()
     # img.save(buf, format="PNG")
-    img.save(buf, format="JPEG", quality=85, optimize=True)
+    img.save(buf, format="JPEG", quality=50, optimize=True)
     buf.seek(0)
     rlimg = RLImage(buf, width=img_width, height=img_height)
     return rlimg

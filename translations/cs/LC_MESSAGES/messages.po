@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-08 11:41+0200\n"
+"POT-Creation-Date: 2026-06-12 00:04+0200\n"
 "PO-Revision-Date: 2025-10-21 18:40+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: cs\n"
@@ -110,35 +110,35 @@ msgstr "reCAPTCHA verifikace selhala. Prosím, zkutste znovu."
 msgid "Your session has expired. Please refresh the page and try again."
 msgstr "Vaše relace vypršela. Obnovte ptosím stránku a zkuste znovu."
 
-#: app.py:812
+#: app.py:855
 msgid "You do not have permission to access this data."
 msgstr "Na zobrazení těchto dat nemáte potřebná práva."
 
-#: app.py:823
+#: app.py:866
 msgid "You must be logged in to access this page."
 msgstr "Pro zobrazení této stránky se musíte přihlásit."
 
-#: app.py:833
+#: app.py:876
 msgid "You do not have permission to access this page."
 msgstr "Na zobrazení této stránky nemáte potřebná práva."
 
-#: app.py:870 app.py:1477 templates/home.html:41
+#: app.py:913 app.py:1536 templates/home.html:41
 msgid "Contact us!"
 msgstr "Kontaktujte nás!"
 
-#: app.py:886
+#: app.py:929
 msgid "Your message has been sent successfully."
 msgstr "Vaše zpráva byla úspěšně odeslána."
 
-#: app.py:889 app.py:892
+#: app.py:932 app.py:935
 msgid "There was an error sending your message. Please try again."
 msgstr "Během odesílání Vaší zprávy došlo k chybě. Zkuste to prosím znovu."
 
-#: app.py:922
+#: app.py:965
 msgid "Change email"
 msgstr "Změnit e-mail"
 
-#: app.py:935
+#: app.py:978
 msgid ""
 "You have requested a change of an email address.Please confirm your new "
 "email address by clicking the button below:"
@@ -146,59 +146,59 @@ msgstr ""
 "zažádali jste o změnu e-mailové adresy. Prosím potvrďte tento požadavek "
 "kliknutím na odkaz níže:"
 
-#: app.py:937
+#: app.py:980
 msgid "AIBAL: Confirm your new email address"
 msgstr "AIBAL: Potvrďte svou novou emailovou adresu"
 
-#: app.py:940 app.py:960
+#: app.py:983 app.py:1003
 msgid "Email changed successfully."
 msgstr "E-mail úspěšně aktualizován."
 
-#: app.py:949
+#: app.py:992
 msgid "Change company email"
 msgstr "Změnit e-mail společnosti"
 
-#: app.py:973 app.py:988 app.py:996 app.py:1012
+#: app.py:1016 app.py:1031 app.py:1039 app.py:1055
 msgid "Change personal information"
 msgstr "Upravit osobní informace"
 
-#: app.py:985
+#: app.py:1028
 msgid "Personal information updated successfully."
 msgstr "Osobní informace úspěšně aktualizovány."
 
-#: app.py:1009
+#: app.py:1052
 msgid "Company information updated successfully."
 msgstr "Informace úspěšně aktualizovány."
 
-#: app.py:1017 templates/user.html:60
+#: app.py:1060 templates/user.html:60
 msgid "Change password"
 msgstr "Změnit heslo"
 
-#: app.py:1031
+#: app.py:1074
 msgid "Password changed successfully."
 msgstr "Heslo úspěšně aktualizováno."
 
-#: app.py:1034
+#: app.py:1077
 msgid "The old password is incorrect."
 msgstr "Zadané staré heslo je nesprávné."
 
-#: app.py:1079 app.py:1117
+#: app.py:1122 app.py:1160
 msgid "You do not have permission to perform this action."
 msgstr "Na provedení této akce nemáte potřebná práva."
 
-#: app.py:1084 app.py:1122
+#: app.py:1127 app.py:1165
 msgid "User with the provided username does not exist"
 msgstr "Uživatel se zadaným přihlašovacím jménem neexistuje."
 
-#: app.py:1137 app.py:1164 app.py:1167 forms.py:98 templates/navbar.html:54
+#: app.py:1180 app.py:1207 app.py:1210 forms.py:98 templates/navbar.html:54
 msgid "Login"
 msgstr "Přihlásit se"
 
-#: app.py:1146
+#: app.py:1189
 msgid "Please confirm your email address before logging in."
 msgstr "Potvrďte prosím před přihlášením svou emailovou adresu."
 
-#: app.py:1150
+#: app.py:1193
 msgid ""
 "Your account has been blocked. In case this should not be the case, "
 "please contact your company admin."
@@ -206,60 +206,60 @@ msgstr ""
 "Váš účet byl zablokován. Pokud se domníváte, že se jedná o omyl, prosím "
 "kontaktujte administrátora své společnosti."
 
-#: app.py:1163 forms.py:55
+#: app.py:1206 forms.py:55
 msgid "Invalid username/email or password."
 msgstr "Chybné přihlašovací údaje."
 
-#: app.py:1193
+#: app.py:1237
 msgid "id"
 msgstr "ID"
 
-#: app.py:1193
+#: app.py:1237
 msgid "date"
 msgstr "Datum"
 
-#: app.py:1193
+#: app.py:1237
 msgid "state"
 msgstr "Stav"
 
-#: app.py:1193
+#: app.py:1237
 msgid "actions"
 msgstr "Akce"
 
-#: app.py:1194 templates/experiments.html:74
+#: app.py:1238 templates/experiments.html:74
 #: templates/experiments_admin.html:75 templates/queue.html:81
 msgid "Edit"
 msgstr "Upravit"
 
-#: app.py:1194
+#: app.py:1238
 msgid "Cancel"
 msgstr "Zrušit"
 
-#: app.py:1222
+#: app.py:1266
 msgid "Experiment Queue"
 msgstr "Fronta experimentů"
 
-#: app.py:1326
+#: app.py:1383
 msgid "None"
 msgstr "None"
 
-#: app.py:1375
+#: app.py:1432
 msgid "Sample Records - Admin View"
 msgstr "Záznamy zpracovaných vzorků - Zobrazení admina"
 
-#: app.py:1379 templates/experiments_admin.html:14 templates/navbar.html:26
+#: app.py:1436 templates/experiments_admin.html:14 templates/navbar.html:26
 msgid "Sample Records"
 msgstr "Záznamy hodnocených vzorků"
 
-#: app.py:1445
+#: app.py:1504
 msgid "Employee Records - Admin View"
 msgstr "Zaměstnanci - Zobrazení admina"
 
-#: app.py:1475 app.py:1663
+#: app.py:1534 app.py:1722
 msgid "Register new company"
 msgstr "Registrace nové společnosti"
 
-#: app.py:1476
+#: app.py:1535
 msgid ""
 "You can use the form above to register a user for your existing company. "
 "If you wish to register a new company instead, please click the button "
@@ -269,11 +269,11 @@ msgstr ""
 "existující společnosti. Chcete-li registrovat novou společnost, klikněte "
 "na tlačítko níže a kontaktujte nás pomocí emailu."
 
-#: app.py:1498 app.py:1528 app.py:1531 app.py:1696 app.py:1699
+#: app.py:1557 app.py:1587 app.py:1590 app.py:1755 app.py:1758
 msgid "Register new user"
 msgstr "Registrace nového uživatele"
 
-#: app.py:1503
+#: app.py:1562
 msgid ""
 "Thank you for signing up! Please confirm your email address by clicking "
 "the link below:"
@@ -281,11 +281,11 @@ msgstr ""
 "Díky za Vaší registraci! Prosím potvrďte svou emailovou adresu kliknutím "
 "na odkaz níže:"
 
-#: app.py:1509
+#: app.py:1568
 msgid "AIBAL: Please confirm your email address"
 msgstr "AIBAL: Potvrďte svou emailovou adresu"
 
-#: app.py:1524
+#: app.py:1583
 msgid ""
 "Registration successful. Please confirm your email via the link sent to "
 "your email address (the process may take a few minutes)."
@@ -293,61 +293,61 @@ msgstr ""
 "Registrace proběhla úspěšně. Prosím, dokončete ji potvrzením emailu "
 "pomocí odkazu zaslaného na Vaši e-mailovou adresu."
 
-#: app.py:1527 app.py:1695
+#: app.py:1586 app.py:1754
 msgid "Database error:"
 msgstr "Chyba databáze:"
 
-#: app.py:1530 app.py:1653 app.py:1698
+#: app.py:1589 app.py:1712 app.py:1757
 msgid "Form validation failed. Please check your input."
 msgstr "Selhala validace formuláře, prosím, zkontrolujte zadané údaje."
 
-#: app.py:1540
+#: app.py:1599
 msgid "Company key regenerated successfully."
 msgstr "Klíč společnosti úspěšně přegenerován."
 
-#: app.py:1550 forms.py:82 templates/company_key.html:9
+#: app.py:1609 forms.py:82 templates/company_key.html:9
 msgid "Company Key"
 msgstr "Klíč společnosti"
 
-#: app.py:1595
+#: app.py:1654
 msgid "Invalid experiment IDs provided."
 msgstr "Poskytnuta chybná ID experimentu."
 
-#: app.py:1605 app.py:1614 app.py:1617 app.py:1654
+#: app.py:1664 app.py:1673 app.py:1676 app.py:1713
 msgid "Export report"
 msgstr "Exportovat report"
 
-#: app.py:1613
+#: app.py:1672
 msgid "No experiments selected for report export."
 msgstr "Není vybrán žádný experiment k exportu reportu."
 
-#: app.py:1616
+#: app.py:1675
 msgid "You do not have permission to access the selected experiments."
 msgstr "Na zobrazení těchto dat nemáte potřebná práva."
 
-#: app.py:1677
+#: app.py:1736
 msgid "A new company registration with the following details has been requested:"
 msgstr ""
 "Byl vznesen nový požadavek na registraci společnosti s následujícími "
 "detaily:"
 
-#: app.py:1679 forms.py:89 forms.py:132
+#: app.py:1738 forms.py:89 forms.py:132
 msgid "Company Name"
 msgstr "Název společnosti"
 
-#: app.py:1680 forms.py:133
+#: app.py:1739 forms.py:133
 msgid "Company Address"
 msgstr "Adresa společnosti"
 
-#: app.py:1681
+#: app.py:1740
 msgid "Contact Email"
 msgstr "Kontaktní email"
 
-#: app.py:1689
+#: app.py:1748
 msgid "AIBAL: New company registration request"
 msgstr "AIBAL: Požadavek o registraci nové společnosti"
 
-#: app.py:1692
+#: app.py:1751
 msgid ""
 "Registration successful. Please confirm this request in your ADMIN mail "
 "account."
@@ -355,27 +355,27 @@ msgstr ""
 "Registrace proběhla úspěšně, prosím potvrďte ji ve svém administrátorském"
 " emailu."
 
-#: app.py:1860 app.py:1882 app.py:1924
+#: app.py:1907 app.py:1924 app.py:1966
 msgid "No active experiment found."
 msgstr "Žádný aktivní experiment nenalezen."
 
-#: app.py:2649
+#: app.py:2270
 msgid "No sample data found."
 msgstr "Žádná data ke vzorku nenalezena."
 
-#: app.py:2650
+#: app.py:2271
 msgid "Please fill the expert guess field before evaluating the sample."
 msgstr "Prosím, vyplňte expertní odhad před vyhodnocením vzorku."
 
-#: app.py:2651
+#: app.py:2272
 msgid "Evaluation completed. Check the console for the results."
 msgstr "Vyhodnocení dokončeno. Vizte konzoli s výsledky. "
 
-#: app.py:2652
+#: app.py:2273
 msgid "Evaluation results: "
 msgstr "Vyhodnocení výsledků: "
 
-#: app.py:2653
+#: app.py:2274
 msgid ""
 "Would you like to use this app with no limitations? Store and export "
 "these results? Contact us to create an account."
@@ -383,65 +383,65 @@ msgstr ""
 "Chcete používat tuto aplikaci bez omezení? Ukládat a exportovat tyto "
 "výsledky? Kontaktujte nás pro vytvoření účtu."
 
-#: app.py:2654
+#: app.py:2275
 msgid "No employees selected for intended action."
 msgstr "Pro vybranou akci nejsou vybráni žádní zaměstnaci."
 
-#: app.py:2655
+#: app.py:2276
 msgid "No sample selected for deletion."
 msgstr "Není vybrán žádný vzorek ke smazaní."
 
-#: app.py:2656
+#: app.py:2277
 msgid "Are you sure you want to delete the selected samples?"
 msgstr "Chcete opravdu smazat vybrané vzorky?"
 
-#: app.py:2657
+#: app.py:2278
 msgid "This action cannot be undone."
 msgstr "Tuto akci nelze vrátit."
 
-#: app.py:2658
+#: app.py:2279
 msgid "Please select sample to view details."
 msgstr "Prosím vybrerte vzorek, u kterého chcete zobrazit detaily."
 
-#: app.py:2659
+#: app.py:2280
 msgid "Please select only one sample for viewing details."
 msgstr "Prosím vyberte pouze jeden vzorek pro zobrazení detailů."
 
-#: app.py:2660
+#: app.py:2281
 msgid "Please select at least one sample for export."
 msgstr "Prosím vybrete alespoň jeden vzorke k exportu."
 
-#: app.py:2661
+#: app.py:2282
 msgid "For CSN 73 6161, exporting a single sample is not allowed."
 msgstr "Dle ČSN 73 6161 jeden vzorek není dostačující pro zkoušku přilnavosti. "
 
-#: app.py:2662
+#: app.py:2283
 msgid "Do you want to proceed with exporting this single sample?"
 msgstr "Přejete si přesto pokračovat a exportovat protokol?"
 
-#: app.py:2663
+#: app.py:2284
 msgid "Are you sure, you want to grant admin privileges to the following users?"
 msgstr "Opravdu chcete udělit administrátorská práva následujícím uživatelům?"
 
-#: app.py:2664
+#: app.py:2285
 msgid ""
 "Are you sure, you want to remove admin privileges from the following "
 "users?"
 msgstr "Opravdu chcete odebrat administrátorská práva následujícím uživatelům?"
 
-#: app.py:2665
+#: app.py:2286
 msgid ""
 "Are you sure, you want to block the sign in option for the following "
 "users?"
 msgstr "Opravdu chcete zablokovat následující uživatele?"
 
-#: app.py:2666
+#: app.py:2287
 msgid ""
 "Are you sure, you want to unblock the sign in option for the following "
 "users?"
 msgstr "Opravdu chcete odblokovat následujícím uživatele?"
 
-#: app.py:2667
+#: app.py:2288
 msgid ""
 "You have selected experiment of another user for editing. This action "
 "will transfer the ownership of the experiment to you (the original owner "
@@ -716,7 +716,7 @@ msgstr ""
 "    Prosím zkontrolujte, zda se u vzorků nejedná o duplikát.\n"
 "    Pokud jsou vzorky definitivně odlišné, můžete toto varování ignorovat."
 
-#: app_report_exporter.py:831 templates/demo.html:73 templates/index.html:215
+#: app_report_exporter.py:831 templates/demo.html:73 templates/index.html:237
 msgid "Original Image"
 msgstr "Původní obrázek"
 
@@ -736,19 +736,19 @@ msgstr "ID vzorku:"
 msgid "Date:"
 msgstr "Datum:"
 
-#: app_report_exporter.py:909 templates/index.html:76 templates/user.html:85
+#: app_report_exporter.py:909 templates/index.html:98 templates/user.html:85
 msgid "Place of Experiment:"
 msgstr "Místo konání experimentu:"
 
-#: app_report_exporter.py:910 templates/index.html:85 templates/user.html:94
+#: app_report_exporter.py:910 templates/index.html:107 templates/user.html:94
 msgid "Sample Collection Data:"
 msgstr "Data o odběru vzorku:"
 
-#: app_report_exporter.py:911 templates/index.html:124 templates/user.html:105
+#: app_report_exporter.py:911 templates/index.html:146 templates/user.html:105
 msgid "Aggregate:"
 msgstr "Kamenivo:"
 
-#: app_report_exporter.py:912 templates/index.html:132 templates/user.html:113
+#: app_report_exporter.py:912 templates/index.html:154 templates/user.html:113
 msgid "Binder:"
 msgstr "Pojivo:"
 
@@ -780,7 +780,7 @@ msgstr "Automatické vyhodnocení [%]: "
 msgid "Visual based Expert Guess [%]:"
 msgstr "Odborný odhad [%]"
 
-#: app_report_exporter.py:930 templates/index.html:154
+#: app_report_exporter.py:930 templates/index.html:176
 msgid "Comment:"
 msgstr "Komentář:"
 
@@ -990,11 +990,11 @@ msgstr "Zobrazit klíč společnosti"
 msgid "DEMO"
 msgstr "DEMO"
 
-#: templates/demo.html:13 templates/index.html:34
+#: templates/demo.html:13 templates/index.html:34 templates/index.html:55
 msgid "Upload Image"
 msgstr "Nahrát obrázek"
 
-#: templates/demo.html:16 templates/index.html:37
+#: templates/demo.html:16 templates/index.html:59
 msgid ""
 "By uploading an image, you agree that it may be stored in the application"
 " repository and potentially used by the authors for training future "
@@ -1003,35 +1003,35 @@ msgstr ""
 "Nahráním obrázku souhlasíte s jeho uložením v aplikaci a možností "
 "budoucího použití jejími autory pro trénink nových modelů."
 
-#: templates/demo.html:21 templates/index.html:163
+#: templates/demo.html:21 templates/index.html:185
 msgid "Automatic Phase Detection"
 msgstr "Automatická detekce fází"
 
-#: templates/demo.html:24 templates/index.html:45 templates/index.html:166
+#: templates/demo.html:24 templates/index.html:67 templates/index.html:188
 msgid "Working..."
 msgstr "Probíhá zpracování..."
 
-#: templates/demo.html:31 templates/index.html:173
+#: templates/demo.html:31 templates/index.html:195
 msgid "MODEL"
 msgstr "MODEL"
 
-#: templates/demo.html:41 templates/index.html:183
+#: templates/demo.html:41 templates/index.html:205
 msgid "Mask Opacity:"
 msgstr "Neprůhlednost masky:"
 
-#: templates/demo.html:53 templates/index.html:195
+#: templates/demo.html:53 templates/index.html:217
 msgid "Display mask - Bitumen"
 msgstr "Zobrazit masku - Asfalt"
 
-#: templates/demo.html:59 templates/index.html:201
+#: templates/demo.html:59 templates/index.html:223
 msgid "Display mask - Aggregate"
 msgstr "Zobrazit masku - Kamenivo"
 
-#: templates/demo.html:65 templates/index.html:207
+#: templates/demo.html:65 templates/index.html:229
 msgid "Display mask - Background"
 msgstr "Zobrazit masku - Pozadí"
 
-#: templates/demo.html:75 templates/index.html:217
+#: templates/demo.html:75 templates/index.html:239
 msgid "Grayscale Image"
 msgstr "Obrázek ve stupních šedi"
 
@@ -1274,15 +1274,27 @@ msgstr "Aktuální experiment"
 msgid "Current Sample"
 msgstr "Aktuální vzorek"
 
-#: templates/index.html:42
+#: templates/index.html:35 templates/index.html:42
+msgid "Take a Photo"
+msgstr "Vyfotit kamerou"
+
+#: templates/index.html:39
+msgid "or"
+msgstr "nebo"
+
+#: templates/index.html:48
+msgid "Capture photo"
+msgstr "Vyfotit"
+
+#: templates/index.html:64
 msgid "Basic Information"
 msgstr "Základní informace"
 
-#: templates/index.html:48
+#: templates/index.html:70
 msgid "Experiment data"
 msgstr "Experimentální data"
 
-#: templates/index.html:51
+#: templates/index.html:73
 msgid ""
 "Are there repeatedly filled values? Click here to set their default for "
 "automatic filling."
@@ -1290,79 +1302,79 @@ msgstr ""
 "Vyplňujete opakovaně některé údaje? Klikněte sem a nastavte si základní "
 "hodnoty."
 
-#: templates/index.html:59
+#: templates/index.html:81
 msgid "Speciemen Number:"
 msgstr "Číslo vzorku:"
 
-#: templates/index.html:61
+#: templates/index.html:83
 msgid "ID"
 msgstr "ID"
 
-#: templates/index.html:68
+#: templates/index.html:90
 msgid "Date and Time:"
 msgstr "Datum a čas:"
 
-#: templates/index.html:71
+#: templates/index.html:93
 msgid "YYYY-MM-DD HH:MM"
 msgstr "YYYY-MM-DD HH:MM"
 
-#: templates/index.html:79 templates/user.html:88
+#: templates/index.html:101 templates/user.html:88
 msgid "Your lab Address"
 msgstr "Adresa Vaší laboratoře"
 
-#: templates/index.html:88 templates/user.html:97
+#: templates/index.html:110 templates/user.html:97
 msgid "Information about the mixture."
 msgstr "Informace o směsi."
 
-#: templates/index.html:98 templates/user.html:124
+#: templates/index.html:120 templates/user.html:124
 msgid "Wrapping Temperature [°C]:"
 msgstr "Obalovací teplota [°C]:"
 
-#: templates/index.html:101 templates/user.html:127
+#: templates/index.html:123 templates/user.html:127
 msgid "80"
 msgstr "80"
 
-#: templates/index.html:107 templates/user.html:133
+#: templates/index.html:129 templates/user.html:133
 msgid "Exposing Water Temperature [°C]:"
 msgstr "Teplota obnažovací vody [°C]:"
 
-#: templates/index.html:110 templates/user.html:136
+#: templates/index.html:132 templates/user.html:136
 msgid "20"
 msgstr "20"
 
-#: templates/index.html:115 templates/user.html:141
+#: templates/index.html:137 templates/user.html:141
 msgid "Test Procedure:"
 msgstr "Testovací procedura:"
 
-#: templates/index.html:118 templates/user.html:144
+#: templates/index.html:140 templates/user.html:144
 msgid "A brief description of the testing procedure"
 msgstr "Stručný popis testovací procedury"
 
-#: templates/index.html:127 templates/user.html:108
+#: templates/index.html:149 templates/user.html:108
 msgid "Information about the aggregate."
 msgstr "Informace o kamenivu."
 
-#: templates/index.html:135 templates/user.html:116
+#: templates/index.html:157 templates/user.html:116
 msgid "Information about the binder."
 msgstr "Informace o pojivu."
 
-#: templates/index.html:140
+#: templates/index.html:162
 msgid "Assessment"
 msgstr "Vyhodnocení"
 
-#: templates/index.html:146
+#: templates/index.html:168
 msgid "Expert Guess"
 msgstr "Odborný odhad"
 
-#: templates/index.html:149
+#: templates/index.html:171
 msgid "Expert Guess of Adhesion Rate"
 msgstr "Odborný odhad procenta obalené plochy"
 
-#: templates/index.html:157
+#: templates/index.html:179
 msgid "Optional"
 msgstr "Volitelné"
 
-#: templates/index.html:236
+#: templates/index.html:258
 msgid "Save and Evaluate"
 msgstr "Vyhodnotit a uložit"
 

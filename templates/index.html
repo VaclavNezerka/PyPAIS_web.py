@@ -32,6 +32,28 @@
             <div class="row">
                 <input type="file" id="fileInput" accept="image/*" class="custom-file-input"></input>
                 <label for="fileInput" class="custom-file-label">{{ _('Upload Image') }}</label>
+                <!-- <button for="fileInput" class="custom-file-label">{{ _('Take a Photo') }}</button> -->
+            </div>
+            <div id="takePhotoDiv" class="row">
+                <p class="text-gray-500">
+                    {{ _('or') }}
+                </p>
+                <div class="row">
+                    <button class="custom-file-label" id="take-photo-open-button">{{ _('Take a Photo') }}</button>
+                </div>
+            </div>
+            <div class="modern-row row" id="capturedImageDiv">
+                <div class="camera modern-column column">
+                    <video id="video">Video stream not available.</video>
+                    <button id="capture-photo-button" class="custom-file-label">{{ _('Capture photo') }}</button>
+                </div>
+
+                <div class="modern-column column">
+                    <canvas id="outputCanvas">
+                        <img id="capturedImage" src="" alt="Captured Image">
+                    </canvas>
+                    <button id="upload-button-camera" class="custom-file-label">{{ _('Upload Image') }}</button>
+                </div>
             </div>
             <p class="text-gray-500">
                 {{ _('By uploading an image, you agree that it may be stored in the application repository and potentially used by the authors for training future models.') }}
@@ -59,7 +81,7 @@
                     {{ _('Speciemen Number:') }}
                 </label>
                 <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('ID') }}"
-                    maxlength="1024" />
+                maxlength="1024" />
             </div> -->
 
 
@@ -238,6 +260,7 @@
         </div>
 
     </body>
+    <script src="{{ url_for('static', filename='script_video.js') }}"></script>
 
 </html>
 

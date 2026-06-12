@@ -2,13 +2,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const currentLang = document.body.dataset.currentLang
     const preferredLang = localStorage.getItem("preferredLang")
 
-    console.log("Report :")
-    console.log("Current language:", currentLang)
-    console.log("Preferred language:", preferredLang)
-    console.log("Preferred language:", preferredLang)
     if (preferredLang && preferredLang !== currentLang) {
         await fetch(`/switch-language/${preferredLang}`, { method: "POST" })
-        console.log("Language switched to:", preferredLang)
+        // console.log("Language switched to:", preferredLang)
         document.body.dataset.currentLang = preferredLang
         location.reload()
     }

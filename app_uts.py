@@ -4,21 +4,49 @@ import json
 import numpy as np
 import pendulum as pdl
 import imagehash
+import db_api
+from typing import Iterable
 
+
+def get_masks_corrected(original: np.ndarray = None, corrections: np.ndarray = None) -> np.ndarray:
+    """
+    Applies manual corrections to the masks and returns the corrected masks.
+
+    Parameters:
+    -----------
+        original (np.ndarray): The original mask.
+        corrections (np.ndarray): The manual corrections to be applied.
+
+    Returns:
+    --------
+        tuple: A tuple containing the corrected asphalt mask and aggregate mask.
+    """
+    if original is None and corrections is None:
+        raise ValueError("At least one of 'original' or 'corrections' must be provided.")
+
+    if original is None:
+        original = np.zeros_like(corrections, dtype=bool)
+    elif corrections is None:
+        corrections = np.zeros_like(original, dtype=int)
+    
+    corrected_mask = original.copy()
+    if corrections is not None:
+        corrected_mask = np.clip(corrected_mask + corrections, 0, 1)
+    return corrected_mask.astype(bool)
+# def get_storage(conn, experiment_id):
+#     if "user_id" not in session:
+#         session["user_id"] = str(uuid.uuid4())
+
+#     if not hasattr(g, "storage"):
+#         g.storage = UserTemporaryStorage.load(conn, experiment_id)
+
+#     return g.storage
+        
 class UserTemporaryStorage:
     """
     A class for storing temporary data for the user.
     This ensures that the user can only access their own data.
     This class replaces the need for a previous solution which was current_images dictionary.
-    
-    PREVIOUS SOLUTION: (OUTDATED - OUT OF CLASS)
-    # current_images = {'color': [] , 'color_original': [], 'gray': [], 'entropy': {}, 'gray_original': {}, 
-    #                   'entropy_original': {}, 'suggested_mask_threshold': {}, 'suggested_mask_blur': {},
-    #                   'suggested_mask': [], 'manual_mask_adjustments': []}
-    # # 'suggested_mask_blur'- an initial blur set by user for automatic mask suggestion 
-    # # 'suggested_mask_threshold'- a threshold set by user for automatic mask suggestion 
-    # # 'suggested_mask' - a mask suggested to a user by actual algorithm (based on the U-NET rembg model)
-    # # 'manual_mask_adjustments' - changes manually made by the user (a sparse numpy boolean matrix), 
     """
     def __init__(self, **kwargs):
         self.user_id = None
@@ -53,7 +81,6 @@ class UserTemporaryStorage:
         self.dhash = None
         self.colorhash = None
         
-        # self._dirty_fields = set()  # to track which fields have been modified
         self.from_dict(kwargs)
         self._dirty_fields = set()  # to track which fields have been modified
 
@@ -71,31 +98,53 @@ class UserTemporaryStorage:
 
 
     @classmethod
-    def load(cls, conn, experiment_id):
-        with conn.cursor() as cur:
-            cur.execute("""
-                SELECT * FROM user_experiments
-                WHERE experiment_id = %s
-            """, (experiment_id,))
-            row = cur.fetchone()
+    def load(cls, experiment_id):
+        
+        if experiment_id is None:
+            print("No experiment_id provided, returning empty UserTemporaryStorage instance.")
+            return cls()  # return an empty instance if no experiment_id is provided
+        else:
+            exp_dict = db_api.get_experiment_by_id(experiment_id)  # ensure the experiment exists in the database
+            return cls(**exp_dict)  # initialize the UserTemporaryStorage instance with the data from the database
+            # with conn.cursor() as cur:
+            #     cur.execute("""
+            #         SELECT * FROM user_experiments
+            #         WHERE experiment_id = %s
+            #     """, (experiment_id,))
+            #     row = cur.fetchone()
 
-            if not row:
-                return None
+            #     if not row:
+            #         return None
 
-            cols = [d[0] for d in cur.description]
-            data = dict(zip(cols, row))
+            #     cols = [d[0] for d in cur.description]
+            #     data = dict(zip(cols, row))
 
-        # convert masks
-        for k in ["aggregate_mask", "asphalt_mask",
-                  "aggregate_mask_manual", "asphalt_mask_manual"]:
-            data[k] = cls._from_bytes(data.get(k))
+            # # convert masks
+            # for k in ["aggregate_mask", "asphalt_mask",
+            #         "aggregate_mask_manual", "asphalt_mask_manual"]:
+            #     data[k] = cls._from_bytes(data.get(k))
 
-        return cls(data)
+            # return cls(data)
+
+    @classmethod
+    def save(self):
+        
+        print('Saving storage to database...')
+        print(f'Current dirty fields: {self._dirty_fields}')
+        data_dict = self.to_dict(for_save=True)
+        experiment_id = data_dict.pop('experiment_id', None)
+        if self.experiment_id is None:
+             self.experiment_id = db_api.insert_experiment_to_db(values_dict=data_dict)
+        
+        db_api.update_experiment_in_db(values_dict=data_dict, experiment_id=experiment_id)
+        self._dirty_fields.clear()  # reset dirty fields after saving
+        print(f'Current dirty fields: {self._dirty_fields}')
+
 
     def __setattr__(self, name: str, value):
+        if hasattr(self, '_dirty_fields'):
+            self._dirty_fields.add(name)
         super().__setattr__(name, value)
-        print(f'Setting attribute {name} to value of type {type(value)}')
-        self._dirty_fields.add(name)
         
             
     def from_dict(self, data_dict: dict) -> None:
@@ -141,7 +190,7 @@ class UserTemporaryStorage:
             dic = dict(self.__dict__)  # make a copy instead of using self.__dict__ (to avoid modifying the original)
 
         if for_save:
-            dic['asphalt_ratio'] = storage.get_asphalt_ratio() 
+            dic['asphalt_ratio'] = self.get_asphalt_ratio() 
             # Convert numpy arrays to bytes for database storage
             for key, value in dic.items():
                 if isinstance(value, np.ndarray):
@@ -155,7 +204,7 @@ class UserTemporaryStorage:
                     dic[key] = str(value)  # store imagehash as string
 
             dic.pop('experiment_id', None)  # remove experiment_id from the dict when saving to db  
-            # dic.pop('_dirty_fields', None)  # remove _dirty_fields from the dict when saving to db
+        dic.pop('_dirty_fields', None)  # remove _dirty_fields from the dict when saving to db
 
         return dic
 

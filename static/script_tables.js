@@ -59,6 +59,7 @@ function editExperimentId(id) {
 
 async function exportExperimentPDF(ids) {
     // window.location.href = "/export-report/"
+
     console.log("Exporting experiments with IDs:", ids)
     // document.getElementById("experiment_ids").value = ids.join(",")
     // console.log(document.getElementById("experiment_ids").value)
@@ -263,7 +264,6 @@ document.getElementById("maxRecords").addEventListener("change", function () {
 
 document.getElementById("sortOrder").addEventListener("change", function () {
     const sortOrder = this.value
-    console.log(sortOrder)
     concatenateSearchQuery("sort_order=" + sortOrder)
 })
 
@@ -480,19 +480,6 @@ function initButtons() {
     document.querySelectorAll(".btn-details").forEach((button) => {
         button.addEventListener("click", () => {
             // If admin selects to view details of an experiment, show alert about security    if (
-            fetch("/is-admins-experiment/" + checkboxes[0])
-                .then((response) => response.json())
-                .then((data) => {
-                    if (!data.is_admins) {
-                        if (!confirm(alerts.elsesExperiment)) {
-                            return
-                        }
-                    }
-                })
-                .catch((err) => {
-                    console.error("Error checking admin status:", err)
-                })
-
             if (checkboxes.length === 0) {
                 alert(alerts.selectExperimetnsToViewDetails)
                 return
@@ -501,7 +488,26 @@ function initButtons() {
                 alert(alerts.selectJustOneExperimetnsToViewDetails)
                 return
             }
-            editExperimentId(checkboxes[0], true)
+
+            fetch("/is-users-experiment/" + checkboxes[0])
+                .then((response) => response.json())
+                .then((data) => {
+                    // this block checks if the user is allowed to proceed
+                    if (!data.is_users) {
+                        if (!confirm(alerts.elsesExperiment)) {
+                            return false
+                        }
+                    }
+                    return true
+                })
+                .then((can_access) => {
+                    if (can_access) {
+                        editExperimentId(checkboxes[0], true)
+                    }
+                })
+                .catch((err) => {
+                    console.error("Error checking admin status:", err)
+                })
         })
     })
 

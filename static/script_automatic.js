@@ -221,6 +221,15 @@ function replaceKeepCase(str, search, replace) {
 
 // add event listeners to update info fields
 
+// document.querySelectorAll("#form-recaptcha-protected").forEach((form) =>
+//     form.addEventListener("submit", function () {
+//         const elements = this.querySelectorAll(
+//             "input, button, select, textarea",
+//         )
+//         elements.forEach((el) => (el.disabled = true))
+//     }),
+// )
+
 init_info_listeners()
 function init_info_listeners() {
     for (const id of [
@@ -415,10 +424,17 @@ async function createImageURLs(data) {
     })
 }
 
+document
+    .getElementById("upload-button-camera")
+    .addEventListener("click", () => {
+        uploadImage()
+    })
+
 async function uploadImage() {
     displayWorkingMessage()
 
     // get the file from the input
+
     const fileInput = document.getElementById("fileInput")
     if (fileInput.files.length === 0) return
     const file = fileInput.files[0]
@@ -474,7 +490,7 @@ async function uploadImage() {
                 input.value = value
                 const fromData = new FormData()
                 fromData.append(key, value)
-                console.log("Updating default value for " + key + ": " + value)
+                // console.log("Updating default value for " + key + ": " + value)
                 fetch(`/update_value/${key}`, {
                     method: "POST",
                     body: fromData,
