@@ -8,6 +8,11 @@ from wtforms import StringField, PasswordField, SubmitField,ValidationError,Inte
 from wtforms.validators import DataRequired, Email, EqualTo
 import db_api 
 from flask_babel import lazy_gettext, _
+import dotenv
+import os
+
+dotenv.load_dotenv()
+PASSWORD_LENGTH_MIN=int(os.getenv('PASSWORD_LENGTH_MIN', 16))
 
 messages={
     'email_already_used': lazy_gettext('This email address is already used. Please use a different one.'),
@@ -80,7 +85,7 @@ class RegistrationFormUser(FlaskForm):
     first_name = StringField(lazy_gettext('First name'),validators=[DataRequired()])
     last_name = StringField(lazy_gettext('Last name'),validators=[DataRequired()])
     company_key = StringField(lazy_gettext('Company Key'),validators=[DataRequired(),Exists(tablename='public_companies')])
-    password = PasswordField(lazy_gettext('Password'),validators=[DataRequired(),RequiredLength(min=8)])
+    password = PasswordField(lazy_gettext('Password'),validators=[DataRequired(),RequiredLength(min=PASSWORD_LENGTH_MIN)])
     confirm_password = PasswordField(lazy_gettext('Confirm password'),validators=[DataRequired(), EqualTo('password', message=messages['passwords_must_match'])])
     submit = SubmitField(lazy_gettext('Submit'))
     # recaptcha = RecaptchaField()
@@ -99,12 +104,12 @@ class LoginForm(FlaskForm):
 
 class ChangePasswordForm(FlaskForm):
     old_password = PasswordField(lazy_gettext('Old password'),validators=[DataRequired()])
-    new_password = PasswordField(lazy_gettext('New password'),validators=[DataRequired(),RequiredLength(min=8)])
+    new_password = PasswordField(lazy_gettext('New password'),validators=[DataRequired(),RequiredLength(min=PASSWORD_LENGTH_MIN)])
     confirm_new_password = PasswordField(lazy_gettext('Confirm new password'),validators=[DataRequired(), EqualTo('new_password', message=messages['passwords_must_match'])])
     submit = SubmitField(lazy_gettext('Submit'))
 
 class ChangeForgottenPasswordForm(FlaskForm):
-    new_password = PasswordField(lazy_gettext('New password'),validators=[DataRequired(),RequiredLength(min=8)])
+    new_password = PasswordField(lazy_gettext('New password'),validators=[DataRequired(),RequiredLength(min=PASSWORD_LENGTH_MIN)])
     confirm_new_password = PasswordField(lazy_gettext('Confirm new password'),validators=[DataRequired(), EqualTo('new_password', message=messages['passwords_must_match'])])
     submit = SubmitField(lazy_gettext('Submit'))
 
