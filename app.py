@@ -175,9 +175,8 @@ app.secret_key=os.getenv('SECRET_KEY', generate_rnd_string(int(SECRET_KEY_LENGTH
 
 def generate_password_hash(password: str) -> str:
     return ws.generate_password_hash(password,method=HASH_METHOD,salt_length=int(SALT_LENGTH))
-# ts = {} # temporary storages for the users... ts[user_id] = UserTemporaryStorage()
 
-class GuestTemporaryStorage:
+class TemporaryStorage:
     """
     A class for storing temporary data for the user.
     This ensures that the user can only access their own data.
@@ -215,29 +214,52 @@ class GuestTemporaryStorage:
         self.dhash = None
         self.colorhash = None
         
-        # self._dirty_fields = set()  # to track which fields have been modified
         self.from_dict(kwargs)
+        self._dirty_fields = set()  # to track which fields have been modified
 
-    # REPLACED BY flask g
-    def _self_to_session(self):
-        """
-        Saves the current state of the object to the session.
-        Necessary to ensure that the changes are refrected in every request / worker.
-        """
-        session['storage'] = zlib.compress(pickle.dumps(self))
-    def __setattr__(self, name: str, value):
-        super().__setattr__(name, value)
-        # self._dirty_fields.add(name)
-        # self._self_to_session()
+    @staticmethod
+    def _to_bytes(arr):
+        buf = io.BytesIO()
+        np.save(buf, arr, allow_pickle=False)
+        return buf.getvalue()
+
+    @staticmethod
+    def _from_bytes(blob):
+        if blob is None:
+            return None
+        return np.load(io.BytesIO(blob), allow_pickle=False)
+
+
+    @classmethod
+    def load(cls, experiment_id):
         
-        self._self_to_session()
-    
-    # def __getattribute__(self, name: str) -> Any:
-    #     value = super().__getattribute__(name)
-    #     if name in ['color']:  
-    #         # get the image from the DB 
-    #         value 
-    #     return value
+        if experiment_id is None:
+            print("No experiment_id provided, returning empty UserTemporaryStorage instance.")
+            return cls()  # return an empty instance if no experiment_id is provided
+        else:
+            exp_dict = db_api.get_experiment_by_id(experiment_id)  # ensure the experiment exists in the database
+            return cls(**exp_dict)  # initialize the UserTemporaryStorage instance with the data from the database
+
+    @classmethod
+    def save(self):
+        
+        print('Saving storage to database...')
+        print(f'Current dirty fields: {self._dirty_fields}')
+        data_dict = self.to_dict(for_save=True)
+        experiment_id = data_dict.pop('experiment_id', None)
+        if self.experiment_id is None:
+             self.experiment_id = db_api.insert_experiment_to_db(values_dict=data_dict)
+        
+        db_api.update_experiment_in_db(values_dict=data_dict, experiment_id=experiment_id)
+        self._dirty_fields.clear()  # reset dirty fields after saving
+        print(f'Current dirty fields: {self._dirty_fields}')
+
+
+    def __setattr__(self, name: str, value):
+        if hasattr(self, '_dirty_fields'):
+            self._dirty_fields.add(name)
+        super().__setattr__(name, value)
+        
             
     def from_dict(self, data_dict: dict) -> None:
         """
@@ -264,7 +286,6 @@ class GuestTemporaryStorage:
                     value = np.load(buffer, allow_pickle=True)
                 setattr(self, key, value)
 
-        # self._self_to_session()  # update the session after loading the data
 
     def to_dict(self, features: Iterable[str] = None, for_save: bool = False) -> dict:
         """
@@ -281,7 +302,7 @@ class GuestTemporaryStorage:
             dic = dict(self.__dict__)  # make a copy instead of using self.__dict__ (to avoid modifying the original)
 
         if for_save:
-            dic['asphalt_ratio'] = storage.get_asphalt_ratio() 
+            dic['asphalt_ratio'] = self.get_asphalt_ratio() 
             # Convert numpy arrays to bytes for database storage
             for key, value in dic.items():
                 if isinstance(value, np.ndarray):
@@ -295,7 +316,7 @@ class GuestTemporaryStorage:
                     dic[key] = str(value)  # store imagehash as string
 
             dic.pop('experiment_id', None)  # remove experiment_id from the dict when saving to db  
-            # dic.pop('_dirty_fields', None)  # remove _dirty_fields from the dict when saving to db
+        dic.pop('_dirty_fields', None)  # remove _dirty_fields from the dict when saving to db
 
         return dic
 
@@ -321,6 +342,7 @@ class GuestTemporaryStorage:
             tuple: A tuple containing the corrected asphalt mask and aggregate mask.
         """
         asphalt_mask = get_masks_corrected(self.asphalt_mask, self.asphalt_mask_manual_corrections) 
+
         return asphalt_mask
 
     def get_aggregate_mask(self) -> np.ndarray | None:
@@ -379,48 +401,79 @@ class GuestTemporaryStorage:
         non_bg_pixels = np.sum(aggregate_mask + asphalt_mask)
         asphalt_pixels = np.sum(asphalt_mask)
         return float(asphalt_pixels / non_bg_pixels) if non_bg_pixels > 0 else 0.0
-from app_uts import UserTemporaryStorage
+    
+    
+class UserTemporaryStorage(TemporaryStorage):
+    """
+    A class for storing temporary data for the authenticated user.
+    """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._dirty_fields = set()  # to track which fields have been modified
+        
+    def to_dict(self, features = None, for_save = False):
+        dict = super().to_dict(features, for_save)
+        dict.pop('_dirty_fields', None)  # remove _dirty_fields from the dict when saving to db
+        return dict
+    
+    
+    @staticmethod
+    def _to_bytes(arr):
+        buf = io.BytesIO()
+        np.save(buf, arr, allow_pickle=False)
+        return buf.getvalue()
 
-class TemporaryStoryManager:
-    def __init__(self, expire_after_seconds: int = 1200): 
-        self._storages: dict[str, UserTemporaryStorage] = {}
-        self.expire_after = expire_after_seconds  # in seconds
-        self._lock = threading.Lock()
-        self._check_frequency_seconds = 300  # check every 5 minutes
-        self._start_cleanup_thread()
+    @staticmethod
+    def _from_bytes(blob):
+        if blob is None:
+            return None
+        return np.load(io.BytesIO(blob), allow_pickle=False)
 
-    def _start_cleanup_thread(self):
-        def cleanup():
-            while True:
-                time.sleep(self._check_frequency_seconds)
-                with self._lock:
-                    current_time = time.time()
-                    expired_keys = [key for key, storage in self._storages.items()
-                                      if current_time - storage.created > self.expire_after]
-                    for key in expired_keys:
-                        print(f'Cleaning up temporary storage for user_id: {key}')
-                        del self._storages[key]
-                        # flash(_('Your temporary data has expired due to time limit. If you want to use the service without limitations, consider creating an account.'), 'info') 
-                        # redirect(url_for('home')) 
-        thread = threading.Thread(target=cleanup, daemon=True)
-        thread.start()
 
-    def create_storage(self, user_id: str) -> None:
-        if user_id not in self._storages:
-            with self._lock:
-                self._storages[user_id] = UserTemporaryStorage(user_id=user_id)
-                self._storages[user_id].created = time.time()
+    @classmethod
+    def load(cls, experiment_id):
+        
+        if experiment_id is None:
+            return cls()  # return an empty instance if no experiment_id is provided
+        else:
+            exp_dict = db_api.get_experiment_by_id(experiment_id)  # ensure the experiment exists in the database
+            return cls(**exp_dict)  # initialize the UserTemporaryStorage instance with the data from the database
 
-    def get(self, user_id: str) -> UserTemporaryStorage:
-        with self._lock:
-            storage = self._storages[user_id]
-            return storage
+    @classmethod
+    def save(self):
+        
+        data_dict = self.to_dict(for_save=True)
+        experiment_id = data_dict.pop('experiment_id', None)
+        if self.experiment_id is None:
+             self.experiment_id = db_api.insert_experiment_to_db(values_dict=data_dict)
+        
+        db_api.update_experiment_in_db(values_dict=data_dict, experiment_id=experiment_id)
+        self._dirty_fields.clear()  # reset dirty fields after saving
 
-# tsm = TemporaryStoryManager()  # expire after 20 minutes of inactivity    
+    def __setattr__(self, name: str, value):
+        if hasattr(self, '_dirty_fields'):
+            self._dirty_fields.add(name)
+        super().__setattr__(name, value)
+    
+class GuestTemporaryStorage(TemporaryStorage):
+    """
+    A class for storing temporary data for unauthenticated users.
+    """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    def _self_to_session(self):
+        """
+        Saves the current state of the object to the session.
+        Necessary to ensure that the changes are refrected in every request / worker.
+        """
+        session['storage'] = zlib.compress(pickle.dumps(self))
+    
+    def __setattr__(self, name: str, value):
+        super().__setattr__(name, value)    
+        self._self_to_session()
 
 serializer = URLSafeTimedSerializer(app.secret_key)
 
-# TODO - implement a thread that will clean up expired tokens from the database periodically
 
 def send_email_confirmation(to_mails: list[str], data: dict, confirmation: Literal ['confirm_email_first', 'confirm_email_change', 'confirm_company_registration_admin', 'confirm_password_reset', 'forgot_password'], intro_text: str, request_details: dict = {}, title: str = 'AIBAL') -> bool:
     """Send an email confirmation link to the user.
@@ -654,7 +707,7 @@ def save_storage(exception=None):
         # never crash teardown (Flask will already be unwinding)
         app.logger.exception("Failed to save storage: %s", e)
 
-def _get_storage() -> UserTemporaryStorage:
+def _get_storage() -> TemporaryStorage:
     # Ensure session has a user_id
     if 'user_id' not in session:
         session['user_id'] = str(uuid.uuid4())
@@ -685,7 +738,7 @@ def _get_storage() -> UserTemporaryStorage:
 
 
 storage = LocalProxy(lambda: _get_storage())
-storage: UserTemporaryStorage = cast(UserTemporaryStorage, storage) # behaves like a global variable, but it is actually a proxy to the user-specific storage 
+storage: TemporaryStorage = cast(TemporaryStorage, storage) # behaves like a global variable, but it is actually a proxy to the user-specific storage 
 
 
 def get_masks_corrected(original: np.ndarray = None, corrections: np.ndarray = None) -> np.ndarray:
