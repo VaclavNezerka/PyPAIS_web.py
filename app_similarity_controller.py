@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 import io
+import PIL
 import numpy as np
 import cv2
 from skimage.metrics import structural_similarity as ssim
@@ -44,35 +45,26 @@ class ImageSimilarityController:
     This class is responsible for controlling the image uniqueness in the background.
     """
 
-    def __init__(self, max_workers: int = 8, checks_per_hash_type: int = 50, similarity_thresholds: dict = {"histogram": 0.1, "ssim": 0.1}, n_similar: int = 10) -> None:
-        # self.executor = threading.ThreadPoolExecutor(max_workers=max_workers)
+    def __init__(self, max_workers: int = 8, checks_per_hash_type: int = 50, similarity_thresholds: dict = {"histogram": 0.0, "ssim": 0.0}, n_similar: int = 10) -> None:
         self.executor = threading.ThreadPoolExecutor(max_workers=max_workers)
         self.checks_per_hash_type = checks_per_hash_type
         self.similarity_thresholds = similarity_thresholds
         self.n_similar = n_similar
 
-    def _check_image_uniqness(self, user_id: int, experiment_id: int, target_image: np.ndarray) -> None:
+    def _check_image_uniqness(self, user_id: int, experiment_id: int, target_image: PIL.Image.Image) -> None:
         """
         Check whether the image has been uploaded before by the user or someone in the same organization.
         """   
-        print(f"SIMILARITY CHECK - Starting similarity check for Experiment ID: {experiment_id} by User ID: {user_id}")
         experiment_ids, hashes = db_api.get_comparing_image_hashes(user_id, experiment_id)
         target_hashes = db_api.get_image_hashes_by_experiment_id(experiment_id)
-        print(f"SIMILARITY CHECK - Experiment ID: {experiment_id} - Retrieved {len(experiment_ids)} images for comparison.")
         similar_image_indices = get_kNN_images(
             target_image_hashes=target_hashes,
             compare_images_hashes=hashes,
             n_max_per_hash_type=self.checks_per_hash_type
         )
-        print(f"SIMILARITY CHECK - Experiment ID: {experiment_id} - Found {len(similar_image_indices)} similar images.")
         similar_experiment_ids = [experiment_ids[i] for i in similar_image_indices]
 
-        # Compute the similarity score on kNN (suspicious) images
-        # TODO: continue...
-        # load target image from DB
-        # target_image = db_api.load_image_by_experiment_id(experiment_id)
-        # target_image =np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8) #TODO: remove this line after testing
-        target_image = cv2_image_from_bytes(target_image)
+        target_image = cv2.cvtColor(np.array(target_image), cv2.COLOR_RGB2BGR)  # Convert PIL Image to OpenCV format
 
         # heap to store the most similar images
         heap_hist = []
@@ -84,7 +76,6 @@ class ImageSimilarityController:
             compare_image = cv2_image_from_bytes(compare_image)
             # Compute similarity scores
             scores = get_image_scores(target_image, compare_image)
-            
             if scores['histogram_score'] >= self.similarity_thresholds['histogram']:
                 heapq.heappush(heap_hist, (scores['histogram_score'], sim_exp_id))
                 if len(heap_hist) > self.n_similar:
@@ -94,11 +85,9 @@ class ImageSimilarityController:
                 if len(heap_ssim) > self.n_similar:
                     heapq.heappop(heap_ssim)
         ...
-        # TODO: In future, consider combining both metrics to determine overall similarity.
-        # TODO: Especially in cases where two images have the same score in one metric
+        # TODO: In future, consider combining both metrics to determine overall similarity. Especially in cases where two images have the same score in one metric
 
         # Write the best matches to DB
-        # print(f"Experiment ID: {experiment_id} - \n\t Similar by Histogram: {heap_hist}, \n\t Similar by SSIM: {heap_ssim}")
         db_api.store_similar_images(
             experiment_id=experiment_id,
             similar_by_histogram=heapq.nlargest(1, heap_hist)[0] if heap_hist else (None, None),
@@ -259,4 +248,3 @@ def get_kNN_images(target_image_hashes: dict[imagehash.ImageHash], compare_image
     return list(similar_images_indices)
 
 
-# isc.controll_experiment(user_id=2, experiment_id=190)
