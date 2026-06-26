@@ -137,43 +137,10 @@ uploadedImageOverlay_bg.onload = function () {
     )
 }
 
-//     canvas.width = this.width ;
-//     canvas.height = this.height ;
-//     ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
-//     const color = labelSettings.asphalt.fill; //rgba(0,255,0,0.2)
-//     ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
-
-//     // create an array from the string
-//     let colorArray = color.match(/[\d.]+/g).map(Number);
-//     const imgArray = ctx.getImageData(0, 0, canvas.width, canvas.height);
-//     // const maskImageData = createImageBitmap(colorizeMask(imgArray, colorArray));
-//     const maskImageData = colorizeMask(imgArray, colorArray);
-//     // const data = maskImageData.data; // Uint8ClampedArray [r,g,b,a, r,g,b,a, ...]
-//     createImageBitmap(maskImageData).then((bitmap) => {
-//         ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-//     });
-//     magnify('overlayCanvas', labelSettings.magnify);
-// };
-
 uploadImage.onerror = function () {
     console.error("Failed to load image at URL: " + this.src)
     console.error
 }
-
-// uploadedImageOverlay_asphalt.onload = () => {
-//     var canvas = document.getElementById('overlayAsphalt');
-//     var ctx = canvas.getContext('2d', { willReadFrequently: true });
-//     canvas.width = uploadedImageOverlay_asphalt.width;
-//     canvas.height = uploadedImageOverlay_asphalt.height;
-//     ctx.drawImage(uploadedImageOverlay_asphalt, 0, 0);
-
-//     let maskImageData = ctx.getImageData(0, 0, uploadedImageOverlay_asphalt.width, uploadedImageOverlay_asphalt.height);
-//     maskImageData = colorizeMask(maskImageData, labelSettings.asphalt.fill);
-//     ctx.putImageData(maskImageData, 0, 0);
-//     canvas.style.display = 'block';
-//     canvas.style.opacity = 0.5;
-//     magnify('overlayCanvas', 4);
-// };
 
 let requestedImage = null
 let displayImageBlur = false
@@ -219,17 +186,6 @@ function replaceKeepCase(str, search, replace) {
     })
 }
 
-// add event listeners to update info fields
-
-// document.querySelectorAll("#form-recaptcha-protected").forEach((form) =>
-//     form.addEventListener("submit", function () {
-//         const elements = this.querySelectorAll(
-//             "input, button, select, textarea",
-//         )
-//         elements.forEach((el) => (el.disabled = true))
-//     }),
-// )
-
 init_info_listeners()
 function init_info_listeners() {
     for (const id of [
@@ -259,19 +215,6 @@ function init_info_listeners() {
         })
     }
 }
-
-// document
-//     .getElementById("info_sample_collection")
-//     .addEventListener("change", function () {
-//         let value = this.value
-//         var formData = new FormData()
-//         formData.append("info", value)
-//         const uniqueQuery = "?nocache=" + new Date().getTime()
-//         fetch("/update_value/info" + uniqueQuery, {
-//             method: "POST",
-//             body: formData,
-//         })
-//     })
 
 function get_overlay_masks() {
     let formData = new FormData()
@@ -671,23 +614,6 @@ function getImageType() {
             break
     }
 
-    // const overlays = [
-    //     { display: displayAsphaltMask, img: uploadedImageOverlay_asphalt, url: uploadedImageURL_mask_asphalt, id: 'overlayCanvasAsphalt' },
-    //     { display: displayAggregateMask, img: uploadedImageOverlay_aggregate, url: uploadedImageURL_mask_aggregate, id: 'overlayCanvasAggregate' },
-    //     { display: displayBackgroundMask, img: uploadedImageOverlay_bg, url: uploadedImageURL_mask_bg, id: 'overlayCanvasBackground' }
-    // ];
-
-    // overlays.forEach(({ display, img, url, id }) => {
-    //     const el = document.getElementById(id);
-    //     if (display) {
-    //         img.src = url;
-    //         el.style.display = 'block';
-    //         el.style.opacity = labelSettings.mask_opacity;
-    //     } else {
-    //         el.style.display = 'none';
-    //     }
-    // });
-
     if (displayAsphaltMask) {
         // console.log("Displaying asphalt mask")
         uploadedImageOverlay_asphalt.src = uploadedImageURL_mask_asphalt
@@ -728,8 +654,6 @@ function displayWorkingMessage() {
 }
 // this function removes the "working" message from the page
 function removeWorkingMessage() {
-    // let workingMessage = document.getElementById("workingMessage")
-    // workingMessage.style.display = "none"
     document.querySelectorAll(".loading").forEach((el) => {
         el.style.display = "none"
     })
@@ -738,8 +662,6 @@ function removeWorkingMessage() {
 async function validateAndUpdate() {
     displayWorkingMessage()
     await processImage()
-    // await drawEntropyHistogram();
-    // await drawIntensityHistogram();
     redrawCanvases()
     removeWorkingMessage()
 }
@@ -885,27 +807,6 @@ function deactivateCurrentExperiment() {
     })
 }
 
-// async function dispatchEvents() {
-//     return new Promise((resolve) => {
-//         for (const id of [
-//             "info_sample_collection_data",
-//             "info_place_of_experiment",
-//             "info_test_procedure",
-//             "info_wrapping_temperature",
-//             "info_exposing_water_temperature",
-//             "info_datetime",
-//             "info_comment",
-//             "info_aggregate",
-//             "info_binder",
-//             "inference_model",
-//             "expertGuess",
-//         ]) {
-//             document.getElementById(id).dispatchEvent(new Event("change"))
-//         }
-//         resolve()
-//     })
-// }
-
 function disableInputFields() {
     for (const id of [
         "info_sample_collection_data",
@@ -950,13 +851,7 @@ function loadExperiment(id) {
                 removeWorkingMessage()
                 return
             }
-            // if (data.expertGuess !== "NaN") {
-            //     document.getElementById("expertGuess").value = Math.round(
-            //         data.expert_guess * 100,
-            //     )
-            // }
-            // console.log("Data", data)
-            // console.log("Setting expert guess to: " + data.expert_guess)
+
             if (data.expertGuess !== null && !isNaN(data.expert_guess)) {
                 if (data.expert_guess > 0) {
                     document.getElementById("expertGuess").value = Math.round(
@@ -990,10 +885,6 @@ function loadExperiment(id) {
             uploadedImageURL_gray = URL.createObjectURL(
                 base64toBlob(data.gray, "image/png"),
             )
-            // set overlay mask URLs
-            // uploadedImageURL_mask_asphalt = URL.createObjectURL(base64toBlob(data.asphalt_mask, 'image/png'));
-            // uploadedImageURL_mask_aggregate = URL.createObjectURL(base64toBlob(data.aggregate_mask, 'image/png'));
-            // uploadedImageURL_mask_bg = URL.createObjectURL(base64toBlob(data.background_mask, 'image/png'));
         })
         .then(() => {
             document.getElementById("defaultImage").style.display = "none"
@@ -1109,7 +1000,6 @@ document.getElementById("expertGuess").addEventListener("input", function () {
             body: formData,
         })
     }
-    // console.log("Expert guess changed to: " + value)
 })
 
 // if the user visits the page '/' and the experiment is active, load the experiment
@@ -1136,9 +1026,6 @@ function changeOverlayOpacity() {
     let value = document.getElementById("opacitySlider").value
     document.getElementById("opacityValue").value = value
     labelSettings.mask_opacity = value / 100
-    // if (displayed_mask) {
-    //     displayed_mask.style.opacity = value / 100;
-    // }
     redrawCanvases()
 }
 

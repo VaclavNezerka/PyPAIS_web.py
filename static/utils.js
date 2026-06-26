@@ -53,4 +53,4 @@ function colorizeMask(maskImageData, color = [255, 0, 0]) {
     return maskImageData
 }
 
-export { hexToRgba, colorizeMask}
+export { hexToRgba, colorizeMask }

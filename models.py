@@ -104,13 +104,8 @@ def sliding_window_inference(image, model, device, patch_size=1024, stride=512, 
         preds[prob_map[2, :, :] > stripped_threshold] = 2
 
     # delete the unused variables to free up memory
-    print(f"Allocated memory: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")
-    print(f"Cached memory: {torch.cuda.memory_reserved() / 1024**2:.2f} MB")
     del prob_map, count_map, probs, logits, inp, patch
-    # gc.collect()  # Force garbage collection
     torch.cuda.empty_cache()  # Clear GPU memory after inference
-    print(f"Allocated memory: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")
-    print(f"Cached memory: {torch.cuda.memory_reserved() / 1024**2:.2f} MB")
 
     return preds
 

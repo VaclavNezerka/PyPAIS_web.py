@@ -1,28 +1,3 @@
-if ("serviceWorker" in navigator) {
-    // unregister the service worker worker_0.js
-    navigator.serviceWorker.getRegistrations().then(function (registrations) {
-        for (let registration of registrations) {
-            registration.unregister()
-        }
-    })
-}
-// // register the service worker worker_0.js
-// if ("serviceWorker" in navigator) {
-//     navigator.serviceWorker
-//         .register("/static/worker_0.js", { scope: "/static/" })
-//         .then((registration) => {
-//             console.log(
-//                 "Service Worker registered with scope:",
-//                 registration.scope,
-//             )
-//         })
-//         .catch((error) => {
-//             console.error("Service Worker registration failed:", error)
-//         })
-// }
-// import save from script.js
-// import {activateExperiment} from './script.js';
-
 async function fetchAlerts() {
     const alerts = await fetch("/translations-alerts", { method: "GET" }).then(
         (response) => response.json(),
@@ -339,42 +314,6 @@ document.addEventListener("DOMContentLoaded", function () {
 let progress = document.getElementById("fileProgress")
 let totalFiles = 0
 let uploadedFiles = 0
-
-document.querySelectorAll("fileInput").forEach((element) => {
-    element.addEventListener("change", () => {
-        const filesUploaded = element.files
-        progress.style.display = "block"
-        document.getElementById("fileProgressDiv").style.display = "block"
-        totalFiles = filesUploaded.length
-
-        // pass the files to the service worker
-        const worker = new Worker("/static/worker_0.js")
-        worker.postMessage({ filesUploaded })
-        worker.onmessage = function (e) {
-            if (e.data === "success") {
-                console.log("Success:", e.data)
-                window.location.reload()
-            } else if (e.data === "report") {
-                uploadedFiles++
-                console.log(
-                    "Uploading file...",
-                    (uploadedFiles / totalFiles) * 100,
-                )
-                progress.value = (uploadedFiles / totalFiles) * 100
-                if (uploadedFiles === totalFiles) {
-                    progress.style.display = "none"
-                    uploadedFiles = 0
-                    totalFiles = 0
-                } else {
-                    console.log("Uploading file...", uploadedFiles)
-                }
-                console.log("Success:", e.data)
-            } else {
-                console.error("Error:", e.data)
-            }
-        }
-    })
-})
 
 window.addEventListener("message", function (e) {
     if (e.data === "success") {

@@ -5,12 +5,6 @@ const alerts = await fetch("/translations-alerts", { method: "GET" }).then(
     (response) => response.json(),
 )
 
-// // .then((data) => data)
-// .catch((error) => {
-//     console.error("Error fetching translations:", error)
-//     return {}
-// })
-
 let uploadedImageURL_color = null
 let uploadedImageURL_gray = null
 let uploadedImageURL_nobg = null
@@ -318,23 +312,6 @@ function getImageType() {
             break
     }
 
-    // const overlays = [
-    //     { display: displayAsphaltMask, img: uploadedImageOverlay_asphalt, url: uploadedImageURL_mask_asphalt, id: 'overlayCanvasAsphalt' },
-    //     { display: displayAggregateMask, img: uploadedImageOverlay_aggregate, url: uploadedImageURL_mask_aggregate, id: 'overlayCanvasAggregate' },
-    //     { display: displayBackgroundMask, img: uploadedImageOverlay_bg, url: uploadedImageURL_mask_bg, id: 'overlayCanvasBackground' }
-    // ];
-
-    // overlays.forEach(({ display, img, url, id }) => {
-    //     const el = document.getElementById(id);
-    //     if (display) {
-    //         img.src = url;
-    //         el.style.display = 'block';
-    //         el.style.opacity = labelSettings.mask_opacity;
-    //     } else {
-    //         el.style.display = 'none';
-    //     }
-    // });
-
     if (displayAsphaltMask) {
         console.log("Displaying asphalt mask")
         uploadedImageOverlay_asphalt.src = uploadedImageURL_mask_asphalt
@@ -509,13 +486,6 @@ async function evaluateExperiment() {
                 )
             }
         })
-    // .then(() =>
-    //     // refresh the page
-    //     window.location.reload()
-    // )
-    // .catch((error) => {
-    //     console.error("Error during evaluation:", error)
-    // })
 }
 
 document
@@ -523,16 +493,12 @@ document
     .addEventListener("click", async function () {
         evaluateExperiment()
     })
-// window.addEventListener('resize', function() { magnify('imageCanvas', 4); }); // this ensures the magnifying glass is redrawn when the window is resized
 window.addEventListener("resize", redrawCanvases) // this ensures the magnifying glass is redrawn when the window is resized
 
 function changeOverlayOpacity() {
     let value = document.getElementById("opacitySlider").value
     document.getElementById("opacityValue").value = value
     labelSettings.mask_opacity = value / 100
-    // if (displayed_mask) {
-    //     displayed_mask.style.opacity = value / 100;
-    // }
     redrawCanvases()
 }
 

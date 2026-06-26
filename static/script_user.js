@@ -110,12 +110,6 @@ document.querySelectorAll(".modern-input").forEach(function (input) {
                 }
                 return response.json()
             })
-            // .then((data) => {
-            //     console.log(
-            //         "Default experiment info updated successfully:",
-            //         data,
-            //     )
-            // })
             .catch((error) => {
                 console.error("Error updating default experiment info:", error)
             })

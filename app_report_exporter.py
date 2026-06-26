@@ -515,17 +515,16 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         mask_asphalt = experiment.get("mask_asphalt", None)
         mask_aggregate = experiment.get("mask_aggregate", None)
         experiment.update({"timestamp": timestep})
-
+        
+        # print(experiment.get('similar_ssim_id'))
+        # print(experiment.get('similar_hist_id'))
         similar_dict = get_similar_experiment(experiment)
-
+        print(f"Similar experiment ID {similar_dict.get('similar_experiment_id')} with similarity score {similar_dict.get('similarity_score'):.2f} using method {similar_dict.get('similarity_method')}.")
         # Add experiment record to PDF
         # pdf.append(PageBreak())
         # draw a line
         pdf.append(Spacer(1, 0.4 * cm))
         
-        # line = Drawing(doc.width ,1 * mm)
-        # line.add(Rect(0, 0, doc.width, 1 * mm, fillColor=colors.HexColor(REPORT_COLORS["topic_color"]), strokeWidth=0, strokeColor=colors.HexColor(REPORT_COLORS["topic_color"])))
-        # pdf.append(line)
         pdf.append(separator)
         
         pdf.append(Spacer(1, 0.2 * cm))

@@ -116,9 +116,11 @@ def hex_to_colorhash(colorhash:str, nbits=42, nbins=3):
 def store_similar_images(cur, conn, experiment_id: int, similar_by_histogram: list[int, float], similar_by_ssim: list[int, float]) -> None:
     cur.execute('SELECT 1 FROM experiments WHERE experiment_id=%s FOR UPDATE', (experiment_id,))
     query = 'UPDATE experiments SET similarity_controll_done=True, similar_hist_id=%s, similar_ssim_id=%s, similar_hist_value=%s, similar_ssim_value=%s WHERE experiment_id=%s'
+    print('image storing')
     cur.execute(query, (
         int(similar_by_histogram[1]), int(similar_by_ssim[1]), 
         float(similar_by_histogram[0]), float(similar_by_ssim[0]), experiment_id))
+    print('ok')
     conn.commit()
 
 @db_connection

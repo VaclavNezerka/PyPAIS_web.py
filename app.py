@@ -1,16 +1,11 @@
 # Packages
-# import gunicorn
 import uuid
-from attrs import field
 import pendulum as pdl
-from db_api import User
 import requests
 from flask import (Flask, render_template, request, send_file, 
                    send_from_directory, flash, redirect,
                    session, url_for, abort, g)
 from flask_mail import Mail, Message
-from wtforms import StringField
-# from flask_login import login_manager, UserMixin, login_required,
 import werkzeug.security as ws
 from werkzeug.local import LocalProxy
 from PIL import Image
@@ -19,24 +14,18 @@ pillow_heif.register_heif_opener()
 import numpy as np
 import io
 import imagehash
-from skimage.filters.rank import entropy
-from skimage.morphology import disk
-from skimage import data, img_as_ubyte
 import cv2
 import time
 from datetime import timedelta
 import secrets
 import string
 import os
-# from rembg import remove
-from db_api import *
 import db_api
 import json
 import base64
 from matplotlib.path import Path as polygon_path
-from icecream import ic
 from rich.traceback import install
-from typing import Iterable, Literal, cast, Any
+from typing import Iterable, Literal, cast
 from flask_talisman import Talisman
 import flask_limiter
 import threading
@@ -44,7 +33,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 install()
 
 from dotenv import load_dotenv
-from warnings import warn,WarningMessage
 from typing_extensions import deprecated
 from models import discover_models, load_model, add_session_to_loaded_model, pop_session_from_loaded_models, inference
 import models
@@ -62,7 +50,6 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from db_api import db_name, db_user, dbpwd, db_host
 from flask_session import Session
-from sqlalchemy import create_engine
 from flask_sqlalchemy import SQLAlchemy
 import pickle, zlib
 import time
@@ -73,8 +60,6 @@ RECAPTCHA_SITE_KEY=os.getenv('RECAPTCHA_SITE_KEY')
 RECAPTCHA_SECRET_KEY=os.getenv('RECAPTCHA_SECRET_KEY')
 
 app = Flask(__name__) # set debug to False for production
-# app.config['RECAPTCHA_PUBLIC_KEY'] = RECAPTCHA_SITE_KEY
-# app.config['RECAPTCHA_PRIVATE_KEY'] = RECAPTCHA_SECRET_KEY
 
 
 # SESSION CONFIGURATION - FOR MULTIPLE WORKERS AND PERSISTENT SESSIONS
@@ -95,11 +80,8 @@ Session(app)
 
 @app.before_request
 def update_session_lifetime():
-    print(f"Before request: {session}")
     if 'authenticated' in session and session['authenticated']:
-        print("User is authenticated. Setting session lifetime to authenticated duration.")
         app.permanent_session_lifetime = SESSION_LIFETIME_AUTHENTICATED
-        print(f"updated {session}")
     else:
         app.permanent_session_lifetime = SESSION_LIFETIME_UNAUTHENTICATED
 
@@ -200,20 +182,10 @@ class GuestTemporaryStorage:
     A class for storing temporary data for the user.
     This ensures that the user can only access their own data.
     This class replaces the need for a previous solution which was current_images dictionary.
-    
-    PREVIOUS SOLUTION: (OUTDATED - OUT OF CLASS)
-    # current_images = {'color': [] , 'color_original': [], 'gray': [], 'entropy': {}, 'gray_original': {}, 
-    #                   'entropy_original': {}, 'suggested_mask_threshold': {}, 'suggested_mask_blur': {},
-    #                   'suggested_mask': [], 'manual_mask_adjustments': []}
-    # # 'suggested_mask_blur'- an initial blur set by user for automatic mask suggestion 
-    # # 'suggested_mask_threshold'- a threshold set by user for automatic mask suggestion 
-    # # 'suggested_mask' - a mask suggested to a user by actual algorithm (based on the U-NET rembg model)
-    # # 'manual_mask_adjustments' - changes manually made by the user (a sparse numpy boolean matrix), 
     """
     def __init__(self, **kwargs):
         self.user_id = None
         # values
-        # self.info = None
         self.info_datetime = None
         self.info_place_of_experiment = None
         self.info_sample_collection_data = None
@@ -255,7 +227,6 @@ class GuestTemporaryStorage:
         session['storage'] = zlib.compress(pickle.dumps(self))
     def __setattr__(self, name: str, value):
         super().__setattr__(name, value)
-        print(f'Setting attribute {name} to value of type {type(value)}')
         # self._dirty_fields.add(name)
         # self._self_to_session()
         
@@ -350,11 +321,6 @@ class GuestTemporaryStorage:
             tuple: A tuple containing the corrected asphalt mask and aggregate mask.
         """
         asphalt_mask = get_masks_corrected(self.asphalt_mask, self.asphalt_mask_manual_corrections) 
-        # if self.asphalt_mask_manual_corrections is not None:
-        #     if asphalt_mask is None:
-        #         asphalt_mask = np.zeros((self.image_height, self.image_width), dtype=bool)
-        #     asphalt_mask += self.asphalt_mask_manual_corrections
-
         return asphalt_mask
 
     def get_aggregate_mask(self) -> np.ndarray | None:
@@ -670,51 +636,6 @@ def check_session_timeout(func):
 
 
 
-
-
-# def _get_storage() -> UserTemporaryStorage:
-#     if 'user_id' not in session: 
-#         session['user_id'] = str(uuid.uuid4())
-
-#     if ('authenticated' not in session or not session['authenticated']):
-#         # unathenticated user - no session 
-#         tsm.create_storage(session['user_id'])
-#         return tsm.get(session['user_id'])
-#     elif 'authenticated' in session and session['authenticated']:
-#         # authenticated user - ensure storage exists
-#         return ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id']))
-
-# @app.teardown_request
-# def save_storage(exception=None):
-#     if hasattr(g, "storage"):
-#         session["storage"] = zlib.compress(pickle.dumps(g.storage))
-
-# @app.teardown_request
-# def save_storage(exception=None):
-#     if hasattr(g, "storage"):
-#         session["storage"] = zlib.compress(pickle.dumps(storage))
-
-# def _get_storage() -> UserTemporaryStorage:
-#     # If already loaded during this request → reuse it
-#     if hasattr(g, "storage"):
-#         return g.storage
-
-#     # Ensure user_id exists
-#     if "user_id" not in session:
-#         session["user_id"] = str(uuid.uuid4())
-
-#     storage_data = session.get("storage")
-
-#     if storage_data:
-#         storage_obj = pickle.loads(zlib.decompress(storage_data))
-#     else:
-#         storage_obj = UserTemporaryStorage(user_id=session["user_id"])
-
-#     # Cache in request context
-#     g.storage = storage_obj
-#     return storage_obj
-
-
 @app.teardown_request
 def save_storage(exception=None):
     storage = getattr(g, "storage", None)
@@ -738,20 +659,6 @@ def _get_storage() -> UserTemporaryStorage:
     if 'user_id' not in session:
         session['user_id'] = str(uuid.uuid4())
 
-    # OLD APPROACH - USING A GLOBAL DICTIONARY (OUTDATED - OUT OF FUNCTION)
-    # # Attempt to load storage from session
-    # storage_data = session.get('storage')
-    # if storage_data:
-    #     # decompress + unpickle
-    #     storage_obj: UserTemporaryStorage = pickle.loads(zlib.decompress(storage_data))
-    # else:
-    #     # Create new storage if none exists
-    #     storage_obj = UserTemporaryStorage(user_id=session['user_id'])
-    #     # Save back into session
-    #     session['storage'] = zlib.compress(pickle.dumps(storage_obj))
-    
-    # return storage_obj
-
     # Attempt to load storage from session
     if session.get('authenticated', False) == True:
         if not hasattr(g, "storage") or g.storage is None:
@@ -760,7 +667,6 @@ def _get_storage() -> UserTemporaryStorage:
             print(f'Loading storage for experiment_id: {experiment_id}')
             g.storage =  UserTemporaryStorage.load(experiment_id)
             storage_obj = g.storage
-            # conn.close()
         else:
             storage_obj = g.storage
     else:
@@ -778,14 +684,9 @@ def _get_storage() -> UserTemporaryStorage:
 
 
 
-# storage = LocalProxy(lambda: ts.setdefault(session['user_id'], UserTemporaryStorage(user_id=session['user_id'])))
-# storage = LocalProxy(lambda: _get_storage())
-# storage = LocalProxy(lambda: _get_storage())
 storage = LocalProxy(lambda: _get_storage())
-storage: UserTemporaryStorage = cast(UserTemporaryStorage, storage)
-# storage... it behaves like a global variable, but it is actually a proxy to the user-specific storage
-# thus storage.name is actually ts[session['user_id']].name
-# setdefault ensures that if the user_id is not in ts, it will create a new UserTemporaryStorage for that user_id
+storage: UserTemporaryStorage = cast(UserTemporaryStorage, storage) # behaves like a global variable, but it is actually a proxy to the user-specific storage 
+
 
 def get_masks_corrected(original: np.ndarray = None, corrections: np.ndarray = None) -> np.ndarray:
     """
@@ -818,12 +719,8 @@ def switch_language(lang_code: str):
     print(f'Switching language to: {lang_code}')
     if lang_code not in app.config['LANGUAGES']:
         abort(404)
-    # optional: also persist in a cookie for non-session clients
-    # response.set_cookie('lang', lang_code, max_age=60*60*24*365)
     session['lang'] = lang_code
-    # response = redirect(request.referrer or url_for('index'))
     return json.dumps({'lang': lang_code}), 200
-    # return response, 302
 
 def dict_to_json(data_dict: dict, features: Iterable[str] = None) -> str:
         """
@@ -839,7 +736,6 @@ def dict_to_json(data_dict: dict, features: Iterable[str] = None) -> str:
 
         return json.dumps(data_dict)        
 
-# @app.before_request        
 def check_data_ownership(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -860,13 +756,10 @@ def check_data_ownership(func):
 def check_authentication(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        print(f'Checking authentication for user_id: {session.get("user_id", None)}')
-        print(session)
         if 'authenticated' in session and session['authenticated']:
             return func(*args, **kwargs)
         else:
             flash(_('You must be logged in to access this page.'), 'error')
-            print('User not authenticated. Redirecting to login page.')
             return redirect(url_for('login')), 302
     return wrapper
 
@@ -939,21 +832,11 @@ def home():
 def page_not_found(error):
     return render_template('404.html', session=session), 404
 
-# @app.errorhandler(Exception)
-# def handle_exception(error) -> tuple:
-#     flash(_('An internal server error has occured.'), 'error')
-#     return redirect(url_for('logout')), 500
-#     return None, 500
 
 
 @app.route('/logout')
 def logout():
     print('Logging out user.')
-    # session.pop('username',None)
-    # session.pop('authenticated',None)
-    # session.pop('user_id',None)
-    # session.pop('user_email',None)
-    # session.pop('is_company_admin',None)
     session.clear()  # Clear all session data to ensure complete logout
     return redirect(url_for('login'))
 
@@ -1221,49 +1104,6 @@ def sort_records(records: list, sort_order: Literal['asc', 'desc'], sort_by: str
     return records[:page_limit]
 
 
-# @app.route('/queue',methods=['GET','POST'])
-# @check_authentication
-# @deprecated("This endpoint is no longer used and will be removed in future versions.")
-# def queue():
-#     sort_order, page_limit, start_sub_id, page, sort_by = get_query_args(**kwargs)
-    
-#     records=[('id','time_stamp','current_state')]
-#     sort_by = sort_by.split(',')  
-#     sort_by = [x for x in sort_by if x in records[0]]
-    
-#     sort_columns=[ records[0].index(x) for x in sort_by]
-
-#     columnames=[_('id'),_('date'),_('state'),_('actions')]
-#     actions=[_('Edit'),_('Cancel')]
-#     records.append(execute_query("SELECT experiment_id, time_stamp, current_state FROM experiments where user_id=%s AND current_state!='finished' ",(session['user_id'],)))
-#     data = records[1]
-
-#     # Data sorting and slicing
-#     current_state_order={'finished':0,'current_experiment': 1, 'started':2,'prepared':3,'processing':4,'pending':5}
-#     reversed_current_state_order={v:k for k,v in current_state_order.items()}
-#     data = [(x[0], x[1].strftime('%Y-%m-%d  %H:%M:%S'), x[2]) for x in data]
-#     data=list(map(lambda x: (x[0],x[1],current_state_order[x[2]]),data))
-#     data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='desc')
-#     # now we have to remap the data back to strings
-#     data=list(map(lambda x: (x[0],x[1],reversed_current_state_order[x[2]]),data))
-        
-#     pages = get_num_pages(len(data), page_limit)
-    
-#     if page>pages:
-#         page=pages
-#     if start_sub_id is None:
-#         start_sub_id=0+page_limit*(page-1)
-#     else:
-#         start_sub_id=int(start_sub_id)
-    
-#     max_sub_id = min(len(data), start_sub_id+page_limit)
-#     data=data[start_sub_id:max_sub_id]
-#     records[1] = data
-
-#     # translate_column_names
-#     columnames = [ _(col) for col in columnames ]
-#     return render_template('queue.html',records=records,session=session,dynamic_content=_('Experiment Queue'),columnames=columnames, actions = actions)
-
 def get_ordenary_user_experiments(**kwargs) -> tuple[list[tuple], int]:
     sort_order, page_limit, start_sub_id, page, sort_by = get_query_args(**kwargs)
     records=[('id','time_stamp','expert_guess', 'asphalt_ratio')]
@@ -1272,7 +1112,7 @@ def get_ordenary_user_experiments(**kwargs) -> tuple[list[tuple], int]:
     sort_columns=[ records[0].index(x) for x in sort_by]
     # records.append(execute_query("SELECT experiment_id, time_stamp, expert_guess, asphalt_ratio, current_state FROM experiments where user_id=%s AND current_state='finished' AND fake_deleted=false",(session['user_id'],)))
     records.append(
-        execute_query("SELECT experiment_id, time_stamp, expert_guess, asphalt_ratio, current_state FROM experiments where user_id=%s AND fake_deleted=false",(session['user_id'],)))
+        db_api.execute_query("SELECT experiment_id, time_stamp, expert_guess, asphalt_ratio, current_state FROM experiments where user_id=%s AND fake_deleted=false",(session['user_id'],)))
     
     # data sorting and slicing
     data = records[1]   
@@ -1412,11 +1252,6 @@ def get_num_pages(total_items: int, page_limit: int) -> int:
 @check_is_company_admin
 def employees():
     kwargs = request.args.to_dict() if request.args else {'page': 1}
-    # sort_order=request.args.get('sort_order','desc')
-    # page_limit=min(1,int(request.args.get('page_limit') or 10))
-    # start_sub_id=request.args.get('start_id',None)
-    # page=int(request.args.get('page',1))
-    # sort_by=request.args.get('sort_by','name,contact,is_company_admin')
     sort_order, page_limit, start_sub_id, page, sort_by = get_query_args(**kwargs)
     
     records=[('name','contact','is_company_admin')]
@@ -1766,25 +1601,11 @@ def grayscale_image(image: np.ndarray) -> np.ndarray:
         raise ValueError("Invalid image shape for grayscaling.")
     return gray_image
 
-# TODO: CONSIDER REMOVAL - SLOWER THAN CV2
-# def grayscale_image(image: np.ndarray) -> np.ndarray:
-#     gray_image = Image.fromarray(image).convert('L')
-#     np_gray = np.array(gray_image)
-#     return np_gray
-
-# TODO: CONSIDER REMOVAL - LIKELY UNUSED
-# @app.route('/rembg',methods=['GET'])
-# @check_authentication
-# def rembg():
-#     return render_template('rembg.html')
 
 @app.route('/update_value/<string:value_name>',methods=['POST'])
 @check_authentication
 @limiter.exempt 
-def update_specific_value(value_name):
-    # ts[session['user_id']].values.__dict__[value_name] = value
-    # setattr(ts[session['user_id']], value_name, value)    
-    print(f'Updating value: {value_name}')
+def update_specific_value(value_name):    
     if storage.experiment_id is None:
         return json.dumps({'status': 'error', 'message': 'No active experiment found'}), 404, {'Content-Type': 'application/json'}
     value = request.form.get(value_name)
@@ -1808,7 +1629,6 @@ def save_specific_value(value_name):
 
 
 @app.route('/evaluate-asphalt',methods=['GET', 'POST'])
-# @check_authentication
 @check_session_timeout
 def evaluate_asphalt():
     evaluation = storage.get_asphalt_ratio()
@@ -1817,19 +1637,18 @@ def evaluate_asphalt():
     return json.dumps({'status': 'success', 'evaluation': evaluation}), 200, {'Content-Type': 'application/json'}
 
 # TODO: CORRECT THE METHOD - should be DELETE
-# @app.route('/delete-experiment/<int:id>',methods=['DLELERTE'])
 @app.route('/delete-experiment/<int:id>',methods=['GET', 'POST'])
 @check_authentication
 @check_data_ownership
 def delete_experiment(id):
-    experiment_state = execute_query('SELECT current_state FROM experiments WHERE experiment_id=%s', (id,))[0][0]
+    experiment_state = db_api.execute_query('SELECT current_state FROM experiments WHERE experiment_id=%s', (id,))[0][0]
     try:
         if experiment_state == 'finished':
             query = 'UPDATE experiments SET fake_deleted=true WHERE experiment_id=%s'
-            execute_query(query, (id,))
+            db_api.execute_query(query, (id,))
         else:
             query = 'DELETE FROM experiments WHERE experiment_id=%s'
-            execute_query(query, (id,))
+            db_api.execute_query(query, (id,))
         status = 'success'
     except:
         status = 'error'
@@ -1873,7 +1692,7 @@ def activate_experiment(id):
             return redirect('/queue')
     # check if the experiment is already active if it is, deactivate it
     query = 'SELECT experiment_id FROM experiments WHERE user_id=%s AND active=True'
-    active_id = execute_query(query, (session['user_id'],))
+    active_id = db_api.execute_query(query, (session['user_id'],))
     print(active_id)
     if active_id:
         for i in active_id:
@@ -1938,39 +1757,31 @@ def is_active():
 
 @app.route('/save',methods=['POST'])
 @ignore_unauthenticated
-# @check_authentication
 def save_experiment(**kwargs):
-        """
-        Saves the current experiment data to the database. If no experiment is active, a new one is created.
-        """
-        if 'state' in kwargs.keys():
-            state = kwargs['state']
-        else:
-            state = request.args.get('state') or request.form.get('state') or 'started'
-            # state = 'started'    
+    """
+    Saves the current experiment data to the database. If no experiment is active, a new one is created.
+    """
+    if 'state' in kwargs.keys():
+        state = kwargs['state']
+    else:
+        state = request.args.get('state') or request.form.get('state') or 'started'
+        # state = 'started'    
 
 
-    # try:        
-        ts_dict = storage.to_dict(for_save=True)
-        ts_dict['current_state'] = state 
-        if session.get('authenticated', False):
-            ts_dict['user_id'] = session['user_id']
+    ts_dict = storage.to_dict(for_save=True)
+    ts_dict['current_state'] = state 
+    if session.get('authenticated', False):
+        ts_dict['user_id'] = session['user_id']
         
-        if storage.experiment_id is None:
-            storage.experiment_id = db_api.insert_experiment_to_db(values_dict=ts_dict) #**
-            session['experiment_id'] = storage.experiment_id #** ensure that the session is updated with the new experiment ID
-            activate_experiment(storage.experiment_id)
-        else:
-            # ts_dict = storage.to_dict(for_save=True)
-            # ts_dict['current_state'] = state
-            # if session.get('authenticated', False):
-            #     ts_dict['user_id'] = session['user_id']
-            db_api.update_experiment_in_db(values_dict=ts_dict, experiment_id=storage.experiment_id)
-        if state.lower() == 'finished':
-            session.pop('storage', None)  # remove storage from session
-        return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
-    # except Exception as e:
-    #     return json.dumps({'status': 'error', 'message': str(e)}), 500, {'Content-Type': 'application/json'}
+    if storage.experiment_id is None:
+        storage.experiment_id = db_api.insert_experiment_to_db(values_dict=ts_dict) #**
+        session['experiment_id'] = storage.experiment_id #** ensure that the session is updated with the new experiment ID
+        activate_experiment(storage.experiment_id)
+    else:
+        db_api.update_experiment_in_db(values_dict=ts_dict, experiment_id=storage.experiment_id)
+    if state.lower() == 'finished':
+        session.pop('storage', None)  # remove storage from session
+    return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
 
 def downscale_image(image: np.ndarray, scale_factor: float = None) -> np.ndarray:
@@ -2008,8 +1819,10 @@ def polish_input_image_file(file) -> np.ndarray:
 
 @app.route('/process-image',methods=['POST'])
 def process_image():
-    # This function processes the image and returns the processed image
-    # it should be called when the user wants to process the image
+    """
+    This function processes the image and returns the processed image.
+    It should be called when the user wants to process the image.
+    """
     file = request.files['file']
     image = polish_input_image_file(file)
     
@@ -2108,7 +1921,6 @@ def encode_to_png(image):
     # creates a byte stream ('buffer') for binary operations
     image_io=io.BytesIO()
     Image.fromarray(np.uint8(image)).save(image_io, format='PNG') #saves the img as PNG to the byte stream ('buffer')
-    # image.save(image_io, format='PNG') #saves the img as PNG to the byte stream ('buffer')
     image_io.seek(0)
     return image_io.getvalue()
   
@@ -2197,4 +2009,3 @@ if __name__ == "__main__":
     else:
         app.secret_key='test_secret_key'
         app.run(host='127.0.0.1', port=5000, debug=debug)
-        # app.run(host='0.0.0.0', port=5011, debug=debug)

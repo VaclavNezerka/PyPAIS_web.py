@@ -12,12 +12,6 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='new_styles.css') }}">
         <link rel="icon" type="image/vnd.icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
-
-        <!-- OpenSeadragon -->
-        <!-- <script src="../static/openseadragon_5.0/openseadragon.min.js"></script> -->
-        <!-- Konva.js -->
-        <!-- <script src="../static/node_modules/konva/konva.min.js"></script> -->
-        <!-- <script type="module" src="/static/script.js"></script> --> <!-- DEPRECATED: OLD THRESHOLDING -->
         <script type="module" src="{{ url_for('static', filename='script_automatic.js') }}"></script>
     </head>
 
@@ -76,14 +70,6 @@
 
 
         <div class="row modern-row">
-            <!-- <div class="column modern-column">
-                <label for="info" class="modern-label upper">
-                    {{ _('Speciemen Number:') }}
-                </label>
-                <input type="text" id="info" class="modern-input enhanced-input" placeholder="{{ _('ID') }}"
-                maxlength="1024" />
-            </div> -->
-
 
             <div class="column modern-column">
                 <label for="info_datetime" class="modern-label upper">

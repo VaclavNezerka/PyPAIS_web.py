@@ -49,7 +49,7 @@ window.addEventListener("load", () => {
             // switch off the camera and hide the captured image
             document.getElementById("capturedImageDiv").style.display = "none"
             // stop using the camera
-            // document.mediaDevices.getUserMedia({ video: false, audio: false })
+            document.mediaDevices.getUserMedia({ video: false, audio: false })
         }
     }
 
@@ -95,16 +95,3 @@ window.addEventListener("load", () => {
             document.getElementById("capturedImageDiv").style.display = "flex"
         })
 })
-
-// function getDeviceType() {
-//     if (navigator.userAgentData) {
-//         return navigator.userAgentData.mobile ? "mobile" : "pc"
-//     }
-
-//     const isMobileUA = /Mobi|Android|iPhone|iPad|iPod/i.test(
-//         navigator.userAgent,
-//     )
-//     const isSmallScreen = window.innerWidth <= 768
-
-//     return isMobileUA || isSmallScreen ? "mobile" : "pc"
-// }
