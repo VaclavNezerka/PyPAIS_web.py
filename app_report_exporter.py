@@ -373,7 +373,6 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     Returns:
         None
     """
-    T = time.time()
     # Fetch experiment data from the database
     user_info = db_api.get_user_by_id(user_id)
     company_id = user_info.get("company", None)
@@ -500,14 +499,10 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     assessments_expert_guess = []
     assessments_automatic = []
     concerns = {"similar_images": 0, "old_images": 0}
-    print("time taken for fetching user and company info:", time.time() - T, "seconds")
-    T = time.time()
     available_models = models.discover_models()
     deprecated_models = models.discover_models(deprecated=True)
-    t=time.time()
     experiments = {id: db_api.get_experiment_by_id(id) for id in experiment_ids}
     timesteps = {id: db_api.get_experiment_timestamp_by_id(id) for id in experiment_ids}
-    print("Time taken for fetching experiments for final table:", time.time() - t, "seconds")
     # def process_single_image(experiment, eid):
         
     for experiment, experiment_id, timestep in zip(experiments.values(), experiment_ids, timesteps.values()):
@@ -516,10 +511,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         mask_aggregate = experiment.get("mask_aggregate", None)
         experiment.update({"timestamp": timestep})
         
-        # print(experiment.get('similar_ssim_id'))
-        # print(experiment.get('similar_hist_id'))
         similar_dict = get_similar_experiment(experiment)
-        print(f"Similar experiment ID {similar_dict.get('similar_experiment_id')} with similarity score {similar_dict.get('similarity_score'):.2f} using method {similar_dict.get('similarity_method')}.")
         # Add experiment record to PDF
         # pdf.append(PageBreak())
         # draw a line
@@ -597,10 +589,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
             concerns["old_images"] += 1
 
 
-    print("")
-    print("Time taken for processing experiments and generating PDF content:", time.time() - T, "seconds")
-    print("")
-    T = time.time()
+
     # Compute statistics
     stats_expert = compute_statistics(assessments_expert_guess)
     stats_automatic = compute_statistics(assessments_automatic)
@@ -689,8 +678,6 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     pdf.append(Spacer(1, 1.0 * cm))
     pdf.append(Paragraph(_("This report was generated using AIBAL on ") + f"{report_date.to_datetime_string()}.", style_justify_right))
     
-    print("Time taken for computing statistics and generating final summary:", time.time() - T, "seconds")
-    T = time.time()
     
     doc.build(pdf,
         # onFirstPage=lambda canvas, doc: first_page(canvas, doc, report_id=report_id),
@@ -698,7 +685,6 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         onLaterPages=lambda canvas, doc: styled_header_footer(canvas, doc, report_id=report_id)
     )
     
-    print("Time taken for building PDF and computing statistics:", time.time() - T, "seconds")
     if as_buffer:
         return buffer.getvalue()
     else:
