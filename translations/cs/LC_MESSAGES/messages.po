@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-26 22:33+0200\n"
+"POT-Creation-Date: 2026-10-07 19:34+0200\n"
 "PO-Revision-Date: 2025-10-21 18:40+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: cs\n"
@@ -425,9 +425,10 @@ msgid ""
 "You have selected experiment of another user for editing. This action "
 "will transfer the ownership of the experiment to you (the original owner "
 "will not be able to access it). Do you want to proceed?"
-msgstr "Pro editaci jste vybrali experiment jiného uživatele. Tato akce "
-"převede experiment do Vašeho vlastnictví (původní uživatel již nebude mít ke vzorku přístup). "
-"Přejete si pokračovat?"
+msgstr ""
+"Pro editaci jste vybrali experiment jiného uživatele. Tato akce převede "
+"experiment do Vašeho vlastnictví (původní uživatel již nebude mít ke "
+"vzorku přístup). Přejete si pokračovat?"
 
 #: app_energy_label.py:38 app_report_exporter.py:148 app_report_exporter.py:334
 msgid "Unclassifiable"
@@ -457,23 +458,23 @@ msgstr "Dostačující"
 msgid "Unsatisfactory"
 msgstr "Nedostačující"
 
-#: app_report_exporter.py:393
+#: app_report_exporter.py:392
 msgid "AIBAL Report"
 msgstr "AIBAL Report"
 
-#: app_report_exporter.py:395
+#: app_report_exporter.py:394
 msgid "AIBAL Report ID:"
 msgstr "AIBAL Report ID:"
 
-#: app_report_exporter.py:396
+#: app_report_exporter.py:395
 msgid "bitumen, adhesion, test, CSN 73 6161"
 msgstr "asfalt, adheze, test, ČSN 73 6161"
 
-#: app_report_exporter.py:422
+#: app_report_exporter.py:421
 msgid "Bitumen Adhesion Test Protocol"
 msgstr "Protokol o zkoušce přilnavosti asfaltu"
 
-#: app_report_exporter.py:426
+#: app_report_exporter.py:425
 msgid ""
 "\n"
 "    This report provides a comprehensive overview of the bitumen adhesion"
@@ -487,7 +488,7 @@ msgstr ""
 "    se všemi informacemi požadovnanými dle ČSN 73 6161.\n"
 "    Zkouška přilnavosti byla provedena na "
 
-#: app_report_exporter.py:429
+#: app_report_exporter.py:428
 msgid ""
 " samples of asphalt mixtures. The detailes about each specimen included "
 "below, the overview is at the end of the document."
@@ -495,7 +496,7 @@ msgstr ""
 " vzorcích. Detailní informace o každém vzorku jsou obsaženy níže. Přehled"
 " se pak nachází na konci dokumentu."
 
-#: app_report_exporter.py:433
+#: app_report_exporter.py:432
 msgid ""
 "\n"
 "    Both the visual expert assesment and the AI-based quantitative "
@@ -513,111 +514,111 @@ msgstr ""
 "    pro srovnání je u každého vzorku vizualizace automatického modelu. \n"
 "    "
 
-#: app_report_exporter.py:446
+#: app_report_exporter.py:445
 msgid "Ordering Party"
 msgstr "Objednavatel"
 
-#: app_report_exporter.py:452
+#: app_report_exporter.py:451
 msgid "Providing Laboratory"
 msgstr "Zpracovatelská laboratoř"
 
-#: app_report_exporter.py:463
+#: app_report_exporter.py:462
 msgid "The proceeding employee"
 msgstr "Zkoušející zaměstnanec"
 
-#: app_report_exporter.py:464 app_report_exporter.py:482
-#: app_report_exporter.py:1171
+#: app_report_exporter.py:463 app_report_exporter.py:481
+#: app_report_exporter.py:1157
 msgid "Name:"
 msgstr "Jméno:"
 
-#: app_report_exporter.py:465 app_report_exporter.py:483
-#: app_report_exporter.py:1173
+#: app_report_exporter.py:464 app_report_exporter.py:482
+#: app_report_exporter.py:1159
 msgid "Contact:"
 msgstr "Kontakt:"
 
-#: app_report_exporter.py:467 app_report_exporter.py:485
+#: app_report_exporter.py:466 app_report_exporter.py:484
 msgid "Signature: ..................................................."
 msgstr "Podpis: ..................................................."
 
-#: app_report_exporter.py:481
+#: app_report_exporter.py:480
 msgid "The controll performed by"
 msgstr "Kontrolu provedl"
 
-#: app_report_exporter.py:559
+#: app_report_exporter.py:551
 msgid "Inference model "
 msgstr "AI model"
 
-#: app_report_exporter.py:559
+#: app_report_exporter.py:551
 msgid " not available for experiment ID"
 msgstr " nedostupný pro experiment ID"
 
-#: app_report_exporter.py:559
+#: app_report_exporter.py:551
 msgid ""
 "Please use newer model for this specimen or contact us to resolve this "
 "issue."
 msgstr ""
 
-#: app_report_exporter.py:609
+#: app_report_exporter.py:598
 msgid "Resulting assesment"
 msgstr "Výsledné vyhodnocení"
 
-#: app_report_exporter.py:619
+#: app_report_exporter.py:608
 msgid "Tabular overview"
 msgstr "Přehled"
 
-#: app_report_exporter.py:621
+#: app_report_exporter.py:610
 msgid "Specimen ID"
 msgstr "ID vzorku"
 
-#: app_report_exporter.py:622
+#: app_report_exporter.py:611
 msgid "Visual Expert Assessment [%]"
 msgstr "Odborný odhad [%]"
 
-#: app_report_exporter.py:623
+#: app_report_exporter.py:612
 msgid "AI-based Assesment  [%]"
 msgstr "AI vyhodnocení [%]"
 
-#: app_report_exporter.py:651
+#: app_report_exporter.py:640
 msgid "Report Conclusion"
 msgstr "Závěr"
 
-#: app_report_exporter.py:654 app_report_exporter.py:655
+#: app_report_exporter.py:643 app_report_exporter.py:644
 msgid "The average adhesion rate across all samples is"
 msgstr "Průměrné pokrytí asfaltem přes všechny vzorky je"
 
-#: app_report_exporter.py:654
+#: app_report_exporter.py:643
 msgid "according to expert visual assesment, which correspondes to calss"
 msgstr "dle vizuálního posouzení experta, což odpovídá třídě"
 
-#: app_report_exporter.py:655
+#: app_report_exporter.py:644
 msgid "according to AI-based analysis, which correspondes to calss"
 msgstr "dle automatického vyhodnocení, což odpovídá třídě"
 
-#: app_report_exporter.py:656 app_report_exporter.py:657
+#: app_report_exporter.py:645 app_report_exporter.py:646
 msgid "The worst adhesion rate ("
 msgstr "Nejnižší míra pokrytí asfaltem ("
 
-#: app_report_exporter.py:656 app_report_exporter.py:657
+#: app_report_exporter.py:645 app_report_exporter.py:646
 msgid " %) observed is class "
 msgstr " %) odpovídá třídě  "
 
-#: app_report_exporter.py:656
+#: app_report_exporter.py:645
 msgid "according to expert visual assesment."
 msgstr "dle vizuálního posouzení experta."
 
-#: app_report_exporter.py:657
+#: app_report_exporter.py:646
 msgid "according to AI-based analysis."
 msgstr "dle automatického vyhodnocení."
 
-#: app_report_exporter.py:660
+#: app_report_exporter.py:649
 msgid "The final considered class is: "
 msgstr "Finální uvažovaná třída asfaltové směsi je: "
 
-#: app_report_exporter.py:661
+#: app_report_exporter.py:650
 msgid "The adhesion between aggregate and binder is classified as: "
 msgstr "Přilnavost zrn kameniva s asfaltovým pojivem je hodnocena jako: "
 
-#: app_report_exporter.py:665
+#: app_report_exporter.py:654
 msgid ""
 " images seem to highly similar with others and might not be unique "
 "specimens."
@@ -625,11 +626,11 @@ msgstr ""
 " obrázků se jeví velice podobné již jindy nahraným a nemusí se jednat o "
 "unikátní  vzorky."
 
-#: app_report_exporter.py:667
+#: app_report_exporter.py:656
 msgid " have been uploaded more than 6 months ago."
 msgstr " bylo nahráno více jak před 6 měsíci. "
 
-#: app_report_exporter.py:669
+#: app_report_exporter.py:658
 msgid ""
 "The report contains less than 2 samples, which is insufficient for CSN 73"
 " 6161 standard compliance."
@@ -637,7 +638,7 @@ msgstr ""
 "Protokol obsahuje méně než 2 vzorky, což je nedostatečné pro posouzení "
 "dle ČSN 73 6161."
 
-#: app_report_exporter.py:671
+#: app_report_exporter.py:660
 msgid ""
 "Significant variance detected between expert assessments (>10%) of "
 "different samples. The CSN 73 6161 standard requires experiment "
@@ -646,7 +647,7 @@ msgstr ""
 "Značné rozdíly v přilnavosti (> 10 %) detekovány mezi jednotlivými vzorky"
 " dle expertního odhadu. ČSN 73 6161 požaduje opakování zkoušky."
 
-#: app_report_exporter.py:673
+#: app_report_exporter.py:662
 msgid ""
 "Significant variance detected between AI-based assessments (>10%) of "
 "different samples. The CSN 73 6161 standard requires experiment "
@@ -657,15 +658,15 @@ msgstr ""
 " dle automatického posouzení. ČSN 73 6161 požaduje opakování zkoušky. "
 "Zvažte toto v případě, že se AI klasifikace jeví jako věrohodná."
 
-#: app_report_exporter.py:675
+#: app_report_exporter.py:664
 msgid "Concerns"
 msgstr "Potíže"
 
-#: app_report_exporter.py:690
+#: app_report_exporter.py:679
 msgid "This report was generated using AIBAL on "
 msgstr "Tento report byl vygenerován systémem AIBAL dne "
 
-#: app_report_exporter.py:792
+#: app_report_exporter.py:778
 msgid ""
 "<<< ⚠ WARNING: The program has detected a highly similar image (on the "
 "left, experiment_id:"
@@ -673,23 +674,23 @@ msgstr ""
 "<<< ⚠ VAROVÁNÍ: Program detekoval velice podobný obrázek (nalevo , ID "
 "experimentu:"
 
-#: app_report_exporter.py:793
+#: app_report_exporter.py:779
 msgid " , uploaded by "
 msgstr ", nahráno uživatelem "
 
-#: app_report_exporter.py:793
+#: app_report_exporter.py:779
 msgid " on "
 msgstr " dne "
 
-#: app_report_exporter.py:794
+#: app_report_exporter.py:780
 msgid ") with"
 msgstr ") s "
 
-#: app_report_exporter.py:794
+#: app_report_exporter.py:780
 msgid "confidence. "
 msgstr "jistotou. "
 
-#: app_report_exporter.py:795
+#: app_report_exporter.py:781
 msgid ""
 "Please review the samples for potential duplication. In case the "
 "specimens clearly aren't duplicates, you can ignore this message."
@@ -697,79 +698,79 @@ msgstr ""
 "    Prosím zkontrolujte, zda se u vzorků nejedná o duplikát.\n"
 "    Pokud jsou vzorky definitivně odlišné, můžete toto varování ignorovat."
 
-#: app_report_exporter.py:830 templates/demo.html:73 templates/index.html:223
+#: app_report_exporter.py:816 templates/demo.html:73 templates/index.html:224
 msgid "Original Image"
 msgstr "Původní obrázek"
 
-#: app_report_exporter.py:830
+#: app_report_exporter.py:816
 msgid "Processed Image"
 msgstr "Zprocesovaný obrázek"
 
-#: app_report_exporter.py:832
+#: app_report_exporter.py:818
 msgid "(Asphalt - RED, Aggregate - BLUE)"
 msgstr "(Asfalt - červená, Kamenivo - modrá)"
 
-#: app_report_exporter.py:906
+#: app_report_exporter.py:892
 msgid "Sample ID:"
 msgstr "ID vzorku:"
 
-#: app_report_exporter.py:907
+#: app_report_exporter.py:893
 msgid "Date:"
 msgstr "Datum:"
 
-#: app_report_exporter.py:908 templates/index.html:84 templates/user.html:85
+#: app_report_exporter.py:894 templates/index.html:85 templates/user.html:85
 msgid "Place of Experiment:"
 msgstr "Místo konání experimentu:"
 
-#: app_report_exporter.py:909 templates/index.html:93 templates/user.html:94
+#: app_report_exporter.py:895 templates/index.html:94 templates/user.html:94
 msgid "Sample Collection Data:"
 msgstr "Data o odběru vzorku:"
 
-#: app_report_exporter.py:910 templates/index.html:132 templates/user.html:105
+#: app_report_exporter.py:896 templates/index.html:133 templates/user.html:105
 msgid "Aggregate:"
 msgstr "Kamenivo:"
 
-#: app_report_exporter.py:911 templates/index.html:140 templates/user.html:113
+#: app_report_exporter.py:897 templates/index.html:141 templates/user.html:113
 msgid "Binder:"
 msgstr "Pojivo:"
 
-#: app_report_exporter.py:912
+#: app_report_exporter.py:898
 msgid "Wrapping temperature [°C]:"
 msgstr "Obalovací teplota [°C]:"
 
-#: app_report_exporter.py:913
+#: app_report_exporter.py:899
 msgid "Exposing water temperature [°C]:"
 msgstr "Teplota obnažovací vody [°C]:"
 
-#: app_report_exporter.py:914
+#: app_report_exporter.py:900
 msgid "Test procedure:"
 msgstr "Testovací procedura:"
 
-#: app_report_exporter.py:925
+#: app_report_exporter.py:911
 msgid "Assessment - Adhesion Rate:"
 msgstr "Vyhodnocení přilnavosti"
 
-#: app_report_exporter.py:926
+#: app_report_exporter.py:912
 msgid "Inference Model:"
 msgstr "AI model:"
 
-#: app_report_exporter.py:927
+#: app_report_exporter.py:913
 msgid "Automatic Assessment [%]:"
 msgstr "Automatické vyhodnocení [%]: "
 
-#: app_report_exporter.py:928
+#: app_report_exporter.py:914
 msgid "Visual based Expert Guess [%]:"
 msgstr "Odborný odhad [%]"
 
-#: app_report_exporter.py:929 templates/index.html:162
+#: app_report_exporter.py:915 templates/index.html:163
 msgid "Comment:"
 msgstr "Komentář:"
 
-#: app_report_exporter.py:1129
+#: app_report_exporter.py:1115
 msgid "Report generated by AIBAL -Bitumen Adhesion Lab - report ID:"
 msgstr "Report byl vygenerován systémem AIBAL - Bitumen Adhesion Lab - ID reportu:"
 
-#: app_report_exporter.py:1172
+#: app_report_exporter.py:1158
 msgid "Address:"
 msgstr "Adresa:"
 
@@ -971,11 +972,11 @@ msgstr "Zobrazit klíč společnosti"
 msgid "DEMO"
 msgstr "DEMO"
 
-#: templates/demo.html:13 templates/index.html:28 templates/index.html:49
+#: templates/demo.html:13 templates/index.html:28
 msgid "Upload Image"
 msgstr "Nahrát obrázek"
 
-#: templates/demo.html:16 templates/index.html:53
+#: templates/demo.html:16 templates/index.html:54
 msgid ""
 "By uploading an image, you agree that it may be stored in the application"
 " repository and potentially used by the authors for training future "
@@ -984,36 +985,36 @@ msgstr ""
 "Nahráním obrázku souhlasíte s jeho uložením v aplikaci a možností "
 "budoucího použití jejími autory pro trénink nových modelů."
 
-#: templates/demo.html:21 templates/index.html:171
+#: templates/demo.html:21 templates/index.html:172
 msgid "Automatic Phase Detection"
 msgstr "Automatická detekce fází"
 
-#: templates/demo.html:24 templates/form_plain.html:7 templates/index.html:61
-#: templates/index.html:174
+#: templates/demo.html:24 templates/form_plain.html:7 templates/index.html:62
+#: templates/index.html:175
 msgid "Working..."
 msgstr "Probíhá zpracování..."
 
-#: templates/demo.html:31 templates/index.html:181
+#: templates/demo.html:31 templates/index.html:182
 msgid "MODEL"
 msgstr "MODEL"
 
-#: templates/demo.html:41 templates/index.html:191
+#: templates/demo.html:41 templates/index.html:192
 msgid "Mask Opacity:"
 msgstr "Neprůhlednost masky:"
 
-#: templates/demo.html:53 templates/index.html:203
+#: templates/demo.html:53 templates/index.html:204
 msgid "Display mask - Bitumen"
 msgstr "Zobrazit masku - Asfalt"
 
-#: templates/demo.html:59 templates/index.html:209
+#: templates/demo.html:59 templates/index.html:210
 msgid "Display mask - Aggregate"
 msgstr "Zobrazit masku - Kamenivo"
 
-#: templates/demo.html:65 templates/index.html:215
+#: templates/demo.html:65 templates/index.html:216
 msgid "Display mask - Background"
 msgstr "Zobrazit masku - Pozadí"
 
-#: templates/demo.html:75 templates/index.html:225
+#: templates/demo.html:75 templates/index.html:226
 msgid "Grayscale Image"
 msgstr "Obrázek ve stupních šedi"
 
@@ -1271,15 +1272,19 @@ msgstr "nebo"
 msgid "Capture photo"
 msgstr "Vyfotit"
 
-#: templates/index.html:58
+#: templates/index.html:50
+msgid "Use the Captured Image"
+msgstr "Použít fotku"
+
+#: templates/index.html:59
 msgid "Basic Information"
 msgstr "Základní informace"
 
-#: templates/index.html:64
+#: templates/index.html:65
 msgid "Experiment data"
 msgstr "Experimentální data"
 
-#: templates/index.html:67
+#: templates/index.html:68
 msgid ""
 "Are there repeatedly filled values? Click here to set their default for "
 "automatic filling."
@@ -1287,71 +1292,71 @@ msgstr ""
 "Vyplňujete opakovaně některé údaje? Klikněte sem a nastavte si základní "
 "hodnoty."
 
-#: templates/index.html:76
+#: templates/index.html:77
 msgid "Date and Time:"
 msgstr "Datum a čas:"
 
-#: templates/index.html:79
+#: templates/index.html:80
 msgid "YYYY-MM-DD HH:MM"
 msgstr "YYYY-MM-DD HH:MM"
 
-#: templates/index.html:87 templates/user.html:88
+#: templates/index.html:88 templates/user.html:88
 msgid "Your lab Address"
 msgstr "Adresa Vaší laboratoře"
 
-#: templates/index.html:96 templates/user.html:97
+#: templates/index.html:97 templates/user.html:97
 msgid "Information about the mixture."
 msgstr "Informace o směsi."
 
-#: templates/index.html:106 templates/user.html:124
+#: templates/index.html:107 templates/user.html:124
 msgid "Wrapping Temperature [°C]:"
 msgstr "Obalovací teplota [°C]:"
 
-#: templates/index.html:109 templates/user.html:127
+#: templates/index.html:110 templates/user.html:127
 msgid "80"
 msgstr "80"
 
-#: templates/index.html:115 templates/user.html:133
+#: templates/index.html:116 templates/user.html:133
 msgid "Exposing Water Temperature [°C]:"
 msgstr "Teplota obnažovací vody [°C]:"
 
-#: templates/index.html:118 templates/user.html:136
+#: templates/index.html:119 templates/user.html:136
 msgid "20"
 msgstr "20"
 
-#: templates/index.html:123 templates/user.html:141
+#: templates/index.html:124 templates/user.html:141
 msgid "Test Procedure:"
 msgstr "Testovací procedura:"
 
-#: templates/index.html:126 templates/user.html:144
+#: templates/index.html:127 templates/user.html:144
 msgid "A brief description of the testing procedure"
 msgstr "Stručný popis testovací procedury"
 
-#: templates/index.html:135 templates/user.html:108
+#: templates/index.html:136 templates/user.html:108
 msgid "Information about the aggregate."
 msgstr "Informace o kamenivu."
 
-#: templates/index.html:143 templates/user.html:116
+#: templates/index.html:144 templates/user.html:116
 msgid "Information about the binder."
 msgstr "Informace o pojivu."
 
-#: templates/index.html:148
+#: templates/index.html:149
 msgid "Assessment"
 msgstr "Vyhodnocení"
 
-#: templates/index.html:154
+#: templates/index.html:155
 msgid "Expert Guess"
 msgstr "Odborný odhad"
 
-#: templates/index.html:157
+#: templates/index.html:158
 msgid "Expert Guess of Adhesion Rate"
 msgstr "Odborný odhad procenta obalené plochy"
 
-#: templates/index.html:165
+#: templates/index.html:166
 msgid "Optional"
 msgstr "Volitelné"
 
-#: templates/index.html:244
+#: templates/index.html:245
 msgid "Save and Evaluate"
 msgstr "Vyhodnotit a uložit"
 
