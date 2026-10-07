@@ -594,10 +594,12 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     stats_expert = compute_statistics(assessments_expert_guess)
     stats_automatic = compute_statistics(assessments_automatic)
 
-    pdf.insert(energy_label_position,EnergyLabel(stats_expert["average"]))
-    pdf.insert(energy_label_position-1,Paragraph(_("Resulting assesment"), styles["Heading2"]))
-    pdf.insert(energy_label_position+1,Spacer(0,10))
-    pdf.insert(energy_label_position-2,Spacer(1, 0.2 * cm))
+    pdf.insert(energy_label_position,Paragraph(_("Resulting assesment - expert"), styles["Heading2"]))
+    pdf.insert(energy_label_position+1,EnergyLabel(stats_expert["average"]))
+    pdf.insert(energy_label_position+2,Spacer(1, 0.2 * cm))
+    pdf.insert(energy_label_position+3,Paragraph(_("Resulting assesment - automatic"), styles["Heading2"]))
+    pdf.insert(energy_label_position+4,EnergyLabel(stats_automatic["average"]))
+    pdf.insert(energy_label_position+5,Spacer(0,10))
 
     # pdf.insert(energy_label_position-1,Spacer(0,20))
 
