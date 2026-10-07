@@ -8,7 +8,10 @@ window.addEventListener("load", () => {
 
     startButton.addEventListener("click", () => {
         navigator.mediaDevices
-            .getUserMedia({ video: true, audio: false })
+            .getUserMedia({
+                video: { width: { ideal: 5472 }, height: { ideal: 3648 } },
+                audio: false,
+            })
             .then((stream) => {
                 video.srcObject = stream
                 video.play()
@@ -49,7 +52,10 @@ window.addEventListener("load", () => {
             // switch off the camera and hide the captured image
             document.getElementById("capturedImageDiv").style.display = "none"
             // stop using the camera
-            document.mediaDevices.getUserMedia({ video: false, audio: false })
+            document.mediaDevices.getUserMedia({
+                video: { width: { ideal: 5472 }, height: { ideal: 3648 } },
+                audio: false,
+            })
         }
     }
 
