@@ -103,10 +103,22 @@
         <div class="row modern-row">
 
             <div class="column modern-column">
-                <label for="info_wrapping_temperature" class="modern-label upper">
+                <!-- <label for="info_wrapping_temperature" class="modern-label upper">
                     {{ _('Wrapping Temperature [°C]:') }}
                 </label>
                 <input type="number" id="info_wrapping_temperature" class="modern-input enhanced-input"
+                    placeholder="{{ _('80') }}" /> -->
+                <label for="info_wrapping_temperature_aggregate" class="modern-label upper">
+                    {{ _('Wrapping Temperature of Aggregate [°C]:') }}
+                </label>
+                <input type="number" id="info_wrapping_temperature_aggregate" class="modern-input enhanced-input"
+                    placeholder="{{ _('80') }}" />
+            </div>
+            <div class="column modern-column">
+                <label for="info_wrapping_temperature_binder" class="modern-label upper">
+                    {{ _('Wrapping Temperature of Binder [°C]:') }}
+                </label>
+                <input type="number" id="info_wrapping_temperature_binder" class="modern-input enhanced-input"
                     placeholder="{{ _('80') }}" />
             </div>
 
@@ -119,13 +131,6 @@
                     placeholder="{{ _('20') }}" />
             </div>
 
-            <div class="column modern-column">
-                <label for="info_test_procedure" class="modern-label upper">
-                    {{ _('Test Procedure:') }}
-                </label>
-                <input type="text" id="info_test_procedure" class="modern-input enhanced-input"
-                    placeholder="{{ _('A brief description of the testing procedure') }}" maxlength="1024" />
-            </div>
         </div>
         <div class="row modern-row">
             <div class="column modern-column">
@@ -142,6 +147,14 @@
                 </label>
                 <input type="text" id="info_binder" class="modern-input enhanced-input"
                     placeholder="{{ _('Information about the binder.') }}" maxlength="1024" />
+            </div>
+
+            <div class="column modern-column">
+                <label for="info_test_procedure" class="modern-label upper">
+                    {{ _('Test Procedure:') }}
+                </label>
+                <input type="text" id="info_test_procedure" class="modern-input enhanced-input"
+                    placeholder="{{ _('A brief description of the testing procedure') }}" maxlength="1024" />
             </div>
         </div>
 

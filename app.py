@@ -188,7 +188,8 @@ class TemporaryStorage:
         self.info_datetime = None
         self.info_place_of_experiment = None
         self.info_sample_collection_data = None
-        self.info_wrapping_temperature = None
+        self.info_wrapping_temperature_aggregate = None
+        self.info_wrapping_temperature_binder = None
         self.info_exposing_water_temperature = None
         self.info_test_procedure = None
         self.info_comment = None

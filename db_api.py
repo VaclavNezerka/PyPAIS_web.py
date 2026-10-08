@@ -125,7 +125,7 @@ def store_similar_images(cur, conn, experiment_id: int, similar_by_histogram: li
 
 @db_connection
 def update_default_experiment_info(cur, conn, user_id: int, field: str, value: str) -> None:
-    valid_fields = {'info_aggregate', 'info_binder', 'info_place_of_experiment', 'info_sample_collection_data', 'info_test_procedure', 'info_exposing_water_temperature', 'info_wrapping_temperature'}
+    valid_fields = {'info_aggregate', 'info_binder', 'info_place_of_experiment', 'info_sample_collection_data', 'info_test_procedure', 'info_exposing_water_temperature', 'info_wrapping_temperature_aggregate', 'info_wrapping_temperature_binder', 'info_comment'}
     if field not in valid_fields:
         raise ValueError(f"Invalid field: {field}. Valid fields are: {valid_fields}")
     record = execute_query(f'SELECT user_id FROM default_info WHERE user_id=%s', (user_id,))

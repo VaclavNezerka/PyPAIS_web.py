@@ -121,9 +121,17 @@
 
             <div class="column modern-column">
                 <label for="info_wrapping_temperature" class="modern-label upper">
-                    {{ _('Wrapping Temperature [°C]:') }}
+                    {{ _('Wrapping Temperature Aggregate [°C]:') }}
                 </label>
-                <input type="number" id="info_wrapping_temperature" class="modern-input enhanced-input"
+                <input type="number" id="info_wrapping_temperature_aggregate" class="modern-input enhanced-input"
+                    placeholder="{{ _('80') }}" />
+            </div>
+
+            <div class="column modern-column">
+                <label for="info_wrapping_temperature_binder" class="modern-label upper">
+                    {{ _('Wrapping Temperature Binder [°C]:') }}
+                </label>
+                <input type="number" id="info_wrapping_temperature_binder" class="modern-input enhanced-input"
                     placeholder="{{ _('80') }}" />
             </div>
 

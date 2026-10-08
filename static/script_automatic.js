@@ -192,7 +192,8 @@ function init_info_listeners() {
         "info_sample_collection_data",
         "info_place_of_experiment",
         "info_test_procedure",
-        "info_wrapping_temperature",
+        "info_wrapping_temperature_aggregate",
+        "info_wrapping_temperature_binder",
         "info_exposing_water_temperature",
         "info_datetime",
         "info_comment",
@@ -812,7 +813,8 @@ function disableInputFields() {
         "info_sample_collection_data",
         "info_place_of_experiment",
         "info_test_procedure",
-        "info_wrapping_temperature",
+        "info_wrapping_temperature_aggregate",
+        "info_wrapping_temperature_binder",
         "info_exposing_water_temperature",
         "info_datetime",
         "info_comment",
@@ -828,7 +830,8 @@ function enableInputFields() {
         "info_sample_collection_data",
         "info_place_of_experiment",
         "info_test_procedure",
-        "info_wrapping_temperature",
+        "info_wrapping_temperature_aggregate",
+        "info_wrapping_temperature_binder",
         "info_exposing_water_temperature",
         "info_datetime",
         "info_comment",
@@ -864,7 +867,8 @@ function loadExperiment(id) {
                 "info_sample_collection_data",
                 "info_place_of_experiment",
                 "info_test_procedure",
-                "info_wrapping_temperature",
+                "info_wrapping_temperature_aggregate",
+                "info_wrapping_temperature_binder",
                 "info_exposing_water_temperature",
                 "info_datetime",
                 "info_comment",
@@ -1137,8 +1141,10 @@ function populateExperimentInfo(info) {
         info.info_place_of_experiment
     document.getElementById("info_test_procedure").value =
         info.info_test_procedure
-    document.getElementById("info_wrapping_temperature").value =
-        info.info_wrapping_temperature
+    document.getElementById("info_wrapping_temperature_aggregate").value =
+        info.info_wrapping_temperature_aggregate
+    document.getElementById("info_wrapping_temperature_binder").value =
+        info.info_wrapping_temperature_binder
     document.getElementById("info_exposing_water_temperature").value =
         info.info_exposing_water_temperature
     document.getElementById("info_comment").value = info.info_comment

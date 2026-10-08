@@ -897,7 +897,8 @@ def add_experiment_record(pdf: list, experiment: Dict[str, Any], similar: dict =
         Paragraph(_("Sample Collection Data:") + f" {experiment.get('info_sample_collection_data', '-')}", style_justify),
         Paragraph(_("Aggregate:") + f" {experiment.get('info_aggregate', '-')}", style_justify),
         Paragraph(_("Binder:") + f" {experiment.get('info_binder', '-')}", style_justify),
-        Paragraph(_("Wrapping temperature [°C]:") + f" {experiment.get('info_wrapping_temperature', '-')}", style_justify),
+        Paragraph(_("Wrapping temperature aggregate [°C]:") + f" {experiment.get('info_wrapping_temperature_aggregate', '-')}", style_justify),
+        Paragraph(_("Wrapping temperature binder [°C]:") + f" {experiment.get('info_wrapping_temperature_binder', '-')}", style_justify),
         Paragraph(_("Exposing water temperature [°C]:") + f" {experiment.get('info_exposing_water_temperature', '-')}", style_justify),
         Paragraph(_("Test procedure:") + f" {experiment.get('info_test_procedure', '-')}", style_justify),
     ]

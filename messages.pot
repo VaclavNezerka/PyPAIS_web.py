@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-08 10:43+0200\n"
+"POT-Creation-Date: 2026-10-08 21:52+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,57 +17,57 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: app.py:520
+#: app.py:521
 msgid "The confirmation link is invalid"
 msgstr ""
 
-#: app.py:523
+#: app.py:524
 msgid "The confirmation link has expired."
 msgstr ""
 
-#: app.py:529
+#: app.py:530
 msgid "Forgot your password? Enter your email address."
 msgstr ""
 
-#: app.py:545
+#: app.py:546
 msgid ""
 "You have requested to reset your password. Please click the button below "
 "to reset your password:"
 msgstr ""
 
-#: app.py:546
+#: app.py:547
 msgid "AIBAL: Password Reset Request"
 msgstr ""
 
-#: app.py:548
+#: app.py:549
 msgid ""
 "An email with password reset instructions has been sent to your email "
 "address."
 msgstr ""
 
-#: app.py:561
+#: app.py:562
 msgid "You can now reset your password!"
 msgstr ""
 
-#: app.py:571 app.py:607
+#: app.py:572 app.py:608
 msgid "Your password has been set. You can now log in!"
 msgstr ""
 
-#: app.py:573 app.py:609
+#: app.py:574 app.py:610
 msgid "There was an error setting your password. Please try again."
 msgstr ""
 
-#: app.py:584
+#: app.py:585
 msgid "Your email address has been confirmed. You can now log in!"
 msgstr ""
 
-#: app.py:597
+#: app.py:598
 msgid ""
 "Your email address has been confirmed. Please, create your password to "
 "complete the registration!"
 msgstr ""
 
-#: app.py:641
+#: app.py:642
 msgid ""
 "Welcome to AIBAL! Your company registration has been confirmed by the "
 "AIBAL administrator.The administrator account for your company has been "
@@ -78,316 +78,316 @@ msgid ""
 "below:"
 msgstr ""
 
-#: app.py:645
+#: app.py:646
 msgid "AIBAL: Please confirm your ADMIN email address"
 msgstr ""
 
-#: app.py:648
+#: app.py:649
 msgid ""
 "The company has been successfully confirmed. The company administrator "
 "will be notified automatically."
 msgstr ""
 
-#: app.py:673
+#: app.py:674
 msgid "reCAPTCHA verification failed. Please try again."
 msgstr ""
 
-#: app.py:686
+#: app.py:687
 msgid "Your session has expired. Please refresh the page and try again."
 msgstr ""
 
-#: app.py:804
+#: app.py:805
 msgid "You do not have permission to access this data."
 msgstr ""
 
-#: app.py:815
+#: app.py:816
 msgid "You must be logged in to access this page."
 msgstr ""
 
-#: app.py:825
+#: app.py:826
 msgid "You do not have permission to access this page."
 msgstr ""
 
-#: app.py:859 app.py:1379 templates/home.html:41
+#: app.py:860 app.py:1380 templates/home.html:41
 msgid "Contact us!"
 msgstr ""
 
-#: app.py:875
+#: app.py:876
 msgid "Your message has been sent successfully."
 msgstr ""
 
-#: app.py:878 app.py:881
+#: app.py:879 app.py:882
 msgid "There was an error sending your message. Please try again."
 msgstr ""
 
-#: app.py:901
+#: app.py:902
 msgid "Change email"
 msgstr ""
 
-#: app.py:914
+#: app.py:915
 msgid ""
 "You have requested a change of an email address.Please confirm your new "
 "email address by clicking the button below:"
 msgstr ""
 
-#: app.py:916
+#: app.py:917
 msgid "AIBAL: Confirm your new email address"
 msgstr ""
 
-#: app.py:919 app.py:939
+#: app.py:920 app.py:940
 msgid "Email changed successfully."
 msgstr ""
 
-#: app.py:928
+#: app.py:929
 msgid "Change company email"
 msgstr ""
 
-#: app.py:952 app.py:967 app.py:975 app.py:991
+#: app.py:953 app.py:968 app.py:976 app.py:992
 msgid "Change personal information"
 msgstr ""
 
-#: app.py:964
+#: app.py:965
 msgid "Personal information updated successfully."
 msgstr ""
 
-#: app.py:988
+#: app.py:989
 msgid "Company information updated successfully."
 msgstr ""
 
-#: app.py:996 templates/user.html:60
+#: app.py:997 templates/user.html:60
 msgid "Change password"
 msgstr ""
 
-#: app.py:1010
+#: app.py:1011
 msgid "Password changed successfully."
 msgstr ""
 
-#: app.py:1013
+#: app.py:1014
 msgid "The old password is incorrect."
 msgstr ""
 
-#: app.py:1058 app.py:1096
+#: app.py:1059 app.py:1097
 msgid "You do not have permission to perform this action."
 msgstr ""
 
-#: app.py:1063 app.py:1101
+#: app.py:1064 app.py:1102
 msgid "User with the provided username does not exist"
 msgstr ""
 
-#: app.py:1116 app.py:1147 app.py:1150 forms.py:103 templates/navbar.html:54
+#: app.py:1117 app.py:1148 app.py:1151 forms.py:103 templates/navbar.html:54
 msgid "Login"
 msgstr ""
 
-#: app.py:1125
+#: app.py:1126
 msgid "Please confirm your email address before logging in."
 msgstr ""
 
-#: app.py:1129
+#: app.py:1130
 msgid ""
 "Your account has been blocked. In case this should not be the case, "
 "please contact your company admin."
 msgstr ""
 
-#: app.py:1146 forms.py:60
+#: app.py:1147 forms.py:60
 msgid "Invalid username/email or password."
 msgstr ""
 
-#: app.py:1246
+#: app.py:1247
 msgid "None"
 msgstr ""
 
-#: app.py:1281
+#: app.py:1282
 msgid "Sample Records - Admin View"
 msgstr ""
 
-#: app.py:1285 templates/experiments_admin.html:14 templates/navbar.html:26
+#: app.py:1286 templates/experiments_admin.html:14 templates/navbar.html:26
 msgid "Sample Records"
 msgstr ""
 
-#: app.py:1348
+#: app.py:1349
 msgid "Employee Records - Admin View"
 msgstr ""
 
-#: app.py:1377 app.py:1562
+#: app.py:1378 app.py:1563
 msgid "Register new company"
 msgstr ""
 
-#: app.py:1378
+#: app.py:1379
 msgid ""
 "You can use the form above to register a user for your existing company. "
 "If you wish to register a new company instead, please click the button "
 "below and contact us via email."
 msgstr ""
 
-#: app.py:1400 app.py:1429 app.py:1435 app.py:1438 app.py:1594 app.py:1597
+#: app.py:1401 app.py:1430 app.py:1436 app.py:1439 app.py:1595 app.py:1598
 msgid "Register new user"
 msgstr ""
 
-#: app.py:1405
+#: app.py:1406
 msgid ""
 "Thank you for signing up! Please confirm your email address by clicking "
 "the link below:"
 msgstr ""
 
-#: app.py:1411
+#: app.py:1412
 msgid "AIBAL: Please confirm your email address"
 msgstr ""
 
-#: app.py:1428
+#: app.py:1429
 msgid ""
 "User registered successfully. The user will be notified via the provided "
 "email address."
 msgstr ""
 
-#: app.py:1431
+#: app.py:1432
 msgid ""
 "Registration successful. Please confirm your email via the link sent to "
 "your email address (the process may take a few minutes)."
 msgstr ""
 
-#: app.py:1434 app.py:1593
+#: app.py:1435 app.py:1594
 msgid "Database error:"
 msgstr ""
 
-#: app.py:1437 app.py:1553 app.py:1596
+#: app.py:1438 app.py:1554 app.py:1597
 msgid "Form validation failed. Please check your input."
 msgstr ""
 
-#: app.py:1447
+#: app.py:1448
 msgid "Company key regenerated successfully."
 msgstr ""
 
-#: app.py:1457 forms.py:87 templates/company_key.html:9
+#: app.py:1458 forms.py:87 templates/company_key.html:9
 msgid "Company Key"
 msgstr ""
 
-#: app.py:1502
+#: app.py:1503
 msgid "Invalid experiment IDs provided."
 msgstr ""
 
-#: app.py:1512 app.py:1521 app.py:1524 app.py:1554
+#: app.py:1513 app.py:1522 app.py:1525 app.py:1555
 msgid "Export report"
 msgstr ""
 
-#: app.py:1520
+#: app.py:1521
 msgid "No experiments selected for report export."
 msgstr ""
 
-#: app.py:1523
+#: app.py:1524
 msgid "You do not have permission to access the selected experiments."
 msgstr ""
 
-#: app.py:1575
+#: app.py:1576
 msgid "A new company registration with the following details has been requested:"
 msgstr ""
 
-#: app.py:1577 forms.py:94 forms.py:137
+#: app.py:1578 forms.py:94 forms.py:137
 msgid "Company Name"
 msgstr ""
 
-#: app.py:1578 forms.py:138
+#: app.py:1579 forms.py:138
 msgid "Company Address"
 msgstr ""
 
-#: app.py:1579
+#: app.py:1580
 msgid "Contact Email"
 msgstr ""
 
-#: app.py:1587
+#: app.py:1588
 msgid "AIBAL: New company registration request"
 msgstr ""
 
-#: app.py:1590
+#: app.py:1591
 msgid ""
 "Registration successful. Please confirm this request in your ADMIN mail "
 "account."
 msgstr ""
 
-#: app.py:1727 app.py:1744 app.py:1780
+#: app.py:1728 app.py:1745 app.py:1781
 msgid "No active experiment found."
 msgstr ""
 
-#: app.py:2035
+#: app.py:2036
 msgid "No sample data found."
 msgstr ""
 
-#: app.py:2036
+#: app.py:2037
 msgid "Please fill the expert guess field before evaluating the sample."
 msgstr ""
 
-#: app.py:2037
+#: app.py:2038
 msgid "Evaluation completed. Check the console for the results."
 msgstr ""
 
-#: app.py:2038
+#: app.py:2039
 msgid "Evaluation results: "
 msgstr ""
 
-#: app.py:2039
+#: app.py:2040
 msgid ""
 "Would you like to use this app with no limitations? Store and export "
 "these results? Contact us to create an account."
 msgstr ""
 
-#: app.py:2040
+#: app.py:2041
 msgid "No employees selected for intended action."
 msgstr ""
 
-#: app.py:2041
+#: app.py:2042
 msgid "No sample selected for deletion."
 msgstr ""
 
-#: app.py:2042
+#: app.py:2043
 msgid "Are you sure you want to delete the selected samples?"
 msgstr ""
 
-#: app.py:2043
+#: app.py:2044
 msgid "This action cannot be undone."
 msgstr ""
 
-#: app.py:2044
+#: app.py:2045
 msgid "Please select sample to view details."
 msgstr ""
 
-#: app.py:2045
+#: app.py:2046
 msgid "Please select only one sample for viewing details."
 msgstr ""
 
-#: app.py:2046
+#: app.py:2047
 msgid "Please select at least one sample for export."
 msgstr ""
 
-#: app.py:2047
+#: app.py:2048
 msgid "For CSN 73 6161, exporting a single sample is not allowed."
 msgstr ""
 
-#: app.py:2048
+#: app.py:2049
 msgid "Do you want to proceed with exporting this single sample?"
 msgstr ""
 
-#: app.py:2049
+#: app.py:2050
 msgid "Are you sure, you want to grant admin privileges to the following users?"
 msgstr ""
 
-#: app.py:2050
+#: app.py:2051
 msgid ""
 "Are you sure, you want to remove admin privileges from the following "
 "users?"
 msgstr ""
 
-#: app.py:2051
+#: app.py:2052
 msgid ""
 "Are you sure, you want to block the sign in option for the following "
 "users?"
 msgstr ""
 
-#: app.py:2052
+#: app.py:2053
 msgid ""
 "Are you sure, you want to unblock the sign in option for the following "
 "users?"
 msgstr ""
 
-#: app.py:2053
+#: app.py:2054
 msgid ""
 "You have selected experiment of another user for editing. This action "
 "will transfer the ownership of the experiment to you (the original owner "
@@ -477,12 +477,12 @@ msgid "The proceeding employee"
 msgstr ""
 
 #: app_report_exporter.py:463 app_report_exporter.py:481
-#: app_report_exporter.py:1159
+#: app_report_exporter.py:1160
 msgid "Name:"
 msgstr ""
 
 #: app_report_exporter.py:464 app_report_exporter.py:482
-#: app_report_exporter.py:1161
+#: app_report_exporter.py:1162
 msgid "Contact:"
 msgstr ""
 
@@ -639,7 +639,7 @@ msgid ""
 "specimens clearly aren't duplicates, you can ignore this message."
 msgstr ""
 
-#: app_report_exporter.py:818 templates/demo.html:73 templates/index.html:224
+#: app_report_exporter.py:818 templates/demo.html:73 templates/index.html:237
 msgid "Original Image"
 msgstr ""
 
@@ -667,51 +667,55 @@ msgstr ""
 msgid "Sample Collection Data:"
 msgstr ""
 
-#: app_report_exporter.py:898 templates/index.html:133 templates/user.html:105
+#: app_report_exporter.py:898 templates/index.html:138 templates/user.html:105
 msgid "Aggregate:"
 msgstr ""
 
-#: app_report_exporter.py:899 templates/index.html:141 templates/user.html:113
+#: app_report_exporter.py:899 templates/index.html:146 templates/user.html:113
 msgid "Binder:"
 msgstr ""
 
 #: app_report_exporter.py:900
-msgid "Wrapping temperature [°C]:"
+msgid "Wrapping temperature aggregate [°C]:"
 msgstr ""
 
 #: app_report_exporter.py:901
-msgid "Exposing water temperature [°C]:"
+msgid "Wrapping temperature binder [°C]:"
 msgstr ""
 
 #: app_report_exporter.py:902
+msgid "Exposing water temperature [°C]:"
+msgstr ""
+
+#: app_report_exporter.py:903
 msgid "Test procedure:"
 msgstr ""
 
-#: app_report_exporter.py:913
+#: app_report_exporter.py:914
 msgid "Assessment - Adhesion Rate:"
 msgstr ""
 
-#: app_report_exporter.py:914
+#: app_report_exporter.py:915
 msgid "Inference Model:"
 msgstr ""
 
-#: app_report_exporter.py:915
+#: app_report_exporter.py:916
 msgid "Automatic Assessment [%]:"
 msgstr ""
 
-#: app_report_exporter.py:916
+#: app_report_exporter.py:917
 msgid "Visual based Expert Guess [%]:"
 msgstr ""
 
-#: app_report_exporter.py:917 templates/index.html:163
+#: app_report_exporter.py:918 templates/index.html:176
 msgid "Comment:"
 msgstr ""
 
-#: app_report_exporter.py:1117
+#: app_report_exporter.py:1118
 msgid "Report generated by AIBAL -Bitumen Adhesion Lab - report ID:"
 msgstr ""
 
-#: app_report_exporter.py:1160
+#: app_report_exporter.py:1161
 msgid "Address:"
 msgstr ""
 
@@ -922,36 +926,36 @@ msgid ""
 "models."
 msgstr ""
 
-#: templates/demo.html:21 templates/index.html:172
+#: templates/demo.html:21 templates/index.html:185
 msgid "Automatic Phase Detection"
 msgstr ""
 
 #: templates/demo.html:24 templates/form_plain.html:7 templates/index.html:62
-#: templates/index.html:175
+#: templates/index.html:188
 msgid "Working..."
 msgstr ""
 
-#: templates/demo.html:31 templates/index.html:182
+#: templates/demo.html:31 templates/index.html:195
 msgid "MODEL"
 msgstr ""
 
-#: templates/demo.html:41 templates/index.html:192
+#: templates/demo.html:41 templates/index.html:205
 msgid "Mask Opacity:"
 msgstr ""
 
-#: templates/demo.html:53 templates/index.html:204
+#: templates/demo.html:53 templates/index.html:217
 msgid "Display mask - Bitumen"
 msgstr ""
 
-#: templates/demo.html:59 templates/index.html:210
+#: templates/demo.html:59 templates/index.html:223
 msgid "Display mask - Aggregate"
 msgstr ""
 
-#: templates/demo.html:65 templates/index.html:216
+#: templates/demo.html:65 templates/index.html:229
 msgid "Display mask - Background"
 msgstr ""
 
-#: templates/demo.html:75 templates/index.html:226
+#: templates/demo.html:75 templates/index.html:239
 msgid "Grayscale Image"
 msgstr ""
 
@@ -1221,55 +1225,64 @@ msgstr ""
 msgid "Information about the mixture."
 msgstr ""
 
-#: templates/index.html:107 templates/user.html:124
+#: templates/index.html:107
 msgid "Wrapping Temperature [°C]:"
 msgstr ""
 
-#: templates/index.html:110 templates/user.html:127
+#: templates/index.html:110 templates/index.html:115 templates/index.html:122
+#: templates/user.html:127 templates/user.html:135
 msgid "80"
 msgstr ""
 
-#: templates/index.html:116 templates/user.html:133
+#: templates/index.html:112
+msgid "Wrapping Temperature of Aggregate [°C]:"
+msgstr ""
+
+#: templates/index.html:119
+msgid "Wrapping Temperature of Binder [°C]:"
+msgstr ""
+
+#: templates/index.html:128 templates/user.html:141
 msgid "Exposing Water Temperature [°C]:"
 msgstr ""
 
-#: templates/index.html:119 templates/user.html:136
+#: templates/index.html:131 templates/user.html:144
 msgid "20"
 msgstr ""
 
-#: templates/index.html:124 templates/user.html:141
-msgid "Test Procedure:"
-msgstr ""
-
-#: templates/index.html:127 templates/user.html:144
-msgid "A brief description of the testing procedure"
-msgstr ""
-
-#: templates/index.html:136 templates/user.html:108
+#: templates/index.html:141 templates/user.html:108
 msgid "Information about the aggregate."
 msgstr ""
 
-#: templates/index.html:144 templates/user.html:116
+#: templates/index.html:149 templates/user.html:116
 msgid "Information about the binder."
 msgstr ""
 
-#: templates/index.html:149
+#: templates/index.html:154 templates/user.html:149
+msgid "Test Procedure:"
+msgstr ""
+
+#: templates/index.html:157 templates/user.html:152
+msgid "A brief description of the testing procedure"
+msgstr ""
+
+#: templates/index.html:162
 msgid "Assessment"
 msgstr ""
 
-#: templates/index.html:155
+#: templates/index.html:168
 msgid "Expert Guess"
 msgstr ""
 
-#: templates/index.html:158
+#: templates/index.html:171
 msgid "Expert Guess of Adhesion Rate"
 msgstr ""
 
-#: templates/index.html:166
+#: templates/index.html:179
 msgid "Optional"
 msgstr ""
 
-#: templates/index.html:245
+#: templates/index.html:258
 msgid "Save and Evaluate"
 msgstr ""
 
@@ -1391,6 +1404,14 @@ msgstr ""
 
 #: templates/user.html:78
 msgid "The changes will be saved automatically."
+msgstr ""
+
+#: templates/user.html:124
+msgid "Wrapping Temperature Aggregate [°C]:"
+msgstr ""
+
+#: templates/user.html:132
+msgid "Wrapping Temperature Binder [°C]:"
 msgstr ""
 
 #: templates/user_nav_element.html:9
