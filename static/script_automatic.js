@@ -164,6 +164,10 @@ function disableControls() {
     })
 }
 
+document.querySelectorAll('input[type="number"]').forEach((input) => {
+    input.addEventListener("wheel", (event) => event.preventDefault())
+})
+
 document.getElementById("fileInput").addEventListener("change", uploadImage)
 
 // auxiliary functions for the string manipulation
