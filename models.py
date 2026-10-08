@@ -21,6 +21,8 @@ def discover_models(deprecated=False) -> list[str]:
     else:
         model_files = glob.glob(os.path.join(os.path.dirname(__file__), 'models', '*.pth'))
     models = [os.path.basename(file) for file in model_files]
+    # sort the models by name in descending order, so the latest model is first
+    models.sort(reverse=True)
     return models
 
 def pop_session_from_loaded_models(session_id: str) -> None:
