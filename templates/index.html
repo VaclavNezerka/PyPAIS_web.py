@@ -21,6 +21,16 @@
             <h2> {{ _('Current Sample') }}</h2>
         </div>
 
+
+
+        <div id="evalProcessingLoader" class="eval-processing-loader" hidden>
+            <div class="eval-loader-content">
+                <div class="eval-loader-spinner"></div>
+                <span class="eval-loader-text">{{ _('Evaluating...') }}</span>
+            </div>
+        </div>
+
+
         <div class="container">
             <!-- First Row: Image Upload -->
             <div class="row">
@@ -245,6 +255,13 @@
                 <img id="defaultImage" src="{{ url_for('static', filename='logo.png') }}" alt="Default Image">
                 <div class="img-magnifier-container">
                     <canvas id="imageCanvas"></canvas>
+
+                    <!-- BG Processing Loader -->
+                    <div id="bgProcessingLoader" class="bg-processing-loader" hidden>
+                        <div class="bg-loader-spinner"></div>
+                        <span class="bg-loader-text">{{_('Working...')}}</span>
+                    </div>
+
                     <canvas class="overlayCanvas" id="overlayCanvasAsphalt"></canvas>
                     <canvas class="overlayCanvas" id="overlayCanvasAggregate"></canvas>
                     <canvas class="overlayCanvas" id="overlayCanvasBackground"></canvas>

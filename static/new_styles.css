@@ -406,3 +406,147 @@ textarea {
         display: block;
     }
 }
+
+/* Canvas container */
+.img-magnifier-container {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+}
+
+/* BG processing overlay */
+.bg-processing-loader {
+    position: absolute;
+    inset: 0;
+    z-index: 1000;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    cursor: wait;
+}
+
+/* .eval-processing-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+
+    cursor: wait;
+}
+.eval-processing-loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+
+    padding: 28px 36px;
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid #e2e2e2;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+} */
+
+.eval-processing-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 99999;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 100%;
+    height: 100vh;
+    box-sizing: border-box;
+
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+
+    cursor: wait;
+}
+
+.eval-processing-loader .eval-loader-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+
+    padding: 40vh 36px;
+    background: transparent;
+    border-radius: 12px;
+
+    /* Ensure content stays centered */
+    margin: auto;
+}
+/* End of centered content card */
+
+/* Keep the overlay hidden when inactive */
+.eval-processing-loader[hidden],
+.bg-processing-loader[hidden] {
+    display: none;
+}
+
+/* Circular spinner */
+.eval-loader-spinner,
+.bg-loader-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #e2e2e2;
+    border-top-color: var(--myTopicColor, #4ecdc4);
+    border-right-color: var(--myTopicColor, #4ecdc4);
+    border-radius: 50%;
+    animation: bgLoaderSpin 0.8s linear infinite;
+
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Loading message */
+.eval-loader-text,
+.bg-loader-text {
+    color: var(--myDarkGray, #444);
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.2px;
+}
+
+/* Spinner animation */
+@keyframes bgLoaderSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes evalLoaderSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Accessibility: reduce motion */
+@media (prefers-reduced-motion: reduce) {
+    .eval-loader-spinner,
+    .bg-loader-spinner {
+        animation-duration: 2s;
+    }
+}

@@ -378,7 +378,20 @@ document
         uploadImage()
     })
 
+const bgProcessingLoader = document.getElementById("bgProcessingLoader")
+
+function showBgProcessingLoader() {
+    bgProcessingLoader.hidden = false
+    bgProcessingLoader.setAttribute("aria-busy", "true")
+}
+
+function hideBgProcessingLoader() {
+    bgProcessingLoader.hidden = true
+    bgProcessingLoader.removeAttribute("aria-busy")
+}
+
 async function uploadImage() {
+    document.getElementById("defaultImage").style.display = "none"
     displayWorkingMessage()
 
     // get the file from the input
@@ -454,9 +467,9 @@ async function uploadImage() {
 
     // 3️⃣ Only now continue with inference
     inference()
-        .then(() => {
-            document.getElementById("defaultImage").style.display = "none"
-        })
+        // .then(() => {
+        //     document.getElementById("defaultImage").style.display = "none"
+        // })
         .then(() => getImageType())
         .then(() => unlockControls())
         // .then(() => enableInputFields())
@@ -656,12 +669,14 @@ function displayWorkingMessage() {
     document.querySelectorAll("#workingMessage").forEach((el) => {
         el.style.display = "block"
     })
+    showBgProcessingLoader()
 }
 // this function removes the "working" message from the page
 function removeWorkingMessage() {
     document.querySelectorAll(".loading").forEach((el) => {
         el.style.display = "none"
     })
+    hideBgProcessingLoader()
 }
 
 async function validateAndUpdate() {
@@ -951,6 +966,7 @@ async function evaluateExperiment() {
             "expert_guess",
             document.getElementById("expertGuess").value / 100,
         )
+        document.getElementById("evalProcessingLoader").hidden = false
         await fetch("/update_value/expert_guess", {
             method: "POST",
             body: formData,
@@ -960,7 +976,7 @@ async function evaluateExperiment() {
         fetch("/evaluate-asphalt" + uniqueQuery, { method: "POST" })
             .then((response) => response.json())
             .then((response) => {
-                // display only 2 decimal places;
+                document.getElementById("evalProcessingLoader").hidden = true
                 let displayNum = response.evaluation * 100
                 displayNum = displayNum.toFixed(2)
                 alert(
@@ -975,6 +991,9 @@ async function evaluateExperiment() {
             .then(() => {
                 // redirect to the '/' page
                 window.location.href = "/"
+            })
+            .finally(() => {
+                document.getElementById("evalProcessingLoader").hidden = true
             })
     }
 }
