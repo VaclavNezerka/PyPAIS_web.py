@@ -9,8 +9,7 @@ from models import TorchModel
 
 TORCH_DEVICE = os.environ.get('TORCH_DEVICE', 'cuda' if torch.cuda.is_available() else 'cpu')
 
-# VN_specific_models = ["unet_bce_multi_20ep.pth"]
-VN_specific_models = ["unet_resnet50_v18_all.pth"]
+VN_specific_models = ["unet_resnet50_v19_all.pth"]
 USE_resnet= 'resnet50' 
 # USE_resnet= 'resnet34' 
 handled_model = VN_specific_models[0]
