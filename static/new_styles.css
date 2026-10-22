@@ -366,7 +366,8 @@ textarea {
     text-align: justify;
 }
 
-#capturedImageDiv {
+#capturedImageDiv,
+#manualSettingsDiv {
     display: none;
     flex-wrap: wrap;
     /* gap: 20px; */
@@ -549,4 +550,50 @@ textarea {
     .bg-loader-spinner {
         animation-duration: 2s;
     }
+}
+
+/* / manual camera settings */
+/* / manual camera settings */
+/* / manual camera settings */
+#manual-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.row-manual {
+    display: grid;
+    /* grid-template-columns: 100px 250px 140px minmax(200px, 1fr); */
+    grid-template-columns: 20vh 25vh 40vh 15vh;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.row-manual label {
+    text-align: center;
+}
+
+.row-manual select,
+.row-manual input[type="range"] {
+    width: 80%;
+    min-width: 0;
+    box-sizing: border-box;
+    align-self: center;
+}
+
+.row-manual input[type="number"] {
+    width: 80%;
+    min-width: 0;
+    box-sizing: border-box;
+    align-self: center;
+}
+
+.row-manual .nomode {
+    text-align: center;
+}
+
+.row-manual .held {
+    display: none;
 }

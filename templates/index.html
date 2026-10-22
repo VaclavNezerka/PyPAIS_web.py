@@ -46,20 +46,33 @@
                     <button class="custom-file-label" id="take-photo-open-button">{{ _('Take a Photo') }}</button>
                 </div>
             </div>
-            <div class="modern-row row" id="capturedImageDiv">
-                <div class="camera modern-column column">
+
+            <div id="capturedImageDiv" class="row">
+                <div class="camera column modern-column">
                     <video id="video">Video stream not available.</video>
                     <button id="capture-photo-button" class="custom-file-label">{{ _('Capture photo') }}</button>
                 </div>
 
-                <div class="modern-column column">
+                <div class="column modern-column">
                     <canvas id="outputCanvas">
                         <img id="capturedImage" src="" alt="Captured Image">
                     </canvas>
                     <button id="upload-button-camera"
                         class="custom-file-label">{{ _('Use the Captured Image') }}</button>
                 </div>
+
             </div>
+            <div id="manualSettingsDiv" class="row">
+                <div class="column modern-column" , id="manual-cam-settings-div" , min-width="2000px">
+                    <h3>{{ _('Manual Camera Settings') }}</h3>
+                    <div id="manual-cam-settings-container"></div>
+
+                    <div id="manual-rows" class="manual-rows"></div>
+                    <p class="missing text-gray-500" id="missing"></p>
+                    <!-- <button id="auto" class="custom-file-label">{{ _('Manual Camera Settings') }}</button> -->
+                </div>
+            </div>
+
             <p class="text-gray-500">
                 {{ _('By uploading an image, you agree that it may be stored in the application repository and potentially used by the authors for training future models.') }}
             </p>
