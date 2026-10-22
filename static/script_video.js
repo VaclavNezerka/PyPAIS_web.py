@@ -28,8 +28,6 @@ const CONTROL_KEYS = [
 const MODES = ["none", "manual", "single-shot", "continuous"]
 const SYMBOLIC = ["min", "max", "mid", "current"]
 
-const CURRENT_PROFILE = { ...DEFAULT_PROFILE }
-
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function pick(obj, keys) {
@@ -186,6 +184,8 @@ const DEFAULT_PROFILE = {
     focusMode: "manual",
     focusDistance: "current",
 }
+
+const CURRENT_PROFILE = { ...DEFAULT_PROFILE }
 
 const ROWS = [
     {
