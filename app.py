@@ -127,10 +127,13 @@ Talisman(app, content_security_policy=csp, force_https=False) # for security hea
 
 
 # LANGUAGE CONFIGURATION
+# code -> name in its own language, in the order of the language menu (flags: static/language_icons/<code>.svg);
+# every language except English (the source texts) needs translations/<code>/LC_MESSAGES/messages.po
+LANGUAGE_NAMES = {'cs': 'Čeština', 'en': 'English', 'de': 'Deutsch', 'it': 'Italiano', 'pl': 'Polski'}
 app.config['BABEL_DEFAULT_LOCALE'] = 'cs'
-app.config['BABEL_SUPPORTED_LOCALES'] = ['en', 'cs']
+app.config['BABEL_SUPPORTED_LOCALES'] = list(LANGUAGE_NAMES)
 # app.config['BABEL_TRANSLATION_DIRECTORIES'] = ['translations']
-app.config['LANGUAGES'] = ['en', 'cs']
+app.config['LANGUAGES'] = list(LANGUAGE_NAMES)
 # app.permanent_session_lifetime=timedelta(days=5)
 
 # MAIL CONFIGURATION
@@ -184,7 +187,8 @@ babel = Babel(app, locale_selector=get_locale)
 @app.context_processor
 def inject_template_globals():
     # the language actually used for the page (drives <html lang>, the flag in the navbar and ui.js texts)
-    return {'current_lang': str(get_babel_locale() or app.config['BABEL_DEFAULT_LOCALE'])}
+    return {'current_lang': str(get_babel_locale() or app.config['BABEL_DEFAULT_LOCALE']),
+            'language_names': LANGUAGE_NAMES}
 
 # the self-hosted web font; Python's MIME table may not know the extension (it was sent as octet-stream)
 mimetypes.add_type('font/woff2', '.woff2')

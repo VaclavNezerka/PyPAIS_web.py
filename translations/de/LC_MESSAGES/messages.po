@@ -1,0 +1,1979 @@
+# German translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-26 23:28+0100\n"
+"PO-Revision-Date: 2026-10-26 23:29+0100\n"
+"Last-Translator: AIBAL\n"
+"Language: de\n"
+"Language-Team: AIBAL\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: app.py:108 app.py:1276
+msgid ""
+"Your account has been blocked. In case this should not be the case, "
+"please contact your company admin."
+msgstr ""
+"Ihr Konto wurde gesperrt. Sollte dies ein Irrtum sein, wenden Sie sich "
+"bitte an Ihren Firmenadministrator."
+
+#: app.py:610
+msgid "The confirmation link has expired."
+msgstr "Der Bestätigungslink ist abgelaufen."
+
+#: app.py:613
+msgid "The confirmation link is invalid"
+msgstr "Der Bestätigungslink ist ungültig"
+
+#: app.py:620
+msgid "Forgot your password? Enter your email address."
+msgstr "Passwort vergessen? Geben Sie Ihre E-Mail-Adresse ein."
+
+#: app.py:636
+msgid ""
+"You have requested to reset your password. Please click the button below "
+"to reset your password:"
+msgstr ""
+"Sie haben das Zurücksetzen Ihres Passworts angefordert. Bitte klicken Sie"
+" auf die Schaltfläche unten, um Ihr Passwort zurückzusetzen:"
+
+#: app.py:637
+msgid "AIBAL: Password Reset Request"
+msgstr "AIBAL: Anfrage zum Zurücksetzen des Passworts"
+
+#: app.py:639
+msgid ""
+"An email with password reset instructions has been sent to your email "
+"address."
+msgstr ""
+"Eine E-Mail mit Anweisungen zum Zurücksetzen des Passworts wurde an Ihre "
+"E-Mail-Adresse gesendet."
+
+#: app.py:652
+msgid "You can now reset your password!"
+msgstr "Sie können Ihr Passwort jetzt zurücksetzen!"
+
+#: app.py:661 app.py:665 app.py:698 app.py:702
+msgid "There was an error setting your password. Please try again."
+msgstr ""
+"Beim Festlegen Ihres Passworts ist ein Fehler aufgetreten. Bitte "
+"versuchen Sie es erneut."
+
+#: app.py:663 app.py:700
+msgid "Your password has been set. You can now log in!"
+msgstr "Ihr Passwort wurde festgelegt. Sie können sich jetzt anmelden!"
+
+#: app.py:676
+msgid "Your email address has been confirmed. You can now log in!"
+msgstr "Ihre E-Mail-Adresse wurde bestätigt. Sie können sich jetzt anmelden!"
+
+#: app.py:689
+msgid ""
+"Your email address has been confirmed. Please, create your password to "
+"complete the registration!"
+msgstr ""
+"Ihre E-Mail-Adresse wurde bestätigt. Bitte legen Sie Ihr Passwort fest, "
+"um die Registrierung abzuschließen!"
+
+#: app.py:734
+msgid ""
+"Welcome to AIBAL! Your company registration has been confirmed by the "
+"AIBAL administrator.The administrator account for your company has been "
+"created automatically (with this email address currently used as a login "
+"username - you can change any credentials later).Your administrator was "
+"automatically created account has been set up. Please confirm your email "
+"address and create the password to your account by clicking the button "
+"below:"
+msgstr ""
+"Willkommen bei AIBAL! Die Registrierung Ihrer Firma wurde vom AIBAL-"
+"Administrator bestätigt. Das Administratorkonto für Ihre Firma wurde "
+"automatisch angelegt (diese E-Mail-Adresse dient derzeit als Benutzername"
+" für die Anmeldung – Sie können alle Zugangsdaten später ändern). Bitte "
+"bestätigen Sie Ihre E-Mail-Adresse und legen Sie das Passwort für Ihr "
+"Konto fest, indem Sie auf die Schaltfläche unten klicken:"
+
+#: app.py:738
+msgid "AIBAL: Please confirm your ADMIN email address"
+msgstr "AIBAL: Bitte bestätigen Sie Ihre ADMIN-E-Mail-Adresse"
+
+#: app.py:741
+msgid ""
+"The company has been successfully confirmed. The company administrator "
+"will be notified automatically."
+msgstr ""
+"Die Firma wurde erfolgreich bestätigt. Der Firmenadministrator wird "
+"automatisch benachrichtigt."
+
+#: app.py:766
+msgid "reCAPTCHA verification failed. Please try again."
+msgstr "reCAPTCHA-Überprüfung fehlgeschlagen. Bitte versuchen Sie es erneut."
+
+#: app.py:779
+msgid "Your session has expired. Please refresh the page and try again."
+msgstr ""
+"Ihre Sitzung ist abgelaufen. Bitte laden Sie die Seite neu und versuchen "
+"Sie es erneut."
+
+#: app.py:901
+msgid "You do not have permission to access this data."
+msgstr "Sie haben keine Berechtigung, auf diese Daten zuzugreifen."
+
+#: app.py:912
+msgid "You must be logged in to access this page."
+msgstr "Sie müssen angemeldet sein, um diese Seite aufzurufen."
+
+#: app.py:924 app.py:994
+msgid "You do not have permission to access this page."
+msgstr "Sie haben keine Berechtigung, diese Seite aufzurufen."
+
+#: app.py:958 templates/home.html:83 templates/home.html:93
+msgid "Contact us!"
+msgstr "Kontaktieren Sie uns!"
+
+#: app.py:974
+msgid "Your message has been sent successfully."
+msgstr "Ihre Nachricht wurde erfolgreich gesendet."
+
+#: app.py:977 app.py:980 app.py:1044
+msgid "There was an error sending your message. Please try again."
+msgstr ""
+"Beim Senden Ihrer Nachricht ist ein Fehler aufgetreten. Bitte versuchen "
+"Sie es erneut."
+
+#: app.py:993 app.py:996
+msgid "The request could not be processed"
+msgstr "Die Anfrage konnte nicht verarbeitet werden"
+
+#: app.py:995
+msgid "Page not found"
+msgstr "Seite nicht gefunden"
+
+#: app.py:997
+msgid "The uploaded file is too large"
+msgstr "Die hochgeladene Datei ist zu groß"
+
+#: app.py:998
+msgid "Too many requests - please wait a moment and try again"
+msgstr ""
+"Zu viele Anfragen – bitte warten Sie einen Moment und versuchen Sie es "
+"erneut"
+
+#: app.py:999
+msgid "Something went wrong on our side"
+msgstr "Auf unserer Seite ist ein Fehler aufgetreten"
+
+#: app.py:1003
+msgid "If the problem persists, please contact us."
+msgstr "Wenn das Problem weiterhin besteht, kontaktieren Sie uns bitte."
+
+#: app.py:1021
+msgid "Change email"
+msgstr "E-Mail-Adresse ändern"
+
+#: app.py:1031 app.py:1077
+msgid "The password is not correct."
+msgstr "Das Passwort ist nicht korrekt."
+
+#: app.py:1037
+msgid ""
+"You have requested a change of an email address.Please confirm your new "
+"email address by clicking the button below:"
+msgstr ""
+"Sie haben eine Änderung Ihrer E-Mail-Adresse angefordert. Bitte "
+"bestätigen Sie Ihre neue E-Mail-Adresse, indem Sie auf die Schaltfläche "
+"unten klicken:"
+
+#: app.py:1039
+msgid "AIBAL: Confirm your new email address"
+msgstr "AIBAL: Bestätigen Sie Ihre neue E-Mail-Adresse"
+
+#: app.py:1042
+msgid ""
+"We have sent a confirmation link to the new address. The e-mail address "
+"will change once you open it."
+msgstr ""
+"Wir haben einen Bestätigungslink an die neue Adresse gesendet. Die E"
+"-Mail-Adresse wird geändert, sobald Sie ihn öffnen."
+
+#: app.py:1055 forms.py:18
+msgid "This email address is already used. Please use a different one."
+msgstr ""
+"Diese E-Mail-Adresse wird bereits verwendet. Bitte verwenden Sie eine "
+"andere."
+
+#: app.py:1057 app.py:1081
+msgid "Email changed successfully."
+msgstr "E-Mail-Adresse erfolgreich geändert."
+
+#: app.py:1059
+msgid "There was an error while changing your e-mail address. Please try again."
+msgstr ""
+"Beim Ändern Ihrer E-Mail-Adresse ist ein Fehler aufgetreten. Bitte "
+"versuchen Sie es erneut."
+
+#: app.py:1067
+msgid "Change company email"
+msgstr "Firmen-E-Mail-Adresse ändern"
+
+#: app.py:1094 app.py:1109 app.py:1118 app.py:1134
+msgid "Change personal information"
+msgstr "Persönliche Daten ändern"
+
+#: app.py:1106
+msgid "Personal information updated successfully."
+msgstr "Persönliche Daten erfolgreich aktualisiert."
+
+#: app.py:1131
+msgid "Company information updated successfully."
+msgstr "Firmendaten erfolgreich aktualisiert."
+
+#: app.py:1139 forms.py:109 templates/user.html:34
+msgid "Change password"
+msgstr "Passwort ändern"
+
+#: app.py:1153 app.py:1539 app.py:1710 app.py:1833
+msgid "Database error - the data was not saved. Please try again."
+msgstr ""
+"Datenbankfehler – die Daten wurden nicht gespeichert. Bitte versuchen Sie"
+" es erneut."
+
+#: app.py:1155
+msgid "Password changed successfully."
+msgstr "Passwort erfolgreich geändert."
+
+#: app.py:1158
+msgid "The old password is incorrect."
+msgstr "Das alte Passwort ist falsch."
+
+#: app.py:1205
+msgid "User with the provided username does not exist"
+msgstr "Es existiert kein Benutzer mit dem angegebenen Benutzernamen"
+
+#: app.py:1207 templates/employees.html:35
+msgid "You cannot change your own account here."
+msgstr "Ihr eigenes Konto können Sie hier nicht ändern."
+
+#: app.py:1263 app.py:1299 app.py:1302 forms.py:103 templates/home.html:25
+#: templates/navbar.html:53
+msgid "Login"
+msgstr "Anmelden"
+
+#: app.py:1272
+msgid "Please confirm your email address before logging in."
+msgstr "Bitte bestätigen Sie Ihre E-Mail-Adresse, bevor Sie sich anmelden."
+
+#: app.py:1298 forms.py:60
+msgid "Invalid username/email or password."
+msgstr "Benutzername/E-Mail-Adresse oder Passwort ungültig."
+
+#: app.py:1317 app.py:1780 app_report_exporter.py:914 templates/index.html:148
+#: templates/user.html:79
+msgid "Sample Collection Data:"
+msgstr "Angaben zur Probenahme:"
+
+#: app.py:1495
+msgid "Is your company not registered yet?"
+msgstr "Ist Ihre Firma noch nicht registriert?"
+
+#: app.py:1496
+msgid ""
+"This form registers a user of an already registered company - you need "
+"its company key from your company admin. A new company is registered "
+"first and confirmed by us."
+msgstr ""
+"Mit diesem Formular registrieren Sie einen Benutzer einer bereits "
+"registrierten Firma – dazu benötigen Sie den Firmenschlüssel von Ihrem "
+"Firmenadministrator. Eine neue Firma wird zuerst registriert und von uns "
+"bestätigt."
+
+#: app.py:1497 app.py:1679 app.py:1711 forms.py:98
+msgid "Register new company"
+msgstr "Neue Firma registrieren"
+
+#: app.py:1505 app.py:1534 app.py:1540 app.py:1543 app.py:1714
+msgid "Register new user"
+msgstr "Neuen Benutzer registrieren"
+
+#: app.py:1528
+msgid ""
+"Thank you for signing up! Please confirm your email address by clicking "
+"the link below:"
+msgstr ""
+"Vielen Dank für Ihre Registrierung! Bitte bestätigen Sie Ihre E-Mail-"
+"Adresse, indem Sie auf den Link unten klicken:"
+
+#: app.py:1529
+msgid "AIBAL: Please confirm your email address"
+msgstr "AIBAL: Bitte bestätigen Sie Ihre E-Mail-Adresse"
+
+#: app.py:1533
+msgid ""
+"User registered successfully. The user will be notified via the provided "
+"email address."
+msgstr ""
+"Benutzer erfolgreich registriert. Der Benutzer wird über die angegebene E"
+"-Mail-Adresse benachrichtigt."
+
+#: app.py:1536
+msgid ""
+"Registration successful. Please confirm your email via the link sent to "
+"your email address (the process may take a few minutes)."
+msgstr ""
+"Registrierung erfolgreich. Bitte bestätigen Sie Ihre E-Mail-Adresse über "
+"den Link, der an Ihre E-Mail-Adresse gesendet wurde (dies kann einige "
+"Minuten dauern)."
+
+#: app.py:1542 app.py:1669 app.py:1713
+msgid "Form validation failed. Please check your input."
+msgstr ""
+"Die Formularprüfung ist fehlgeschlagen. Bitte überprüfen Sie Ihre "
+"Eingaben."
+
+#: app.py:1552
+msgid "Company key regenerated successfully."
+msgstr "Firmenschlüssel erfolgreich neu generiert."
+
+#: app.py:1562 forms.py:87 templates/company.html:41
+#: templates/company_key.html:4 templates/company_key.html:11
+msgid "Company Key"
+msgstr "Firmenschlüssel"
+
+#: app.py:1577
+msgid "Me (the exporting user)"
+msgstr "Ich (exportierender Benutzer)"
+
+#: app.py:1609
+msgid "Invalid experiment IDs provided."
+msgstr "Ungültige Versuchs-IDs angegeben."
+
+#: app.py:1617
+msgid "You do not have permission to access the selected experiments."
+msgstr "Sie haben keine Berechtigung, auf die ausgewählten Versuche zuzugreifen."
+
+#: app.py:1693
+msgid "A new company registration with the following details has been requested:"
+msgstr "Die Registrierung einer neuen Firma mit folgenden Angaben wurde beantragt:"
+
+#: app.py:1695 forms.py:94 forms.py:137
+msgid "Company Name"
+msgstr "Firmenname"
+
+#: app.py:1696 forms.py:138
+msgid "Company Address"
+msgstr "Firmenadresse"
+
+#: app.py:1697
+msgid "Contact Email"
+msgstr "Kontakt-E-Mail"
+
+#: app.py:1705
+msgid "AIBAL: New company registration request"
+msgstr "AIBAL: Anfrage zur Registrierung einer neuen Firma"
+
+#: app.py:1707
+msgid ""
+"Registration successful. Please confirm this request in your ADMIN mail "
+"account."
+msgstr ""
+"Registrierung erfolgreich. Bitte bestätigen Sie diese Anfrage in Ihrem "
+"ADMIN-E-Mail-Konto."
+
+#: app.py:1777 app_report_exporter.py:911 templates/index.html:111
+msgid "Sample Designation:"
+msgstr "Probenbezeichnung:"
+
+#: app.py:1778 templates/index.html:116
+msgid "Date and Time:"
+msgstr "Datum und Uhrzeit:"
+
+#: app.py:1779 app_report_exporter.py:913 templates/index.html:120
+#: templates/user.html:51
+msgid "Place of Experiment:"
+msgstr "Prüfort:"
+
+#: app.py:1781 templates/index.html:132
+msgid "Wrapping Temperature of Aggregate [°C]:"
+msgstr "Umhüllungstemperatur der Gesteinskörnung [°C]:"
+
+#: app.py:1782 templates/index.html:136
+msgid "Wrapping Temperature of Binder [°C]:"
+msgstr "Umhüllungstemperatur des Bindemittels [°C]:"
+
+#: app.py:1783 templates/index.html:140 templates/user.html:75
+msgid "Exposing Water Temperature [°C]:"
+msgstr "Wasserbadtemperatur [°C]:"
+
+#: app.py:1784 templates/index.html:144 templates/user.html:55
+msgid "Test Procedure:"
+msgstr "Prüfverfahren:"
+
+#: app.py:1785 app_report_exporter.py:928 templates/index.html:176
+msgid "Comment:"
+msgstr "Kommentar:"
+
+#: app.py:1786 app_report_exporter.py:915 templates/index.html:124
+#: templates/user.html:59
+msgid "Aggregate:"
+msgstr "Gesteinskörnung:"
+
+#: app.py:1787 app_report_exporter.py:916 templates/index.html:128
+#: templates/user.html:63
+msgid "Binder:"
+msgstr "Bindemittel:"
+
+#: app.py:1788 templates/experiments.html:66 templates/experiments.html:89
+#: templates/export_report.html:55 templates/index.html:170
+#: templates/index.html:208
+msgid "Expert Guess"
+msgstr "Experteneinschätzung"
+
+#: app.py:1789
+msgid "MODEL"
+msgstr "MODELL"
+
+#: app.py:1818
+msgid ""
+"Your session has expired. Please log in again - the last changes were not"
+" saved."
+msgstr ""
+"Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an – die "
+"letzten Änderungen wurden nicht gespeichert."
+
+#: app.py:1826
+msgid "Invalid value:"
+msgstr "Ungültiger Wert:"
+
+#: app.py:1831
+msgid "No active sample - upload an image first."
+msgstr "Keine aktive Probe – laden Sie zuerst ein Bild hoch."
+
+#: app.py:1904 app.py:1921 app.py:1957
+msgid "No active experiment found."
+msgstr "Kein aktiver Versuch gefunden."
+
+#: app.py:1961 app.py:2258
+msgid "No sample data found."
+msgstr "Keine Probendaten gefunden."
+
+#: app.py:2087 app.py:2292
+msgid "Please choose an image file (JPG, PNG or HEIC)."
+msgstr "Bitte wählen Sie eine Bilddatei (JPG, PNG oder HEIC)."
+
+#: app.py:2148
+msgid "Unknown model."
+msgstr "Unbekanntes Modell."
+
+#: app.py:2259
+msgid "Please fill the expert guess field before evaluating the sample."
+msgstr ""
+"Bitte füllen Sie das Feld „Experteneinschätzung“ aus, bevor Sie die Probe"
+" auswerten."
+
+#: app.py:2260
+msgid "Evaluation completed. Check the console for the results."
+msgstr "Auswertung abgeschlossen. Die Ergebnisse finden Sie in der Konsole."
+
+#: app.py:2261
+msgid "Evaluation results: "
+msgstr "Auswertungsergebnisse: "
+
+#: app.py:2262 templates/home.html:80
+msgid ""
+"Would you like to use this app with no limitations? Store and export "
+"these results? Contact us to create an account."
+msgstr ""
+"Möchten Sie diese App ohne Einschränkungen nutzen? Die Ergebnisse "
+"speichern und exportieren? Kontaktieren Sie uns, um ein Konto zu "
+"erstellen."
+
+#: app.py:2263
+msgid "No employees selected for intended action."
+msgstr "Für die gewünschte Aktion wurden keine Mitarbeiter ausgewählt."
+
+#: app.py:2264
+msgid "No sample selected for deletion."
+msgstr "Keine Probe zum Löschen ausgewählt."
+
+#: app.py:2265
+msgid "Are you sure you want to delete the selected samples?"
+msgstr "Möchten Sie die ausgewählten Proben wirklich löschen?"
+
+#: app.py:2266
+msgid "This action cannot be undone."
+msgstr "Diese Aktion kann nicht rückgängig gemacht werden."
+
+#: app.py:2267
+msgid "Please select sample to view details."
+msgstr "Bitte wählen Sie eine Probe aus, um die Details anzuzeigen."
+
+#: app.py:2268
+msgid "Please select only one sample for viewing details."
+msgstr "Bitte wählen Sie nur eine Probe aus, um die Details anzuzeigen."
+
+#: app.py:2269
+msgid "Please select at least one sample for export."
+msgstr "Bitte wählen Sie mindestens eine Probe für den Export aus."
+
+#: app.py:2270
+msgid "For CSN 73 6161, exporting a single sample is not allowed."
+msgstr "Nach ČSN 73 6161 ist der Export einer einzelnen Probe nicht zulässig."
+
+#: app.py:2271
+msgid "Do you want to proceed with exporting this single sample?"
+msgstr "Möchten Sie diese einzelne Probe trotzdem exportieren?"
+
+#: app.py:2272
+msgid "Are you sure, you want to grant admin privileges to the following users?"
+msgstr "Möchten Sie den folgenden Benutzern wirklich Administratorrechte erteilen?"
+
+#: app.py:2273
+msgid ""
+"Are you sure, you want to remove admin privileges from the following "
+"users?"
+msgstr ""
+"Möchten Sie den folgenden Benutzern wirklich die Administratorrechte "
+"entziehen?"
+
+#: app.py:2274
+msgid ""
+"Are you sure, you want to block the sign in option for the following "
+"users?"
+msgstr "Möchten Sie die Anmeldung für die folgenden Benutzer wirklich sperren?"
+
+#: app.py:2275
+msgid ""
+"Are you sure, you want to unblock the sign in option for the following "
+"users?"
+msgstr ""
+"Möchten Sie die Anmeldung für die folgenden Benutzer wirklich wieder "
+"freigeben?"
+
+#: app.py:2276
+msgid ""
+"You have selected experiment of another user for editing. This action "
+"will transfer the ownership of the experiment to you (the original owner "
+"will not be able to access it). Do you want to proceed?"
+msgstr ""
+"Sie haben einen Versuch eines anderen Benutzers zur Bearbeitung "
+"ausgewählt. Dadurch geht der Versuch in Ihren Besitz über (der "
+"ursprüngliche Eigentümer hat danach keinen Zugriff mehr darauf). Möchten "
+"Sie fortfahren?"
+
+#: app.py:2277
+msgid "Saving..."
+msgstr "Wird gespeichert..."
+
+#: app.py:2278
+msgid "All sample data saved at"
+msgstr "Alle Probendaten gespeichert um"
+
+#: app.py:2279
+msgid "Unsaved changes"
+msgstr "Ungespeicherte Änderungen"
+
+#: app.py:2280
+msgid "NOT SAVED:"
+msgstr "NICHT GESPEICHERT:"
+
+#: app.py:2281
+msgid ""
+"The sample data could not be saved, so the sample was not evaluated. "
+"Please try again."
+msgstr ""
+"Die Probendaten konnten nicht gespeichert werden, daher wurde die Probe "
+"nicht ausgewertet. Bitte versuchen Sie es erneut."
+
+#: app.py:2282
+msgid "The evaluation failed."
+msgstr "Die Auswertung ist fehlgeschlagen."
+
+#: app.py:2283 templates/index.html:17
+msgid "Upload a photo of the sample to start the assessment."
+msgstr "Laden Sie ein Foto der Probe hoch, um mit der Bewertung zu beginnen."
+
+#: app.py:2284 templates/experiments.html:62 templates/experiments.html:76
+msgid "Sample ID"
+msgstr "Proben-ID"
+
+#: app.py:2285
+msgid "Class"
+msgstr "Klasse"
+
+#: app.py:2286
+msgid "Processing the photo..."
+msgstr "Foto wird verarbeitet..."
+
+#: app.py:2287
+msgid "The model is detecting bitumen and aggregate..."
+msgstr "Das Modell erkennt Bitumen und Gesteinskörnung..."
+
+#: app.py:2288
+msgid "Loading the sample..."
+msgstr "Probe wird geladen..."
+
+#: app.py:2289
+msgid "Evaluating..."
+msgstr "Wird ausgewertet..."
+
+#: app.py:2290
+msgid "The photo could not be processed."
+msgstr "Das Foto konnte nicht verarbeitet werden."
+
+#: app.py:2291
+msgid "The automatic detection failed."
+msgstr "Die automatische Erkennung ist fehlgeschlagen."
+
+#: app.py:2293
+msgid "Default values were filled in."
+msgstr "Die Standardwerte wurden eingetragen."
+
+#: app.py:2294
+msgid ""
+"There are no default values for the empty fields. You can set them in "
+"your profile."
+msgstr ""
+"Für die leeren Felder sind keine Standardwerte hinterlegt. Sie können "
+"diese in Ihrem Profil festlegen."
+
+#: app.py:2295
+msgid "Wait until the automatic detection has finished."
+msgstr "Warten Sie, bis die automatische Erkennung abgeschlossen ist."
+
+#: app.py:2296
+msgid "Confirm"
+msgstr "Bestätigen"
+
+#: app.py:2297 templates/employees.html:61 templates/experiments.html:125
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: app.py:2298 templates/experiments.html:127
+msgid "Delete"
+msgstr "Löschen"
+
+#: app_energy_label.py:38 app_report_exporter.py:155 app_report_exporter.py:391
+msgid "Unclassifiable"
+msgstr "Ohne Klasse"
+
+#: app_energy_label.py:104 app_report_exporter.py:221
+msgid "Adhesion"
+msgstr "Haftung"
+
+#: app_energy_label.py:114 app_report_exporter.py:231
+msgid "Rating"
+msgstr "Bewertung"
+
+#: app_report_exporter.py:296
+msgid "Inference model "
+msgstr "Inferenzmodell "
+
+#: app_report_exporter.py:296
+msgid " not available for experiment ID"
+msgstr " nicht verfügbar für Versuchs-ID"
+
+#: app_report_exporter.py:296
+msgid ""
+"Please use newer model for this specimen or contact us to resolve this "
+"issue."
+msgstr ""
+"Bitte verwenden Sie für diese Probe ein neueres Modell oder kontaktieren "
+"Sie uns, um das Problem zu lösen."
+
+#: app_report_exporter.py:367
+msgid "Excellent"
+msgstr "Ausgezeichnet"
+
+#: app_report_exporter.py:369
+msgid "Good"
+msgstr "Gut"
+
+#: app_report_exporter.py:371
+msgid "Satisfactory"
+msgstr "Befriedigend"
+
+#: app_report_exporter.py:373
+msgid "Unsatisfactory"
+msgstr "Unbefriedigend"
+
+#: app_report_exporter.py:453
+msgid "AIBAL Report"
+msgstr "AIBAL-Prüfbericht"
+
+#: app_report_exporter.py:455
+msgid "AIBAL Report ID:"
+msgstr "AIBAL-Berichts-ID:"
+
+#: app_report_exporter.py:456
+msgid "bitumen, adhesion, test, CSN 73 6161"
+msgstr "Bitumen, Haftung, Prüfung, ČSN 73 6161"
+
+#: app_report_exporter.py:482
+msgid "Bitumen Adhesion Test Protocol"
+msgstr "Prüfbericht zur Haftung von Bitumen an Gesteinskörnung"
+
+#: app_report_exporter.py:486
+msgid ""
+"\n"
+"    This report provides a comprehensive overview of the bitumen adhesion"
+" test protocol,\n"
+"    with all relevant information according to the CSN 73 6161 standard.\n"
+"    The adhesion test was performed on "
+msgstr ""
+"\n"
+"    Dieser Prüfbericht gibt einen umfassenden Überblick über die Prüfung "
+"der Bitumenhaftung\n"
+"    mit allen relevanten Angaben gemäß der Norm ČSN 73 6161.\n"
+"    Die Haftprüfung wurde an "
+
+#: app_report_exporter.py:489
+msgid ""
+" samples of asphalt mixtures. The detailes about each specimen included "
+"below, the overview is at the end of the document."
+msgstr ""
+" Proben von Asphaltmischgut durchgeführt. Die Angaben zu den einzelnen "
+"Proben folgen unten, die Übersicht befindet sich am Ende des Dokuments."
+
+#: app_report_exporter.py:493
+msgid ""
+"\n"
+"    Both the visual expert assesment and the AI-based quantitative "
+"analysis are included in this report.\n"
+"    If this two contradict each other, the visual expert assesment is "
+"considered the final result, however,\n"
+"    the AI-based visualization is included for reference. \n"
+"    "
+msgstr ""
+"\n"
+"    Dieser Prüfbericht enthält sowohl die visuelle Experteneinschätzung "
+"als auch die KI-gestützte quantitative Analyse.\n"
+"    Widersprechen sich beide, gilt die visuelle Experteneinschätzung als "
+"maßgebliches Ergebnis;\n"
+"    die KI-gestützte Visualisierung ist zum Vergleich beigefügt. \n"
+"    "
+
+#: app_report_exporter.py:506
+msgid "Ordering Party"
+msgstr "Auftraggeber"
+
+#: app_report_exporter.py:512
+msgid "Providing Laboratory"
+msgstr "Prüflabor"
+
+#: app_report_exporter.py:523
+msgid "The proceeding employee"
+msgstr "Durchgeführt von"
+
+#: app_report_exporter.py:524 app_report_exporter.py:542
+#: app_report_exporter.py:1170
+msgid "Name:"
+msgstr "Name:"
+
+#: app_report_exporter.py:525 app_report_exporter.py:543
+#: app_report_exporter.py:1172
+msgid "Contact:"
+msgstr "Kontakt:"
+
+#: app_report_exporter.py:527 app_report_exporter.py:545
+msgid "Signature: ..................................................."
+msgstr "Unterschrift: ..................................................."
+
+#: app_report_exporter.py:541
+msgid "The controll performed by"
+msgstr "Kontrolliert von"
+
+#: app_report_exporter.py:620
+msgid "Resulting assesment - expert"
+msgstr "Gesamtbewertung – Experteneinschätzung"
+
+#: app_report_exporter.py:620
+msgid "Resulting assesment - automatic"
+msgstr "Gesamtbewertung – automatisch"
+
+#: app_report_exporter.py:632
+msgid "Tabular overview"
+msgstr "Tabellarische Übersicht"
+
+#: app_report_exporter.py:634
+msgid "Specimen ID"
+msgstr "Proben-ID"
+
+#: app_report_exporter.py:635
+msgid "Visual Expert Assessment [%]"
+msgstr "Visuelle Experteneinschätzung [%]"
+
+#: app_report_exporter.py:636
+msgid "AI-based Assesment  [%]"
+msgstr "KI-gestützte Bewertung [%]"
+
+#: app_report_exporter.py:657
+msgid "Report Conclusion"
+msgstr "Fazit"
+
+#: app_report_exporter.py:661 app_report_exporter.py:663
+msgid "The average adhesion rate across all samples is"
+msgstr "Der mittlere Umhüllungsgrad über alle Proben beträgt"
+
+#: app_report_exporter.py:661
+msgid "according to expert visual assesment, which correspondes to calss"
+msgstr "gemäß visueller Experteneinschätzung; dies entspricht der Klasse"
+
+#: app_report_exporter.py:663
+msgid "according to AI-based analysis, which correspondes to calss"
+msgstr "gemäß KI-gestützter Analyse; dies entspricht der Klasse"
+
+#: app_report_exporter.py:665 app_report_exporter.py:667
+msgid "The worst adhesion rate ("
+msgstr "Der niedrigste beobachtete Umhüllungsgrad ("
+
+#: app_report_exporter.py:665 app_report_exporter.py:667
+msgid " %) observed is class "
+msgstr " %) entspricht der Klasse "
+
+#: app_report_exporter.py:665
+msgid "according to expert visual assesment."
+msgstr "gemäß visueller Experteneinschätzung."
+
+#: app_report_exporter.py:667
+msgid "according to AI-based analysis."
+msgstr "gemäß KI-gestützter Analyse."
+
+#: app_report_exporter.py:669
+msgid "The final considered class is: "
+msgstr "Maßgebende Klasse: "
+
+#: app_report_exporter.py:670
+msgid "The adhesion between aggregate and binder is classified as: "
+msgstr "Die Haftung zwischen Gesteinskörnung und Bindemittel wird bewertet als: "
+
+#: app_report_exporter.py:674
+msgid ""
+" images seem to highly similar with others and might not be unique "
+"specimens."
+msgstr ""
+" Bilder sind anderen Bildern sehr ähnlich und stammen möglicherweise "
+"nicht von eigenständigen Proben."
+
+#: app_report_exporter.py:676
+msgid " have been uploaded more than 6 months ago."
+msgstr " Bilder wurden vor mehr als 6 Monaten hochgeladen."
+
+#: app_report_exporter.py:678
+msgid ""
+"The report contains less than 2 samples, which is insufficient for CSN 73"
+" 6161 standard compliance."
+msgstr ""
+"Der Prüfbericht enthält weniger als 2 Proben; dies genügt den "
+"Anforderungen der Norm ČSN 73 6161 nicht."
+
+#: app_report_exporter.py:682
+msgid ""
+"Significant variance detected between expert assessments (>10%) of "
+"different samples. The CSN 73 6161 standard requires experiment "
+"repetition."
+msgstr ""
+"Erhebliche Streuung zwischen den Experteneinschätzungen (>10 %) der "
+"einzelnen Proben festgestellt. Die Norm ČSN 73 6161 verlangt eine "
+"Wiederholung der Prüfung."
+
+#: app_report_exporter.py:684
+msgid ""
+"Significant variance detected between AI-based assessments (>10%) of "
+"different samples. The CSN 73 6161 standard requires experiment "
+"repetition. Consider this in case that the AI based results seem "
+"reliable."
+msgstr ""
+"Erhebliche Streuung zwischen den KI-gestützten Bewertungen (>10 %) der "
+"einzelnen Proben festgestellt. Die Norm ČSN 73 6161 verlangt eine "
+"Wiederholung der Prüfung. Berücksichtigen Sie dies, sofern die KI-"
+"gestützten Ergebnisse plausibel erscheinen."
+
+#: app_report_exporter.py:686
+msgid "Concerns"
+msgstr "Auffälligkeiten"
+
+#: app_report_exporter.py:701
+msgid "This report was generated using AIBAL on "
+msgstr "Dieser Prüfbericht wurde mit AIBAL erstellt am "
+
+#: app_report_exporter.py:800
+msgid ""
+"<<< ⚠ WARNING: The program has detected a highly similar image (on the "
+"left, experiment_id:"
+msgstr ""
+"<<< ⚠ WARNUNG: Das Programm hat ein sehr ähnliches Bild erkannt (links, "
+"Versuchs-ID:"
+
+#: app_report_exporter.py:801
+msgid " , uploaded by "
+msgstr " , hochgeladen von "
+
+#: app_report_exporter.py:801
+msgid " on "
+msgstr " am "
+
+#: app_report_exporter.py:802
+msgid ") with"
+msgstr ") mit"
+
+#: app_report_exporter.py:802
+msgid "confidence. "
+msgstr "Sicherheit. "
+
+#: app_report_exporter.py:803
+msgid ""
+"Please review the samples for potential duplication. In case the "
+"specimens clearly aren't duplicates, you can ignore this message."
+msgstr ""
+"Bitte prüfen Sie, ob es sich um doppelt erfasste Proben handelt. Wenn die"
+" Proben eindeutig keine Duplikate sind, können Sie diesen Hinweis "
+"ignorieren."
+
+#: app_report_exporter.py:838 templates/macros/viewer.html:48
+msgid "Original Image"
+msgstr "Originalbild"
+
+#: app_report_exporter.py:838
+msgid "Processed Image"
+msgstr "Verarbeitetes Bild"
+
+#: app_report_exporter.py:840
+msgid "(Bitumen - blue, aggregate - red)"
+msgstr "(Bitumen – blau, Gesteinskörnung – rot)"
+
+#: app_report_exporter.py:910
+msgid "Sample ID:"
+msgstr "Proben-ID:"
+
+#: app_report_exporter.py:912
+msgid "Date:"
+msgstr "Datum:"
+
+#: app_report_exporter.py:917
+msgid "Wrapping temperature aggregate [°C]:"
+msgstr "Umhüllungstemperatur Gesteinskörnung [°C]:"
+
+#: app_report_exporter.py:918
+msgid "Wrapping temperature binder [°C]:"
+msgstr "Umhüllungstemperatur Bindemittel [°C]:"
+
+#: app_report_exporter.py:919
+msgid "Exposing water temperature [°C]:"
+msgstr "Wasserbadtemperatur [°C]:"
+
+#: app_report_exporter.py:920
+msgid "Test procedure:"
+msgstr "Prüfverfahren:"
+
+#: app_report_exporter.py:924
+msgid "Assessment - Adhesion Rate:"
+msgstr "Bewertung – Umhüllungsgrad:"
+
+#: app_report_exporter.py:925
+msgid "Inference Model:"
+msgstr "Inferenzmodell:"
+
+#: app_report_exporter.py:926
+msgid "Automatic Assessment [%]:"
+msgstr "Automatische Bewertung [%]:"
+
+#: app_report_exporter.py:927
+msgid "Visual based Expert Guess [%]:"
+msgstr "Visuelle Experteneinschätzung [%]:"
+
+#: app_report_exporter.py:1128
+msgid "Report generated by AIBAL -Bitumen Adhesion Lab - report ID:"
+msgstr "Erstellt mit AIBAL – AI Bitumen Adhesion Lab – Berichts-ID:"
+
+#: app_report_exporter.py:1171
+msgid "Address:"
+msgstr "Adresse:"
+
+#: forms.py:19
+msgid "This username is already taken. Please choose a different one."
+msgstr "Dieser Benutzername ist bereits vergeben. Bitte wählen Sie einen anderen."
+
+#: forms.py:20
+msgid "This company name is already taken. Please choose a different one."
+msgstr "Dieser Firmenname ist bereits vergeben. Bitte wählen Sie einen anderen."
+
+#: forms.py:21
+msgid "Passwords must match."
+msgstr "Die Passwörter müssen übereinstimmen."
+
+#: forms.py:45
+#, python-format
+msgid ""
+"No record \"%(field_name)s\" with value \"%(field_data)s\" exists. "
+"Contact your admin to get your credentials."
+msgstr ""
+"Es existiert kein Eintrag „%(field_name)s“ mit dem Wert „%(field_data)s“."
+" Wenden Sie sich an Ihren Administrator, um Ihre Zugangsdaten zu "
+"erhalten."
+
+#: forms.py:68
+#, python-brace-format
+msgid "The minimal allowed length is {min} characters."
+msgstr "Die minimal zulässige Länge beträgt {min} Zeichen."
+
+#: forms.py:71
+#, python-brace-format
+msgid "The maximal allowed length is {max} characters."
+msgstr "Die maximal zulässige Länge beträgt {max} Zeichen."
+
+#: forms.py:82 forms.py:122 templates/employees.html:24
+#: templates/employees.html:41
+msgid "Username"
+msgstr "Benutzername"
+
+#: forms.py:83 forms.py:95 forms.py:152 forms.py:167
+msgid "Email address"
+msgstr "E-Mail-Adresse"
+
+#: forms.py:85 forms.py:123
+msgid "First name"
+msgstr "Vorname"
+
+#: forms.py:86 forms.py:124
+msgid "Last name"
+msgstr "Nachname"
+
+#: forms.py:88 forms.py:102
+msgid "Password"
+msgstr "Passwort"
+
+#: forms.py:89
+msgid "Confirm password"
+msgstr "Passwort bestätigen"
+
+#: forms.py:90 templates/form.html:20 templates/home.html:82
+#: templates/navbar.html:54
+msgid "Register"
+msgstr "Registrieren"
+
+#: forms.py:97
+msgid "Company address"
+msgstr "Firmenadresse"
+
+#: forms.py:101
+msgid "Username/Email"
+msgstr "Benutzername/E-Mail"
+
+#: forms.py:106
+msgid "Old password"
+msgstr "Altes Passwort"
+
+#: forms.py:107 forms.py:112
+msgid "New password"
+msgstr "Neues Passwort"
+
+#: forms.py:108 forms.py:113
+msgid "Confirm new password"
+msgstr "Neues Passwort bestätigen"
+
+#: forms.py:114
+msgid "Set new password"
+msgstr "Neues Passwort festlegen"
+
+#: forms.py:117
+msgid "Your Email address"
+msgstr "Ihre E-Mail-Adresse"
+
+#: forms.py:118 forms.py:156
+msgid "Send reset link"
+msgstr "Link zum Zurücksetzen senden"
+
+#: forms.py:125 forms.py:139
+msgid "Save changes"
+msgstr "Änderungen speichern"
+
+#: forms.py:130 forms.py:144
+msgid "At least one field must be filled in."
+msgstr "Mindestens ein Feld muss ausgefüllt werden."
+
+#: forms.py:160
+msgid "New email address"
+msgstr "Neue E-Mail-Adresse"
+
+#: forms.py:162
+msgid "Current password"
+msgstr "Aktuelles Passwort"
+
+#: forms.py:163 templates/user.html:33
+msgid "Change e-mail address"
+msgstr "E-Mail-Adresse ändern"
+
+#: forms.py:166
+msgid "Your Name"
+msgstr "Ihr Name"
+
+#: forms.py:168
+msgid "Subject"
+msgstr "Betreff"
+
+#: forms.py:170
+msgid "Message"
+msgstr "Nachricht"
+
+#: forms.py:173
+msgid "Send message"
+msgstr "Nachricht senden"
+
+#: forms.py:176
+msgid "Ordering Party Name"
+msgstr "Name des Auftraggebers"
+
+#: forms.py:177
+msgid "Ordering Party Address"
+msgstr "Adresse des Auftraggebers"
+
+#: forms.py:178
+msgid "Ordering Party Email"
+msgstr "E-Mail des Auftraggebers"
+
+#: forms.py:179
+msgid "Controller/Employee Email"
+msgstr "Kontrollierender Mitarbeiter (E-Mail)"
+
+#: forms.py:180 templates/experiments.html:99 templates/experiments.html:100
+#: templates/experiments.html:126 templates/export_report.html:5
+#: templates/export_report.html:11 templates/export_report.html:28
+#: templates/index.html:192 templates/index.html:217
+msgid "Export report"
+msgstr "Prüfbericht exportieren"
+
+#: templates/base.html:20
+msgid "Skip to content"
+msgstr "Zum Inhalt springen"
+
+#: templates/base.html:31
+msgid "2025 David Šilhánek, Václav Nežerka."
+msgstr "2025 David Šilhánek, Václav Nežerka."
+
+#: templates/base.html:32
+msgid "Development supported by"
+msgstr "Die Entwicklung wird gefördert durch die"
+
+#: templates/base.html:33
+msgid "Technology Agency of the Czech Republic"
+msgstr "Technologieagentur der Tschechischen Republik"
+
+#: templates/base.html:34
+msgid "project CL02000145."
+msgstr "Projekt CL02000145."
+
+#: templates/company.html:6 templates/company.html:12 templates/company.html:22
+msgid "Company Information"
+msgstr "Firmendaten"
+
+#: templates/company.html:15 templates/employees.html:4
+#: templates/employees.html:10 templates/navbar.html:15
+msgid "Employees"
+msgstr "Mitarbeiter"
+
+#: templates/company.html:26
+msgid "Company Name: "
+msgstr "Firmenname: "
+
+#: templates/company.html:27
+msgid "Address: "
+msgstr "Adresse: "
+
+#: templates/company.html:28
+msgid "Company E-mail: "
+msgstr "Firmen-E-Mail: "
+
+#: templates/company.html:30
+msgid ""
+"The company name and address are printed on every report as the providing"
+" laboratory."
+msgstr ""
+"Firmenname und Adresse werden auf jedem Prüfbericht als Prüflabor "
+"angegeben."
+
+#: templates/company.html:33
+msgid "Edit company information"
+msgstr "Firmendaten bearbeiten"
+
+#: templates/company.html:34
+msgid "Change company e-mail address"
+msgstr "Firmen-E-Mail-Adresse ändern"
+
+#: templates/company.html:42 templates/company_key.html:12
+msgid "Colleagues join your company by entering this key when they register."
+msgstr ""
+"Kollegen treten Ihrer Firma bei, indem sie bei der Registrierung diesen "
+"Schlüssel eingeben."
+
+#: templates/company.html:47
+msgid ""
+"Share the key only with your colleagues. If it got into the wrong hands, "
+"generate a new one - the old key stops working."
+msgstr ""
+"Geben Sie den Schlüssel nur an Ihre Kollegen weiter. Falls er in falsche "
+"Hände gelangt ist, generieren Sie einen neuen – der alte Schlüssel wird "
+"dann ungültig."
+
+#: templates/company.html:51
+msgid "View company key"
+msgstr "Firmenschlüssel anzeigen"
+
+#: templates/company.html:53
+msgid "Generate a new company key? The current key will stop working."
+msgstr ""
+"Neuen Firmenschlüssel generieren? Der aktuelle Schlüssel wird dann "
+"ungültig."
+
+#: templates/company.html:54
+msgid "Regenerate company key"
+msgstr "Firmenschlüssel neu generieren"
+
+#: templates/company_key.html:15 templates/navbar.html:16
+msgid "Company"
+msgstr "Firma"
+
+#: templates/company_key.html:23
+msgid "Copy"
+msgstr "Kopieren"
+
+#: templates/company_key.html:26
+msgid "Send the key to your colleague."
+msgstr "Senden Sie den Schlüssel an Ihren Kollegen."
+
+#: templates/company_key.html:27
+msgid "The colleague registers at"
+msgstr "Der Kollege registriert sich unter"
+
+#: templates/company_key.html:27
+msgid "and enters the key."
+msgstr "und gibt den Schlüssel ein."
+
+#: templates/company_key.html:28
+msgid ""
+"After confirming the e-mail address, the colleague appears among the "
+"employees."
+msgstr ""
+"Nach Bestätigung der E-Mail-Adresse erscheint der Kollege in der "
+"Mitarbeiterliste."
+
+#: templates/company_key.html:30
+msgid "For security, the key will be hidden in one minute."
+msgstr "Aus Sicherheitsgründen wird der Schlüssel in einer Minute ausgeblendet."
+
+#: templates/employees.html:11
+msgid "Users of your company with a confirmed e-mail address."
+msgstr "Benutzer Ihrer Firma mit bestätigter E-Mail-Adresse."
+
+#: templates/employees.html:14
+msgid "Invite a colleague"
+msgstr "Kollegen einladen"
+
+#: templates/employees.html:22 templates/experiments.html:61
+msgid "Select all"
+msgstr "Alle auswählen"
+
+#: templates/employees.html:23
+msgid "Name"
+msgstr "Name"
+
+#: templates/employees.html:25 templates/employees.html:42
+#: templates/navbar.html:21
+msgid "Contact"
+msgstr "Kontakt"
+
+#: templates/employees.html:26 templates/employees.html:43
+msgid "Role"
+msgstr "Rolle"
+
+#: templates/employees.html:27 templates/employees.html:47
+#: templates/experiments.html:68 templates/experiments.html:91
+msgid "Status"
+msgstr "Status"
+
+#: templates/employees.html:35 templates/employees.html:40
+msgid "You"
+msgstr "Sie"
+
+#: templates/employees.html:37 templates/experiments.html:75
+msgid "Select"
+msgstr "Auswählen"
+
+#: templates/employees.html:44 templates/navbar.html:46
+msgid "Company admin"
+msgstr "Firmenadministrator"
+
+#: templates/employees.html:45 templates/navbar.html:46
+msgid "User"
+msgstr "Benutzer"
+
+#: templates/employees.html:48
+msgid "Blocked"
+msgstr "Gesperrt"
+
+#: templates/employees.html:49
+msgid "Active"
+msgstr "Aktiv"
+
+#: templates/employees.html:53 templates/experiments.html:107
+msgid "No records found"
+msgstr "Keine Einträge gefunden"
+
+#: templates/employees.html:60 templates/experiments.html:124
+msgid "selected"
+msgstr "ausgewählt"
+
+#: templates/employees.html:62
+msgid "Grant Admin privileges"
+msgstr "Administratorrechte erteilen"
+
+#: templates/employees.html:63
+msgid "Remove Admin privileges"
+msgstr "Administratorrechte entziehen"
+
+#: templates/employees.html:64
+msgid "Unblock User"
+msgstr "Benutzer entsperren"
+
+#: templates/employees.html:65
+msgid "Block User"
+msgstr "Benutzer sperren"
+
+#: templates/employees.html:70
+msgid "How does a colleague join?"
+msgstr "Wie tritt ein Kollege bei?"
+
+#: templates/employees.html:71
+msgid ""
+"Click the button below to register a new employee. For registration, you "
+"need to know the company key, which can be viewed"
+msgstr ""
+"Klicken Sie auf die Schaltfläche unten, um einen neuen Mitarbeiter zu "
+"registrieren. Für die Registrierung benötigen Sie den Firmenschlüssel. "
+"Diesen finden Sie"
+
+#: templates/employees.html:72
+msgid "here"
+msgstr "hier"
+
+#: templates/employees.html:73
+msgid "Register New Employee"
+msgstr "Neuen Mitarbeiter registrieren"
+
+#: templates/error.html:6
+msgid "Error"
+msgstr "Fehler"
+
+#: templates/error.html:10
+msgid "Back to the app"
+msgstr "Zurück zur App"
+
+#: templates/error.html:11
+msgid "Previous page"
+msgstr "Vorherige Seite"
+
+#: templates/experiments.html:22 templates/experiments.html:28
+#: templates/export_report.html:15 templates/index.html:216
+#: templates/navbar.html:13
+msgid "Sample Records"
+msgstr "Probenübersicht"
+
+#: templates/experiments.html:29
+msgid "All samples of your company."
+msgstr "Alle Proben Ihrer Firma."
+
+#: templates/experiments.html:29
+msgid "Your evaluated and unfinished samples."
+msgstr "Ihre ausgewerteten und noch nicht abgeschlossenen Proben."
+
+#: templates/experiments.html:32 templates/index.html:193
+#: templates/index.html:218
+msgid "New sample"
+msgstr "Neue Probe"
+
+#: templates/experiments.html:40
+msgid "Search by sample designation:"
+msgstr "Nach Probenbezeichnung suchen:"
+
+#: templates/experiments.html:44
+msgid "Designation or sample ID"
+msgstr "Bezeichnung oder Proben-ID"
+
+#: templates/experiments.html:48
+msgid "Max records on page:"
+msgstr "Max. Einträge pro Seite:"
+
+#: templates/experiments.html:53
+msgid "Search"
+msgstr "Suchen"
+
+#: templates/experiments.html:54
+msgid "Clear"
+msgstr "Zurücksetzen"
+
+#: templates/experiments.html:63
+msgid "Sample Designation"
+msgstr "Probenbezeichnung"
+
+#: templates/experiments.html:64 templates/experiments.html:82
+msgid "Date"
+msgstr "Datum"
+
+#: templates/experiments.html:65 templates/experiments.html:84
+msgid "Performed by"
+msgstr "Durchgeführt von"
+
+#: templates/experiments.html:67 templates/experiments.html:90
+#: templates/export_report.html:55 templates/home.html:74
+#: templates/index.html:165 templates/index.html:203
+msgid "AI assessment"
+msgstr "KI-Bewertung"
+
+#: templates/experiments.html:69
+msgid "Actions"
+msgstr "Aktionen"
+
+#: templates/experiments.html:79 templates/export_report.html:54
+msgid "No designation"
+msgstr "Ohne Bezeichnung"
+
+#: templates/experiments.html:92
+msgid "Evaluated"
+msgstr "Ausgewertet"
+
+#: templates/experiments.html:93
+msgid "In progress"
+msgstr "In Bearbeitung"
+
+#: templates/experiments.html:97 templates/experiments.html:98
+msgid "Open"
+msgstr "Öffnen"
+
+#: templates/experiments.html:106
+msgid "No sample matches the search."
+msgstr "Keine Probe entspricht der Suche."
+
+#: templates/experiments.html:107
+msgid "evaluate your first sample"
+msgstr "werten Sie Ihre erste Probe aus"
+
+#: templates/experiments.html:116
+msgid "Page"
+msgstr "Seite"
+
+#: templates/experiments.html:116
+msgid "records"
+msgstr "Einträge"
+
+#: templates/experiments.html:118
+msgid "Previous"
+msgstr "Zurück"
+
+#: templates/experiments.html:119
+msgid "Next"
+msgstr "Weiter"
+
+#: templates/export_report.html:12
+msgid "Protocol of the adhesion test according to ČSN 73 6161 (PDF)."
+msgstr "Prüfbericht der Haftprüfung nach ČSN 73 6161 (PDF)."
+
+#: templates/export_report.html:23
+msgid "Report details"
+msgstr "Angaben zum Prüfbericht"
+
+#: templates/export_report.html:24
+msgid "The ordering party is printed on the protocol; the controller signs it."
+msgstr ""
+"Der Auftraggeber wird im Prüfbericht angegeben; die kontrollierende "
+"Person unterschreibt ihn."
+
+#: templates/export_report.html:35
+msgid "Selected samples"
+msgstr "Ausgewählte Proben"
+
+#: templates/export_report.html:36
+msgid "Change the selection in the sample records"
+msgstr "Auswahl in der Probenübersicht ändern"
+
+#: templates/export_report.html:42
+msgid ""
+"ČSN 73 6161 requires at least two samples in one report. A report with "
+"one sample will point this out."
+msgstr ""
+"ČSN 73 6161 verlangt mindestens zwei Proben in einem Prüfbericht. Ein "
+"Prüfbericht mit nur einer Probe weist darauf hin."
+
+#: templates/export_report.html:47
+msgid "Some of the selected samples have not been evaluated yet."
+msgstr "Einige der ausgewählten Proben wurden noch nicht ausgewertet."
+
+#: templates/form.html:4
+msgid "Form"
+msgstr "Formular"
+
+#: templates/form.html:15
+msgid "Sign in to assess your asphalt samples."
+msgstr "Melden Sie sich an, um Ihre Asphaltproben zu bewerten."
+
+#: templates/form.html:19
+msgid "Forgot your password?"
+msgstr "Passwort vergessen?"
+
+#: templates/form.html:24
+msgid "Back"
+msgstr "Zurück"
+
+#: templates/home.html:6 templates/navbar.html:19
+msgid "About"
+msgstr "Über die App"
+
+#: templates/home.html:18
+msgid ""
+"AI Bitumen Adhesion Lab is a web application for the analysis and "
+"classification of bitumen-aggregate adhesion in asphalt concrete with the"
+" support of national standards (e.g. according to ČSN 73 6161). Using a U"
+"-Net-based AI model, it precisely segments stripped and coated surfaces, "
+"delivering objective, and repeatable results. "
+msgstr ""
+"AI Bitumen Adhesion Lab ist eine Webanwendung zur Analyse und "
+"Klassifizierung der Bitumen-Gesteins-Affinität in Asphaltbeton mit "
+"Unterstützung nationaler Normen (z. B. nach ČSN 73 6161). Ein KI-Modell "
+"auf Basis von U-Net segmentiert präzise freigelegte und mit Bitumen "
+"umhüllte Oberflächen und liefert so objektive und reproduzierbare "
+"Ergebnisse. "
+
+#: templates/home.html:19
+msgid ""
+"With an intuitive interface and useful features like automated reports, "
+"it provides researchers, engineers and professionals with fast, reliable,"
+" and science-based alternative to subjective visual assessment."
+msgstr ""
+"Mit einer intuitiven Oberfläche und nützlichen Funktionen wie automatisch"
+" erstellten Prüfberichten bietet die Anwendung Forschenden, Ingenieuren "
+"und Fachleuten eine schnelle, zuverlässige und wissenschaftlich fundierte"
+" Alternative zur subjektiven visuellen Beurteilung."
+
+#: templates/home.html:21 templates/home.html:56
+msgid "Try it out"
+msgstr "Ausprobieren"
+
+#: templates/home.html:23 templates/index.html:6 templates/index.html:16
+#: templates/navbar.html:12
+msgid "Current Sample"
+msgstr "Aktuelle Probe"
+
+#: templates/home.html:35
+msgid "How it works"
+msgstr "So funktioniert es"
+
+#: templates/home.html:39
+msgid "Photograph the sample"
+msgstr "Probe fotografieren"
+
+#: templates/home.html:40
+msgid ""
+"Upload a photo of the stripped aggregate or take it with the camera "
+"directly in the app."
+msgstr ""
+"Laden Sie ein Foto der geprüften Gesteinskörnung hoch oder nehmen Sie es "
+"direkt in der App mit der Kamera auf."
+
+#: templates/home.html:44
+msgid "AI detects bitumen and aggregate"
+msgstr "KI erkennt Bitumen und Gesteinskörnung"
+
+#: templates/home.html:45
+msgid ""
+"The model marks the coated and stripped surface and computes the asphalt "
+"coverage and its class."
+msgstr ""
+"Das Modell markiert die umhüllte und die freigelegte Oberfläche und "
+"berechnet den Umhüllungsgrad mit Bitumen sowie die zugehörige Klasse."
+
+#: templates/home.html:49
+msgid "Export the protocol"
+msgstr "Prüfbericht exportieren"
+
+#: templates/home.html:50
+msgid ""
+"Compare the result with your expert estimate and export a PDF protocol "
+"according to ČSN 73 6161."
+msgstr ""
+"Vergleichen Sie das Ergebnis mit Ihrer Experteneinschätzung und "
+"exportieren Sie einen PDF-Prüfbericht nach ČSN 73 6161."
+
+#: templates/home.html:57
+msgid "Upload a photo of a sample - nothing is stored in the demo."
+msgstr "Laden Sie ein Foto einer Probe hoch – in der Demo wird nichts gespeichert."
+
+#: templates/home.html:62 templates/index.html:33
+msgid "Upload a photo of the sample"
+msgstr "Foto der Probe hochladen"
+
+#: templates/home.html:63 templates/index.html:34
+msgid "Drag the photo here or choose a file (JPG, PNG, HEIC)."
+msgstr "Ziehen Sie das Foto hierher oder wählen Sie eine Datei (JPG, PNG, HEIC)."
+
+#: templates/home.html:65 templates/index.html:36
+msgid "Choose photo"
+msgstr "Foto auswählen"
+
+#: templates/home.html:67 templates/index.html:39
+msgid ""
+"By uploading an image, you agree that it may be stored in the application"
+" repository and potentially used by the authors for training future "
+"models."
+msgstr ""
+"Mit dem Hochladen eines Bildes erklären Sie sich damit einverstanden, "
+"dass es im Datenbestand der Anwendung gespeichert und von den Autoren "
+"gegebenenfalls zum Training künftiger Modelle verwendet wird."
+
+#: templates/home.html:70 templates/index.html:90
+msgid "Upload another photo"
+msgstr "Anderes Foto hochladen"
+
+#: templates/home.html:94
+msgid ""
+"Would you like to register your company or research institute? Or does it"
+" sound interesting, but you have more questions\n"
+"                        or need adjustments for your optimal "
+"workflow—such as support for a different national standard?"
+msgstr ""
+"Möchten Sie Ihre Firma oder Ihr Forschungsinstitut registrieren? Oder "
+"klingt das interessant, Sie haben aber noch Fragen oder benötigen "
+"Anpassungen für Ihren Arbeitsablauf – etwa die Unterstützung einer "
+"anderen nationalen Norm?"
+
+#: templates/index.html:19
+msgid "Progress"
+msgstr "Fortschritt"
+
+#: templates/index.html:20 templates/index.html:28
+msgid "Photo"
+msgstr "Foto"
+
+#: templates/index.html:21 templates/index.html:97
+msgid "Sample data"
+msgstr "Probendaten"
+
+#: templates/index.html:22 templates/index.html:158
+msgid "Assessment"
+msgstr "Bewertung"
+
+#: templates/index.html:23
+msgid "Report"
+msgstr "Prüfbericht"
+
+#: templates/index.html:37
+msgid "Take a Photo"
+msgstr "Mit Kamera aufnehmen"
+
+#: templates/index.html:46
+msgid "Camera"
+msgstr "Kamera"
+
+#: templates/index.html:47
+msgid "Close"
+msgstr "Schließen"
+
+#: templates/index.html:52
+msgid "Video stream not available."
+msgstr "Videostream nicht verfügbar."
+
+#: templates/index.html:53
+msgid "Live view"
+msgstr "Live-Ansicht"
+
+#: templates/index.html:57
+msgid "Captured photo"
+msgstr "Aufgenommenes Foto"
+
+#: templates/index.html:61
+msgid "Capture photo"
+msgstr "Foto aufnehmen"
+
+#: templates/index.html:62
+msgid "Use the Captured Image"
+msgstr "Aufgenommenes Foto verwenden"
+
+#: templates/index.html:66 templates/index.html:67
+msgid "Exposure time"
+msgstr "Belichtungszeit"
+
+#: templates/index.html:69
+msgid "Auto"
+msgstr "Automatisch"
+
+#: templates/index.html:70
+msgid "Longest exposure this camera allows:"
+msgstr "Längste von dieser Kamera unterstützte Belichtungszeit:"
+
+#: templates/index.html:73
+msgid ""
+"This browser does not allow web pages to adjust the camera (exposure "
+"time, white balance). For manual camera settings, use Google Chrome or "
+"Microsoft Edge."
+msgstr ""
+"Dieser Browser erlaubt Webseiten nicht, die Kamera einzustellen "
+"(Belichtungszeit, Weißabgleich). Verwenden Sie für manuelle "
+"Kameraeinstellungen Google Chrome oder Microsoft Edge."
+
+#: templates/index.html:76
+msgid "This camera does not allow setting the exposure time."
+msgstr "Bei dieser Kamera kann die Belichtungszeit nicht eingestellt werden."
+
+#: templates/index.html:79
+msgid "Advanced camera settings"
+msgstr "Erweiterte Kameraeinstellungen"
+
+#: templates/index.html:98
+msgid "Basic Information"
+msgstr "Grundangaben"
+
+#: templates/index.html:101 templates/navbar.html:48 templates/user.html:41
+msgid "Default values"
+msgstr "Standardwerte"
+
+#: templates/index.html:103
+msgid "Fill in empty fields"
+msgstr "Leere Felder ausfüllen"
+
+#: templates/index.html:104
+msgid "Edit default values"
+msgstr "Standardwerte bearbeiten"
+
+#: templates/index.html:113
+msgid "Your own designation of the sample, shown in the sample records"
+msgstr "Ihre eigene Probenbezeichnung, wird in der Probenübersicht angezeigt"
+
+#: templates/index.html:121 templates/user.html:52
+msgid "Your lab Address"
+msgstr "Adresse Ihres Labors"
+
+#: templates/index.html:125 templates/user.html:60
+msgid "Information about the aggregate."
+msgstr "Angaben zur Gesteinskörnung."
+
+#: templates/index.html:129 templates/user.html:64
+msgid "Information about the binder."
+msgstr "Angaben zum Bindemittel."
+
+#: templates/index.html:145 templates/user.html:56
+msgid "A brief description of the testing procedure"
+msgstr "Kurze Beschreibung des Prüfverfahrens"
+
+#: templates/index.html:149 templates/user.html:80
+msgid "Information about the mixture."
+msgstr "Angaben zum Mischgut."
+
+#: templates/index.html:159
+msgid "Asphalt coverage of the aggregate surface"
+msgstr "Bitumenumhüllung der Gesteinsoberfläche"
+
+#: templates/index.html:172
+msgid "Expert Guess of Adhesion Rate"
+msgstr "Experteneinschätzung des Umhüllungsgrads"
+
+#: templates/index.html:173
+msgid "Your visual estimate, required for the evaluation."
+msgstr "Ihre visuelle Einschätzung, für die Auswertung erforderlich."
+
+#: templates/index.html:177
+msgid "Optional"
+msgstr "Optional"
+
+#: templates/index.html:188
+msgid "Save sample data"
+msgstr "Probendaten speichern"
+
+#: templates/index.html:189
+msgid "Save and Evaluate"
+msgstr "Speichern und auswerten"
+
+#: templates/index.html:199
+msgid "Sample evaluated"
+msgstr "Probe ausgewertet"
+
+#: templates/index.html:213
+msgid ""
+"ČSN 73 6161 requires at least two samples in one report. You can export "
+"the report from the sample records at any time."
+msgstr ""
+"ČSN 73 6161 verlangt mindestens zwei Proben in einem Prüfbericht. Sie "
+"können den Prüfbericht jederzeit aus der Probenübersicht exportieren."
+
+#: templates/mail_confirm.html:94 templates/mail_contact.html:74
+msgid "Hello,"
+msgstr "Guten Tag,"
+
+#: templates/mail_confirm.html:113
+msgid ""
+"If the button doesn’t work, copy and paste the following link into your "
+"browser:"
+msgstr ""
+"Falls die Schaltfläche nicht funktioniert, kopieren Sie den folgenden "
+"Link und fügen Sie ihn in Ihren Browser ein:"
+
+#: templates/mail_confirm.html:118
+msgid "If you do not recognize this request, you can safely ignore this email."
+msgstr ""
+"Wenn Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail "
+"einfach ignorieren."
+
+#: templates/mail_confirm.html:122 templates/mail_contact.html:104
+msgid "Best regards,"
+msgstr "Mit freundlichen Grüßen"
+
+#: templates/mail_confirm.html:123 templates/mail_contact.html:105
+msgid "AIBAL Team"
+msgstr "Ihr AIBAL-Team"
+
+#: templates/mail_contact.html:77
+msgid "The following user:"
+msgstr "Der folgende Benutzer:"
+
+#: templates/mail_contact.html:88
+msgid "has sent you the following message:"
+msgstr "hat Ihnen folgende Nachricht gesendet:"
+
+#: templates/mail_contact.html:100
+msgid ""
+"If this seems to be a reasenoble request, you can replay to the email "
+"address above."
+msgstr ""
+"Wenn die Anfrage seriös erscheint, können Sie an die oben genannte E"
+"-Mail-Adresse antworten."
+
+#: templates/navbar.html:10
+msgid "Main navigation"
+msgstr "Hauptnavigation"
+
+#: templates/navbar.html:20
+msgid "Demo"
+msgstr "Demo"
+
+#: templates/navbar.html:27
+msgid "Language"
+msgstr "Sprache"
+
+#: templates/navbar.html:40 templates/navbar.html:47 templates/user.html:6
+#: templates/user.html:12
+msgid "User Profile"
+msgstr "Benutzerprofil"
+
+#: templates/navbar.html:49
+msgid "Logout"
+msgstr "Abmelden"
+
+#: templates/navbar.html:58
+msgid "Menu"
+msgstr "Menü"
+
+#: templates/user.html:20
+msgid "User Information"
+msgstr "Benutzerdaten"
+
+#: templates/user.html:24
+msgid "Username: "
+msgstr "Benutzername: "
+
+#: templates/user.html:25
+msgid "First Name: "
+msgstr "Vorname: "
+
+#: templates/user.html:26
+msgid "Last Name: "
+msgstr "Nachname: "
+
+#: templates/user.html:27
+msgid "Company: "
+msgstr "Firma: "
+
+#: templates/user.html:28
+msgid "E-mail: "
+msgstr "E-Mail: "
+
+#: templates/user.html:32
+msgid "Edit personal information"
+msgstr "Persönliche Daten bearbeiten"
+
+#: templates/user.html:42
+msgid ""
+"If some information repeats often, you can set here your default values, "
+"otherwise, keep the fields empty."
+msgstr ""
+"Wenn sich bestimmte Angaben häufig wiederholen, können Sie hier "
+"Standardwerte festlegen; andernfalls lassen Sie die Felder leer."
+
+#: templates/user.html:47
+msgid ""
+"Here you can customize your app settings. The following options are "
+"automatically filled in when uploading an image of asphalt sample."
+msgstr ""
+"Hier können Sie Ihre App-Einstellungen anpassen. Die folgenden Angaben "
+"werden beim Hochladen eines Bildes einer Asphaltprobe automatisch "
+"ausgefüllt."
+
+#: templates/user.html:48
+msgid "The changes will be saved automatically."
+msgstr "Die Änderungen werden automatisch gespeichert."
+
+#: templates/user.html:67
+msgid "Wrapping Temperature Aggregate [°C]:"
+msgstr "Umhüllungstemperatur Gesteinskörnung [°C]:"
+
+#: templates/user.html:71
+msgid "Wrapping Temperature Binder [°C]:"
+msgstr "Umhüllungstemperatur Bindemittel [°C]:"
+
+#: templates/macros/viewer.html:8
+msgid "recommended"
+msgstr "empfohlen"
+
+#: templates/macros/viewer.html:23
+msgid "Working..."
+msgstr "Wird verarbeitet..."
+
+#: templates/macros/viewer.html:27
+msgid "Masks"
+msgstr "Masken"
+
+#: templates/macros/viewer.html:29
+msgid "Bitumen"
+msgstr "Bitumen"
+
+#: templates/macros/viewer.html:32
+msgid "Aggregate"
+msgstr "Gesteinskörnung"
+
+#: templates/macros/viewer.html:35
+msgid "Background"
+msgstr "Hintergrund"
+
+#: templates/macros/viewer.html:37
+msgid "Hover over the photo to magnify"
+msgstr "Zum Vergrößern mit der Maus über das Foto fahren"
+
+#: templates/macros/viewer.html:41
+msgid "Mask Opacity:"
+msgstr "Maskendeckkraft:"
+
+#: templates/macros/viewer.html:46
+msgid "Image"
+msgstr "Bild"
+
+#: templates/macros/viewer.html:49
+msgid "Grayscale Image"
+msgstr "Graustufenbild"
+
+#: templates/macros/viewer.html:53
+msgid "Model"
+msgstr "Modell"
+

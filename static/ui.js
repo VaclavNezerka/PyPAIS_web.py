@@ -1,11 +1,14 @@
 // Small UI helpers shared by all pages (exposed as window.ui):
 // toasts instead of alert(), confirmation dialogs instead of confirm(), a busy overlay and dropdown handling.
 ;(function () {
-    const lang = document.documentElement.lang === "cs" ? "cs" : "en"
-    const TEXT = {
+    const TEXTS = {
         cs: { ok: "OK", cancel: "Zrušit", close: "Zavřít" },
         en: { ok: "OK", cancel: "Cancel", close: "Close" },
-    }[lang]
+        de: { ok: "OK", cancel: "Abbrechen", close: "Schließen" },
+        it: { ok: "OK", cancel: "Annulla", close: "Chiudi" },
+        pl: { ok: "OK", cancel: "Anuluj", close: "Zamknij" },
+    }
+    const TEXT = TEXTS[document.documentElement.lang] || TEXTS.en
 
     function toastRegion() {
         let region = document.getElementById("toastRegion")

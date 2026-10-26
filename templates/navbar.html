@@ -25,12 +25,13 @@
     <div class="header-tools">
       <details class="dropdown" id="langMenu">
         <summary class="btn btn-ghost btn-sm" aria-label="{{ _('Language') }}">
-          <img class="flag" src="{{ url_for('static', filename='language_icons/icon_' ~ current_lang ~ '.png') }}" alt="">
+          <img class="flag" src="{{ url_for('static', filename='language_icons/' ~ current_lang ~ '.svg') }}" alt="">
           {{ current_lang | upper }} {{ icon('chevron-down') }}
         </summary>
         <div class="dropdown-menu">
-          <button type="button" data-lang="cs"><img class="flag" src="{{ url_for('static', filename='language_icons/icon_cs.png') }}" alt=""> Čeština</button>
-          <button type="button" data-lang="en"><img class="flag" src="{{ url_for('static', filename='language_icons/icon_en.png') }}" alt=""> English</button>
+          {% for code, name in language_names.items() %}
+          <button type="button" data-lang="{{ code }}" lang="{{ code }}"><img class="flag" src="{{ url_for('static', filename='language_icons/' ~ code ~ '.svg') }}" alt=""> {{ name }}</button>
+          {% endfor %}
         </div>
       </details>
 

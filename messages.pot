@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-08 21:52+0200\n"
+"POT-Creation-Date: 2026-10-26 23:28+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,57 +17,63 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: app.py:521
-msgid "The confirmation link is invalid"
+#: app.py:108 app.py:1276
+msgid ""
+"Your account has been blocked. In case this should not be the case, "
+"please contact your company admin."
 msgstr ""
 
-#: app.py:524
+#: app.py:610
 msgid "The confirmation link has expired."
 msgstr ""
 
-#: app.py:530
+#: app.py:613
+msgid "The confirmation link is invalid"
+msgstr ""
+
+#: app.py:620
 msgid "Forgot your password? Enter your email address."
 msgstr ""
 
-#: app.py:546
+#: app.py:636
 msgid ""
 "You have requested to reset your password. Please click the button below "
 "to reset your password:"
 msgstr ""
 
-#: app.py:547
+#: app.py:637
 msgid "AIBAL: Password Reset Request"
 msgstr ""
 
-#: app.py:549
+#: app.py:639
 msgid ""
 "An email with password reset instructions has been sent to your email "
 "address."
 msgstr ""
 
-#: app.py:562
+#: app.py:652
 msgid "You can now reset your password!"
 msgstr ""
 
-#: app.py:572 app.py:608
-msgid "Your password has been set. You can now log in!"
-msgstr ""
-
-#: app.py:574 app.py:610
+#: app.py:661 app.py:665 app.py:698 app.py:702
 msgid "There was an error setting your password. Please try again."
 msgstr ""
 
-#: app.py:585
+#: app.py:663 app.py:700
+msgid "Your password has been set. You can now log in!"
+msgstr ""
+
+#: app.py:676
 msgid "Your email address has been confirmed. You can now log in!"
 msgstr ""
 
-#: app.py:598
+#: app.py:689
 msgid ""
 "Your email address has been confirmed. Please, create your password to "
 "complete the registration!"
 msgstr ""
 
-#: app.py:642
+#: app.py:734
 msgid ""
 "Welcome to AIBAL! Your company registration has been confirmed by the "
 "AIBAL administrator.The administrator account for your company has been "
@@ -78,367 +84,571 @@ msgid ""
 "below:"
 msgstr ""
 
-#: app.py:646
+#: app.py:738
 msgid "AIBAL: Please confirm your ADMIN email address"
 msgstr ""
 
-#: app.py:649
+#: app.py:741
 msgid ""
 "The company has been successfully confirmed. The company administrator "
 "will be notified automatically."
 msgstr ""
 
-#: app.py:674
+#: app.py:766
 msgid "reCAPTCHA verification failed. Please try again."
 msgstr ""
 
-#: app.py:687
+#: app.py:779
 msgid "Your session has expired. Please refresh the page and try again."
 msgstr ""
 
-#: app.py:805
+#: app.py:901
 msgid "You do not have permission to access this data."
 msgstr ""
 
-#: app.py:816
+#: app.py:912
 msgid "You must be logged in to access this page."
 msgstr ""
 
-#: app.py:826
+#: app.py:924 app.py:994
 msgid "You do not have permission to access this page."
 msgstr ""
 
-#: app.py:860 app.py:1380 templates/home.html:41
+#: app.py:958 templates/home.html:83 templates/home.html:93
 msgid "Contact us!"
 msgstr ""
 
-#: app.py:876
+#: app.py:974
 msgid "Your message has been sent successfully."
 msgstr ""
 
-#: app.py:879 app.py:882
+#: app.py:977 app.py:980 app.py:1044
 msgid "There was an error sending your message. Please try again."
 msgstr ""
 
-#: app.py:902
+#: app.py:993 app.py:996
+msgid "The request could not be processed"
+msgstr ""
+
+#: app.py:995
+msgid "Page not found"
+msgstr ""
+
+#: app.py:997
+msgid "The uploaded file is too large"
+msgstr ""
+
+#: app.py:998
+msgid "Too many requests - please wait a moment and try again"
+msgstr ""
+
+#: app.py:999
+msgid "Something went wrong on our side"
+msgstr ""
+
+#: app.py:1003
+msgid "If the problem persists, please contact us."
+msgstr ""
+
+#: app.py:1021
 msgid "Change email"
 msgstr ""
 
-#: app.py:915
+#: app.py:1031 app.py:1077
+msgid "The password is not correct."
+msgstr ""
+
+#: app.py:1037
 msgid ""
 "You have requested a change of an email address.Please confirm your new "
 "email address by clicking the button below:"
 msgstr ""
 
-#: app.py:917
+#: app.py:1039
 msgid "AIBAL: Confirm your new email address"
 msgstr ""
 
-#: app.py:920 app.py:940
+#: app.py:1042
+msgid ""
+"We have sent a confirmation link to the new address. The e-mail address "
+"will change once you open it."
+msgstr ""
+
+#: app.py:1055 forms.py:18
+msgid "This email address is already used. Please use a different one."
+msgstr ""
+
+#: app.py:1057 app.py:1081
 msgid "Email changed successfully."
 msgstr ""
 
-#: app.py:929
+#: app.py:1059
+msgid "There was an error while changing your e-mail address. Please try again."
+msgstr ""
+
+#: app.py:1067
 msgid "Change company email"
 msgstr ""
 
-#: app.py:953 app.py:968 app.py:976 app.py:992
+#: app.py:1094 app.py:1109 app.py:1118 app.py:1134
 msgid "Change personal information"
 msgstr ""
 
-#: app.py:965
+#: app.py:1106
 msgid "Personal information updated successfully."
 msgstr ""
 
-#: app.py:989
+#: app.py:1131
 msgid "Company information updated successfully."
 msgstr ""
 
-#: app.py:997 templates/user.html:60
+#: app.py:1139 forms.py:109 templates/user.html:34
 msgid "Change password"
 msgstr ""
 
-#: app.py:1011
+#: app.py:1153 app.py:1539 app.py:1710 app.py:1833
+msgid "Database error - the data was not saved. Please try again."
+msgstr ""
+
+#: app.py:1155
 msgid "Password changed successfully."
 msgstr ""
 
-#: app.py:1014
+#: app.py:1158
 msgid "The old password is incorrect."
 msgstr ""
 
-#: app.py:1059 app.py:1097
-msgid "You do not have permission to perform this action."
-msgstr ""
-
-#: app.py:1064 app.py:1102
+#: app.py:1205
 msgid "User with the provided username does not exist"
 msgstr ""
 
-#: app.py:1117 app.py:1148 app.py:1151 forms.py:103 templates/navbar.html:54
+#: app.py:1207 templates/employees.html:35
+msgid "You cannot change your own account here."
+msgstr ""
+
+#: app.py:1263 app.py:1299 app.py:1302 forms.py:103 templates/home.html:25
+#: templates/navbar.html:53
 msgid "Login"
 msgstr ""
 
-#: app.py:1126
+#: app.py:1272
 msgid "Please confirm your email address before logging in."
 msgstr ""
 
-#: app.py:1130
-msgid ""
-"Your account has been blocked. In case this should not be the case, "
-"please contact your company admin."
-msgstr ""
-
-#: app.py:1147 forms.py:60
+#: app.py:1298 forms.py:60
 msgid "Invalid username/email or password."
 msgstr ""
 
-#: app.py:1247
-msgid "None"
+#: app.py:1317 app.py:1780 app_report_exporter.py:914 templates/index.html:148
+#: templates/user.html:79
+msgid "Sample Collection Data:"
 msgstr ""
 
-#: app.py:1282
-msgid "Sample Records - Admin View"
+#: app.py:1495
+msgid "Is your company not registered yet?"
 msgstr ""
 
-#: app.py:1286 templates/experiments_admin.html:14 templates/navbar.html:26
-msgid "Sample Records"
+#: app.py:1496
+msgid ""
+"This form registers a user of an already registered company - you need "
+"its company key from your company admin. A new company is registered "
+"first and confirmed by us."
 msgstr ""
 
-#: app.py:1349
-msgid "Employee Records - Admin View"
-msgstr ""
-
-#: app.py:1378 app.py:1563
+#: app.py:1497 app.py:1679 app.py:1711 forms.py:98
 msgid "Register new company"
 msgstr ""
 
-#: app.py:1379
-msgid ""
-"You can use the form above to register a user for your existing company. "
-"If you wish to register a new company instead, please click the button "
-"below and contact us via email."
-msgstr ""
-
-#: app.py:1401 app.py:1430 app.py:1436 app.py:1439 app.py:1595 app.py:1598
+#: app.py:1505 app.py:1534 app.py:1540 app.py:1543 app.py:1714
 msgid "Register new user"
 msgstr ""
 
-#: app.py:1406
+#: app.py:1528
 msgid ""
 "Thank you for signing up! Please confirm your email address by clicking "
 "the link below:"
 msgstr ""
 
-#: app.py:1412
+#: app.py:1529
 msgid "AIBAL: Please confirm your email address"
 msgstr ""
 
-#: app.py:1429
+#: app.py:1533
 msgid ""
 "User registered successfully. The user will be notified via the provided "
 "email address."
 msgstr ""
 
-#: app.py:1432
+#: app.py:1536
 msgid ""
 "Registration successful. Please confirm your email via the link sent to "
 "your email address (the process may take a few minutes)."
 msgstr ""
 
-#: app.py:1435 app.py:1594
-msgid "Database error:"
-msgstr ""
-
-#: app.py:1438 app.py:1554 app.py:1597
+#: app.py:1542 app.py:1669 app.py:1713
 msgid "Form validation failed. Please check your input."
 msgstr ""
 
-#: app.py:1448
+#: app.py:1552
 msgid "Company key regenerated successfully."
 msgstr ""
 
-#: app.py:1458 forms.py:87 templates/company_key.html:9
+#: app.py:1562 forms.py:87 templates/company.html:41
+#: templates/company_key.html:4 templates/company_key.html:11
 msgid "Company Key"
 msgstr ""
 
-#: app.py:1503
+#: app.py:1577
+msgid "Me (the exporting user)"
+msgstr ""
+
+#: app.py:1609
 msgid "Invalid experiment IDs provided."
 msgstr ""
 
-#: app.py:1513 app.py:1522 app.py:1525 app.py:1555
-msgid "Export report"
-msgstr ""
-
-#: app.py:1521
-msgid "No experiments selected for report export."
-msgstr ""
-
-#: app.py:1524
+#: app.py:1617
 msgid "You do not have permission to access the selected experiments."
 msgstr ""
 
-#: app.py:1576
+#: app.py:1693
 msgid "A new company registration with the following details has been requested:"
 msgstr ""
 
-#: app.py:1578 forms.py:94 forms.py:137
+#: app.py:1695 forms.py:94 forms.py:137
 msgid "Company Name"
 msgstr ""
 
-#: app.py:1579 forms.py:138
+#: app.py:1696 forms.py:138
 msgid "Company Address"
 msgstr ""
 
-#: app.py:1580
+#: app.py:1697
 msgid "Contact Email"
 msgstr ""
 
-#: app.py:1588
+#: app.py:1705
 msgid "AIBAL: New company registration request"
 msgstr ""
 
-#: app.py:1591
+#: app.py:1707
 msgid ""
 "Registration successful. Please confirm this request in your ADMIN mail "
 "account."
 msgstr ""
 
-#: app.py:1728 app.py:1745 app.py:1781
+#: app.py:1777 app_report_exporter.py:911 templates/index.html:111
+msgid "Sample Designation:"
+msgstr ""
+
+#: app.py:1778 templates/index.html:116
+msgid "Date and Time:"
+msgstr ""
+
+#: app.py:1779 app_report_exporter.py:913 templates/index.html:120
+#: templates/user.html:51
+msgid "Place of Experiment:"
+msgstr ""
+
+#: app.py:1781 templates/index.html:132
+msgid "Wrapping Temperature of Aggregate [°C]:"
+msgstr ""
+
+#: app.py:1782 templates/index.html:136
+msgid "Wrapping Temperature of Binder [°C]:"
+msgstr ""
+
+#: app.py:1783 templates/index.html:140 templates/user.html:75
+msgid "Exposing Water Temperature [°C]:"
+msgstr ""
+
+#: app.py:1784 templates/index.html:144 templates/user.html:55
+msgid "Test Procedure:"
+msgstr ""
+
+#: app.py:1785 app_report_exporter.py:928 templates/index.html:176
+msgid "Comment:"
+msgstr ""
+
+#: app.py:1786 app_report_exporter.py:915 templates/index.html:124
+#: templates/user.html:59
+msgid "Aggregate:"
+msgstr ""
+
+#: app.py:1787 app_report_exporter.py:916 templates/index.html:128
+#: templates/user.html:63
+msgid "Binder:"
+msgstr ""
+
+#: app.py:1788 templates/experiments.html:66 templates/experiments.html:89
+#: templates/export_report.html:55 templates/index.html:170
+#: templates/index.html:208
+msgid "Expert Guess"
+msgstr ""
+
+#: app.py:1789
+msgid "MODEL"
+msgstr ""
+
+#: app.py:1818
+msgid ""
+"Your session has expired. Please log in again - the last changes were not"
+" saved."
+msgstr ""
+
+#: app.py:1826
+msgid "Invalid value:"
+msgstr ""
+
+#: app.py:1831
+msgid "No active sample - upload an image first."
+msgstr ""
+
+#: app.py:1904 app.py:1921 app.py:1957
 msgid "No active experiment found."
 msgstr ""
 
-#: app.py:2036
+#: app.py:1961 app.py:2258
 msgid "No sample data found."
 msgstr ""
 
-#: app.py:2037
+#: app.py:2087 app.py:2292
+msgid "Please choose an image file (JPG, PNG or HEIC)."
+msgstr ""
+
+#: app.py:2148
+msgid "Unknown model."
+msgstr ""
+
+#: app.py:2259
 msgid "Please fill the expert guess field before evaluating the sample."
 msgstr ""
 
-#: app.py:2038
+#: app.py:2260
 msgid "Evaluation completed. Check the console for the results."
 msgstr ""
 
-#: app.py:2039
+#: app.py:2261
 msgid "Evaluation results: "
 msgstr ""
 
-#: app.py:2040
+#: app.py:2262 templates/home.html:80
 msgid ""
 "Would you like to use this app with no limitations? Store and export "
 "these results? Contact us to create an account."
 msgstr ""
 
-#: app.py:2041
+#: app.py:2263
 msgid "No employees selected for intended action."
 msgstr ""
 
-#: app.py:2042
+#: app.py:2264
 msgid "No sample selected for deletion."
 msgstr ""
 
-#: app.py:2043
+#: app.py:2265
 msgid "Are you sure you want to delete the selected samples?"
 msgstr ""
 
-#: app.py:2044
+#: app.py:2266
 msgid "This action cannot be undone."
 msgstr ""
 
-#: app.py:2045
+#: app.py:2267
 msgid "Please select sample to view details."
 msgstr ""
 
-#: app.py:2046
+#: app.py:2268
 msgid "Please select only one sample for viewing details."
 msgstr ""
 
-#: app.py:2047
+#: app.py:2269
 msgid "Please select at least one sample for export."
 msgstr ""
 
-#: app.py:2048
+#: app.py:2270
 msgid "For CSN 73 6161, exporting a single sample is not allowed."
 msgstr ""
 
-#: app.py:2049
+#: app.py:2271
 msgid "Do you want to proceed with exporting this single sample?"
 msgstr ""
 
-#: app.py:2050
+#: app.py:2272
 msgid "Are you sure, you want to grant admin privileges to the following users?"
 msgstr ""
 
-#: app.py:2051
+#: app.py:2273
 msgid ""
 "Are you sure, you want to remove admin privileges from the following "
 "users?"
 msgstr ""
 
-#: app.py:2052
+#: app.py:2274
 msgid ""
 "Are you sure, you want to block the sign in option for the following "
 "users?"
 msgstr ""
 
-#: app.py:2053
+#: app.py:2275
 msgid ""
 "Are you sure, you want to unblock the sign in option for the following "
 "users?"
 msgstr ""
 
-#: app.py:2054
+#: app.py:2276
 msgid ""
 "You have selected experiment of another user for editing. This action "
 "will transfer the ownership of the experiment to you (the original owner "
 "will not be able to access it). Do you want to proceed?"
 msgstr ""
 
-#: app_energy_label.py:38 app_report_exporter.py:148 app_report_exporter.py:334
+#: app.py:2277
+msgid "Saving..."
+msgstr ""
+
+#: app.py:2278
+msgid "All sample data saved at"
+msgstr ""
+
+#: app.py:2279
+msgid "Unsaved changes"
+msgstr ""
+
+#: app.py:2280
+msgid "NOT SAVED:"
+msgstr ""
+
+#: app.py:2281
+msgid ""
+"The sample data could not be saved, so the sample was not evaluated. "
+"Please try again."
+msgstr ""
+
+#: app.py:2282
+msgid "The evaluation failed."
+msgstr ""
+
+#: app.py:2283 templates/index.html:17
+msgid "Upload a photo of the sample to start the assessment."
+msgstr ""
+
+#: app.py:2284 templates/experiments.html:62 templates/experiments.html:76
+msgid "Sample ID"
+msgstr ""
+
+#: app.py:2285
+msgid "Class"
+msgstr ""
+
+#: app.py:2286
+msgid "Processing the photo..."
+msgstr ""
+
+#: app.py:2287
+msgid "The model is detecting bitumen and aggregate..."
+msgstr ""
+
+#: app.py:2288
+msgid "Loading the sample..."
+msgstr ""
+
+#: app.py:2289
+msgid "Evaluating..."
+msgstr ""
+
+#: app.py:2290
+msgid "The photo could not be processed."
+msgstr ""
+
+#: app.py:2291
+msgid "The automatic detection failed."
+msgstr ""
+
+#: app.py:2293
+msgid "Default values were filled in."
+msgstr ""
+
+#: app.py:2294
+msgid ""
+"There are no default values for the empty fields. You can set them in "
+"your profile."
+msgstr ""
+
+#: app.py:2295
+msgid "Wait until the automatic detection has finished."
+msgstr ""
+
+#: app.py:2296
+msgid "Confirm"
+msgstr ""
+
+#: app.py:2297 templates/employees.html:61 templates/experiments.html:125
+msgid "Cancel"
+msgstr ""
+
+#: app.py:2298 templates/experiments.html:127
+msgid "Delete"
+msgstr ""
+
+#: app_energy_label.py:38 app_report_exporter.py:155 app_report_exporter.py:391
 msgid "Unclassifiable"
 msgstr ""
 
-#: app_energy_label.py:104 app_report_exporter.py:214
+#: app_energy_label.py:104 app_report_exporter.py:221
 msgid "Adhesion"
 msgstr ""
 
-#: app_energy_label.py:114 app_report_exporter.py:224
+#: app_energy_label.py:114 app_report_exporter.py:231
 msgid "Rating"
 msgstr ""
 
-#: app_report_exporter.py:310
+#: app_report_exporter.py:296
+msgid "Inference model "
+msgstr ""
+
+#: app_report_exporter.py:296
+msgid " not available for experiment ID"
+msgstr ""
+
+#: app_report_exporter.py:296
+msgid ""
+"Please use newer model for this specimen or contact us to resolve this "
+"issue."
+msgstr ""
+
+#: app_report_exporter.py:367
 msgid "Excellent"
 msgstr ""
 
-#: app_report_exporter.py:312
+#: app_report_exporter.py:369
 msgid "Good"
 msgstr ""
 
-#: app_report_exporter.py:314
+#: app_report_exporter.py:371
 msgid "Satisfactory"
 msgstr ""
 
-#: app_report_exporter.py:316
+#: app_report_exporter.py:373
 msgid "Unsatisfactory"
 msgstr ""
 
-#: app_report_exporter.py:392
+#: app_report_exporter.py:453
 msgid "AIBAL Report"
 msgstr ""
 
-#: app_report_exporter.py:394
+#: app_report_exporter.py:455
 msgid "AIBAL Report ID:"
 msgstr ""
 
-#: app_report_exporter.py:395
+#: app_report_exporter.py:456
 msgid "bitumen, adhesion, test, CSN 73 6161"
 msgstr ""
 
-#: app_report_exporter.py:421
+#: app_report_exporter.py:482
 msgid "Bitumen Adhesion Test Protocol"
 msgstr ""
 
-#: app_report_exporter.py:425
+#: app_report_exporter.py:486
 msgid ""
 "\n"
 "    This report provides a comprehensive overview of the bitumen adhesion"
@@ -447,13 +657,13 @@ msgid ""
 "    The adhesion test was performed on "
 msgstr ""
 
-#: app_report_exporter.py:428
+#: app_report_exporter.py:489
 msgid ""
 " samples of asphalt mixtures. The detailes about each specimen included "
 "below, the overview is at the end of the document."
 msgstr ""
 
-#: app_report_exporter.py:432
+#: app_report_exporter.py:493
 msgid ""
 "\n"
 "    Both the visual expert assesment and the AI-based quantitative "
@@ -464,138 +674,124 @@ msgid ""
 "    "
 msgstr ""
 
-#: app_report_exporter.py:445
+#: app_report_exporter.py:506
 msgid "Ordering Party"
 msgstr ""
 
-#: app_report_exporter.py:451
+#: app_report_exporter.py:512
 msgid "Providing Laboratory"
 msgstr ""
 
-#: app_report_exporter.py:462
+#: app_report_exporter.py:523
 msgid "The proceeding employee"
 msgstr ""
 
-#: app_report_exporter.py:463 app_report_exporter.py:481
-#: app_report_exporter.py:1160
+#: app_report_exporter.py:524 app_report_exporter.py:542
+#: app_report_exporter.py:1170
 msgid "Name:"
 msgstr ""
 
-#: app_report_exporter.py:464 app_report_exporter.py:482
-#: app_report_exporter.py:1162
+#: app_report_exporter.py:525 app_report_exporter.py:543
+#: app_report_exporter.py:1172
 msgid "Contact:"
 msgstr ""
 
-#: app_report_exporter.py:466 app_report_exporter.py:484
+#: app_report_exporter.py:527 app_report_exporter.py:545
 msgid "Signature: ..................................................."
 msgstr ""
 
-#: app_report_exporter.py:480
+#: app_report_exporter.py:541
 msgid "The controll performed by"
 msgstr ""
 
-#: app_report_exporter.py:551
-msgid "Inference model "
-msgstr ""
-
-#: app_report_exporter.py:551
-msgid " not available for experiment ID"
-msgstr ""
-
-#: app_report_exporter.py:551
-msgid ""
-"Please use newer model for this specimen or contact us to resolve this "
-"issue."
-msgstr ""
-
-#: app_report_exporter.py:597
+#: app_report_exporter.py:620
 msgid "Resulting assesment - expert"
 msgstr ""
 
-#: app_report_exporter.py:600
+#: app_report_exporter.py:620
 msgid "Resulting assesment - automatic"
 msgstr ""
 
-#: app_report_exporter.py:610
+#: app_report_exporter.py:632
 msgid "Tabular overview"
 msgstr ""
 
-#: app_report_exporter.py:612
+#: app_report_exporter.py:634
 msgid "Specimen ID"
 msgstr ""
 
-#: app_report_exporter.py:613
+#: app_report_exporter.py:635
 msgid "Visual Expert Assessment [%]"
 msgstr ""
 
-#: app_report_exporter.py:614
+#: app_report_exporter.py:636
 msgid "AI-based Assesment  [%]"
 msgstr ""
 
-#: app_report_exporter.py:642
+#: app_report_exporter.py:657
 msgid "Report Conclusion"
 msgstr ""
 
-#: app_report_exporter.py:645 app_report_exporter.py:646
+#: app_report_exporter.py:661 app_report_exporter.py:663
 msgid "The average adhesion rate across all samples is"
 msgstr ""
 
-#: app_report_exporter.py:645
+#: app_report_exporter.py:661
 msgid "according to expert visual assesment, which correspondes to calss"
 msgstr ""
 
-#: app_report_exporter.py:646
+#: app_report_exporter.py:663
 msgid "according to AI-based analysis, which correspondes to calss"
 msgstr ""
 
-#: app_report_exporter.py:647 app_report_exporter.py:648
+#: app_report_exporter.py:665 app_report_exporter.py:667
 msgid "The worst adhesion rate ("
 msgstr ""
 
-#: app_report_exporter.py:647 app_report_exporter.py:648
+#: app_report_exporter.py:665 app_report_exporter.py:667
 msgid " %) observed is class "
 msgstr ""
 
-#: app_report_exporter.py:647
+#: app_report_exporter.py:665
 msgid "according to expert visual assesment."
 msgstr ""
 
-#: app_report_exporter.py:648
+#: app_report_exporter.py:667
 msgid "according to AI-based analysis."
 msgstr ""
 
-#: app_report_exporter.py:651
+#: app_report_exporter.py:669
 msgid "The final considered class is: "
 msgstr ""
 
-#: app_report_exporter.py:652
+#: app_report_exporter.py:670
 msgid "The adhesion between aggregate and binder is classified as: "
 msgstr ""
 
-#: app_report_exporter.py:656
+#: app_report_exporter.py:674
 msgid ""
 " images seem to highly similar with others and might not be unique "
 "specimens."
 msgstr ""
 
-#: app_report_exporter.py:658
+#: app_report_exporter.py:676
 msgid " have been uploaded more than 6 months ago."
 msgstr ""
 
-#: app_report_exporter.py:660
+#: app_report_exporter.py:678
 msgid ""
 "The report contains less than 2 samples, which is insufficient for CSN 73"
 " 6161 standard compliance."
 msgstr ""
 
-#: app_report_exporter.py:662
+#: app_report_exporter.py:682
 msgid ""
 "Significant variance detected between expert assessments (>10%) of "
 "different samples. The CSN 73 6161 standard requires experiment "
 "repetition."
 msgstr ""
 
-#: app_report_exporter.py:664
+#: app_report_exporter.py:684
 msgid ""
 "Significant variance detected between AI-based assessments (>10%) of "
 "different samples. The CSN 73 6161 standard requires experiment "
@@ -603,124 +799,100 @@ msgid ""
 "reliable."
 msgstr ""
 
-#: app_report_exporter.py:666
+#: app_report_exporter.py:686
 msgid "Concerns"
 msgstr ""
 
-#: app_report_exporter.py:681
+#: app_report_exporter.py:701
 msgid "This report was generated using AIBAL on "
 msgstr ""
 
-#: app_report_exporter.py:780
+#: app_report_exporter.py:800
 msgid ""
 "<<< ⚠ WARNING: The program has detected a highly similar image (on the "
 "left, experiment_id:"
 msgstr ""
 
-#: app_report_exporter.py:781
+#: app_report_exporter.py:801
 msgid " , uploaded by "
 msgstr ""
 
-#: app_report_exporter.py:781
+#: app_report_exporter.py:801
 msgid " on "
 msgstr ""
 
-#: app_report_exporter.py:782
+#: app_report_exporter.py:802
 msgid ") with"
 msgstr ""
 
-#: app_report_exporter.py:782
+#: app_report_exporter.py:802
 msgid "confidence. "
 msgstr ""
 
-#: app_report_exporter.py:783
+#: app_report_exporter.py:803
 msgid ""
 "Please review the samples for potential duplication. In case the "
 "specimens clearly aren't duplicates, you can ignore this message."
 msgstr ""
 
-#: app_report_exporter.py:818 templates/demo.html:73 templates/index.html:237
+#: app_report_exporter.py:838 templates/macros/viewer.html:48
 msgid "Original Image"
 msgstr ""
 
-#: app_report_exporter.py:818
+#: app_report_exporter.py:838
 msgid "Processed Image"
 msgstr ""
 
-#: app_report_exporter.py:820
-msgid "(Asphalt - RED, Aggregate - BLUE)"
+#: app_report_exporter.py:840
+msgid "(Bitumen - blue, aggregate - red)"
 msgstr ""
 
-#: app_report_exporter.py:894
+#: app_report_exporter.py:910
 msgid "Sample ID:"
 msgstr ""
 
-#: app_report_exporter.py:895
+#: app_report_exporter.py:912
 msgid "Date:"
 msgstr ""
 
-#: app_report_exporter.py:896 templates/index.html:85 templates/user.html:85
-msgid "Place of Experiment:"
-msgstr ""
-
-#: app_report_exporter.py:897 templates/index.html:94 templates/user.html:94
-msgid "Sample Collection Data:"
-msgstr ""
-
-#: app_report_exporter.py:898 templates/index.html:138 templates/user.html:105
-msgid "Aggregate:"
-msgstr ""
-
-#: app_report_exporter.py:899 templates/index.html:146 templates/user.html:113
-msgid "Binder:"
-msgstr ""
-
-#: app_report_exporter.py:900
+#: app_report_exporter.py:917
 msgid "Wrapping temperature aggregate [°C]:"
 msgstr ""
 
-#: app_report_exporter.py:901
+#: app_report_exporter.py:918
 msgid "Wrapping temperature binder [°C]:"
 msgstr ""
 
-#: app_report_exporter.py:902
+#: app_report_exporter.py:919
 msgid "Exposing water temperature [°C]:"
 msgstr ""
 
-#: app_report_exporter.py:903
+#: app_report_exporter.py:920
 msgid "Test procedure:"
 msgstr ""
 
-#: app_report_exporter.py:914
+#: app_report_exporter.py:924
 msgid "Assessment - Adhesion Rate:"
 msgstr ""
 
-#: app_report_exporter.py:915
+#: app_report_exporter.py:925
 msgid "Inference Model:"
 msgstr ""
 
-#: app_report_exporter.py:916
+#: app_report_exporter.py:926
 msgid "Automatic Assessment [%]:"
 msgstr ""
 
-#: app_report_exporter.py:917
+#: app_report_exporter.py:927
 msgid "Visual based Expert Guess [%]:"
 msgstr ""
 
-#: app_report_exporter.py:918 templates/index.html:176
-msgid "Comment:"
-msgstr ""
-
-#: app_report_exporter.py:1118
+#: app_report_exporter.py:1128
 msgid "Report generated by AIBAL -Bitumen Adhesion Lab - report ID:"
 msgstr ""
 
-#: app_report_exporter.py:1161
+#: app_report_exporter.py:1171
 msgid "Address:"
-msgstr ""
-
-#: forms.py:18
-msgid "This email address is already used. Please use a different one."
 msgstr ""
 
 #: forms.py:19
@@ -752,11 +924,12 @@ msgstr ""
 msgid "The maximal allowed length is {max} characters."
 msgstr ""
 
-#: forms.py:82 forms.py:122 templates/employees.html:26
+#: forms.py:82 forms.py:122 templates/employees.html:24
+#: templates/employees.html:41
 msgid "Username"
 msgstr ""
 
-#: forms.py:83 forms.py:95 forms.py:152 forms.py:165
+#: forms.py:83 forms.py:95 forms.py:152 forms.py:167
 msgid "Email address"
 msgstr ""
 
@@ -776,9 +949,9 @@ msgstr ""
 msgid "Confirm password"
 msgstr ""
 
-#: forms.py:90 forms.py:98 forms.py:109 forms.py:114 forms.py:118 forms.py:125
-#: forms.py:139 forms.py:156 forms.py:161 forms.py:171 forms.py:178
-msgid "Submit"
+#: forms.py:90 templates/form.html:20 templates/home.html:82
+#: templates/navbar.html:54
+msgid "Register"
 msgstr ""
 
 #: forms.py:97
@@ -801,8 +974,20 @@ msgstr ""
 msgid "Confirm new password"
 msgstr ""
 
+#: forms.py:114
+msgid "Set new password"
+msgstr ""
+
 #: forms.py:117
 msgid "Your Email address"
+msgstr ""
+
+#: forms.py:118 forms.py:156
+msgid "Send reset link"
+msgstr ""
+
+#: forms.py:125 forms.py:139
+msgid "Save changes"
 msgstr ""
 
 #: forms.py:130 forms.py:144
@@ -813,333 +998,420 @@ msgstr ""
 msgid "New email address"
 msgstr ""
 
-#: forms.py:164
-msgid "Your Name"
+#: forms.py:162
+msgid "Current password"
+msgstr ""
+
+#: forms.py:163 templates/user.html:33
+msgid "Change e-mail address"
 msgstr ""
 
 #: forms.py:166
-msgid "Subject"
+msgid "Your Name"
 msgstr ""
 
 #: forms.py:168
+msgid "Subject"
+msgstr ""
+
+#: forms.py:170
 msgid "Message"
 msgstr ""
 
-#: forms.py:174
-msgid "Ordering Party Name"
-msgstr ""
-
-#: forms.py:175
-msgid "Ordering Party Address"
+#: forms.py:173
+msgid "Send message"
 msgstr ""
 
 #: forms.py:176
-msgid "Ordering Party Email"
+msgid "Ordering Party Name"
 msgstr ""
 
 #: forms.py:177
+msgid "Ordering Party Address"
+msgstr ""
+
+#: forms.py:178
+msgid "Ordering Party Email"
+msgstr ""
+
+#: forms.py:179
 msgid "Controller/Employee Email"
 msgstr ""
 
-#: templates/404.html:9
-msgid "404 Not Found - AIBAL"
+#: forms.py:180 templates/experiments.html:99 templates/experiments.html:100
+#: templates/experiments.html:126 templates/export_report.html:5
+#: templates/export_report.html:11 templates/export_report.html:28
+#: templates/index.html:192 templates/index.html:217
+msgid "Export report"
 msgstr ""
 
-#: templates/404.html:15
-msgid "Page not found"
+#: templates/base.html:20
+msgid "Skip to content"
 msgstr ""
 
-#: templates/base.html:44
+#: templates/base.html:31
 msgid "2025 David Šilhánek, Václav Nežerka."
 msgstr ""
 
-#: templates/base.html:47
-msgid ""
-"All rights reserved excluding icons which are where created by artists on"
-" the"
-msgstr ""
-
-#: templates/base.html:49
-msgid "platform, namely:"
-msgstr ""
-
-#: templates/base.html:61
+#: templates/base.html:32
 msgid "Development supported by"
 msgstr ""
 
-#: templates/base.html:63
+#: templates/base.html:33
 msgid "Technology Agency of the Czech Republic"
 msgstr ""
 
-#: templates/base.html:63
+#: templates/base.html:34
 msgid "project CL02000145."
 msgstr ""
 
-#: templates/company.html:9 templates/user.html:9 templates/user.html:18
-msgid "User Information"
-msgstr ""
-
-#: templates/company.html:18
+#: templates/company.html:6 templates/company.html:12 templates/company.html:22
 msgid "Company Information"
 msgstr ""
 
-#: templates/company.html:29
+#: templates/company.html:15 templates/employees.html:4
+#: templates/employees.html:10 templates/navbar.html:15
+msgid "Employees"
+msgstr ""
+
+#: templates/company.html:26
 msgid "Company Name: "
 msgstr ""
 
-#: templates/company.html:33
+#: templates/company.html:27
 msgid "Address: "
 msgstr ""
 
-#: templates/company.html:37
+#: templates/company.html:28
 msgid "Company E-mail: "
 msgstr ""
 
-#: templates/company.html:46
+#: templates/company.html:30
+msgid ""
+"The company name and address are printed on every report as the providing"
+" laboratory."
+msgstr ""
+
+#: templates/company.html:33
 msgid "Edit company information"
 msgstr ""
 
-#: templates/company.html:50
+#: templates/company.html:34
 msgid "Change company e-mail address"
 msgstr ""
 
-#: templates/company.html:53
-msgid "Regenerate company key"
+#: templates/company.html:42 templates/company_key.html:12
+msgid "Colleagues join your company by entering this key when they register."
 msgstr ""
 
-#: templates/company.html:56
+#: templates/company.html:47
+msgid ""
+"Share the key only with your colleagues. If it got into the wrong hands, "
+"generate a new one - the old key stops working."
+msgstr ""
+
+#: templates/company.html:51
 msgid "View company key"
 msgstr ""
 
-#: templates/demo.html:6
-msgid "DEMO"
+#: templates/company.html:53
+msgid "Generate a new company key? The current key will stop working."
 msgstr ""
 
-#: templates/demo.html:13 templates/index.html:28
-msgid "Upload Image"
+#: templates/company.html:54
+msgid "Regenerate company key"
 msgstr ""
 
-#: templates/demo.html:16 templates/index.html:54
+#: templates/company_key.html:15 templates/navbar.html:16
+msgid "Company"
+msgstr ""
+
+#: templates/company_key.html:23
+msgid "Copy"
+msgstr ""
+
+#: templates/company_key.html:26
+msgid "Send the key to your colleague."
+msgstr ""
+
+#: templates/company_key.html:27
+msgid "The colleague registers at"
+msgstr ""
+
+#: templates/company_key.html:27
+msgid "and enters the key."
+msgstr ""
+
+#: templates/company_key.html:28
 msgid ""
-"By uploading an image, you agree that it may be stored in the application"
-" repository and potentially used by the authors for training future "
-"models."
+"After confirming the e-mail address, the colleague appears among the "
+"employees."
 msgstr ""
 
-#: templates/demo.html:21 templates/index.html:185
-msgid "Automatic Phase Detection"
+#: templates/company_key.html:30
+msgid "For security, the key will be hidden in one minute."
 msgstr ""
 
-#: templates/demo.html:24 templates/form_plain.html:7 templates/index.html:62
-#: templates/index.html:188
-msgid "Working..."
-msgstr ""
-
-#: templates/demo.html:31 templates/index.html:195
-msgid "MODEL"
-msgstr ""
-
-#: templates/demo.html:41 templates/index.html:205
-msgid "Mask Opacity:"
-msgstr ""
-
-#: templates/demo.html:53 templates/index.html:217
-msgid "Display mask - Bitumen"
-msgstr ""
-
-#: templates/demo.html:59 templates/index.html:223
-msgid "Display mask - Aggregate"
-msgstr ""
-
-#: templates/demo.html:65 templates/index.html:229
-msgid "Display mask - Background"
-msgstr ""
-
-#: templates/demo.html:75 templates/index.html:239
-msgid "Grayscale Image"
-msgstr ""
-
-#: templates/demo.html:94
-msgid "Evaluate"
+#: templates/employees.html:11
+msgid "Users of your company with a confirmed e-mail address."
 msgstr ""
 
 #: templates/employees.html:14
-msgid "Employee Records"
+msgid "Invite a colleague"
 msgstr ""
 
-#: templates/employees.html:25
+#: templates/employees.html:22 templates/experiments.html:61
+msgid "Select all"
+msgstr ""
+
+#: templates/employees.html:23
 msgid "Name"
 msgstr ""
 
-#: templates/employees.html:27 templates/experiments_admin.html:28
+#: templates/employees.html:25 templates/employees.html:42
+#: templates/navbar.html:21
 msgid "Contact"
 msgstr ""
 
-#: templates/employees.html:28
-msgid "Is Admin"
+#: templates/employees.html:26 templates/employees.html:43
+msgid "Role"
 msgstr ""
 
-#: templates/employees.html:29
-msgid "Is Blocked"
+#: templates/employees.html:27 templates/employees.html:47
+#: templates/experiments.html:68 templates/experiments.html:91
+msgid "Status"
 msgstr ""
 
-#: templates/employees.html:30 templates/experiments.html:31
-#: templates/experiments_admin.html:33
-msgid "Selected"
+#: templates/employees.html:35 templates/employees.html:40
+msgid "You"
 msgstr ""
 
-#: templates/employees.html:39 templates/experiments.html:40
-#: templates/experiments_admin.html:42
-msgid "Max records on page:"
+#: templates/employees.html:37 templates/experiments.html:75
+msgid "Select"
 msgstr ""
 
-#: templates/employees.html:47 templates/experiments.html:48
-#: templates/experiments_admin.html:50
-msgid "Sort order:"
+#: templates/employees.html:44 templates/navbar.html:46
+msgid "Company admin"
 msgstr ""
 
-#: templates/employees.html:50 templates/experiments.html:51
-#: templates/experiments_admin.html:53
-msgid "Descending"
+#: templates/employees.html:45 templates/navbar.html:46
+msgid "User"
 msgstr ""
 
-#: templates/employees.html:51 templates/experiments.html:52
-#: templates/experiments_admin.html:54
-msgid "Ascending"
+#: templates/employees.html:48
+msgid "Blocked"
 msgstr ""
 
-#: templates/employees.html:57
-msgid "Grant Admin privileges"
+#: templates/employees.html:49
+msgid "Active"
 msgstr ""
 
-#: templates/employees.html:59
-msgid "Remove Admin privileges"
-msgstr ""
-
-#: templates/employees.html:61
-msgid "Unblock User"
-msgstr ""
-
-#: templates/employees.html:62
-msgid "Block User"
-msgstr ""
-
-#: templates/employees.html:88 templates/experiments.html:100
-#: templates/experiments_admin.html:94
+#: templates/employees.html:53 templates/experiments.html:107
 msgid "No records found"
 msgstr ""
 
-#: templates/employees.html:96 templates/experiments.html:108
-#: templates/experiments_admin.html:102
-msgid "Previous"
+#: templates/employees.html:60 templates/experiments.html:124
+msgid "selected"
 msgstr ""
 
-#: templates/employees.html:98 templates/experiments.html:110
-#: templates/experiments_admin.html:104
-msgid "Next"
+#: templates/employees.html:62
+msgid "Grant Admin privileges"
 msgstr ""
 
-#: templates/employees.html:102 templates/employees.html:108
-msgid "Register New Employee"
+#: templates/employees.html:63
+msgid "Remove Admin privileges"
 msgstr ""
 
-#: templates/employees.html:104
+#: templates/employees.html:64
+msgid "Unblock User"
+msgstr ""
+
+#: templates/employees.html:65
+msgid "Block User"
+msgstr ""
+
+#: templates/employees.html:70
+msgid "How does a colleague join?"
+msgstr ""
+
+#: templates/employees.html:71
 msgid ""
 "Click the button below to register a new employee. For registration, you "
 "need to know the company key, which can be viewed"
 msgstr ""
 
-#: templates/employees.html:105
+#: templates/employees.html:72
 msgid "here"
 msgstr ""
 
-#: templates/experiments.html:14
-msgid "Samples Records"
+#: templates/employees.html:73
+msgid "Register New Employee"
 msgstr ""
 
-#: templates/experiments.html:25 templates/experiments_admin.html:25
-msgid "Sample ID"
+#: templates/error.html:6
+msgid "Error"
 msgstr ""
 
-#: templates/experiments.html:26 templates/experiments_admin.html:26
+#: templates/error.html:10
+msgid "Back to the app"
+msgstr ""
+
+#: templates/error.html:11
+msgid "Previous page"
+msgstr ""
+
+#: templates/experiments.html:22 templates/experiments.html:28
+#: templates/export_report.html:15 templates/index.html:216
+#: templates/navbar.html:13
+msgid "Sample Records"
+msgstr ""
+
+#: templates/experiments.html:29
+msgid "All samples of your company."
+msgstr ""
+
+#: templates/experiments.html:29
+msgid "Your evaluated and unfinished samples."
+msgstr ""
+
+#: templates/experiments.html:32 templates/index.html:193
+#: templates/index.html:218
+msgid "New sample"
+msgstr ""
+
+#: templates/experiments.html:40
+msgid "Search by sample designation:"
+msgstr ""
+
+#: templates/experiments.html:44
+msgid "Designation or sample ID"
+msgstr ""
+
+#: templates/experiments.html:48
+msgid "Max records on page:"
+msgstr ""
+
+#: templates/experiments.html:53
+msgid "Search"
+msgstr ""
+
+#: templates/experiments.html:54
+msgid "Clear"
+msgstr ""
+
+#: templates/experiments.html:63
+msgid "Sample Designation"
+msgstr ""
+
+#: templates/experiments.html:64 templates/experiments.html:82
 msgid "Date"
 msgstr ""
 
-#: templates/experiments.html:27 templates/experiments.html:28
-#: templates/experiments_admin.html:29 templates/experiments_admin.html:30
-msgid "Asphalt coverage - "
-msgstr ""
-
-#: templates/experiments.html:27 templates/experiments_admin.html:29
-#, python-format
-msgid "Expert guess [%%]"
-msgstr ""
-
-#: templates/experiments.html:28 templates/experiments_admin.html:30
-#, python-format
-msgid "Model prediction [%%]"
-msgstr ""
-
-#: templates/experiments.html:29 templates/experiments_admin.html:31
-msgid "Actions"
-msgstr ""
-
-#: templates/experiments.html:30 templates/experiments_admin.html:32
-msgid "Similarity Check"
-msgstr ""
-
-#: templates/experiments.html:57 templates/experiments_admin.html:59
-msgid "Edit Selected Sample"
-msgstr ""
-
-#: templates/experiments.html:58 templates/experiments_admin.html:60
-msgid "Export Selected"
-msgstr ""
-
-#: templates/experiments.html:59 templates/experiments_admin.html:61
-msgid "Delete Selected"
-msgstr ""
-
-#: templates/experiments.html:74 templates/experiments_admin.html:75
-msgid "Edit"
-msgstr ""
-
-#: templates/experiments.html:76 templates/experiments_admin.html:77
-msgid "Delete"
-msgstr ""
-
-#: templates/experiments_admin.html:27
+#: templates/experiments.html:65 templates/experiments.html:84
 msgid "Performed by"
 msgstr ""
 
-#: templates/form_plain.html:16 templates/form_plain.html:18
-msgid "submit"
+#: templates/experiments.html:67 templates/experiments.html:90
+#: templates/export_report.html:55 templates/home.html:74
+#: templates/index.html:165 templates/index.html:203
+msgid "AI assessment"
 msgstr ""
 
-#: templates/form_plain.html:35
+#: templates/experiments.html:69
+msgid "Actions"
+msgstr ""
+
+#: templates/experiments.html:79 templates/export_report.html:54
+msgid "No designation"
+msgstr ""
+
+#: templates/experiments.html:92
+msgid "Evaluated"
+msgstr ""
+
+#: templates/experiments.html:93
+msgid "In progress"
+msgstr ""
+
+#: templates/experiments.html:97 templates/experiments.html:98
+msgid "Open"
+msgstr ""
+
+#: templates/experiments.html:106
+msgid "No sample matches the search."
+msgstr ""
+
+#: templates/experiments.html:107
+msgid "evaluate your first sample"
+msgstr ""
+
+#: templates/experiments.html:116
+msgid "Page"
+msgstr ""
+
+#: templates/experiments.html:116
+msgid "records"
+msgstr ""
+
+#: templates/experiments.html:118
+msgid "Previous"
+msgstr ""
+
+#: templates/experiments.html:119
+msgid "Next"
+msgstr ""
+
+#: templates/export_report.html:12
+msgid "Protocol of the adhesion test according to ČSN 73 6161 (PDF)."
+msgstr ""
+
+#: templates/export_report.html:23
+msgid "Report details"
+msgstr ""
+
+#: templates/export_report.html:24
+msgid "The ordering party is printed on the protocol; the controller signs it."
+msgstr ""
+
+#: templates/export_report.html:35
+msgid "Selected samples"
+msgstr ""
+
+#: templates/export_report.html:36
+msgid "Change the selection in the sample records"
+msgstr ""
+
+#: templates/export_report.html:42
+msgid ""
+"ČSN 73 6161 requires at least two samples in one report. A report with "
+"one sample will point this out."
+msgstr ""
+
+#: templates/export_report.html:47
+msgid "Some of the selected samples have not been evaluated yet."
+msgstr ""
+
+#: templates/form.html:4
+msgid "Form"
+msgstr ""
+
+#: templates/form.html:15
+msgid "Sign in to assess your asphalt samples."
+msgstr ""
+
+#: templates/form.html:19
 msgid "Forgot your password?"
 msgstr ""
 
-#: templates/home.html:18 templates/home.html:27
-msgid "ABOUT"
+#: templates/form.html:24
+msgid "Back"
 msgstr ""
 
-#: templates/home.html:28
-msgid ""
-"AI BAL is an advanced software tool designed for the analysis and "
-"classification of asphalt images. Utilizing state-of-the-art machine "
-"learning models, AI BAL provides accurate segmentation and classification"
-" of bitumen, aggregate, and background components in asphalt samples."
+#: templates/home.html:6 templates/navbar.html:19
+msgid "About"
 msgstr ""
 
-#: templates/home.html:29
-msgid ""
-"With an intuitive interface and powerful features, AI BAL is ideal for "
-"researchers, engineers, and professionals in the field of pavement "
-"materials."
-msgstr ""
-
-#: templates/home.html:31
+#: templates/home.html:18
 msgid ""
 "AI Bitumen Adhesion Lab is a web application for the analysis and "
 "classification of bitumen-aggregate adhesion in asphalt concrete with the"
@@ -1148,18 +1420,84 @@ msgid ""
 "delivering objective, and repeatable results. "
 msgstr ""
 
-#: templates/home.html:34
+#: templates/home.html:19
 msgid ""
 "With an intuitive interface and useful features like automated reports, "
 "it provides researchers, engineers and professionals with fast, reliable,"
 " and science-based alternative to subjective visual assessment."
 msgstr ""
 
-#: templates/home.html:36
+#: templates/home.html:21 templates/home.html:56
 msgid "Try it out"
 msgstr ""
 
-#: templates/home.html:38
+#: templates/home.html:23 templates/index.html:6 templates/index.html:16
+#: templates/navbar.html:12
+msgid "Current Sample"
+msgstr ""
+
+#: templates/home.html:35
+msgid "How it works"
+msgstr ""
+
+#: templates/home.html:39
+msgid "Photograph the sample"
+msgstr ""
+
+#: templates/home.html:40
+msgid ""
+"Upload a photo of the stripped aggregate or take it with the camera "
+"directly in the app."
+msgstr ""
+
+#: templates/home.html:44
+msgid "AI detects bitumen and aggregate"
+msgstr ""
+
+#: templates/home.html:45
+msgid ""
+"The model marks the coated and stripped surface and computes the asphalt "
+"coverage and its class."
+msgstr ""
+
+#: templates/home.html:49
+msgid "Export the protocol"
+msgstr ""
+
+#: templates/home.html:50
+msgid ""
+"Compare the result with your expert estimate and export a PDF protocol "
+"according to ČSN 73 6161."
+msgstr ""
+
+#: templates/home.html:57
+msgid "Upload a photo of a sample - nothing is stored in the demo."
+msgstr ""
+
+#: templates/home.html:62 templates/index.html:33
+msgid "Upload a photo of the sample"
+msgstr ""
+
+#: templates/home.html:63 templates/index.html:34
+msgid "Drag the photo here or choose a file (JPG, PNG, HEIC)."
+msgstr ""
+
+#: templates/home.html:65 templates/index.html:36
+msgid "Choose photo"
+msgstr ""
+
+#: templates/home.html:67 templates/index.html:39
+msgid ""
+"By uploading an image, you agree that it may be stored in the application"
+" repository and potentially used by the authors for training future "
+"models."
+msgstr ""
+
+#: templates/home.html:70 templates/index.html:90
+msgid "Upload another photo"
+msgstr ""
+
+#: templates/home.html:94
 msgid ""
 "Would you like to register your company or research institute? Or does it"
 " sound interesting, but you have more questions\n"
@@ -1167,123 +1505,157 @@ msgid ""
 "workflow—such as support for a different national standard?"
 msgstr ""
 
-#: templates/index.html:10
-msgid "Image Processing with NN"
+#: templates/index.html:19
+msgid "Progress"
 msgstr ""
 
-#: templates/index.html:20 templates/navbar.html:22
-msgid "Current Experiment"
+#: templates/index.html:20 templates/index.html:28
+msgid "Photo"
 msgstr ""
 
-#: templates/index.html:21 templates/navbar.html:25
-msgid "Current Sample"
+#: templates/index.html:21 templates/index.html:97
+msgid "Sample data"
 msgstr ""
 
-#: templates/index.html:29 templates/index.html:36
-msgid "Take a Photo"
-msgstr ""
-
-#: templates/index.html:33
-msgid "or"
-msgstr ""
-
-#: templates/index.html:42
-msgid "Capture photo"
-msgstr ""
-
-#: templates/index.html:50
-msgid "Use the Captured Image"
-msgstr ""
-
-#: templates/index.html:59
-msgid "Basic Information"
-msgstr ""
-
-#: templates/index.html:65
-msgid "Experiment data"
-msgstr ""
-
-#: templates/index.html:68
-msgid ""
-"Are there repeatedly filled values? Click here to set their default for "
-"automatic filling."
-msgstr ""
-
-#: templates/index.html:77
-msgid "Date and Time:"
-msgstr ""
-
-#: templates/index.html:80
-msgid "YYYY-MM-DD HH:MM"
-msgstr ""
-
-#: templates/index.html:88 templates/user.html:88
-msgid "Your lab Address"
-msgstr ""
-
-#: templates/index.html:97 templates/user.html:97
-msgid "Information about the mixture."
-msgstr ""
-
-#: templates/index.html:107
-msgid "Wrapping Temperature [°C]:"
-msgstr ""
-
-#: templates/index.html:110 templates/index.html:115 templates/index.html:122
-#: templates/user.html:127 templates/user.html:135
-msgid "80"
-msgstr ""
-
-#: templates/index.html:112
-msgid "Wrapping Temperature of Aggregate [°C]:"
-msgstr ""
-
-#: templates/index.html:119
-msgid "Wrapping Temperature of Binder [°C]:"
-msgstr ""
-
-#: templates/index.html:128 templates/user.html:141
-msgid "Exposing Water Temperature [°C]:"
-msgstr ""
-
-#: templates/index.html:131 templates/user.html:144
-msgid "20"
-msgstr ""
-
-#: templates/index.html:141 templates/user.html:108
-msgid "Information about the aggregate."
-msgstr ""
-
-#: templates/index.html:149 templates/user.html:116
-msgid "Information about the binder."
-msgstr ""
-
-#: templates/index.html:154 templates/user.html:149
-msgid "Test Procedure:"
-msgstr ""
-
-#: templates/index.html:157 templates/user.html:152
-msgid "A brief description of the testing procedure"
-msgstr ""
-
-#: templates/index.html:162
+#: templates/index.html:22 templates/index.html:158
 msgid "Assessment"
 msgstr ""
 
-#: templates/index.html:168
-msgid "Expert Guess"
+#: templates/index.html:23
+msgid "Report"
 msgstr ""
 
-#: templates/index.html:171
+#: templates/index.html:37
+msgid "Take a Photo"
+msgstr ""
+
+#: templates/index.html:46
+msgid "Camera"
+msgstr ""
+
+#: templates/index.html:47
+msgid "Close"
+msgstr ""
+
+#: templates/index.html:52
+msgid "Video stream not available."
+msgstr ""
+
+#: templates/index.html:53
+msgid "Live view"
+msgstr ""
+
+#: templates/index.html:57
+msgid "Captured photo"
+msgstr ""
+
+#: templates/index.html:61
+msgid "Capture photo"
+msgstr ""
+
+#: templates/index.html:62
+msgid "Use the Captured Image"
+msgstr ""
+
+#: templates/index.html:66 templates/index.html:67
+msgid "Exposure time"
+msgstr ""
+
+#: templates/index.html:69
+msgid "Auto"
+msgstr ""
+
+#: templates/index.html:70
+msgid "Longest exposure this camera allows:"
+msgstr ""
+
+#: templates/index.html:73
+msgid ""
+"This browser does not allow web pages to adjust the camera (exposure "
+"time, white balance). For manual camera settings, use Google Chrome or "
+"Microsoft Edge."
+msgstr ""
+
+#: templates/index.html:76
+msgid "This camera does not allow setting the exposure time."
+msgstr ""
+
+#: templates/index.html:79
+msgid "Advanced camera settings"
+msgstr ""
+
+#: templates/index.html:98
+msgid "Basic Information"
+msgstr ""
+
+#: templates/index.html:101 templates/navbar.html:48 templates/user.html:41
+msgid "Default values"
+msgstr ""
+
+#: templates/index.html:103
+msgid "Fill in empty fields"
+msgstr ""
+
+#: templates/index.html:104
+msgid "Edit default values"
+msgstr ""
+
+#: templates/index.html:113
+msgid "Your own designation of the sample, shown in the sample records"
+msgstr ""
+
+#: templates/index.html:121 templates/user.html:52
+msgid "Your lab Address"
+msgstr ""
+
+#: templates/index.html:125 templates/user.html:60
+msgid "Information about the aggregate."
+msgstr ""
+
+#: templates/index.html:129 templates/user.html:64
+msgid "Information about the binder."
+msgstr ""
+
+#: templates/index.html:145 templates/user.html:56
+msgid "A brief description of the testing procedure"
+msgstr ""
+
+#: templates/index.html:149 templates/user.html:80
+msgid "Information about the mixture."
+msgstr ""
+
+#: templates/index.html:159
+msgid "Asphalt coverage of the aggregate surface"
+msgstr ""
+
+#: templates/index.html:172
 msgid "Expert Guess of Adhesion Rate"
 msgstr ""
 
-#: templates/index.html:179
+#: templates/index.html:173
+msgid "Your visual estimate, required for the evaluation."
+msgstr ""
+
+#: templates/index.html:177
 msgid "Optional"
 msgstr ""
 
-#: templates/index.html:258
+#: templates/index.html:188
+msgid "Save sample data"
+msgstr ""
+
+#: templates/index.html:189
 msgid "Save and Evaluate"
+msgstr ""
+
+#: templates/index.html:199
+msgid "Sample evaluated"
+msgstr ""
+
+#: templates/index.html:213
+msgid ""
+"ČSN 73 6161 requires at least two samples in one report. You can export "
+"the report from the sample records at any time."
 msgstr ""
 
 #: templates/mail_confirm.html:94 templates/mail_contact.html:74
@@ -1323,98 +1695,123 @@ msgid ""
 msgstr ""
 
 #: templates/navbar.html:10
-msgid "Navbar"
+msgid "Main navigation"
 msgstr ""
 
-#: templates/navbar.html:23
-msgid "Queue"
+#: templates/navbar.html:20
+msgid "Demo"
 msgstr ""
 
-#: templates/navbar.html:24
-msgid "Experiment History"
+#: templates/navbar.html:27
+msgid "Language"
 msgstr ""
 
-#: templates/navbar.html:28
-msgid "Employees"
+#: templates/navbar.html:40 templates/navbar.html:47 templates/user.html:6
+#: templates/user.html:12
+msgid "User Profile"
 msgstr ""
 
-#: templates/navbar.html:29
-msgid "Company"
-msgstr ""
-
-#: templates/navbar.html:35 templates/navbar.html:36
-msgid "User"
-msgstr ""
-
-#: templates/navbar.html:40 templates/user_nav_element.html:10
+#: templates/navbar.html:49
 msgid "Logout"
 msgstr ""
 
-#: templates/navbar.html:53
-msgid "About"
+#: templates/navbar.html:58
+msgid "Menu"
 msgstr ""
 
-#: templates/navbar.html:55
-msgid "Register"
+#: templates/user.html:20
+msgid "User Information"
 msgstr ""
 
-#: templates/user.html:29
+#: templates/user.html:24
 msgid "Username: "
 msgstr ""
 
-#: templates/user.html:33
+#: templates/user.html:25
 msgid "First Name: "
 msgstr ""
 
-#: templates/user.html:37
+#: templates/user.html:26
 msgid "Last Name: "
 msgstr ""
 
-#: templates/user.html:41
+#: templates/user.html:27
 msgid "Company: "
 msgstr ""
 
-#: templates/user.html:45
+#: templates/user.html:28
 msgid "E-mail: "
 msgstr ""
 
-#: templates/user.html:54
+#: templates/user.html:32
 msgid "Edit personal information"
 msgstr ""
 
-#: templates/user.html:57
-msgid "Change e-mail address"
-msgstr ""
-
-#: templates/user.html:68
-msgid "Personalised Settings"
-msgstr ""
-
-#: templates/user.html:72
-msgid ""
-"Here you can customize your app settings. The following options are "
-"automatically filled in when uploading an image of asphalt sample."
-msgstr ""
-
-#: templates/user.html:75
+#: templates/user.html:42
 msgid ""
 "If some information repeats often, you can set here your default values, "
 "otherwise, keep the fields empty."
 msgstr ""
 
-#: templates/user.html:78
+#: templates/user.html:47
+msgid ""
+"Here you can customize your app settings. The following options are "
+"automatically filled in when uploading an image of asphalt sample."
+msgstr ""
+
+#: templates/user.html:48
 msgid "The changes will be saved automatically."
 msgstr ""
 
-#: templates/user.html:124
+#: templates/user.html:67
 msgid "Wrapping Temperature Aggregate [°C]:"
 msgstr ""
 
-#: templates/user.html:132
+#: templates/user.html:71
 msgid "Wrapping Temperature Binder [°C]:"
 msgstr ""
 
-#: templates/user_nav_element.html:9
-msgid "User Profile"
+#: templates/macros/viewer.html:8
+msgid "recommended"
+msgstr ""
+
+#: templates/macros/viewer.html:23
+msgid "Working..."
+msgstr ""
+
+#: templates/macros/viewer.html:27
+msgid "Masks"
+msgstr ""
+
+#: templates/macros/viewer.html:29
+msgid "Bitumen"
+msgstr ""
+
+#: templates/macros/viewer.html:32
+msgid "Aggregate"
+msgstr ""
+
+#: templates/macros/viewer.html:35
+msgid "Background"
+msgstr ""
+
+#: templates/macros/viewer.html:37
+msgid "Hover over the photo to magnify"
+msgstr ""
+
+#: templates/macros/viewer.html:41
+msgid "Mask Opacity:"
+msgstr ""
+
+#: templates/macros/viewer.html:46
+msgid "Image"
+msgstr ""
+
+#: templates/macros/viewer.html:49
+msgid "Grayscale Image"
+msgstr ""
+
+#: templates/macros/viewer.html:53
+msgid "Model"
 msgstr ""
 

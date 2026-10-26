@@ -417,10 +417,13 @@ video {
     text-transform: uppercase;
 }
 
+/* the SVG flags have their own proportions - cropped to a circle; the ring keeps white parts visible */
 .flag {
     width: 20px;
     height: 20px;
     border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 1px var(--border-strong);
 }
 
 /* ---------- buttons ---------- */

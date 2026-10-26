@@ -1009,7 +1009,7 @@ def first_page(canvas, doc, report_id: str):
     canvas.drawCentredString(
         width / 2,
         height - 200 * mm,
-        "AIBAL Report",    )
+        _("AIBAL Report"),    )
     canvas.saveState()
     PageBreak()
 
@@ -1096,7 +1096,7 @@ def styled_header_footer(canvas, doc, report_id: str):
         doc.leftMargin + 132 *mm,
         # width-doc.rightMargin,
         height - header_height +  8* mm,
-        "AIBAL Report"
+        _("AIBAL Report")
     )
     # canvas.setFont("DejaVu-Bold", 10)
     # canvas.drawString(
@@ -1132,7 +1132,7 @@ def styled_header_footer(canvas, doc, report_id: str):
     canvas.drawRightString(
         width - doc.rightMargin,
         footer_height - 6 * mm,
-        f"Page {doc.page}"  # Assuming doc.pageCount is defined elsewhere
+        _("Page") + f" {doc.page}"
     )
 
     canvas.restoreState()
