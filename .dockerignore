@@ -1,0 +1,23 @@
+# keep secrets and local environments out of the image
+.env
+*.env
+deploy/aibal.env
+venv_aibal/
+.venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.dockerignore
+instance/
+tests/
+node_modules/
+*.dump
+*.sql
+PyPAIS_DB.session.sql
+TODO.py
+push_to_server.sh
+run_prod.sh
+run_secure.sh
+test.sh
+deploy/k8s/

@@ -34,3 +34,6 @@ to_server.sh
 models_train.py
 models_train_inference.py
 push_to_server.sh
+# real secrets for the e-INFRA deployment (template: deploy/aibal.env.example)
+deploy/aibal.env
+*.dump

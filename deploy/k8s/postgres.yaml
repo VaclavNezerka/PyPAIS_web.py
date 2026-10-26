@@ -1,0 +1,80 @@
+# PostgreSQL for AIBAL, run by the CloudNativePG operator of the CERIT-SC platform.
+# Apply with: kubectl apply -f deploy/k8s/postgres.yaml
+# The operator creates the Secret "aibal-db-app" (keys username, password, dbname, ...) and the
+# read-write Service "aibal-db-rw" that the app connects to.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: aibal-db
+spec:
+  # zfs-csi is fast but local to one node and has no backup - the second instance is a live replica
+  instances: 2
+  imageName: ghcr.io/cloudnative-pg/postgresql:17-standard-trixie
+  primaryUpdateStrategy: unsupervised
+  storage:
+    # photos and masks are stored in the database: check the size of the current one before
+    # migrating (SELECT pg_size_pretty(pg_database_size(current_database()));)
+    size: 20Gi
+    storageClass: zfs-csi
+  bootstrap:
+    initdb:
+      database: aibal
+      owner: aibal
+  postgresql:
+    parameters:
+      max_connections: "100"
+      shared_buffers: 256MB
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  managed:
+    services:
+      disabledDefaultServices: ["r", "ro"]
+  # daily backups to S3: see deploy/k8s/postgres-backup.yaml
+---
+# only the app (same namespace), the operator, the other instance and monitoring may connect
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: aibal-db
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: aibal-db
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 5432
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cloudnativepg
+      ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 8000
+    - from:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: aibal-db
+      ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 8000
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cattle-monitoring-system
+      ports:
+        - protocol: TCP
+          port: 9187

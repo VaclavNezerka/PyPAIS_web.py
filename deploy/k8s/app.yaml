@@ -1,0 +1,159 @@
+# AIBAL on the e-INFRA CZ / CERIT-SC Kubernetes platform: settings, the app with one GPU slice,
+# its Service and the public HTTPS address. Apply with: kubectl apply -f deploy/k8s/app.yaml
+# Secrets (SECRET_KEY, mail, reCAPTCHA) come from the Secret "aibal-secrets" (see deploy/README.md),
+# the database credentials from the Secret "aibal-db-app" that the PostgreSQL operator creates.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aibal-config
+data:
+  APP_BASE_URL: "https://aibal.dyn.cloud.e-infra.cz"
+  DB_HOST: "aibal-db-rw"
+  TORCH_DEVICE: "cuda"
+  # 2 gunicorn workers share the GPU slice; CPU threads per worker (os.cpu_count() sees the whole node)
+  WEB_CONCURRENCY: "2"
+  TORCH_NUM_THREADS: "2"
+  GUNICORN_TIMEOUT: "180"
+  MODEL_CACHE_SIZE: "1"
+  MAX_UPLOAD_MB: "40"
+  MAIL_SUPPRESS_SEND: "False"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aibal
+  labels:
+    app: aibal
+spec:
+  replicas: 1
+  # one GPU slice: the old pod stops before the new one starts
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: aibal
+  template:
+    metadata:
+      labels:
+        app: aibal
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: app
+          # set to the image pushed by deploy/build_push.ps1, e.g. cerit.io/<user>/aibal:<tag>
+          image: cerit.io/CHANGE-ME/aibal:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: aibal-config
+            - secretRef:
+                name: aibal-secrets
+          env:
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: aibal-db-app
+                  key: dbname
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: aibal-db-app
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: aibal-db-app
+                  key: password
+          resources:
+            # a 10 GB slice of an A100 is plenty (the model plus 1024 px patches need ~2-3 GB per worker);
+            # if no slice is free, "nvidia.com/gpu: 1" requests a whole GPU instead
+            requests:
+              cpu: "1"
+              memory: 6Gi
+              nvidia.com/mig-1g.10gb: 1
+            limits:
+              cpu: "4"
+              memory: 10Gi
+              nvidia.com/mig-1g.10gb: 1
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          # importing torch takes a while; inference blocks a worker for a few seconds - lenient probes
+          startupProbe:
+            httpGet:
+              path: /home
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            httpGet:
+              path: /home
+              port: http
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 4
+          livenessProbe:
+            httpGet:
+              path: /home
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 6
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aibal
+spec:
+  type: ClusterIP
+  selector:
+    app: aibal
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+# HTTPS with an automatic Let's Encrypt certificate; names under dyn.cloud.e-infra.cz are registered
+# automatically. The app sees plain HTTP behind the ingress (ProxyFix trusts one proxy).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aibal
+  annotations:
+    kubernetes.io/ingress.class: nginx-traefik
+    cert-manager.io/cluster-issuer: letsencrypt-gateway
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx-traefik
+  tls:
+    - hosts:
+        - aibal.dyn.cloud.e-infra.cz
+      secretName: aibal-tls
+  rules:
+    - host: aibal.dyn.cloud.e-infra.cz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: aibal
+                port:
+                  number: 80
