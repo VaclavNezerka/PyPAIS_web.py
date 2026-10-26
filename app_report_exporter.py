@@ -270,6 +270,39 @@ class EnergyLabel(Flowable):
 
 
 
+def experiment_masks(experiment: Dict[str, Any], experiment_id: int, user_id: int) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Asphalt and aggregate masks of a sample as evaluated in the app (stored masks + manual corrections).
+    The model only runs for samples without stored masks; its result is stored for the next export.
+    """
+    def corrected(mask_key: str, corrections_key: str):
+        mask = memory_to_np_array(experiment[mask_key])
+        corrections = experiment.get(corrections_key)
+        if corrections is not None:
+            mask = np.clip(mask + memory_to_np_array(corrections), 0, 1)
+        return mask.astype(bool)
+
+    if experiment.get("asphalt_mask") is not None and experiment.get("aggregate_mask") is not None:
+        asphalt_mask = corrected("asphalt_mask", "asphalt_mask_manual_corrections")
+        aggregate_mask = corrected("aggregate_mask", "aggregate_mask_manual_corrections")
+        if asphalt_mask.any() or aggregate_mask.any():  # all-zero masks = the model never ran for this sample
+            return asphalt_mask, aggregate_mask
+
+    model = experiment.get("inference_model")
+    if model in models.discover_models():
+        model_name = model
+    elif model in models.discover_models(deprecated=True):
+        model_name = os.path.join("deprecated", model)
+    else:
+        abort(500, description=_("Inference model ") + str(model) + _(' not available for experiment ID') + str(experiment_id) + '. ' + _("Please use newer model for this specimen or contact us to resolve this issue."))
+    asphalt_mask, aggregate_mask, background_mask = models.inference_on_numpy(
+        np_image=memory_to_np_array(experiment.get("color")), model_name=model_name, session_id=user_id)
+    db_api.update_experiment_in_db(values_dict={
+        "asphalt_mask": to_byetarray(asphalt_mask.astype(np.uint8)),
+        "aggregate_mask": to_byetarray(aggregate_mask.astype(np.uint8)),
+    }, experiment_id=experiment_id)
+    return asphalt_mask.astype(bool), aggregate_mask.astype(bool)
+
 def to_byetarray(np_array: np.ndarray) -> bytes:
     buffer = io.BytesIO()
     np.save(buffer, np_array)
@@ -305,6 +338,23 @@ def register_exporter(name: str):
         exporter_registry[name] = cls
         return cls
     return decorator
+
+def esc(value, default: str = '-') -> str:
+    """Text for reportlab Paragraph markup - user data must not be parsed as markup (e.g. '<frakce 8/16>' or '<img>')."""
+    if value is None or value == '' or value == 'None':
+        return default
+    return xml_escape(str(value))
+
+def as_float(value) -> float | None:
+    """Number from a DB value; None for missing or unreadable values (which are left out of the statistics)."""
+    try:
+        return None if value is None or value in ('', '-', 'None') else float(value)
+    except (TypeError, ValueError):
+        return None
+
+def percent(value) -> str:
+    number = as_float(value)
+    return f"{100 * number:.2f}" if number is not None else '-'
 
 def memory_to_np_array(memory: bytes) -> np.ndarray:
     buffer = io.BytesIO(bytes(memory))
@@ -344,6 +394,10 @@ def get_CSN_73_6161_classification(adhesion_rate: float) -> str:
 # Compute the asphalt adhesion statistics
 def compute_statistics(assessments: List[float], to_per_cents: bool = True) -> Dict[str, Union[float, str]]:
     assessments = [float(a) for a in assessments if a is not None]
+    if not assessments:
+        # e.g. no selected sample has an expert guess yet
+        return {"average": None, "stddev": None, "worst": None,
+                "average_classification": "-", "average_word_classification": "-", "worst_classification": "-"}
     average = float(np.mean(assessments))
     worst = float(np.min(assessments))
     stddev = float(np.std(assessments) if len(assessments) > 1 else 0.0)
@@ -468,8 +522,8 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
 
     left_column = [
         Paragraph(_("The proceeding employee"), styles["Heading2"]),
-        Paragraph(_("Name:") + f" {user_info.get('first_name', '-')} {user_info.get('last_name', '-')}", style_justify),
-        Paragraph(_("Contact:") + f" {user_info.get('e_mail', '-')}", style_justify),
+        Paragraph(_("Name:") + f" {esc(user_info.get('first_name'))} {esc(user_info.get('last_name'), '')}", style_justify),
+        Paragraph(_("Contact:") + f" {esc(user_info.get('e_mail'))}", style_justify),
         Spacer(1, 1.0 * cm),
         Paragraph(_("Signature: ..................................................."), style_justify),
         Spacer(1, 0.3 * cm),
@@ -486,8 +540,8 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     right_column = [
         # Paragraph(_("The controlling employee"), styles["Heading2"]),
         Paragraph(_("The controll performed by"), styles["Heading2"]),
-        Paragraph(_("Name:") + f" {controlling_employee.get('first_name', '-')} {controlling_employee.get('last_name', '-')}", style_justify),
-        Paragraph(_("Contact:") + f" {controlling_employee.get('e_mail', '-')}", style_justify),
+        Paragraph(_("Name:") + f" {esc(controlling_employee.get('first_name'))} {esc(controlling_employee.get('last_name'), '')}", style_justify),
+        Paragraph(_("Contact:") + f" {esc(controlling_employee.get('e_mail'))}", style_justify),
         Spacer(1, 1.0 * cm),
         Paragraph(_("Signature: ..................................................."), style_justify),
         Spacer(1, 0.3 * cm),
@@ -507,60 +561,27 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     assessments_expert_guess = []
     assessments_automatic = []
     concerns = {"similar_images": 0, "old_images": 0}
-    available_models = models.discover_models()
-    deprecated_models = models.discover_models(deprecated=True)
     experiments = {id: db_api.get_experiment_by_id(id) for id in experiment_ids}
     timesteps = {id: db_api.get_experiment_timestamp_by_id(id) for id in experiment_ids}
     # def process_single_image(experiment, eid):
         
     for experiment, experiment_id, timestep in zip(experiments.values(), experiment_ids, timesteps.values()):
-        # experiment = db_api.get_experiment_by_id(experiment_id)
-        mask_asphalt = experiment.get("mask_asphalt", None)
-        mask_aggregate = experiment.get("mask_aggregate", None)
         experiment.update({"timestamp": timestep})
-        
+        original_image = memory_to_np_array(experiment.get("color"))
+        # the masks as evaluated in the app (the model only runs for samples without stored masks)
+        asphalt_mask, aggregate_mask = experiment_masks(experiment, experiment_id, user_id)
+        if as_float(experiment.get("asphalt_ratio")) is None:
+            # never evaluated - compute the coverage from the masks instead of failing on a missing value
+            covered = int(asphalt_mask.sum())
+            total = covered + int(aggregate_mask.sum())
+            experiment["asphalt_ratio"] = covered / total if total else None
+
         similar_dict = get_similar_experiment(experiment)
         # Add experiment record to PDF
-        # pdf.append(PageBreak())
-        # draw a line
         pdf.append(Spacer(1, 0.4 * cm))
-        
         pdf.append(separator)
-        
         pdf.append(Spacer(1, 0.2 * cm))
         pdf = add_experiment_record(pdf, experiment, similar=similar_dict, doc=doc)
-        
-        original_image = memory_to_np_array(experiment.get("color"))
-        if any(v is None for v in [mask_asphalt, mask_aggregate]):
-            if experiment.get("inference_model") in available_models:
-                asphalt_mask, aggregate_mask, bg = models.inference_on_numpy(
-                    np_image=original_image,
-                    model_name=experiment.get("inference_model"),
-                    session_id=user_id
-                )
-                db_api.update_experiment_in_db(values_dict={
-                    "mask_asphalt": to_byetarray(asphalt_mask),
-                    "mask_aggregate": to_byetarray(aggregate_mask)
-                }, experiment_id=experiment_id)
-            elif experiment.get("inference_model") in deprecated_models:
-                asphalt_mask, aggregate_mask, bg = models.inference_on_numpy(
-                    np_image=original_image,
-                    model_name=os.path.join("deprecated", experiment.get("inference_model")),
-                    session_id=user_id
-                )
-                # save the masks to the database for future reference
-                
-                db_api.update_experiment_in_db(values_dict={
-                    "mask_asphalt": to_byetarray(asphalt_mask),
-                    "mask_aggregate": to_byetarray(aggregate_mask)
-                }, experiment_id=experiment_id)
-            else:
-                model = experiment.get("inference_model", 'unknown')
-                abort(500, description=_("Inference model ") + model + _(' not available for experiment ID') + str(experiment_id) + '. ' + _("Please use newer model for this specimen or contact us to resolve this issue."))    
-                return None
-        else:
-            asphalt_mask = memory_to_np_array(mask_asphalt)
-            aggregate_mask = memory_to_np_array(mask_aggregate)
 
         processed_image = process_image(
             original_image,
@@ -577,15 +598,9 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
             doc=doc
         )
 
-        # Collect assessments
-        expert_guess = experiment.get("expert_guess", 0.0)
-        if isinstance(expert_guess, str) or isinstance(expert_guess, decimal.Decimal):
-            try:
-                expert_guess = float(expert_guess)
-            except ValueError:
-                expert_guess = 0.0
-        assessments_expert_guess.append(expert_guess)
-        assessments_automatic.append(float(experiment.get("asphalt_ratio", None)))
+        # Collect assessments - missing values are left out of the statistics (they used to count as 0 %)
+        assessments_expert_guess.append(as_float(experiment.get("expert_guess")))
+        assessments_automatic.append(as_float(experiment.get("asphalt_ratio")))
 
         # Count suspicious cases
         if similar_dict:
@@ -602,12 +617,12 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     stats_expert = compute_statistics(assessments_expert_guess)
     stats_automatic = compute_statistics(assessments_automatic)
 
-    pdf.insert(energy_label_position,Paragraph(_("Resulting assesment - expert"), styles["Heading2"]))
-    pdf.insert(energy_label_position+1,EnergyLabel(stats_expert["average"]))
-    pdf.insert(energy_label_position+2,Spacer(1, 0.2 * cm))
-    pdf.insert(energy_label_position+3,Paragraph(_("Resulting assesment - automatic"), styles["Heading2"]))
-    pdf.insert(energy_label_position+4,EnergyLabel(stats_automatic["average"]))
-    pdf.insert(energy_label_position+5,Spacer(0,10))
+    labels = []
+    for title, stats in ((_("Resulting assesment - expert"), stats_expert), (_("Resulting assesment - automatic"), stats_automatic)):
+        labels.append(Paragraph(title, styles["Heading2"]))
+        labels.append(EnergyLabel(stats["average"]) if stats["average"] is not None else Paragraph("-", style_justify))
+        labels.append(Spacer(1, 0.2 * cm))
+    pdf[energy_label_position:energy_label_position] = labels
 
     # pdf.insert(energy_label_position-1,Spacer(0,20))
 
@@ -623,18 +638,6 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     ]]
 
 
-    exp_guesses = []
-    for exp in experiments.values():
-        # exp = db_api.get_experiment_by_id(eid)
-        exp_guesses.append(exp.get("expert_guess", 0.0))
-        if exp_guesses[-1] is None:
-            exp_guesses[-1] = 0.0
-        if isinstance(exp_guesses[-1], str):
-            try:
-                exp_guesses[-1] = float(exp_guesses[-1])
-            except ValueError:
-                exp_guesses[-1] = 0.0
-
     # specimen ID together with the user's designation of the sample (if any)
     specimens = []
     for eid, exp in zip(experiment_ids, experiments.values()):
@@ -644,9 +647,8 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     table_data.extend(
         [ items for items in zip(
             specimens,
-            # [f"{100*db_api.get_experiment_by_id(eid).get('expert_guess', 0) ):.2f}" for eid in experiment_ids],
-            [f"{100*exp_guess:.2f}" for exp_guess in exp_guesses],
-            [f"{100*exp.get('asphalt_ratio', 0):.2f}" for exp in experiments.values()],
+            [percent(exp.get('expert_guess')) for exp in experiments.values()],
+            [percent(exp.get('asphalt_ratio')) for exp in experiments.values()],
         )]
     )
     pdf = add_table(pdf, table_data, colWidths=[doc.width/3]*3)
@@ -655,12 +657,15 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     # Final summary + issues
     pdf.append(Paragraph(_("Report Conclusion"), styles["Heading2"]))
     # pdf.append(Paragraph(_("Summary"), styles["Heading3"]))
-    items = [
-        Paragraph(_("The average adhesion rate across all samples is") + f" {stats_expert['average']:.2f} ± {stats_expert['stddev']:.2f} % " + _("according to expert visual assesment, which correspondes to calss") + f" {stats_expert['average_classification']}. ", style_justify),
-        Paragraph(_("The average adhesion rate across all samples is") + f" {stats_automatic['average']:.2f} ± {stats_automatic['stddev']:.2f} % " + _("according to AI-based analysis, which correspondes to calss") + f" {stats_automatic['average_classification']}. ", style_justify),
-        Paragraph(_("The worst adhesion rate (") +f"{stats_expert['worst']:.2f}" + _(" %) observed is class ") + f"{stats_expert['worst_classification']} " + _("according to expert visual assesment."), style_justify),
-        Paragraph(_("The worst adhesion rate (") +f"{stats_automatic['worst']:.2f}" + _(" %) observed is class ") + f"{stats_automatic['worst_classification']} " + _("according to AI-based analysis."), style_justify),
-    ]
+    items = []
+    if stats_expert['average'] is not None:
+        items.append(Paragraph(_("The average adhesion rate across all samples is") + f" {stats_expert['average']:.2f} ± {stats_expert['stddev']:.2f} % " + _("according to expert visual assesment, which correspondes to calss") + f" {stats_expert['average_classification']}. ", style_justify))
+    if stats_automatic['average'] is not None:
+        items.append(Paragraph(_("The average adhesion rate across all samples is") + f" {stats_automatic['average']:.2f} ± {stats_automatic['stddev']:.2f} % " + _("according to AI-based analysis, which correspondes to calss") + f" {stats_automatic['average_classification']}. ", style_justify))
+    if stats_expert['worst'] is not None:
+        items.append(Paragraph(_("The worst adhesion rate (") +f"{stats_expert['worst']:.2f}" + _(" %) observed is class ") + f"{stats_expert['worst_classification']} " + _("according to expert visual assesment."), style_justify))
+    if stats_automatic['worst'] is not None:
+        items.append(Paragraph(_("The worst adhesion rate (") +f"{stats_automatic['worst']:.2f}" + _(" %) observed is class ") + f"{stats_automatic['worst_classification']} " + _("according to AI-based analysis."), style_justify))
     pdf = add_itemized_list(pdf, items)
     pdf.append(Paragraph(_("The final considered class is: ") + f"{stats_expert['average_classification']}", styles["Heading4"]))
     pdf.append(Paragraph(_("The adhesion between aggregate and binder is classified as: ") + f"{stats_expert['average_word_classification']}", styles["Heading4"]))
@@ -672,9 +677,11 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         issues.append(f"{concerns['old_images']}/{len(experiment_ids)}" + _(" have been uploaded more than 6 months ago."))
     if len(experiment_ids) < 2:
         issues.append(_("The report contains less than 2 samples, which is insufficient for CSN 73 6161 standard compliance."))
-    if max(assessments_expert_guess) - min(assessments_expert_guess) > 0.1:
+    expert_values = [a for a in assessments_expert_guess if a is not None]
+    automatic_values = [a for a in assessments_automatic if a is not None]
+    if expert_values and max(expert_values) - min(expert_values) > 0.1:
         issues.append(_("Significant variance detected between expert assessments (>10%) of different samples. The CSN 73 6161 standard requires experiment repetition."))
-    if max(assessments_automatic) - min(assessments_automatic) > 0.1:
+    if automatic_values and max(automatic_values) - min(automatic_values) > 0.1:
         issues.append(_("Significant variance detected between AI-based assessments (>10%) of different samples. The CSN 73 6161 standard requires experiment repetition. Consider this in case that the AI based results seem reliable."))
     if len(issues) > 0:
         pdf.append(Paragraph(_("Concerns"), styles["Heading2"]))
@@ -792,7 +799,7 @@ def return_similarity_warning(pdf: list, similar_dict: dict) -> list:
     similar_date = similar_dict.get("similar_upload_date")
 
     warning_text = _("<<< ⚠ WARNING: The program has detected a highly similar image (on the left, experiment_id:") + \
-        f"{similar_experiment_id}" + _(" , uploaded by ") + f"{similar_user_e_mail}" + _(" on ") + f"{similar_date}" + \
+        f"{esc(similar_experiment_id)}" + _(" , uploaded by ") + f"{esc(similar_user_e_mail)}" + _(" on ") + f"{esc(similar_date)}" + \
         _(") with") + f" {100*similarity_score:.2f}% " + _("confidence. ") + \
         _("""Please review the samples for potential duplication. In case the specimens clearly aren't duplicates, you can ignore this message.""")
         # _("using") + f" {similarity_method}. " + \
@@ -899,39 +906,28 @@ def add_experiment_record(pdf: list, experiment: Dict[str, Any], similar: dict =
         pdf (list): The updated PDF content list.
     """
 
-    for key, value in experiment.items():
-        if value is None or value == 'None':
-            experiment[key] = '-'
-
-
+    # missing values are printed as '-' (without changing the caller's data, which the statistics use)
     left_column = [
-        Paragraph(_("Sample ID:") + f" {experiment.get('experiment_id', '-')}", styles["Heading3"]),
-        Paragraph(_("Sample Designation:") + f" {xml_escape(str(experiment.get('info_sample_label', '-')))}", style_left),
-        Paragraph(_("Date:") + f" {experiment.get('info_datetime', '-')}", style_justify),
-        Paragraph(_("Place of Experiment:") + f" {experiment.get('info_place_of_experiment', '-')}", style_justify),
-        Paragraph(_("Sample Collection Data:") + f" {experiment.get('info_sample_collection_data', '-')}", style_justify),
-        Paragraph(_("Aggregate:") + f" {experiment.get('info_aggregate', '-')}", style_justify),
-        Paragraph(_("Binder:") + f" {experiment.get('info_binder', '-')}", style_justify),
-        Paragraph(_("Wrapping temperature aggregate [°C]:") + f" {experiment.get('info_wrapping_temperature_aggregate', '-')}", style_justify),
-        Paragraph(_("Wrapping temperature binder [°C]:") + f" {experiment.get('info_wrapping_temperature_binder', '-')}", style_justify),
-        Paragraph(_("Exposing water temperature [°C]:") + f" {experiment.get('info_exposing_water_temperature', '-')}", style_justify),
-        Paragraph(_("Test procedure:") + f" {experiment.get('info_test_procedure', '-')}", style_justify),
+        Paragraph(_("Sample ID:") + f" {esc(experiment.get('experiment_id'))}", styles["Heading3"]),
+        Paragraph(_("Sample Designation:") + f" {esc(experiment.get('info_sample_label'))}", style_left),
+        Paragraph(_("Date:") + f" {esc(experiment.get('info_datetime'))}", style_justify),
+        Paragraph(_("Place of Experiment:") + f" {esc(experiment.get('info_place_of_experiment'))}", style_justify),
+        Paragraph(_("Sample Collection Data:") + f" {esc(experiment.get('info_sample_collection_data'))}", style_justify),
+        Paragraph(_("Aggregate:") + f" {esc(experiment.get('info_aggregate'))}", style_justify),
+        Paragraph(_("Binder:") + f" {esc(experiment.get('info_binder'))}", style_justify),
+        Paragraph(_("Wrapping temperature aggregate [°C]:") + f" {esc(experiment.get('info_wrapping_temperature_aggregate'))}", style_justify),
+        Paragraph(_("Wrapping temperature binder [°C]:") + f" {esc(experiment.get('info_wrapping_temperature_binder'))}", style_justify),
+        Paragraph(_("Exposing water temperature [°C]:") + f" {esc(experiment.get('info_exposing_water_temperature'))}", style_justify),
+        Paragraph(_("Test procedure:") + f" {esc(experiment.get('info_test_procedure'))}", style_justify),
     ]
-    expert_guess = experiment.get("expert_guess", 0.0)
-    
-    if isinstance(expert_guess, str):
-        try:
-            expert_guess = float(expert_guess)
-        except ValueError:
-            expert_guess = 0.0
 
     right_column = [
         Paragraph(_("Assessment - Adhesion Rate:"), styles["Heading4"]),
-        Paragraph(_("Inference Model:") + f" {experiment.get('inference_model', '-')}", style_justify),
-        Paragraph(_("Automatic Assessment [%]:") + f" {100*experiment.get('asphalt_ratio', '-'):.2f}", style_justify),
-        Paragraph(_("Visual based Expert Guess [%]:") + f" {100*expert_guess:.2f}", style_justify),
-        Paragraph(_("Comment:") + f" {experiment.get('comment', '-')}", style_justify),
-    ]    
+        Paragraph(_("Inference Model:") + f" {esc(experiment.get('inference_model'))}", style_justify),
+        Paragraph(_("Automatic Assessment [%]:") + f" {percent(experiment.get('asphalt_ratio'))}", style_justify),
+        Paragraph(_("Visual based Expert Guess [%]:") + f" {percent(experiment.get('expert_guess'))}", style_justify),
+        Paragraph(_("Comment:") + f" {esc(experiment.get('info_comment'))}", style_justify),
+    ]
     table_data = [["", ""]]
     table_data.append([left_column, right_column])
     pdf = two_col_text_layout(pdf, table_data, doc=doc)
@@ -1171,10 +1167,10 @@ def two_col_text_layout(pdf: list, table_data: List[List[str]], doc) -> list:
 
 def party_details_data(pdf: list, party_info: Dict[str, Any]) -> list:
     data = [
-        Paragraph(f"{party_info.get('Caption', 'Party Details')}", styles["Heading2"]),
-        Paragraph(_("Name:") + f" {party_info.get('name', '-')}", style_justify),
-        Paragraph(_("Address:") + f" {party_info.get('address', '-')}", style_justify),
-        Paragraph(_("Contact:") + f" {party_info.get('contact', '-')}", style_justify),
+        Paragraph(esc(party_info.get('Caption', 'Party Details')), styles["Heading2"]),
+        Paragraph(_("Name:") + f" {esc(party_info.get('name'))}", style_justify),
+        Paragraph(_("Address:") + f" {esc(party_info.get('address'))}", style_justify),
+        Paragraph(_("Contact:") + f" {esc(party_info.get('contact'))}", style_justify),
         Spacer(1, 0.2 * cm)
     ]
 
