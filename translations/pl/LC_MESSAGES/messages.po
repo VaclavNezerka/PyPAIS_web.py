@@ -917,8 +917,8 @@ msgid "Processed Image"
 msgstr "Obraz przetworzony"
 
 #: app_report_exporter.py:840
-msgid "(Bitumen - blue, aggregate - red)"
-msgstr "(Asfalt – niebieski, kruszywo – czerwony)"
+msgid "(Bitumen - blue, aggregate - red, background - green)"
+msgstr "(Asfalt – niebieski, kruszywo – czerwony, tło – zielony)"
 
 #: app_report_exporter.py:910
 msgid "Sample ID:"

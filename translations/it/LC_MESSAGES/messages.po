@@ -927,8 +927,8 @@ msgid "Processed Image"
 msgstr "Immagine elaborata"
 
 #: app_report_exporter.py:840
-msgid "(Bitumen - blue, aggregate - red)"
-msgstr "(Bitume - blu, aggregato - rosso)"
+msgid "(Bitumen - blue, aggregate - red, background - green)"
+msgstr "(Bitume - blu, aggregato - rosso, sfondo - verde)"
 
 #: app_report_exporter.py:910
 msgid "Sample ID:"

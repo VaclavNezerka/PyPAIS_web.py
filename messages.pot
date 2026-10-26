@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-26 23:28+0100\n"
+"POT-Creation-Date: 2026-10-26 23:52+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -239,7 +239,7 @@ msgstr ""
 msgid "Invalid username/email or password."
 msgstr ""
 
-#: app.py:1317 app.py:1780 app_report_exporter.py:914 templates/index.html:148
+#: app.py:1317 app.py:1780 app_report_exporter.py:919 templates/index.html:148
 #: templates/user.html:79
 msgid "Sample Collection Data:"
 msgstr ""
@@ -336,7 +336,7 @@ msgid ""
 "account."
 msgstr ""
 
-#: app.py:1777 app_report_exporter.py:911 templates/index.html:111
+#: app.py:1777 app_report_exporter.py:916 templates/index.html:111
 msgid "Sample Designation:"
 msgstr ""
 
@@ -344,7 +344,7 @@ msgstr ""
 msgid "Date and Time:"
 msgstr ""
 
-#: app.py:1779 app_report_exporter.py:913 templates/index.html:120
+#: app.py:1779 app_report_exporter.py:918 templates/index.html:120
 #: templates/user.html:51
 msgid "Place of Experiment:"
 msgstr ""
@@ -365,16 +365,16 @@ msgstr ""
 msgid "Test Procedure:"
 msgstr ""
 
-#: app.py:1785 app_report_exporter.py:928 templates/index.html:176
+#: app.py:1785 app_report_exporter.py:933 templates/index.html:176
 msgid "Comment:"
 msgstr ""
 
-#: app.py:1786 app_report_exporter.py:915 templates/index.html:124
+#: app.py:1786 app_report_exporter.py:920 templates/index.html:124
 #: templates/user.html:59
 msgid "Aggregate:"
 msgstr ""
 
-#: app.py:1787 app_report_exporter.py:916 templates/index.html:128
+#: app.py:1787 app_report_exporter.py:921 templates/index.html:128
 #: templates/user.html:63
 msgid "Binder:"
 msgstr ""
@@ -590,65 +590,66 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
-#: app_energy_label.py:38 app_report_exporter.py:155 app_report_exporter.py:391
+#: app_energy_label.py:38 app_report_exporter.py:156 app_report_exporter.py:396
 msgid "Unclassifiable"
 msgstr ""
 
-#: app_energy_label.py:104 app_report_exporter.py:221
+#: app_energy_label.py:104 app_report_exporter.py:222
 msgid "Adhesion"
 msgstr ""
 
-#: app_energy_label.py:114 app_report_exporter.py:231
+#: app_energy_label.py:114 app_report_exporter.py:232
 msgid "Rating"
 msgstr ""
 
-#: app_report_exporter.py:296
+#: app_report_exporter.py:297
 msgid "Inference model "
 msgstr ""
 
-#: app_report_exporter.py:296
+#: app_report_exporter.py:297
 msgid " not available for experiment ID"
 msgstr ""
 
-#: app_report_exporter.py:296
+#: app_report_exporter.py:297
 msgid ""
 "Please use newer model for this specimen or contact us to resolve this "
 "issue."
 msgstr ""
 
-#: app_report_exporter.py:367
+#: app_report_exporter.py:372
 msgid "Excellent"
 msgstr ""
 
-#: app_report_exporter.py:369
+#: app_report_exporter.py:374
 msgid "Good"
 msgstr ""
 
-#: app_report_exporter.py:371
+#: app_report_exporter.py:376
 msgid "Satisfactory"
 msgstr ""
 
-#: app_report_exporter.py:373
+#: app_report_exporter.py:378
 msgid "Unsatisfactory"
 msgstr ""
 
-#: app_report_exporter.py:453
+#: app_report_exporter.py:458 app_report_exporter.py:1017
+#: app_report_exporter.py:1104
 msgid "AIBAL Report"
 msgstr ""
 
-#: app_report_exporter.py:455
+#: app_report_exporter.py:460
 msgid "AIBAL Report ID:"
 msgstr ""
 
-#: app_report_exporter.py:456
+#: app_report_exporter.py:461
 msgid "bitumen, adhesion, test, CSN 73 6161"
 msgstr ""
 
-#: app_report_exporter.py:482
+#: app_report_exporter.py:487
 msgid "Bitumen Adhesion Test Protocol"
 msgstr ""
 
-#: app_report_exporter.py:486
+#: app_report_exporter.py:491
 msgid ""
 "\n"
 "    This report provides a comprehensive overview of the bitumen adhesion"
@@ -657,13 +658,13 @@ msgid ""
 "    The adhesion test was performed on "
 msgstr ""
 
-#: app_report_exporter.py:489
+#: app_report_exporter.py:494
 msgid ""
 " samples of asphalt mixtures. The detailes about each specimen included "
 "below, the overview is at the end of the document."
 msgstr ""
 
-#: app_report_exporter.py:493
+#: app_report_exporter.py:498
 msgid ""
 "\n"
 "    Both the visual expert assesment and the AI-based quantitative "
@@ -674,124 +675,124 @@ msgid ""
 "    "
 msgstr ""
 
-#: app_report_exporter.py:506
+#: app_report_exporter.py:511
 msgid "Ordering Party"
 msgstr ""
 
-#: app_report_exporter.py:512
+#: app_report_exporter.py:517
 msgid "Providing Laboratory"
 msgstr ""
 
-#: app_report_exporter.py:523
+#: app_report_exporter.py:528
 msgid "The proceeding employee"
 msgstr ""
 
-#: app_report_exporter.py:524 app_report_exporter.py:542
-#: app_report_exporter.py:1170
+#: app_report_exporter.py:529 app_report_exporter.py:547
+#: app_report_exporter.py:1175
 msgid "Name:"
 msgstr ""
 
-#: app_report_exporter.py:525 app_report_exporter.py:543
-#: app_report_exporter.py:1172
+#: app_report_exporter.py:530 app_report_exporter.py:548
+#: app_report_exporter.py:1177
 msgid "Contact:"
 msgstr ""
 
-#: app_report_exporter.py:527 app_report_exporter.py:545
+#: app_report_exporter.py:532 app_report_exporter.py:550
 msgid "Signature: ..................................................."
 msgstr ""
 
-#: app_report_exporter.py:541
+#: app_report_exporter.py:546
 msgid "The controll performed by"
 msgstr ""
 
-#: app_report_exporter.py:620
+#: app_report_exporter.py:625
 msgid "Resulting assesment - expert"
 msgstr ""
 
-#: app_report_exporter.py:620
+#: app_report_exporter.py:625
 msgid "Resulting assesment - automatic"
 msgstr ""
 
-#: app_report_exporter.py:632
+#: app_report_exporter.py:637
 msgid "Tabular overview"
 msgstr ""
 
-#: app_report_exporter.py:634
+#: app_report_exporter.py:639
 msgid "Specimen ID"
 msgstr ""
 
-#: app_report_exporter.py:635
+#: app_report_exporter.py:640
 msgid "Visual Expert Assessment [%]"
 msgstr ""
 
-#: app_report_exporter.py:636
+#: app_report_exporter.py:641
 msgid "AI-based Assesment  [%]"
 msgstr ""
 
-#: app_report_exporter.py:657
+#: app_report_exporter.py:662
 msgid "Report Conclusion"
 msgstr ""
 
-#: app_report_exporter.py:661 app_report_exporter.py:663
+#: app_report_exporter.py:666 app_report_exporter.py:668
 msgid "The average adhesion rate across all samples is"
 msgstr ""
 
-#: app_report_exporter.py:661
+#: app_report_exporter.py:666
 msgid "according to expert visual assesment, which correspondes to calss"
 msgstr ""
 
-#: app_report_exporter.py:663
+#: app_report_exporter.py:668
 msgid "according to AI-based analysis, which correspondes to calss"
 msgstr ""
 
-#: app_report_exporter.py:665 app_report_exporter.py:667
+#: app_report_exporter.py:670 app_report_exporter.py:672
 msgid "The worst adhesion rate ("
 msgstr ""
 
-#: app_report_exporter.py:665 app_report_exporter.py:667
+#: app_report_exporter.py:670 app_report_exporter.py:672
 msgid " %) observed is class "
 msgstr ""
 
-#: app_report_exporter.py:665
+#: app_report_exporter.py:670
 msgid "according to expert visual assesment."
 msgstr ""
 
-#: app_report_exporter.py:667
+#: app_report_exporter.py:672
 msgid "according to AI-based analysis."
 msgstr ""
 
-#: app_report_exporter.py:669
+#: app_report_exporter.py:674
 msgid "The final considered class is: "
 msgstr ""
 
-#: app_report_exporter.py:670
+#: app_report_exporter.py:675
 msgid "The adhesion between aggregate and binder is classified as: "
 msgstr ""
 
-#: app_report_exporter.py:674
+#: app_report_exporter.py:679
 msgid ""
 " images seem to highly similar with others and might not be unique "
 "specimens."
 msgstr ""
 
-#: app_report_exporter.py:676
+#: app_report_exporter.py:681
 msgid " have been uploaded more than 6 months ago."
 msgstr ""
 
-#: app_report_exporter.py:678
+#: app_report_exporter.py:683
 msgid ""
 "The report contains less than 2 samples, which is insufficient for CSN 73"
 " 6161 standard compliance."
 msgstr ""
 
-#: app_report_exporter.py:682
+#: app_report_exporter.py:687
 msgid ""
 "Significant variance detected between expert assessments (>10%) of "
 "different samples. The CSN 73 6161 standard requires experiment "
 "repetition."
 msgstr ""
 
-#: app_report_exporter.py:684
+#: app_report_exporter.py:689
 msgid ""
 "Significant variance detected between AI-based assessments (>10%) of "
 "different samples. The CSN 73 6161 standard requires experiment "
@@ -799,99 +800,103 @@ msgid ""
 "reliable."
 msgstr ""
 
-#: app_report_exporter.py:686
+#: app_report_exporter.py:691
 msgid "Concerns"
 msgstr ""
 
-#: app_report_exporter.py:701
+#: app_report_exporter.py:706
 msgid "This report was generated using AIBAL on "
 msgstr ""
 
-#: app_report_exporter.py:800
+#: app_report_exporter.py:805
 msgid ""
 "<<< ⚠ WARNING: The program has detected a highly similar image (on the "
 "left, experiment_id:"
 msgstr ""
 
-#: app_report_exporter.py:801
+#: app_report_exporter.py:806
 msgid " , uploaded by "
 msgstr ""
 
-#: app_report_exporter.py:801
+#: app_report_exporter.py:806
 msgid " on "
 msgstr ""
 
-#: app_report_exporter.py:802
+#: app_report_exporter.py:807
 msgid ") with"
 msgstr ""
 
-#: app_report_exporter.py:802
+#: app_report_exporter.py:807
 msgid "confidence. "
 msgstr ""
 
-#: app_report_exporter.py:803
+#: app_report_exporter.py:808
 msgid ""
 "Please review the samples for potential duplication. In case the "
 "specimens clearly aren't duplicates, you can ignore this message."
 msgstr ""
 
-#: app_report_exporter.py:838 templates/macros/viewer.html:48
+#: app_report_exporter.py:843 templates/macros/viewer.html:48
 msgid "Original Image"
 msgstr ""
 
-#: app_report_exporter.py:838
+#: app_report_exporter.py:843
 msgid "Processed Image"
 msgstr ""
 
-#: app_report_exporter.py:840
-msgid "(Bitumen - blue, aggregate - red)"
+#: app_report_exporter.py:845
+msgid "(Bitumen - blue, aggregate - red, background - green)"
 msgstr ""
 
-#: app_report_exporter.py:910
+#: app_report_exporter.py:915
 msgid "Sample ID:"
 msgstr ""
 
-#: app_report_exporter.py:912
+#: app_report_exporter.py:917
 msgid "Date:"
 msgstr ""
 
-#: app_report_exporter.py:917
+#: app_report_exporter.py:922
 msgid "Wrapping temperature aggregate [°C]:"
 msgstr ""
 
-#: app_report_exporter.py:918
+#: app_report_exporter.py:923
 msgid "Wrapping temperature binder [°C]:"
 msgstr ""
 
-#: app_report_exporter.py:919
+#: app_report_exporter.py:924
 msgid "Exposing water temperature [°C]:"
 msgstr ""
 
-#: app_report_exporter.py:920
+#: app_report_exporter.py:925
 msgid "Test procedure:"
 msgstr ""
 
-#: app_report_exporter.py:924
+#: app_report_exporter.py:929
 msgid "Assessment - Adhesion Rate:"
 msgstr ""
 
-#: app_report_exporter.py:925
+#: app_report_exporter.py:930
 msgid "Inference Model:"
 msgstr ""
 
-#: app_report_exporter.py:926
+#: app_report_exporter.py:931
 msgid "Automatic Assessment [%]:"
 msgstr ""
 
-#: app_report_exporter.py:927
+#: app_report_exporter.py:932
 msgid "Visual based Expert Guess [%]:"
 msgstr ""
 
-#: app_report_exporter.py:1128
+#: app_report_exporter.py:1133
 msgid "Report generated by AIBAL -Bitumen Adhesion Lab - report ID:"
 msgstr ""
 
-#: app_report_exporter.py:1171
+#: app_report_exporter.py:1140 templates/experiments.html:116
+msgid "Page"
+msgstr ""
+
+#: app_report_exporter.py:1176
 msgid "Address:"
 msgstr ""
 
@@ -1343,10 +1348,6 @@ msgstr ""
 
 #: templates/experiments.html:107
 msgid "evaluate your first sample"
-msgstr ""
-
-#: templates/experiments.html:116
-msgid "Page"
 msgstr ""
 
 #: templates/experiments.html:116

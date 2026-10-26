@@ -38,12 +38,13 @@ from reportlab.platypus import Flowable
 from xml.sax.saxutils import escape as xml_escape
 from dotenv import load_dotenv
 
-# mask colours must match --mask-bitumen / --mask-aggregate in static/app.css (the app's viewer)
+# mask colours must match --mask-bitumen / --mask-aggregate / --mask-background in static/app.css (the app's viewer)
 REPORT_COLORS = {
     # "topic_color": "#4ecdc4",      # turquoise
     "topic_color": "#2b2b2b",      # light gray
     "mask_asphalt": "#1f4fff",   # blue
     "mask_aggregate": "#e8323c",      # red
+    "mask_background": "#1fa64a",     # green
     # "warning_color": "#fff3cd",  # pale orange
     "warning_color": "#ffffff",  # white
     "warning_text_color": "#ff6b6b",   # red 
@@ -91,6 +92,15 @@ style_left = ParagraphStyle(
     name="Left",
     parent=style_justify,
     alignment=TA_LEFT,
+)
+
+# mask colour legend under the processed image - wraps within the image column (longer in some languages)
+style_legend = ParagraphStyle(
+    name="Legend",
+    parent=style_justify,
+    alignment=TA_CENTER,
+    fontSize=9,
+    leading=11,
 )
 
 styles.add(ParagraphStyle(
@@ -309,7 +319,7 @@ def to_byetarray(np_array: np.ndarray) -> bytes:
 
 def process_image(original_image: np.ndarray, mask_asphalt: np.ndarray, mask_aggregate: np.ndarray) -> np.ndarray:
     """
-    Create a processed image highlighting asphalt and aggregate areas.
+    Create a processed image highlighting asphalt, aggregate and background areas.
 
     Args:
         original_image (np.ndarray): The original image as a NumPy array.
@@ -329,6 +339,10 @@ def process_image(original_image: np.ndarray, mask_asphalt: np.ndarray, mask_agg
     # Highlight aggregate areas in red
     color_rgb_aggregate = hex_to_RGB(REPORT_COLORS["mask_aggregate"])
     processed_img[mask_aggregate == 1] = color_rgb_aggregate  # Red color for aggregate
+
+    # Background (neither asphalt nor aggregate, as in the app's viewer) in green
+    background = np.logical_not(np.logical_or(mask_asphalt == 1, mask_aggregate == 1))
+    processed_img[background] = hex_to_RGB(REPORT_COLORS["mask_background"])
 
     return processed_img
 
@@ -837,7 +851,9 @@ def add_images(pdf: list, img_original: PIL.Image,  img_processed: PIL.Image, si
     img2 = get_printable_image(img_processed, max_image_size_cm)
     table_data.append([_("Original Image"), _("Processed Image")])
     table_data.append([img1, img2])
-    table_data.append(["", _("(Bitumen - blue, aggregate - red)")])
+    # non-breaking spaces around the dashes: a line may break only between the "material - colour" pairs
+    legend = _("(Bitumen - blue, aggregate - red, background - green)").replace(" – ", " – ").replace(" - ", " - ")
+    table_data.append(["", Paragraph(xml_escape(legend), style_legend)])
     if similar_image:
         warning_box = return_similarity_warning(pdf, similar_image)
         similar_image_printable = get_printable_image(similar_image.get("similar_image"), max_image_size_cm)
