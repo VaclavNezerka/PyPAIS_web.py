@@ -38,7 +38,7 @@
           {% endif %}
         </td>
         <td class="cell-strong card-title-cell">{{ e.name }}{% if e.is_me %} <span class="badge">{{ _('You') }}</span>{% endif %}</td>
-        <td class="mono" data-label="{{ _('Username') }}">{{ e.username }}</td>
+        <td data-label="{{ _('Username') }}">{{ e.username }}</td>
         <td data-label="{{ _('Contact') }}"><a href="mailto:{{ e.e_mail }}">{{ e.e_mail }}</a></td>
         <td data-label="{{ _('Role') }}">
           {% if e.is_admin %}<span class="badge badge-brand">{{ icon('shield') }} {{ _('Company admin') }}</span>

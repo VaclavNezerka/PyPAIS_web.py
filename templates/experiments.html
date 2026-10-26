@@ -73,7 +73,7 @@
       {% for r in records %}
       <tr>
         <td class="col-check"><input type="checkbox" class="row-check" value="{{ r.id }}" aria-label="{{ _('Select') }} {{ r.id }}"></td>
-        <td class="num mono" data-label="{{ _('Sample ID') }}">{{ r.id }}</td>
+        <td class="num" data-label="{{ _('Sample ID') }}">{{ r.id }}</td>
         <td class="cell-truncate cell-strong designation-cell card-title-cell" title="{{ r.designation|striptags }}">
           <button type="button" class="btn-link" data-action="open" data-id="{{ r.id }}" data-owned="{{ 'true' if r.owned else 'false' }}">
             {%- if r.designation %}{{ r.designation }}{% else %}<span class="muted">{{ _('No designation') }}</span>{% endif -%}

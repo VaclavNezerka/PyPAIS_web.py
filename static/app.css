@@ -1,35 +1,57 @@
 /* AIBAL design system - one stylesheet for the whole app.
    No inline styles are allowed by the CSP, so every layout need has a class here. */
 
+/* ---------- font ---------- */
+/* Plus Jakarta Sans (SIL OFL, see fonts/OFL-PlusJakartaSans.txt), variable weight 200-800,
+   self-hosted because the CSP allows fonts only from this site */
+@font-face {
+    font-family: "Plus Jakarta Sans";
+    font-style: normal;
+    font-display: swap;
+    font-weight: 200 800;
+    src: url("fonts/plus-jakarta-sans-latin-ext-wght-normal.woff2") format("woff2-variations");
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+        U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: "Plus Jakarta Sans";
+    font-style: normal;
+    font-display: swap;
+    font-weight: 200 800;
+    src: url("fonts/plus-jakarta-sans-latin-wght-normal.woff2") format("woff2-variations");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+        U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* ---------- tokens ---------- */
-/* Look: laboratory instrument / technical report - neutral greys, hairline borders instead of
-   soft shadows, small radii, one deep petrol accent, monospaced figures for measured values. */
+/* Look: clean and friendly - light neutral surfaces, thin borders with a soft shadow,
+   moderate radii, one deep petrol accent (the logo's teal, darkened). */
 :root {
     --brand: #0e6e68;
-    --brand-hover: #0a5853;
-    --brand-strong: #074541;
-    --brand-tint: #e9f0ef;
+    --brand-hover: #0b5c57;
+    --brand-strong: #084a46;
+    --brand-tint: #e7f1f0;
 
-    --bg: #f2f3f5;
+    --bg: #f5f6f8;
     --surface: #ffffff;
-    --surface-2: #f6f7f8;
-    --border: #d9dde2;
-    --border-strong: #b6bec6;
-    --text: #14191e;
-    --text-2: #4b5560;
-    --text-muted: #7d8791;
-    --ink: #1a2026; /* dark panels: selection bar, avatar, partner logos */
-    --grid-line: rgba(20, 25, 30, 0.055); /* graph-paper background of empty photo areas */
+    --surface-2: #f7f8fa;
+    --border: #e1e4e8;
+    --border-strong: #c7cdd4;
+    --text: #161b21;
+    --text-2: #525c67;
+    --text-muted: #838d98;
+    --ink: #1c2229; /* dark panels: selection bar, partner logos */
 
-    --success: #13734a;
-    --success-tint: #edf5f0;
-    --warning: #915708;
-    --warning-tint: #fbf4e7;
+    --success: #167a4f;
+    --success-tint: #eaf5ef;
+    --warning: #95600d;
+    --warning-tint: #fcf4e6;
     --danger: #b42a2f;
     --danger-hover: #962226;
-    --danger-tint: #fbeeee;
-    --info: #1e5bb8;
-    --info-tint: #edf2fa;
+    --danger-tint: #fcefef;
+    --info: #2160c4;
+    --info-tint: #edf3fc;
 
     /* segmentation masks - the same colours as REPORT_COLORS in app_report_exporter.py
        (no blue: the samples are photographed on blue paper) */
@@ -37,17 +59,17 @@
     --mask-aggregate: #4ecdc4;
     --mask-background: #8c96a0;
 
-    --radius-sm: 2px;
-    --radius: 3px;
-    --radius-lg: 4px;
-    --shadow-sm: 0 1px 0 rgba(20, 25, 30, 0.04);
-    --shadow: 0 2px 6px rgba(20, 25, 30, 0.1);
-    --shadow-lg: 0 8px 24px rgba(20, 25, 30, 0.16);
-    --focus: 0 0 0 1px var(--brand); /* inputs: together with the brand border a crisp 2px line */
+    --radius-sm: 4px;
+    --radius: 6px;
+    --radius-lg: 8px;
+    --shadow-sm: 0 1px 2px rgba(22, 27, 33, 0.05);
+    --shadow: 0 4px 12px rgba(22, 27, 33, 0.08);
+    --shadow-lg: 0 12px 28px rgba(22, 27, 33, 0.14);
+    --focus: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent);
 
-    --font: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
-    --font-mono: "Cascadia Mono", ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-    --header-h: 56px;
+    --font: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --header-h: 60px;
     --container: 1280px;
 }
 
@@ -69,9 +91,12 @@ body {
     flex-direction: column;
     font-family: var(--font);
     font-size: 15px;
-    line-height: 1.5;
+    line-height: 1.55;
     color: var(--text);
     background: var(--bg);
+    font-variant-numeric: tabular-nums;
+    word-spacing: 0.04em; /* the typeface sets words quite close together */
+    -webkit-font-smoothing: antialiased;
 }
 
 h1,
@@ -80,17 +105,18 @@ h3,
 h4 {
     margin: 0;
     line-height: 1.25;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: -0.01em;
     color: var(--text);
 }
 
 h1 {
-    font-size: 1.5rem;
-    letter-spacing: -0.01em;
+    font-size: 1.6rem;
+    letter-spacing: -0.02em;
 }
 
 h2 {
-    font-size: 1.05rem;
+    font-size: 1.08rem;
 }
 
 h3 {
@@ -162,7 +188,6 @@ video {
     top: 0;
     z-index: 50;
     background: var(--surface);
-    border-top: 3px solid var(--brand);
     border-bottom: 1px solid var(--border);
 }
 
@@ -180,11 +205,10 @@ video {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding-right: 20px;
-    border-right: 1px solid var(--border);
+    margin-right: 8px;
     color: var(--text);
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-weight: 800;
+    letter-spacing: 0.02em;
     white-space: nowrap;
 }
 
@@ -199,9 +223,9 @@ video {
 
 .brand-sub {
     display: block;
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     font-weight: 500;
-    letter-spacing: 0.02em;
+    letter-spacing: 0;
     color: var(--text-2);
 }
 
@@ -222,8 +246,8 @@ video {
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
     color: var(--text-2);
-    font-weight: 550;
-    font-size: 0.95rem;
+    font-weight: 600;
+    font-size: 0.93rem;
 }
 
 .app-nav a:hover {
@@ -266,15 +290,13 @@ video {
     justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
-    margin-bottom: 20px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--border);
+    margin-bottom: 22px;
 }
 
 .page-header p {
     margin: 4px 0 0;
     color: var(--text-2);
-    font-size: 0.9rem;
+    font-size: 0.92rem;
 }
 
 .page-actions {
@@ -382,16 +404,16 @@ video {
 }
 
 .avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: var(--radius);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--ink);
+    background: var(--brand);
     color: #fff;
-    font-weight: 600;
-    font-size: 0.78rem;
+    font-weight: 700;
+    font-size: 0.8rem;
     text-transform: uppercase;
 }
 
@@ -736,18 +758,17 @@ details.disclosure[open] > summary .icon {
 }
 
 /* ---------- notices and badges ---------- */
-/* notices: neutral box with a coloured rule and icon (no tinted fills) */
+/* notices: a lightly tinted box with a coloured icon */
 .notice {
     display: flex;
     gap: 10px;
     align-items: flex-start;
-    padding: 10px 14px;
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--info);
+    padding: 11px 14px;
+    border: 1px solid color-mix(in srgb, var(--info) 18%, transparent);
     border-radius: var(--radius);
-    background: var(--surface-2);
+    background: var(--info-tint);
     color: var(--text);
-    font-size: 0.88rem;
+    font-size: 0.9rem;
 }
 
 .notice > .icon {
@@ -759,7 +780,8 @@ details.disclosure[open] > summary .icon {
 }
 
 .notice-warning {
-    border-left-color: var(--warning);
+    border-color: color-mix(in srgb, var(--warning) 22%, transparent);
+    background: var(--warning-tint);
 }
 
 .notice-warning > .icon {
@@ -767,7 +789,8 @@ details.disclosure[open] > summary .icon {
 }
 
 .notice-danger {
-    border-left-color: var(--danger);
+    border-color: color-mix(in srgb, var(--danger) 20%, transparent);
+    background: var(--danger-tint);
 }
 
 .notice-danger > .icon {
@@ -775,50 +798,49 @@ details.disclosure[open] > summary .icon {
 }
 
 .notice-success {
-    border-left-color: var(--success);
+    border-color: color-mix(in srgb, var(--success) 20%, transparent);
+    background: var(--success-tint);
 }
 
 .notice-success > .icon {
     color: var(--success);
 }
 
-/* badges: small square status tags */
+/* badges: small status labels */
 .badge {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 1px 6px;
-    border: 1px solid var(--border-strong);
+    padding: 2px 8px;
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    background: var(--surface);
+    background: var(--surface-2);
     color: var(--text-2);
-    font-size: 0.7rem;
-    font-weight: 650;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-size: 0.78rem;
+    font-weight: 600;
     white-space: nowrap;
 }
 
 .badge-success {
-    border-color: color-mix(in srgb, var(--success) 45%, transparent);
+    border-color: color-mix(in srgb, var(--success) 25%, transparent);
     background: var(--success-tint);
     color: var(--success);
 }
 
 .badge-warning {
-    border-color: color-mix(in srgb, var(--warning) 45%, transparent);
+    border-color: color-mix(in srgb, var(--warning) 25%, transparent);
     background: var(--warning-tint);
     color: var(--warning);
 }
 
 .badge-danger {
-    border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+    border-color: color-mix(in srgb, var(--danger) 25%, transparent);
     background: var(--danger-tint);
     color: var(--danger);
 }
 
 .badge-brand {
-    border-color: color-mix(in srgb, var(--brand) 45%, transparent);
+    border-color: color-mix(in srgb, var(--brand) 25%, transparent);
     background: var(--brand-tint);
     color: var(--brand-strong);
 }
@@ -866,12 +888,9 @@ details.disclosure[open] > summary .icon {
 .table th {
     background: var(--surface-2);
     color: var(--text-2);
-    font-size: 0.72rem;
-    font-weight: 650;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    font-size: 0.8rem;
+    font-weight: 600;
     white-space: nowrap;
-    border-bottom-color: var(--border-strong);
 }
 
 .table tbody tr:last-child td {
@@ -884,17 +903,11 @@ details.disclosure[open] > summary .icon {
 
 .table tbody tr.is-selected {
     background: var(--brand-tint);
-    box-shadow: inset 3px 0 0 var(--brand);
 }
 
-/* measured values and IDs in a monospaced face, aligned on the decimal places */
+/* numbers right-aligned; the font's tabular figures (body) keep the decimals in line */
 .table .num {
     text-align: right;
-}
-
-.table td.num {
-    font-family: var(--font-mono);
-    font-size: 0.86rem;
 }
 
 .table .col-check {
@@ -1187,11 +1200,9 @@ dialog.ui-dialog::backdrop {
 
 .auth-aside {
     width: min(340px, 100%);
-    padding: 20px 22px;
-    border: 1px solid var(--border);
-    border-top: 3px solid var(--brand);
+    padding: 22px;
     border-radius: var(--radius-lg);
-    background: var(--surface);
+    background: var(--brand-tint);
 }
 
 .auth-aside h2 {
@@ -1334,13 +1345,8 @@ dialog.ui-dialog::backdrop {
     }
 
     .app-nav a.is-active {
-        background: var(--surface-2);
+        background: var(--brand-tint);
         border-left-color: var(--brand);
-    }
-
-    .brand {
-        padding-right: 0;
-        border-right: 0;
     }
 
     .app-header-inner {
@@ -1443,13 +1449,11 @@ html {
 .hero-visual img {
     width: min(260px, 100%);
     height: auto;
-    padding: 36px;
+    padding: 40px;
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    background-color: var(--surface);
-    background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
-        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 13px 13px;
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
 }
 
 .landing-section {
@@ -1487,21 +1491,17 @@ html {
 }
 
 .feature-steps h3::before {
-    content: counter(step, decimal-leading-zero) "  ";
+    content: counter(step) ". ";
     color: var(--brand);
-    font-family: var(--font-mono);
-    font-weight: 500;
-    white-space: pre;
 }
 
 .feature-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    border: 1px solid color-mix(in srgb, var(--brand) 35%, transparent);
-    border-radius: var(--radius);
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-lg);
     background: var(--brand-tint);
     color: var(--brand);
 }
@@ -1721,32 +1721,28 @@ html {
 /* =====================================================================
    Current Sample (workbench)
    ===================================================================== */
-/* progress as one segmented track; the current step is underlined */
+/* progress as one segmented control; the current step is highlighted */
 .stepper {
     display: flex;
     flex-wrap: wrap;
+    gap: 2px;
     margin: 0;
-    padding: 0;
+    padding: 3px;
     list-style: none;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
     background: var(--surface);
-    overflow: hidden;
 }
 
 .step {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 7px 14px 7px 10px;
-    border-right: 1px solid var(--border);
+    padding: 6px 12px 6px 8px;
+    border-radius: var(--radius);
     color: var(--text-muted);
-    font-size: 0.84rem;
+    font-size: 0.85rem;
     font-weight: 600;
-}
-
-.step:last-child {
-    border-right: 0;
 }
 
 .step-num {
@@ -1754,17 +1750,18 @@ html {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-sm);
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    font-size: 0.75rem;
+    font-weight: 700;
 }
 
 .step.is-current {
     color: var(--brand-strong);
-    box-shadow: inset 0 -2px 0 var(--brand);
+    background: var(--brand-tint);
 }
 
 .step.is-current .step-num {
@@ -1830,12 +1827,9 @@ html {
     align-items: center;
     text-align: center;
     gap: 8px;
-    padding: 48px 24px;
-    border: 1px dashed var(--border-strong);
-    background-color: var(--surface);
-    background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
-        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 16px 16px;
+    padding: 52px 24px;
+    border: 2px dashed var(--border-strong);
+    background: var(--surface);
     transition: border-color 0.12s, background-color 0.12s;
 }
 
@@ -1852,9 +1846,8 @@ html {
     width: 56px;
     height: 56px;
     margin-bottom: 4px;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius);
-    background: var(--surface);
+    border-radius: 12px;
+    background: var(--brand-tint);
     color: var(--brand);
 }
 
@@ -1942,10 +1935,6 @@ html {
     width: 100%;
 }
 
-.row-manual input[type="number"] {
-    font-family: var(--font-mono);
-    font-size: 0.82rem;
-}
 
 .row-manual input[type="range"] {
     width: 100%;
@@ -2053,7 +2042,7 @@ html {
 .swatch {
     width: 12px;
     height: 12px;
-    border-radius: 1px;
+    border-radius: 3px;
 }
 
 .swatch-bitumen {
@@ -2101,10 +2090,9 @@ html {
 
 .field-inline output {
     min-width: 42px;
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums;
     color: var(--text-2);
-    font-size: 0.82rem;
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
 .viewer-replace {
@@ -2123,15 +2111,13 @@ html {
     grid-column: 1 / -1;
 }
 
-/* measured result shown like an instrument readout */
 .result-tile {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 10px 14px 12px;
+    padding: 12px 16px 14px;
     border: 1px solid var(--border);
-    border-left: 3px solid var(--brand);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     background: var(--surface-2);
 }
 
@@ -2139,19 +2125,16 @@ html {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.72rem;
-    font-weight: 650;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    font-size: 0.82rem;
+    font-weight: 600;
     color: var(--text-2);
 }
 
 .result-value {
-    font-family: var(--font-mono);
-    font-size: 1.65rem;
-    font-weight: 600;
+    font-size: 1.85rem;
+    font-weight: 700;
     letter-spacing: -0.02em;
-    font-variant-numeric: tabular-nums;
+    color: var(--brand-strong);
 }
 
 .result-class {

@@ -50,7 +50,7 @@
       <ul class="sample-list">
         {% for s in samples %}
         <li>
-          <span class="mono muted">#{{ s.id }}</span>
+          <span class="muted">#{{ s.id }}</span>
           <span class="sample-list-name">{% if s.designation %}{{ s.designation }}{% else %}<span class="muted">{{ _('No designation') }}</span>{% endif %}</span>
           <span class="small muted">{{ s.date }} · {{ _('AI assessment') }} {{ s.ai or '–' }} · {{ _('Expert Guess') }} {{ s.expert or '–' }}</span>
         </li>

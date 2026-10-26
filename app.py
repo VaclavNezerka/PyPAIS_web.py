@@ -22,6 +22,7 @@ import secrets
 import hashlib
 import string
 import os
+import mimetypes
 import db_api
 import json
 import base64
@@ -184,6 +185,9 @@ babel = Babel(app, locale_selector=get_locale)
 def inject_template_globals():
     # the language actually used for the page (drives <html lang>, the flag in the navbar and ui.js texts)
     return {'current_lang': str(get_babel_locale() or app.config['BABEL_DEFAULT_LOCALE'])}
+
+# the self-hosted web font; Python's MIME table may not know the extension (it was sent as octet-stream)
+mimetypes.add_type('font/woff2', '.woff2')
 
 @app.url_defaults
 def static_file_version(endpoint, values):
