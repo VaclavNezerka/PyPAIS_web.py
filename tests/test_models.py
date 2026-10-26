@@ -3,339 +3,126 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)).split('tests')[0])
 import tempfile
-import shutil
 import torch
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import models
-from models import discover_models, pop_session_from_loaded_models, add_session_to_loaded_model, load_model, inference, TORCH_DEVICE
+from models import discover_models, model_path, get_model, inference_on_numpy
 import numpy as np
 
 
-@pytest.fixture
-def temp_models_dir():
-    """Create a temporary models directory with test model files."""
-    temp_dir = tempfile.mkdtemp()
-    models_dir = os.path.join(temp_dir, 'models')
-    os.makedirs(models_dir)
-    
-    # Create dummy model files
-    test_files = ['model1.pth', 'model2.pth', 'not_a_model.txt']
-    for file in test_files:
-        with open(os.path.join(models_dir, file), 'w') as f:
-            f.write('dummy content')
-    
-    yield temp_dir, models_dir
-    
-    # Cleanup
-    shutil.rmtree(temp_dir)
+class FakeUnet(torch.nn.Module):
+    """Predicts class 1 (asphalt) for every pixel."""
+    def forward(self, x):
+        logits = torch.zeros(x.shape[0], 3, x.shape[2], x.shape[3])
+        logits[:, 1] = 5.0  # clearly below the 0.2 probability that turns a pixel into class 2
+        return logits
+
 
 @pytest.fixture
-def reset_torch_loaded_models():
-    """Reset the global torch_loaded_models before each test."""
-    original_models = models.torch_loaded_models.copy()
+def empty_model_cache():
+    """An empty model cache for each test; the original one is put back afterwards."""
+    original = models.torch_loaded_models.copy()
     models.torch_loaded_models.clear()
-    yield
-    models.torch_loaded_models = original_models
+    yield models.torch_loaded_models
+    models.torch_loaded_models.clear()
+    models.torch_loaded_models.update(original)
+
+
+@pytest.fixture
+def fake_models():
+    """torch.load returns a new FakeUnet for any of the files model1.pth, model2.pth, model3.pth."""
+    with patch('models.model_path', side_effect=lambda name: f'/fake/{name}'), \
+         patch('models.torch.load', side_effect=lambda *args, **kwargs: FakeUnet()) as load:
+        yield load
 
 
 class TestDiscoverModels:
-    
+
     @patch('models.os.path.dirname')
     @patch('models.glob.glob')
     def test_discover_models_returns_model_files(self, mock_glob, mock_dirname):
-        """Test that discover_models returns only .pth files."""
+        """discover_models returns the file names, the latest model (by name) first."""
         mock_dirname.return_value = '/fake/path'
         mock_glob.return_value = [
             '/fake/path/models/model1.pth',
             '/fake/path/models/model2.pth'
         ]
-        
+
         result = discover_models()
-        
-        assert result == ['model1.pth', 'model2.pth']
-        mock_glob.assert_called_once_with('/fake/path/models/*.pth')
-    
+
+        assert result == ['model2.pth', 'model1.pth']
+        mock_glob.assert_called_once_with(os.path.join('/fake/path', 'models', '*.pth'))
+
     def test_discover_models_empty_directory(self):
         """Test discover_models with empty models directory."""
         with tempfile.TemporaryDirectory() as temp_dir:
             empty_models_dir = os.path.join(temp_dir, 'models')
             os.makedirs(empty_models_dir)
-            
+
             with patch('models.os.path.dirname', return_value=temp_dir):
                 result = discover_models()
                 assert result == []
 
 
-class TestPopSessionFromLoadedModels:
-    
-    def test_pop_session_removes_session(self, reset_torch_loaded_models):
-        """Test that pop_session removes a session from active users."""
-        
-        models.torch_loaded_models = {
-            'model1.pth': {
-                'model': MagicMock(),
-                'path': '/path/to/model1.pth',
-                'active_users': {'session1', 'session2'}
-            }
-        }
-        
-        pop_session_from_loaded_models('session1')
-        
-        assert 'session1' not in models.torch_loaded_models['model1.pth']['active_users']
-        assert 'session2' in models.torch_loaded_models['model1.pth']['active_users']
-    
-    def test_pop_session_removes_model_when_no_users(self, reset_torch_loaded_models):
-        """Test that the model is removed when no active users remain."""
-        models.torch_loaded_models = {
-            'model1.pth': {
-                'model': MagicMock(),
-                'path': '/path/to/model1.pth',
-                'active_users': {'session1'}
-            }
-        }
-        
-        pop_session_from_loaded_models('session1')
-        
-        assert 'model1.pth' not in models.torch_loaded_models
-    
-    def test_pop_session_nonexistent_session(self, reset_torch_loaded_models):
-        """Test popping a session that doesn't exist."""
-        models.torch_loaded_models = {
-            'model1.pth': {
-                'model': MagicMock(),
-                'path': '/path/to/model1.pth',
-                'active_users': {'session1'}
-            }
-        }
-        
-        # Should not raise an exception
-        pop_session_from_loaded_models('nonexistent_session')
-        
-        # Model should still exist
-        assert 'model1.pth' in models.torch_loaded_models
-        assert 'session1' in models.torch_loaded_models['model1.pth']['active_users']
+class TestModelPath:
+
+    def test_shipped_model_is_accepted(self):
+        name = discover_models()[0]
+        assert model_path(name).endswith(os.path.join('models', name))
+
+    @pytest.mark.parametrize('name', ['../app.py', 'unknown.pth', os.path.join('..', 'models', 'x.pth'), ''])
+    def test_other_names_are_refused(self, name):
+        with pytest.raises(ValueError):
+            model_path(name)
 
 
-class TestAddSessionToLoadedModel:
-    
-    def test_add_session_to_existing_model(self, reset_torch_loaded_models):
-        """Test adding a session to an existing model."""
-        models.torch_loaded_models = {
-            'model1.pth': {
-                'model': MagicMock(),
-                'path': '/path/to/model1.pth',
-                'active_users': {'session1'}
-            }
-        }
-        
-        add_session_to_loaded_model('model1.pth', 'session2')
-        
-        assert 'session2' in models.torch_loaded_models['model1.pth']['active_users']
-        assert len(models.torch_loaded_models['model1.pth']['active_users']) == 2
-    
-    def test_add_duplicate_session(self, reset_torch_loaded_models):
-        """Test that adding the same session twice doesn't create duplicates."""
-        models.torch_loaded_models = {
-            'model1.pth': {
-                'model': MagicMock(),
-                'path': '/path/to/model1.pth',
-                'active_users': {'session1'}
-            }
-        }
-        
-        add_session_to_loaded_model('model1.pth', 'session1')
-        
-        # Should still only have one instance
-        assert len(models.torch_loaded_models['model1.pth']['active_users']) == 1
+class TestModelCache:
+
+    def test_model_is_loaded_once(self, empty_model_cache, fake_models):
+        first = get_model('model1.pth')
+        second = get_model('model1.pth')
+
+        assert first is second
+        assert fake_models.call_count == 1
+
+    def test_least_recently_used_model_is_dropped(self, empty_model_cache, fake_models):
+        with patch('models.MODEL_CACHE_SIZE', 2):
+            get_model('model1.pth')
+            get_model('model2.pth')
+            get_model('model1.pth')  # model2 is now the least recently used
+            get_model('model3.pth')
+
+        assert list(empty_model_cache) == ['model1.pth', 'model3.pth']
+        assert fake_models.call_count == 3
+
+    def test_default_cache_keeps_one_model(self, empty_model_cache, fake_models):
+        with patch('models.MODEL_CACHE_SIZE', 1):
+            get_model('model1.pth')
+            get_model('model2.pth')
+
+        assert list(empty_model_cache) == ['model2.pth']
+
+    def test_inference_uses_the_cache(self, empty_model_cache, fake_models):
+        image = np.random.randint(0, 255, (48, 64, 3), dtype=np.uint8)
+
+        for _ in range(3):
+            asphalt_mask, aggregate_mask, background_mask = inference_on_numpy(image, 'model1.pth')
+
+        assert fake_models.call_count == 1
+        assert asphalt_mask.shape == image.shape[:2]
+        assert asphalt_mask.all() and not aggregate_mask.any() and not background_mask.any()
 
 
-class TestLoadModel:
-    
-    @patch('models.torch.load')
-    # @patch('models.torch.nn.Module.load_state_dict')
-    def test_load_new_model(self, mock_torch_load, reset_torch_loaded_models):
-        """Test loading a new model."""
-        mock_model = MagicMock()
-        mock_torch_load.return_value = mock_model
-        # mock_load_state_dict.return_value = None
-        
-        load_model('/path/to/model1.pth', 'session1')
-
-        assert 'model1.pth' in models.torch_loaded_models
-        assert isinstance(models.torch_loaded_models['model1.pth']['model'], torch.nn.Module)
-        models.torch_loaded_models['model1.pth']['model'].model == mock_model
-        assert 'session1' in models.torch_loaded_models['model1.pth']['active_users']
-        mock_torch_load.assert_called_once_with('/path/to/model1.pth', map_location=torch.device(TORCH_DEVICE), weights_only=False)
-    
-    @patch('models.torch.load')
-    def test_load_existing_model(self, mock_torch_load, reset_torch_loaded_models):
-        """Test adding a session to an already loaded model."""
-        mock_model = MagicMock()
-        models.torch_loaded_models = {
-            'model1.pth': {
-                'model': mock_model,
-                'path': '/path/to/model1.pth',
-                'active_users': {'session1'}
-            }
-        }
-        
-        load_model('/path/to/model1.pth', 'session2')
-        
-        # torch.load should not be called again
-        mock_torch_load.assert_not_called()
-        # session2 should be added to active users
-        assert 'session2' in models.torch_loaded_models['model1.pth']['active_users']
-        assert len(models.torch_loaded_models['model1.pth']['active_users']) == 2
-
-
-class TestInference:
-    
-    @patch('models.load_model')
-    def test_inference_with_loaded_model(self, mock_load_model, reset_torch_loaded_models):
-        """Test inference with an already loaded model."""
-        mock_model = MagicMock()
-        mock_model.evaluate.return_value = torch.tensor([1, 2, 3])
-        
-        models.torch_loaded_models = {
-            'model1.pth': {
-                'model': mock_model,
-                'path': '/path/to/model1.pth',
-                'active_users': {'session1'}
-            }
-        }
-        
-        input_data = torch.tensor([1, 2, 3])
-        result = inference('model1.pth', input_data, 'session1')
-
-        mock_load_model.assert_not_called()
-        assert torch.equal(result, torch.tensor([1, 2, 3]))
-
-    
-    @patch('models.load_model')
-    @patch('models.add_session_to_loaded_model')
-    def test_inference_with_new_session(self, mock_add_session, mock_load_model, reset_torch_loaded_models):
-        """Test inference when session is not in active users."""
-        mock_model = MagicMock()
-        mock_model.evaluate.return_value = torch.tensor([1, 2, 3])
-        
-        models.torch_loaded_models = {
-            'model1.pth': {
-                'model': mock_model,
-                'path': '/path/to/model1.pth',
-                'active_users': {'session1'}
-            }
-        }
-        
-        input_data = torch.tensor([1, 2, 3])
-        result = inference('model1.pth', input_data, 'session2')
-        
-        mock_load_model.assert_not_called()
-        mock_add_session.assert_called_once_with('model1.pth', 'session2')
-        assert torch.equal(result, torch.tensor([1, 2, 3]))
-    
-    @patch('models.load_model')
-    @patch('models.os.path.dirname')
-    def test_inference_with_unloaded_model(self, mock_dirname, mock_load_model, reset_torch_loaded_models):
-        """Test inference when model is not loaded."""
-        mock_dirname.return_value = '/fake/path'
-        mock_model = MagicMock()
-        mock_model.evaluate.return_value = torch.tensor([1, 2, 3])
-        
-        # Simulate load_model behavior
-        def side_effect(model_path, session_id):
-            models.torch_loaded_models['model1.pth'] = {
-                'model': mock_model,
-                'path': model_path,
-                'active_users': {session_id}
-            }
-        
-        mock_load_model.side_effect = side_effect
-        
-        input_data = torch.tensor([1, 2, 3])
-        result = inference('model1.pth', input_data, 'session1')
-        
-        mock_load_model.assert_called_once_with('/fake/path/models/model1.pth', 'session1')
-        assert torch.equal(result, torch.tensor([1, 2, 3]))
-
-class TestTorchDevice:
-    
-    @patch.dict(os.environ, {'TORCH_DEVICE': 'cpu'})
-    def test_torch_device_from_env(self):
-        """Test that TORCH_DEVICE uses environment variable."""
-        # Need to reload the module to pick up the new environment variable
-        import importlib
-        importlib.reload(models)
-        assert models.TORCH_DEVICE == 'cpu'
-    
-    @patch.dict(os.environ, {}, clear=True)
-    @patch('models.torch.cuda.is_available', return_value=True)
-    def test_torch_device_cuda_available(self, mock_cuda_available):
-        """Test TORCH_DEVICE defaults to cuda when available."""
-        import importlib
-        importlib.reload(models)
-        assert models.TORCH_DEVICE == 'cuda'
-    
-    @patch.dict(os.environ, {}, clear=True)
-    @patch('models.torch.cuda.is_available', return_value=False)
-    def test_torch_device_cuda_not_available(self, mock_cuda_available):
-        """Test TORCH_DEVICE defaults to cpu when cuda not available."""
-        import importlib
-        importlib.reload(models)
-        assert models.TORCH_DEVICE == 'cpu'
-
-
-# Integration tests
 class TestIntegration:
 
-    # @patch('models.torch.load')
-    # @patch('models.TorchModel.load_state_dict')
-    # def test_full_workflow(self, reset_torch_loaded_models, mock_load_state_dict, mock_torch_load):
-    #     """Test a complete workflow of loading, using, and cleaning up models."""
-    #     mock_model = MagicMock()
-    #     mock_model.eval.return_value = torch.tensor([1, 2, 3])
-    #     mock_torch_load.return_value = mock_model
-        
-    #     # Load model for session1
-    #     load_model('/path/to/model1.pth', 'session1')
-    #     assert len(models.torch_loaded_models) == 1
-        
-    #     # Add session2 to same model
-    #     load_model('/path/to/model1.pth', 'session2')
-    #     assert len(models.torch_loaded_models['model1.pth']['active_users']) == 2
-    #     # Perform inference
-    #     input_data = torch.tensor([1, 2, 3])
-    #     result = inference('model1.pth', input_data, 'session1')
-    #     assert torch.equal(result, torch.tensor([1, 2, 3]))
-        
-    #     # Remove session1
-    #     pop_session_from_loaded_models('session1')
-    #     assert len(models.torch_loaded_models['model1.pth']['active_users']) == 1
-    #     assert 'model1.pth' in models.torch_loaded_models
-    #     # Remove session2 (should remove model)
-    #     pop_session_from_loaded_models('session2')
-    #     assert len(models.torch_loaded_models) == 0
+    def test_real_model(self, empty_model_cache):
+        """The latest shipped model runs on a small image and stays loaded."""
+        name = discover_models()[0]
+        image = np.random.randint(0, 255, (300, 400, 3), dtype=np.uint8)
 
-    def test_real_workflow(self, reset_torch_loaded_models):
-        """Test with a real model and inference."""
+        masks = inference_on_numpy(image, name)
 
-        load_model('models/unet_optimal (v5).pth', 'session1')
-        assert 'unet_optimal (v5).pth' in models.torch_loaded_models
-
-        # print("Loaded models:", models.torch_loaded_models['unet_optimal_(v5).pth']['model'])
-
-        input_data = torch.rand(1, 3, 256, 256)  # Simulated input data
-        result = inference('unet_optimal (v5).pth', input_data, 'session1')
-        assert result is not None
-        assert isinstance(result, torch.Tensor)
-        assert result.shape == (1, 3, 256, 256)
-        assert result.sum().round() == 256 * 256
-
-
-# load_model('models/unet_optimal_(v5).pth', 'session1')
-# model = models.torch_loaded_models['unet_optimal_(v5).pth']['model']
-# input_data = torch.rand(1, 3, 20, 20)  # Simulated input data
-# response = model(input_data)  # Set model to evaluation mode
-
-
-if __name__ == "__main__":
-    pytest.main([__file__])
+        assert all(mask.shape == image.shape[:2] for mask in masks)
+        # every pixel belongs to exactly one class
+        assert (masks[0].astype(int) + masks[1] + masks[2] == 1).all()
+        assert name in empty_model_cache

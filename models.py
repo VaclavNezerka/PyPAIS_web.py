@@ -9,10 +9,19 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 import time
 import gc
+import threading
+from collections import OrderedDict
 
 # Default
 TORCH_DEVICE = os.environ.get('TORCH_DEVICE', 'cuda' if torch.cuda.is_available() else 'cpu')
-torch_loaded_models = {}
+# CPU threads per process; torch uses all cores by default, so several gunicorn workers would compete for them
+# (gunicorn.conf.py sets cores / workers unless TORCH_NUM_THREADS is given)
+if os.getenv('TORCH_NUM_THREADS'):
+    torch.set_num_threads(int(os.environ['TORCH_NUM_THREADS']))
+# models kept in memory per process (about 130 MB each); the least recently used one is dropped first
+MODEL_CACHE_SIZE = max(1, int(os.getenv('MODEL_CACHE_SIZE', 1)))
+torch_loaded_models: OrderedDict[str, torch.nn.Module] = OrderedDict()
+_models_lock = threading.Lock()
 
 def discover_models(deprecated=False) -> list[str]:
     """Discover all model files in the models directory."""
@@ -35,36 +44,26 @@ def model_path(model_name: str) -> str:
         raise ValueError(f"Unknown model: {model_name}")
     return os.path.join(os.path.dirname(__file__), 'models', model_name)
 
-def pop_session_from_loaded_models(session_id: str) -> None:
+def get_model(model_name: str) -> torch.nn.Module:
     """
-    Remove a session from the loaded models tracking. If the session is the last one using a model, the model will be removed from memory.
-
-    Parameters:
-    - session_id (str): Unique identifier for the session to be removed.
+    The model ready for inference. It is loaded once per process and kept for the next requests
+    (at most MODEL_CACHE_SIZE models; loading another one drops the least recently used).
+    A request still running with a dropped model keeps its own reference, so dropping it is safe.
     """
-
-    keys_to_remove = []
-
-    for model_name, model_info in torch_loaded_models.items():
-        if session_id in model_info["active_users"]:
-            model_info["active_users"].remove(session_id)
-            if not model_info["active_users"]:
-                keys_to_remove.append(model_name)
-    
-    for key in keys_to_remove:
-        del torch_loaded_models[key]["model"]  # Delete the model from memory
-        del torch_loaded_models[key]
-        gc.collect()  # Force garbage collection to free up memory
-        torch.cuda.empty_cache()  # Clear GPU memory after removing the model
-
-def add_session_to_loaded_model(model_name: str,session_id: str) -> None:
-    """
-    Add a session to the loaded models tracking. If the session already exists, it will not be added again.
-
-    Parameters:
-    - session_id (str): Unique identifier for the session to be added.
-    """
-    torch_loaded_models[model_name]["active_users"].add(session_id)
+    with _models_lock:
+        if model_name in torch_loaded_models:
+            torch_loaded_models.move_to_end(model_name)
+            return torch_loaded_models[model_name]
+        print(f"Loading model {model_name}")
+        model = torch.load(model_path(model_name), map_location=torch.device(TORCH_DEVICE), weights_only=False)
+        model.to(torch.device(TORCH_DEVICE)).eval()
+        torch_loaded_models[model_name] = model
+        while len(torch_loaded_models) > MODEL_CACHE_SIZE:
+            torch_loaded_models.popitem(last=False)
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        return model
 
 normalize_tf = A.Compose([A.Normalize(), ToTensorV2()])
 # def sliding_window_inference(image, model, device, patch_size=512, stride=256, normalize_transform=None,
@@ -160,32 +159,6 @@ class TorchModel(torch.nn.Module):
 #     model.to(torch.device(TORCH_DEVICE)).eval()
 #     return model
 
-def load_model(model_path: str, model_name: str, session_id: str) -> None:
-    """
-    Safely load a model and track its usage by session ID.
-
-    - If the session already uses different model, it will not be loaded again.
-    - If the model is already loaded for this session, it will not be loaded again.
-    - If the model is already loaded for another session, it will be shared.
-
-    Parameters:
-    - model_path (str): Path to the model file.
-    - model_name (str): Name of the model.
-    - session_id (str): Unique identifier for the session using the model.
-    """
-    
-    # Check if the model is already loaded for this session
-    if model_name in torch_loaded_models:
-        # session ids are stored in a set to avoid duplicates
-        add_session_to_loaded_model(model_name, session_id)
-    else:
-        # load the model if not already loaded
-        model = TorchModel()
-        # model.load_state_dict(torch.load(model_path, map_location=torch.device(TORCH_DEVICE)))
-        model.model = torch.load(model_path, map_location=torch.device(TORCH_DEVICE), weights_only=False)
-        model.to(torch.device(TORCH_DEVICE)).eval()
-        torch_loaded_models[model_name] = {"model": model, "path": model_path, "active_users": {session_id}}
-
 
 # TODO: remove this after testing
 # new_model = smp.Unet('resnet34', encoder_weights='imagenet', in_channels=3, classes=3)
@@ -205,46 +178,28 @@ def load_model(model_path: str, model_name: str, session_id: str) -> None:
 # print(result[0,:,0,0])
 # print(result[0,:,0,0].sum())
 
-def inference(model_name: str, input_data: torch.Tensor, session_id: str) -> torch.Tensor:
+def inference(model_name: str, input_data: np.ndarray) -> np.ndarray:
     """
-    Perform inference using a loaded model.
+    Perform inference using the (cached) model.
 
     Parameters:
     - model_name (str): Name of the model to use for inference.
-    - input_data (torch.Tensor): Input data for the model.
-    - session_id (str): Unique identifier for the session using the model.
+    - input_data (np.ndarray): The image.
 
     Returns:
-    - torch.Tensor: Output from the model after inference. Of shape (N, C, H, W) where N is batch size, C is number of classes, H and W are height and width.
+    - np.ndarray: The predicted class of every pixel.
     """
-    print(list(torch_loaded_models.keys()))
-    if model_name not in list(torch_loaded_models.keys()):
-        print(f"Model {model_name} not loaded for session {session_id}. Loading now...")
-        load_model(model_path(model_name), model_name, session_id)
-    
-    print(list(torch_loaded_models.keys()))
-    if session_id not in torch_loaded_models[model_name]["active_users"]:
-        add_session_to_loaded_model(model_name, session_id)
-
-    # Perform inference with the loaded model
-    model = torch_loaded_models[model_name]["model"]
-    # return model.evaluate(input_data.to(TORCH_DEVICE))
-    input_data = input_data.transpose(1, 0, 2) 
+    model = get_model(model_name)
+    input_data = input_data.transpose(1, 0, 2)
     # input_data = cv2.cvtColor(input_data, cv2.COLOR_BGR2RGB)
-    
+
     prediction: np.ndarray = sliding_window_inference(
         image=input_data,
-        model=model.model, 
+        model=model,
         normalize_transform=normalize_tf,
         device=TORCH_DEVICE
     )
-    prediction = prediction.T
-    
-    # delete the unused model
-    print(len(torch_loaded_models))
-    pop_session_from_loaded_models(session_id)
-    print(len(torch_loaded_models))
-    return prediction
+    return prediction.T
 
 def postprocess_model_prediction(prediction: torch.Tensor):
     """
@@ -278,14 +233,13 @@ def postprocess_model_prediction(prediction: torch.Tensor):
 
     return asphalt_mask, aggregate_mask, background_mask
 
-def inference_on_numpy(np_image: np.ndarray, model_name: str, session_id: int) -> tuple:
+def inference_on_numpy(np_image: np.ndarray, model_name: str) -> tuple:
     """
     Perform inference on the given numpy image using the specified model.
     Parameters:
     -----------
         np_image (np.ndarray): The input image as a numpy array.
         model_name (str): The name of the model to use for inference.
-        session_id (int): The session ID for the user.
 
     Returns:
     --------
@@ -299,8 +253,7 @@ def inference_on_numpy(np_image: np.ndarray, model_name: str, session_id: int) -
     print(input_data.shape)
 
     model_prediction = inference(model_name=model_name,
-                                 input_data=input_data,
-                                 session_id=session_id)
+                                 input_data=input_data)
     # model_prediction= model_prediction.permute(0, 1, 3, 2 )  # Change back to (batch_size, height, width, channels)
     # get model prediction and save it to the sessions
     asphalt_mask, aggregate_mask, background_mask = postprocess_model_prediction(model_prediction)

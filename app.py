@@ -38,7 +38,7 @@ install()
 
 from dotenv import load_dotenv
 from typing_extensions import deprecated
-from models import discover_models, load_model, add_session_to_loaded_model, pop_session_from_loaded_models, inference
+from models import discover_models
 import models
 import decimal
 from flask_babel import Babel, _, lazy_gettext, get_locale as get_babel_locale
@@ -2135,7 +2135,6 @@ def inference_image():
     asphalt_mask, aggregate_mask, background_mask = models.inference_on_numpy(
         np_image=storage.color,
         model_name=storage.inference_model,
-        session_id=session['user_id']
     )
     # save the masks to the storage
     storage.from_dict({

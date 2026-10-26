@@ -270,7 +270,7 @@ class EnergyLabel(Flowable):
 
 
 
-def experiment_masks(experiment: Dict[str, Any], experiment_id: int, user_id: int) -> tuple[np.ndarray, np.ndarray]:
+def experiment_masks(experiment: Dict[str, Any], experiment_id: int) -> tuple[np.ndarray, np.ndarray]:
     """
     Asphalt and aggregate masks of a sample as evaluated in the app (stored masks + manual corrections).
     The model only runs for samples without stored masks; its result is stored for the next export.
@@ -296,7 +296,7 @@ def experiment_masks(experiment: Dict[str, Any], experiment_id: int, user_id: in
     else:
         abort(500, description=_("Inference model ") + str(model) + _(' not available for experiment ID') + str(experiment_id) + '. ' + _("Please use newer model for this specimen or contact us to resolve this issue."))
     asphalt_mask, aggregate_mask, background_mask = models.inference_on_numpy(
-        np_image=memory_to_np_array(experiment.get("color")), model_name=model_name, session_id=user_id)
+        np_image=memory_to_np_array(experiment.get("color")), model_name=model_name)
     db_api.update_experiment_in_db(values_dict={
         "asphalt_mask": to_byetarray(asphalt_mask.astype(np.uint8)),
         "aggregate_mask": to_byetarray(aggregate_mask.astype(np.uint8)),
@@ -569,7 +569,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         experiment.update({"timestamp": timestep})
         original_image = memory_to_np_array(experiment.get("color"))
         # the masks as evaluated in the app (the model only runs for samples without stored masks)
-        asphalt_mask, aggregate_mask = experiment_masks(experiment, experiment_id, user_id)
+        asphalt_mask, aggregate_mask = experiment_masks(experiment, experiment_id)
         if as_float(experiment.get("asphalt_ratio")) is None:
             # never evaluated - compute the coverage from the masks instead of failing on a missing value
             covered = int(asphalt_mask.sum())
