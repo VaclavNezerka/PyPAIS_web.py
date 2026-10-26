@@ -185,6 +185,15 @@ def inject_template_globals():
     # the language actually used for the page (drives <html lang>, the flag in the navbar and ui.js texts)
     return {'current_lang': str(get_babel_locale() or app.config['BABEL_DEFAULT_LOCALE'])}
 
+@app.url_defaults
+def static_file_version(endpoint, values):
+    # url_for('static', ...) gets ?v=<modification time>: after an update browsers load the new
+    # stylesheet/scripts instead of a copy they cached heuristically (Flask sends no max-age)
+    if endpoint == 'static' and 'filename' in values and 'v' not in values:
+        path = os.path.join(app.static_folder, values['filename'])
+        if os.path.isfile(path):
+            values['v'] = int(os.path.getmtime(path))
+
 def rate_limit_key() -> str:
     # logged-in users per account, everybody else per client address (ProxyFix x_for provides the real one);
     # the random user_id of guests is not used - it changes with every new session
