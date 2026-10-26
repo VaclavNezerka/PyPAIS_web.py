@@ -12,7 +12,7 @@ import dotenv
 import os
 
 dotenv.load_dotenv()
-PASSWORD_LENGTH_MIN=int(os.getenv('PASSWORD_LENGTH_MIN', 16))
+PASSWORD_LENGTH_MIN=int(os.getenv('PASSWORD_LENGTH_MIN', 8))
 
 messages={
     'email_already_used': lazy_gettext('This email address is already used. Please use a different one.'),
