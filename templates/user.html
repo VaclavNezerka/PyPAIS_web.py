@@ -1,161 +1,86 @@
-<!DOCTYPE html>
 {% extends "base.html" %}
+{% from "macros/icons.html" import icon %}
+{% macro label(text) %}{{ text.rstrip(': ') }}{% endmacro %}
+{%- set user = dynamic_content -%}
+
+{% block title %}{{ _('User Profile') }}{% endblock %}
+{% block head %}<script src="{{ url_for('static', filename='script_user.js') }}" defer></script>{% endblock %}
+
 {% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ _('User Profile') }}</h1>
+    <p>{{ user.first_name }} {{ user.last_name }} · {{ user.company_name }}</p>
+  </div>
+</div>
 
+<div class="profile-grid">
+  <div class="card">
+    <div class="card-header">
+      <h2>{{ _('User Information') }}</h2>
+    </div>
+    <div class="card-body">
+      <dl class="kv">
+        <dt>{{ label(_('Username: ')) }}</dt><dd>{{ user.username }}</dd>
+        <dt>{{ label(_('First Name: ')) }}</dt><dd>{{ user.first_name }}</dd>
+        <dt>{{ label(_('Last Name: ')) }}</dt><dd>{{ user.last_name }}</dd>
+        <dt>{{ label(_('Company: ')) }}</dt><dd>{{ user.company_name }}</dd>
+        <dt>{{ label(_('E-mail: ')) }}</dt><dd>{{ user.e_mail }}</dd>
+      </dl>
+    </div>
+    <div class="card-footer card-footer-wrap">
+      <a class="btn btn-sm" href="/edit-personal-information">{{ icon('edit') }} {{ _('Edit personal information') }}</a>
+      <a class="btn btn-sm" href="/change-email">{{ icon('mail') }} {{ _('Change e-mail address') }}</a>
+      <a class="btn btn-sm" href="/change-password">{{ icon('lock') }} {{ _('Change password') }}</a>
+    </div>
+  </div>
 
-<html>
-
-    <head>
-        <title>{{ _('User Information') }}</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='new_styles.css') }}">
-        <link rel="icon" type="image/vnd.icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    </head>
-
-    <body>
-        <!-- First Row: Image Upload -->
-        <div class="colorbar">
-            <h2>{{ _('User Information') }}</h2>
+  <div class="card" id="personalized_settings">
+    <div class="card-header">
+      <div>
+        <h2>{{ _('Default values') }}</h2>
+        <p>{{ _('If some information repeats often, you can set here your default values, otherwise, keep the fields empty.') }}</p>
+      </div>
+      <span class="save-status" id="defaultsStatus" role="status" aria-live="polite"></span>
+    </div>
+    <div class="card-body">
+      <p class="small muted">{{ _('Here you can customize your app settings. The following options are automatically filled in when uploading an image of asphalt sample.') }}
+        {{ _('The changes will be saved automatically.') }}</p>
+      <div class="form-grid">
+        <div class="field">
+          <label for="info_place_of_experiment">{{ label(_('Place of Experiment:')) }}</label>
+          <input type="text" id="info_place_of_experiment" class="default-input" maxlength="1024" placeholder="{{ _('Your lab Address') }}">
         </div>
-        <div class="container">
-            <div class="row modern-row">
-                <div class="column modern-column">
-                    <img class="profile-picture" src="{{ url_for('static', filename='avatars/gorilla.png') }}"
-                        alt="Profile Picture">
-                </div>
-                <div class="column modern-column">
-                    <table>
-                        <tr>
-                            <td>{{ _('Username: ') }}</td>
-                            <td>{{ dynamic_content.username }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ _('First Name: ') }}</td>
-                            <td>{{ dynamic_content.first_name }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ _('Last Name: ') }}</td>
-                            <td>{{ dynamic_content.last_name }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ _('Company: ') }}</td>
-                            <td>{{ dynamic_content.company_name }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ _('E-mail: ') }}</td>
-                            <td>{{ dynamic_content.e_mail }}</td>
-                        </tr>
-                    </table>
-                </div>
-
-                <div class="column modern-column">
-                    <div class="row">
-                        <button id="editPersonalInformationButton"
-                            type=submit>{{ _('Edit personal information') }}</button>
-                    </div>
-                    <div class="row">
-                        <button id="changeEmailButton" type=submit>{{ _('Change e-mail address') }}</button>
-                    </div>
-                    <div class="row">
-                        <button id="changePasswordButton" type=submit>{{ _('Change password') }}</button>
-                    </div>
-                </div>
-            </div>
-
+        <div class="field">
+          <label for="info_test_procedure">{{ label(_('Test Procedure:')) }}</label>
+          <input type="text" id="info_test_procedure" class="default-input" maxlength="1024" placeholder="{{ _('A brief description of the testing procedure') }}">
         </div>
-
-        <div class="colorbar" id="personalized_settings">
-            <h2>{{ _('Personalised Settings') }}</h2>
+        <div class="field">
+          <label for="info_aggregate">{{ label(_('Aggregate:')) }}</label>
+          <input type="text" id="info_aggregate" class="default-input" maxlength="1024" placeholder="{{ _('Information about the aggregate.') }}">
         </div>
-
-        <p>
-            {{ _('Here you can customize your app settings. The following options are automatically filled in when uploading an image of asphalt sample.') }}
-        </p>
-        <p>
-            {{ _('If some information repeats often, you can set here your default values, otherwise, keep the fields empty.') }}
-        </p>
-        <p>
-            {{ _('The changes will be saved automatically.') }}
-        </p>
-
-        <div class="row modern-row">
-
-            <div class="column modern-column">
-                <label for="info_place_of_experiment" class="modern-label upper">
-                    {{ _('Place of Experiment:') }}
-                </label>
-                <input type="text" id="info_place_of_experiment" class="modern-input enhanced-input"
-                    placeholder="{{ _('Your lab Address') }}" maxlength="1024" />
-            </div>
-
-            <!-- Information -->
-            <div class="column modern-column">
-                <label for="info_sample_collection_data" class="modern-label upper">
-                    {{ _('Sample Collection Data:') }}
-                </label>
-                <input type="text" id="info_sample_collection_data" class="modern-input enhanced-input"
-                    placeholder="{{ _('Information about the mixture.') }}" maxlength="1024" />
-            </div>
-
+        <div class="field">
+          <label for="info_binder">{{ label(_('Binder:')) }}</label>
+          <input type="text" id="info_binder" class="default-input" maxlength="1024" placeholder="{{ _('Information about the binder.') }}">
         </div>
-        <div class="row modern-row">
-
-            <div class="column modern-column">
-                <label for="info_aggregate" class="modern-label upper">
-                    {{ _('Aggregate:') }}
-                </label>
-                <input type="text" id="info_aggregate" class="modern-input enhanced-input"
-                    placeholder="{{ _('Information about the aggregate.') }}" maxlength="1024" />
-            </div>
-
-            <div class="column modern-column">
-                <label for="info_binder" class="modern-label upper">
-                    {{ _('Binder:') }}
-                </label>
-                <input type="text" id="info_binder" class="modern-input enhanced-input"
-                    placeholder="{{ _('Information about the binder.') }}" maxlength="1024" />
-            </div>
+        <div class="field">
+          <label for="info_wrapping_temperature_aggregate">{{ label(_('Wrapping Temperature Aggregate [°C]:')) }}</label>
+          <input type="number" id="info_wrapping_temperature_aggregate" class="default-input" step="any" placeholder="160">
         </div>
-
-        <div class="row modern-row">
-
-            <div class="column modern-column">
-                <label for="info_wrapping_temperature" class="modern-label upper">
-                    {{ _('Wrapping Temperature Aggregate [°C]:') }}
-                </label>
-                <input type="number" id="info_wrapping_temperature_aggregate" class="modern-input enhanced-input"
-                    placeholder="{{ _('80') }}" />
-            </div>
-
-            <div class="column modern-column">
-                <label for="info_wrapping_temperature_binder" class="modern-label upper">
-                    {{ _('Wrapping Temperature Binder [°C]:') }}
-                </label>
-                <input type="number" id="info_wrapping_temperature_binder" class="modern-input enhanced-input"
-                    placeholder="{{ _('80') }}" />
-            </div>
-
-            <!-- Information -->
-            <div class="column modern-column">
-                <label for="info_exposing_water_temperature" class="modern-label upper">
-                    {{ _('Exposing Water Temperature [°C]:') }}
-                </label>
-                <input type="number" id="info_exposing_water_temperature" class="modern-input enhanced-input"
-                    placeholder="{{ _('20') }}" />
-            </div>
-
-            <div class="column modern-column">
-                <label for="info_test_procedure" class="modern-label upper">
-                    {{ _('Test Procedure:') }}
-                </label>
-                <input type="text" id="info_test_procedure" class="modern-input enhanced-input"
-                    placeholder="{{ _('A brief description of the testing procedure') }}" maxlength="1024" />
-            </div>
+        <div class="field">
+          <label for="info_wrapping_temperature_binder">{{ label(_('Wrapping Temperature Binder [°C]:')) }}</label>
+          <input type="number" id="info_wrapping_temperature_binder" class="default-input" step="any" placeholder="160">
         </div>
-
-        <script src="{{ url_for('static', filename='script_user.js') }}"></script>
-    </body>
-
-</html>
-
-{% endblock content %}
+        <div class="field">
+          <label for="info_exposing_water_temperature">{{ label(_('Exposing Water Temperature [°C]:')) }}</label>
+          <input type="number" id="info_exposing_water_temperature" class="default-input" step="any" placeholder="20">
+        </div>
+        <div class="field">
+          <label for="info_sample_collection_data">{{ label(_('Sample Collection Data:')) }}</label>
+          <input type="text" id="info_sample_collection_data" class="default-input" maxlength="1024" placeholder="{{ _('Information about the mixture.') }}">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

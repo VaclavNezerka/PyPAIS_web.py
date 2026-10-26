@@ -1,117 +1,63 @@
-// User endpoints
-document.querySelectorAll("#changePasswordButton").forEach(function (button) {
-    button.addEventListener("click", function () {
-        // redirect to change password page
-        window.location.href = "/change-password"
-    })
-})
+// User profile (default values of the sample form) and the company key page.
 
-document.querySelectorAll("#changeEmailButton").forEach(function (button) {
-    button.addEventListener("click", function () {
-        // redirect to change email page
-        window.location.href = "/change-email"
-    })
-})
+// ---------- default values: loaded from the server, autosaved shortly after typing stops ----------
+const defaultInputs = document.querySelectorAll(".default-input")
+const defaultsStatus = document.getElementById("defaultsStatus")
+const defaultsTimers = {}
+let defaultsTexts = {}
 
-document
-    .querySelectorAll("#editPersonalInformationButton")
-    .forEach(function (button) {
-        button.addEventListener("click", function () {
-            // redirect to edit personal info page
-            window.location.href = "/edit-personal-information"
+async function saveDefault(input) {
+    defaultsStatus.className = "save-status saving"
+    defaultsStatus.textContent = defaultsTexts.saveStatusSaving || "…"
+    try {
+        const response = await fetch("/update-default-experiment-info", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ field: input.id, value: input.value }),
         })
-    })
-
-// COMPANY -- endpoints
-document
-    .querySelectorAll("#changeCompanyEmailButton")
-    .forEach(function (button) {
-        button.addEventListener("click", function () {
-            // redirect to change company email page
-            window.location.href = "/change-company-email"
-        })
-    })
-
-document
-    .querySelectorAll("#editCompanyInformationButton")
-    .forEach(function (button) {
-        button.addEventListener("click", function () {
-            // redirect to edit company info page
-            window.location.href = "/edit-company-information"
-        })
-    })
-
-// COMPANY key management
-document
-    .querySelectorAll("#regenerateCompanyKeyButton")
-    .forEach(function (button) {
-        button.addEventListener("click", function () {
-            // redirect to regenerate company key page
-            window.location.href = "/regenerate-company-key"
-        })
-    })
-
-document.querySelectorAll("#viewCompanyKeyButton").forEach(function (button) {
-    button.addEventListener("click", function () {
-        // redirect to regenerate company key page
-        window.location.href = "/view-company-key"
-    })
-})
-
-document.addEventListener("DOMContentLoaded", function () {
-    // if page is view-company-key, show alert about security
-    if (window.location.pathname === "/view-company-key") {
-        // wait 500ms and then show alert
-        setTimeout(function () {
-            // redirect to company after 10 seconds
-            window.location.href = "/company"
-        }, 10000)
+        if (!response.ok) throw new Error(response.status + " " + response.statusText)
+        defaultsStatus.className = "save-status saved"
+        defaultsStatus.textContent = (defaultsTexts.saveStatusSaved || "") + " " + new Date().toLocaleTimeString() + " ✓"
+    } catch (error) {
+        defaultsStatus.className = "save-status error"
+        defaultsStatus.textContent = (defaultsTexts.saveStatusError || "") + " " + error.message
     }
-})
+}
 
-document.addEventListener("DOMContentLoaded", function () {
-    // if page is view-company-key, show alert about security
+if (defaultInputs.length) {
+    fetch("/translations-alerts")
+        .then((response) => response.json())
+        .then((data) => (defaultsTexts = data))
     fetch("/get-default-experiment-info")
         .then((response) => response.json())
         .then((data) => {
-            if (data.status === "success") {
-                // loop through data and set value of input with id of key to value
-                for (const [key, value] of Object.entries(data.data)) {
-                    const input = document.getElementById(key)
-                    if (input) {
-                        input.value = value
-                        if (value) {
-                            input.classList.add("has-value")
-                        } else {
-                            input.classList.remove("has-value")
-                        }
-                    }
-                }
+            for (const [key, value] of Object.entries(data.data || {})) {
+                const input = document.getElementById(key)
+                if (input && input.classList.contains("default-input") && value !== null) input.value = value
             }
         })
-})
-
-document.querySelectorAll(".modern-input").forEach(function (input) {
-    // input.addEventListener("change", function () {
-    input.addEventListener("input", function () {
-        fetch("/update-default-experiment-info", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                field: input.id,
-                value: input.value,
-            }),
+    defaultInputs.forEach((input) => {
+        input.addEventListener("input", () => {
+            clearTimeout(defaultsTimers[input.id])
+            defaultsTimers[input.id] = setTimeout(() => saveDefault(input), 500)
         })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Network response was not ok")
-                }
-                return response.json()
-            })
-            .catch((error) => {
-                console.error("Error updating default experiment info:", error)
-            })
     })
-})
+}
+
+// ---------- company key: copy, and hide it after a minute ----------
+const companyKey = document.getElementById("companyKey")
+if (companyKey) {
+    document.getElementById("copyCompanyKey").addEventListener("click", async () => {
+        try {
+            await navigator.clipboard.writeText(companyKey.dataset.key)
+            window.ui.toast("✓ " + companyKey.dataset.key, "success")
+        } catch (error) {
+            window.getSelection().selectAllChildren(companyKey)
+        }
+    })
+    setTimeout(() => {
+        companyKey.textContent = "•".repeat(companyKey.dataset.key.length)
+        document.getElementById("copyCompanyKey").hidden = true
+        document.getElementById("keyHideNote").hidden = true
+    }, 60000)
+}

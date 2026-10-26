@@ -164,7 +164,7 @@ def load_image_by_experiment_id(cur, conn, experiment_id: int) -> bytes | None:
 @db_connection
 def get_all_company_employees(cur, conn, company_id: int) -> list[dict]:
     cursor = conn.cursor(cursor_factory=RealDictCursor) 
-    query = 'SELECT first_name, last_name, username, e_mail, is_company_admin, is_blocked FROM users WHERE company=%s AND e_mail_confirmed=True;'
+    query = 'SELECT id, first_name, last_name, username, e_mail, is_company_admin, is_blocked FROM users WHERE company=%s AND e_mail_confirmed=True;'
     cursor.execute(query, (company_id,))
     result = cursor.fetchall()
     if not result:

@@ -294,7 +294,7 @@ msgstr "Poskytnuta chybná ID experimentu."
 
 #: app.py:1513 app.py:1522 app.py:1525 app.py:1555
 msgid "Export report"
-msgstr "Exportovat report"
+msgstr "Exportovat protokol"
 
 #: app.py:1521
 msgid "No experiments selected for report export."
@@ -850,7 +850,7 @@ msgstr "Odeslat"
 
 #: forms.py:97
 msgid "Company address"
-msgstr "Adreasa společnosti"
+msgstr "Adresa společnosti"
 
 #: forms.py:101
 msgid "Username/Email"
@@ -1719,3 +1719,357 @@ msgstr "Vyhodnocuji…"
 #: templates/index.html:67 templates/index.html:72
 msgid "Manual Camera Settings"
 msgstr "Ruční nastavení kamery"
+
+msgid "The request could not be processed"
+msgstr "Požadavek se nepodařilo zpracovat"
+
+msgid "The uploaded file is too large"
+msgstr "Nahraný soubor je příliš velký"
+
+msgid "Too many requests - please wait a moment and try again"
+msgstr "Příliš mnoho požadavků – chvíli počkejte a zkuste to znovu"
+
+msgid "Something went wrong on our side"
+msgstr "Na naší straně se něco pokazilo"
+
+msgid "If the problem persists, please contact us."
+msgstr "Pokud problém přetrvává, kontaktujte nás."
+
+msgid "Is your company not registered yet?"
+msgstr "Vaše společnost ještě není registrovaná?"
+
+msgid "This form registers a user of an already registered company - you need its company key from your company admin. A new company is registered first and confirmed by us."
+msgstr "Tento formulář registruje uživatele již registrované společnosti – potřebujete klíč společnosti od jejího administrátora. Novou společnost je třeba nejprve zaregistrovat; registraci potvrdíme."
+
+msgid "Me (the exporting user)"
+msgstr "Já (exportující uživatel)"
+
+msgid "Upload a photo of the sample to start the assessment."
+msgstr "Nahrajte fotografii vzorku a začněte s hodnocením."
+
+msgid "Class"
+msgstr "Třída"
+
+msgid "Processing the photo..."
+msgstr "Zpracovávám fotografii…"
+
+msgid "The model is detecting bitumen and aggregate..."
+msgstr "Model rozpoznává asfalt a kamenivo…"
+
+msgid "Loading the sample..."
+msgstr "Načítám vzorek…"
+
+msgid "The photo could not be processed."
+msgstr "Fotografii se nepodařilo zpracovat."
+
+msgid "The automatic detection failed."
+msgstr "Automatická detekce selhala."
+
+msgid "Please choose an image file (JPG, PNG or HEIC)."
+msgstr "Vyberte prosím obrázek (JPG, PNG nebo HEIC)."
+
+msgid "Default values were filled in."
+msgstr "Výchozí hodnoty byly doplněny."
+
+msgid "There are no default values for the empty fields. You can set them in your profile."
+msgstr "Pro prázdná pole nemáte nastavené výchozí hodnoty. Nastavíte je ve svém profilu."
+
+msgid "Wait until the automatic detection has finished."
+msgstr "Počkejte na dokončení automatické detekce."
+
+msgid "Confirm"
+msgstr "Potvrdit"
+
+msgid "Cancel"
+msgstr "Zrušit"
+
+msgid "(Bitumen - red, aggregate - turquoise)"
+msgstr "(Asfalt – červená, kamenivo – tyrkysová)"
+
+msgid "Set new password"
+msgstr "Nastavit nové heslo"
+
+msgid "Send reset link"
+msgstr "Odeslat odkaz pro obnovení"
+
+msgid "Save changes"
+msgstr "Uložit změny"
+
+msgid "Send message"
+msgstr "Odeslat zprávu"
+
+msgid "Skip to content"
+msgstr "Přejít na obsah"
+
+msgid "Flag icons"
+msgstr "Ikony vlajek"
+
+msgid "The company name and address are printed on every report as the providing laboratory."
+msgstr "Název a adresa společnosti se tisknou na každý protokol jako zpracovatelská laboratoř."
+
+msgid "Colleagues join your company by entering this key when they register."
+msgstr "Kolegové se ke společnosti připojí zadáním tohoto klíče při registraci."
+
+msgid "Share the key only with your colleagues. If it got into the wrong hands, generate a new one - the old key stops working."
+msgstr "Klíč sdílejte pouze s kolegy. Pokud by se dostal do nepovolaných rukou, vygenerujte nový – starý klíč přestane platit."
+
+msgid "Generate a new company key? The current key will stop working."
+msgstr "Vygenerovat nový klíč společnosti? Současný klíč přestane platit."
+
+msgid "Copy"
+msgstr "Kopírovat"
+
+msgid "Send the key to your colleague."
+msgstr "Pošlete klíč kolegovi."
+
+msgid "The colleague registers at"
+msgstr "Kolega se zaregistruje na adrese"
+
+msgid "and enters the key."
+msgstr "a zadá klíč."
+
+msgid "After confirming the e-mail address, the colleague appears among the employees."
+msgstr "Po potvrzení e-mailové adresy se kolega objeví mezi zaměstnanci."
+
+msgid "For security, the key will be hidden in one minute."
+msgstr "Z bezpečnostních důvodů bude klíč za minutu skryt."
+
+msgid "Users of your company with a confirmed e-mail address."
+msgstr "Uživatelé vaší společnosti s potvrzenou e-mailovou adresou."
+
+msgid "Invite a colleague"
+msgstr "Pozvat kolegu"
+
+msgid "Select all"
+msgstr "Vybrat vše"
+
+msgid "Role"
+msgstr "Role"
+
+msgid "Status"
+msgstr "Stav"
+
+msgid "You cannot change your own account here."
+msgstr "Svůj vlastní účet zde měnit nemůžete."
+
+msgid "You"
+msgstr "Vy"
+
+msgid "Select"
+msgstr "Vybrat"
+
+msgid "Company admin"
+msgstr "Administrátor společnosti"
+
+msgid "Blocked"
+msgstr "Zablokován"
+
+msgid "Active"
+msgstr "Aktivní"
+
+msgid "selected"
+msgstr "vybráno"
+
+msgid "How does a colleague join?"
+msgstr "Jak se připojí kolega?"
+
+msgid "Error"
+msgstr "Chyba"
+
+msgid "Back to the app"
+msgstr "Zpět do aplikace"
+
+msgid "Previous page"
+msgstr "Předchozí stránka"
+
+msgid "All samples of your company."
+msgstr "Všechny vzorky vaší společnosti."
+
+msgid "Your evaluated and unfinished samples."
+msgstr "Vaše vyhodnocené i rozpracované vzorky."
+
+msgid "New sample"
+msgstr "Nový vzorek"
+
+msgid "Search"
+msgstr "Hledat"
+
+msgid "Clear"
+msgstr "Zrušit filtr"
+
+msgid "AI assessment"
+msgstr "Vyhodnocení AI"
+
+msgid "No designation"
+msgstr "Bez označení"
+
+msgid "Evaluated"
+msgstr "Vyhodnoceno"
+
+msgid "In progress"
+msgstr "Rozpracováno"
+
+msgid "Open"
+msgstr "Otevřít"
+
+msgid "No sample matches the search."
+msgstr "Hledání neodpovídá žádný vzorek."
+
+msgid "evaluate your first sample"
+msgstr "vyhodnoťte svůj první vzorek"
+
+msgid "Page"
+msgstr "Strana"
+
+msgid "records"
+msgstr "záznamů"
+
+msgid "Protocol of the adhesion test according to ČSN 73 6161 (PDF)."
+msgstr "Protokol o zkoušce přilnavosti dle ČSN 73 6161 (PDF)."
+
+msgid "Report details"
+msgstr "Údaje protokolu"
+
+msgid "The ordering party is printed on the protocol; the controller signs it."
+msgstr "Objednatel se uvede v protokolu; kontrolující osoba protokol podepisuje."
+
+msgid "Selected samples"
+msgstr "Vybrané vzorky"
+
+msgid "Change the selection in the sample records"
+msgstr "Výběr změníte v záznamech vzorků"
+
+msgid "ČSN 73 6161 requires at least two samples in one report. A report with one sample will point this out."
+msgstr "ČSN 73 6161 vyžaduje alespoň dva vzorky v jednom protokolu. Protokol s jedním vzorkem na to upozorní."
+
+msgid "Some of the selected samples have not been evaluated yet."
+msgstr "Některé z vybraných vzorků ještě nebyly vyhodnoceny."
+
+msgid "Form"
+msgstr "Formulář"
+
+msgid "Sign in to assess your asphalt samples."
+msgstr "Přihlaste se a hodnoťte své asfaltové vzorky."
+
+msgid "Back"
+msgstr "Zpět"
+
+msgid "How it works"
+msgstr "Jak to funguje"
+
+msgid "Photograph the sample"
+msgstr "Vyfoťte vzorek"
+
+msgid "Upload a photo of the stripped aggregate or take it with the camera directly in the app."
+msgstr "Nahrajte fotografii obnaženého kameniva, nebo ji pořiďte kamerou přímo v aplikaci."
+
+msgid "AI detects bitumen and aggregate"
+msgstr "AI rozpozná asfalt a kamenivo"
+
+msgid "The model marks the coated and stripped surface and computes the asphalt coverage and its class."
+msgstr "Model označí obalený a obnažený povrch a spočítá pokrytí asfaltem i jeho třídu."
+
+msgid "Export the protocol"
+msgstr "Exportujte protokol"
+
+msgid "Compare the result with your expert estimate and export a PDF protocol according to ČSN 73 6161."
+msgstr "Porovnejte výsledek se svým odborným odhadem a exportujte PDF protokol dle ČSN 73 6161."
+
+msgid "Upload a photo of a sample - nothing is stored in the demo."
+msgstr "Nahrajte fotografii vzorku – v ukázce se nic neukládá."
+
+msgid "Upload a photo of the sample"
+msgstr "Nahrajte fotografii vzorku"
+
+msgid "Drag the photo here or choose a file (JPG, PNG, HEIC)."
+msgstr "Přetáhněte fotografii sem nebo vyberte soubor (JPG, PNG, HEIC)."
+
+msgid "Choose photo"
+msgstr "Vybrat fotografii"
+
+msgid "Upload another photo"
+msgstr "Nahrát jinou fotografii"
+
+msgid "Progress"
+msgstr "Postup"
+
+msgid "Photo"
+msgstr "Fotografie"
+
+msgid "Sample data"
+msgstr "Údaje o vzorku"
+
+msgid "Report"
+msgstr "Protokol"
+
+msgid "Camera"
+msgstr "Kamera"
+
+msgid "Close"
+msgstr "Zavřít"
+
+msgid "Video stream not available."
+msgstr "Obraz z kamery není k dispozici."
+
+msgid "Live view"
+msgstr "Živý náhled"
+
+msgid "Captured photo"
+msgstr "Pořízená fotografie"
+
+msgid "Default values"
+msgstr "Výchozí hodnoty"
+
+msgid "Fill in empty fields"
+msgstr "Doplnit prázdná pole"
+
+msgid "Edit default values"
+msgstr "Upravit výchozí hodnoty"
+
+msgid "Asphalt coverage of the aggregate surface"
+msgstr "Pokrytí povrchu kameniva asfaltem"
+
+msgid "Your visual estimate, required for the evaluation."
+msgstr "Váš vizuální odhad, nutný pro vyhodnocení."
+
+msgid "Sample evaluated"
+msgstr "Vzorek vyhodnocen"
+
+msgid "ČSN 73 6161 requires at least two samples in one report. You can export the report from the sample records at any time."
+msgstr "ČSN 73 6161 vyžaduje alespoň dva vzorky v jednom protokolu. Protokol můžete kdykoli exportovat ze záznamů vzorků."
+
+msgid "Main navigation"
+msgstr "Hlavní navigace"
+
+msgid "Demo"
+msgstr "Ukázka"
+
+msgid "Language"
+msgstr "Jazyk"
+
+msgid "Menu"
+msgstr "Menu"
+
+msgid "recommended"
+msgstr "doporučený"
+
+msgid "Masks"
+msgstr "Masky"
+
+msgid "Bitumen"
+msgstr "Asfalt"
+
+msgid "Aggregate"
+msgstr "Kamenivo"
+
+msgid "Background"
+msgstr "Pozadí"
+
+msgid "Hover over the photo to magnify"
+msgstr "Najeďte myší na fotografii pro zvětšení"
+
+msgid "Image"
+msgstr "Obrázek"
+
+msgid "Model"
+msgstr "Model"

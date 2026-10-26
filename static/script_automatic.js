@@ -1,6 +1,6 @@
-// Current Sample page (workbench): photo upload / camera, segmentation viewer, sample data with autosave,
-// assessment and evaluation. The camera itself is handled by script_video.js.
-import base64toBlob from "./utils.js"
+// Current Sample page (workbench): photo upload / camera, segmentation viewer (viewer.js), sample data
+// with autosave, assessment and evaluation. The camera itself is handled by script_video.js.
+import { createViewer, showResult as renderResult } from "./viewer.js"
 
 const alerts = await fetch("/translations-alerts", { method: "GET" }).then((response) => response.json())
 const ui = window.ui
@@ -23,175 +23,14 @@ const INFO_FIELDS = [
 // fields that describe one particular sample - cleared when a new photo starts a new sample
 const PER_SAMPLE_FIELDS = ["info_sample_label", "info_comment", "info_sample_collection_data"]
 
+const viewer = createViewer({ onEvaluateShortcut: () => !state.evaluated && evaluateSample() })
 const state = {
-    hasImage: false,
-    hasMasks: false,
     evaluated: false,
     experimentId: null,
-    busy: false,
-}
-
-// ---------------------------------------------------------------------------------------------
-// Viewer: photo + colour mask overlays (the colours are shared with the PDF report via CSS)
-// ---------------------------------------------------------------------------------------------
-const rootStyles = getComputedStyle(document.documentElement)
-const LAYERS = {
-    asphalt: {
-        canvas: $("overlayCanvasAsphalt"),
-        toggle: $("redOverlayCheckbox"),
-        color: rootStyles.getPropertyValue("--mask-bitumen").trim(),
-    },
-    aggregate: {
-        canvas: $("overlayCanvasAggregate"),
-        toggle: $("aggregateOverlayCheckbox"),
-        color: rootStyles.getPropertyValue("--mask-aggregate").trim(),
-    },
-    background: {
-        canvas: $("overlayCanvasBackground"),
-        toggle: $("backgroundOverlayCheckbox"),
-        color: rootStyles.getPropertyValue("--mask-background").trim(),
-    },
-}
-const imageUrls = { original: null, bw: null }
-
-function hexToRgb(hex) {
-    hex = hex.replace("#", "")
-    if (hex.length === 3) hex = [...hex].map((c) => c + c).join("")
-    return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16))
-}
-
-function loadImage(url) {
-    return new Promise((resolve, reject) => {
-        const img = new Image()
-        img.onload = () => resolve(img)
-        img.onerror = reject
-        img.src = url
-    })
-}
-
-function pngUrl(base64) {
-    return URL.createObjectURL(base64toBlob(base64, "image/png"))
-}
-
-function setImages(colorBase64, grayBase64) {
-    for (const key of Object.keys(imageUrls)) {
-        if (imageUrls[key]) URL.revokeObjectURL(imageUrls[key])
-    }
-    imageUrls.original = pngUrl(colorBase64)
-    imageUrls.bw = pngUrl(grayBase64)
-}
-
-async function drawPhoto() {
-    const url = imageUrls[$("imageType").value] || imageUrls.original
-    if (!url) return
-    const img = await loadImage(url)
-    const canvas = $("imageCanvas")
-    canvas.width = img.naturalWidth
-    canvas.height = img.naturalHeight
-    canvas.getContext("2d").drawImage(img, 0, 0)
-}
-
-// masks come as transparent PNGs - paint the opaque pixels in the layer colour
-async function drawMask(layer, base64) {
-    const img = await loadImage(pngUrl(base64))
-    const canvas = layer.canvas
-    canvas.width = img.naturalWidth
-    canvas.height = img.naturalHeight
-    const ctx = canvas.getContext("2d", { willReadFrequently: true })
-    ctx.drawImage(img, 0, 0)
-    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    const [r, g, b] = hexToRgb(layer.color)
-    const data = pixels.data
-    for (let i = 0; i < data.length; i += 4) {
-        if (data[i + 3] > 127) {
-            data[i] = r
-            data[i + 1] = g
-            data[i + 2] = b
-            data[i + 3] = 255
-        } else {
-            data[i + 3] = 0
-        }
-    }
-    ctx.putImageData(pixels, 0, 0)
-    URL.revokeObjectURL(img.src)
-}
-
-async function setMasks(data) {
-    await Promise.all([
-        drawMask(LAYERS.asphalt, data.asphalt_mask),
-        drawMask(LAYERS.aggregate, data.aggregate_mask),
-        drawMask(LAYERS.background, data.background_mask),
-    ])
-    state.hasMasks = true
-    applyLayerVisibility()
-}
-
-function opacity() {
-    return Number($("opacitySlider").value) / 100
-}
-
-function applyLayerVisibility() {
-    for (const layer of Object.values(LAYERS)) {
-        layer.canvas.hidden = !(state.hasMasks && layer.toggle.checked)
-        layer.canvas.style.opacity = opacity()
-    }
-}
-
-function setViewerBusy(text) {
-    state.busy = Boolean(text)
-    $("bgProcessingLoader").hidden = !text
-    if (text) $("viewerBusyText").textContent = text
-}
-
-// magnifying loupe that follows the cursor and shows the photo together with the visible masks
-function initLoupe() {
-    const stage = $("viewerStage")
-    const loupe = $("loupe")
-    const ZOOM = 3
-    const ctx = loupe.getContext("2d")
-
-    stage.addEventListener("mousemove", (event) => {
-        const photo = $("imageCanvas")
-        if (!state.hasImage || state.busy) return
-        const rect = photo.getBoundingClientRect()
-        const x = event.clientX - rect.left
-        const y = event.clientY - rect.top
-        if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
-            loupe.hidden = true
-            return
-        }
-        const scale = photo.width / rect.width
-        const size = loupe.width
-        const region = (size / ZOOM) * scale
-        const sx = x * scale - region / 2
-        const sy = y * scale - region / 2
-        ctx.clearRect(0, 0, size, size)
-        ctx.globalAlpha = 1
-        ctx.drawImage(photo, sx, sy, region, region, 0, 0, size, size)
-        for (const layer of Object.values(LAYERS)) {
-            if (!layer.canvas.hidden) {
-                ctx.globalAlpha = opacity()
-                ctx.drawImage(layer.canvas, sx, sy, region, region, 0, 0, size, size)
-            }
-        }
-        const half = loupe.offsetWidth / 2
-        loupe.style.left = x - half + "px"
-        loupe.style.top = y - half + "px"
-        loupe.hidden = false
-    })
-    stage.addEventListener("mouseleave", () => (loupe.hidden = true))
 }
 
 function showResult(element, classElement, result) {
-    if (!result || result.asphalt_percent === null || result.asphalt_percent === undefined) {
-        element.textContent = "–"
-        classElement.textContent = ""
-        return
-    }
-    element.textContent = result.asphalt_percent.toFixed(1) + " %"
-    classElement.textContent = result.class
-        ? alerts.classLabel + " " + result.class + (result.class_word ? " · " + result.class_word : "")
-        : ""
+    renderResult(element, classElement, result, alerts.classLabel)
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -215,9 +54,9 @@ function updateStepper() {
     const labelFilled = $("info_sample_label").value.trim() !== ""
     const guessFilled = $("expertGuess").value !== ""
     const done = {
-        photo: state.hasImage,
-        info: state.hasImage && labelFilled,
-        assess: state.hasMasks && guessFilled,
+        photo: viewer.state.hasImage,
+        info: viewer.state.hasImage && labelFilled,
+        assess: viewer.state.hasMasks && guessFilled,
         report: state.evaluated,
     }
     let currentSet = false
@@ -234,7 +73,7 @@ function updateStepper() {
         }
     }
     const label = $("info_sample_label").value.trim()
-    $("sampleSubtitle").textContent = !state.hasImage
+    $("sampleSubtitle").textContent = !viewer.state.hasImage
         ? alerts.subtitleEmpty
         : (state.experimentId ? alerts.sampleId + " " + state.experimentId : "") + (label ? " · " + label : "")
 }
@@ -365,7 +204,7 @@ function localNowForInput() {
 }
 
 async function runInference() {
-    setViewerBusy(alerts.runningModel)
+    viewer.setBusy(alerts.runningModel)
     try {
         const formData = new FormData()
         formData.append("model_name", $("inference_model").value)
@@ -373,12 +212,12 @@ async function runInference() {
         const data = await response.json().catch(() => ({}))
         if (!response.ok || data.status !== "success") throw new Error(data.message || response.statusText)
         if (data.experimentId) state.experimentId = data.experimentId
-        await setMasks(data)
+        await viewer.setMasks(data)
         showResult($("aiPercent"), $("aiClass"), data)
     } catch (error) {
         ui.toast(alerts.inferenceFailed + " " + (error.message || ""), "error")
     } finally {
-        setViewerBusy(null)
+        viewer.setBusy(null)
         updateStepper()
     }
 }
@@ -390,19 +229,17 @@ async function uploadPhoto(file) {
         return
     }
     showWorkbench()
-    setViewerBusy(alerts.processingPhoto)
+    viewer.setBusy(alerts.processingPhoto)
     try {
         const formData = new FormData()
         formData.append("file", file)
         const response = await fetch("/process-image", { method: "POST", body: formData })
         if (!response.ok) throw new Error(response.status + " " + response.statusText)
         const data = await response.json()
-        setImages(data.color, data.gray)
-        await drawPhoto()
-        state.hasImage = true
-        state.hasMasks = false
+        viewer.setImages(data.color, data.gray)
+        await viewer.drawPhoto()
+        viewer.clearMasks()
         state.evaluated = false
-        applyLayerVisibility()
         showResult($("aiPercent"), $("aiClass"), null)
 
         const active = await fetch("/is-experiment-active").then((r) => r.json())
@@ -416,7 +253,7 @@ async function uploadPhoto(file) {
         await Promise.all([...PER_SAMPLE_FIELDS, "expert_guess", "info_datetime", "inference_model"].map(saveFieldNow))
         await applyDefaults()
     } catch (error) {
-        setViewerBusy(null)
+        viewer.setBusy(null)
         ui.toast(alerts.uploadFailed + " " + (error.message || ""), "error")
         return
     }
@@ -432,7 +269,7 @@ function inputDateTime(value) {
 async function openSample(id) {
     showWorkbench()
     setFormEnabled(false)
-    setViewerBusy(alerts.loadingSample)
+    viewer.setBusy(alerts.loadingSample)
     try {
         const response = await fetch("/load-experiment/" + id + "?nocache=" + Date.now())
         const data = await response.json().catch(() => ({}))
@@ -450,19 +287,18 @@ async function openSample(id) {
             model.value = data.inference_model
         }
 
-        setImages(data.color, data.gray)
-        await drawPhoto()
-        state.hasImage = true
+        viewer.setImages(data.color, data.gray)
+        await viewer.drawPhoto()
         setFormEnabled(true)
         if (data.has_masks) {
-            await setMasks(data)
+            await viewer.setMasks(data)
             showResult($("aiPercent"), $("aiClass"), data)
-            setViewerBusy(null)
+            viewer.setBusy(null)
         } else {
             await runInference()
         }
     } catch (error) {
-        setViewerBusy(null)
+        viewer.setBusy(null)
         ui.toast(error.message, "error")
     }
     updateStepper()
@@ -477,7 +313,7 @@ async function evaluateSample() {
         $("expertGuess").focus()
         return
     }
-    if (!state.hasMasks) {
+    if (!viewer.state.hasMasks) {
         ui.toast(alerts.waitForModel, "warning")
         return
     }
@@ -517,105 +353,67 @@ async function evaluateSample() {
 // ---------------------------------------------------------------------------------------------
 // Wiring
 // ---------------------------------------------------------------------------------------------
-function initInputs() {
-    for (const field of INFO_FIELDS) {
-        const input = $(field)
-        input.addEventListener("input", () => {
-            scheduleAutosave(field)
-            updateStepper()
-        })
-        // leaving the field saves it right away
-        input.addEventListener("change", () => {
-            if (field in autosaveTimers) saveFieldNow(field)
-        })
-    }
-    $("expertGuess").addEventListener("input", function () {
-        if (this.value !== "") {
-            const value = Number(this.value)
-            if (value < 0) this.value = 0
-            else if (value > 100) this.value = 100
-        }
-        scheduleAutosave("expert_guess")
+for (const field of INFO_FIELDS) {
+    const input = $(field)
+    input.addEventListener("input", () => {
+        scheduleAutosave(field)
         updateStepper()
     })
-    $("inference_model").addEventListener("change", async () => {
-        await saveFieldNow("inference_model")
-        if (state.hasImage) await runInference()
-    })
-
-    $("save_experiment_info").addEventListener("click", saveWithFeedback)
-    $("index_evaluation").addEventListener("click", evaluateSample)
-    $("applyDefaultsButton").addEventListener("click", () => {
-        $("applyDefaultsButton").closest("details").removeAttribute("open")
-        applyDefaults({ announce: true })
-    })
-    $("resultDialog").addEventListener("click", (event) => {
-        if (event.target === $("resultDialog")) $("resultDialog").close()
-    })
-
-    window.addEventListener("beforeunload", (event) => {
-        if (unsavedFields.size > 0 || pendingSaves > 0) {
-            event.preventDefault()
-            event.returnValue = ""
-        }
+    // leaving the field saves it right away
+    input.addEventListener("change", () => {
+        if (field in autosaveTimers) saveFieldNow(field)
     })
 }
-
-function initViewerControls() {
-    for (const layer of Object.values(LAYERS)) layer.toggle.addEventListener("change", applyLayerVisibility)
-    $("opacitySlider").addEventListener("input", () => {
-        $("opacityValue").textContent = $("opacitySlider").value + " %"
-        applyLayerVisibility()
-    })
-    $("imageType").addEventListener("change", drawPhoto)
-
-    // keyboard shortcuts - not while typing into a field
-    document.addEventListener("keydown", (event) => {
-        if (!event.shiftKey || !event.key || event.ctrlKey || event.metaKey || event.altKey) return
-        if (event.target.closest("input, textarea, select, [contenteditable]")) return
-        const toggle = { a: LAYERS.asphalt.toggle, s: LAYERS.aggregate.toggle, d: LAYERS.background.toggle }[
-            event.key.toLowerCase()
-        ]
-        if (toggle) {
-            toggle.checked = !toggle.checked
-            applyLayerVisibility()
-        } else if (event.key.toLowerCase() === "c" && state.hasImage) {
-            const select = $("imageType")
-            select.selectedIndex = (select.selectedIndex + 1) % select.options.length
-            drawPhoto()
-        } else if (event.key.toLowerCase() === "e" && state.hasImage && !state.evaluated) {
-            evaluateSample()
-        }
-    })
-    initLoupe()
-}
-
-function initUpload() {
-    $("fileInput").addEventListener("change", () => {
-        const file = $("fileInput").files[0]
-        $("fileInput").value = ""
-        uploadPhoto(file)
-    })
-    // the camera (script_video.js) puts the captured photo into #fileInput
-    $("upload-button-camera").addEventListener("click", () => uploadPhoto($("fileInput").files[0]))
-
-    for (const zone of [$("dropzone"), $("viewerStage")]) {
-        zone.addEventListener("dragover", (event) => {
-            event.preventDefault()
-            zone.classList.add("is-dragover")
-        })
-        zone.addEventListener("dragleave", () => zone.classList.remove("is-dragover"))
-        zone.addEventListener("drop", (event) => {
-            event.preventDefault()
-            zone.classList.remove("is-dragover")
-            uploadPhoto(event.dataTransfer.files[0])
-        })
+$("expertGuess").addEventListener("input", function () {
+    if (this.value !== "") {
+        const value = Number(this.value)
+        if (value < 0) this.value = 0
+        else if (value > 100) this.value = 100
     }
+    scheduleAutosave("expert_guess")
+    updateStepper()
+})
+$("inference_model").addEventListener("change", async () => {
+    await saveFieldNow("inference_model")
+    if (viewer.state.hasImage) await runInference()
+})
+
+$("save_experiment_info").addEventListener("click", saveWithFeedback)
+$("index_evaluation").addEventListener("click", evaluateSample)
+$("applyDefaultsButton").addEventListener("click", () => {
+    $("applyDefaultsButton").closest("details").removeAttribute("open")
+    applyDefaults({ announce: true })
+})
+$("resultDialog").addEventListener("click", (event) => {
+    if (event.target === $("resultDialog")) $("resultDialog").close()
+})
+window.addEventListener("beforeunload", (event) => {
+    if (unsavedFields.size > 0 || pendingSaves > 0) {
+        event.preventDefault()
+        event.returnValue = ""
+    }
+})
+
+// upload: file picker, drag and drop, camera (script_video.js puts the captured photo into #fileInput)
+$("fileInput").addEventListener("change", () => {
+    const file = $("fileInput").files[0]
+    $("fileInput").value = ""
+    uploadPhoto(file)
+})
+$("upload-button-camera").addEventListener("click", () => uploadPhoto($("fileInput").files[0]))
+for (const zone of [$("dropzone"), $("viewerStage")]) {
+    zone.addEventListener("dragover", (event) => {
+        event.preventDefault()
+        zone.classList.add("is-dragover")
+    })
+    zone.addEventListener("dragleave", () => zone.classList.remove("is-dragover"))
+    zone.addEventListener("drop", (event) => {
+        event.preventDefault()
+        zone.classList.remove("is-dragover")
+        uploadPhoto(event.dataTransfer.files[0])
+    })
 }
 
-initInputs()
-initViewerControls()
-initUpload()
 setFormEnabled(false)
 updateStepper()
 

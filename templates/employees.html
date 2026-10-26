@@ -1,116 +1,76 @@
-<!-- login.html -->
+{% extends "base.html" %}
+{% from "macros/icons.html" import icon %}
 
-{%  extends "base.html" %}
+{% block title %}{{ _('Employees') }}{% endblock %}
+{% block head %}<script src="{{ url_for('static', filename='script_tables.js') }}" defer></script>{% endblock %}
 
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
+<div class="page-header">
+  <div>
+    <h1>{{ _('Employees') }}</h1>
+    <p>{{ _('Users of your company with a confirmed e-mail address.') }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="/view-company-key">{{ icon('plus') }} {{ _('Invite a colleague') }}</a>
+  </div>
+</div>
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='new_styles.css') }}">
-        <title>{{ _('Employee Records') }}</title>
-    </head>
+<div class="table-wrap">
+  <table class="table table-cards" data-selection-bar="selectionBar">
+    <thead>
+      <tr>
+        <th class="col-check"><input type="checkbox" class="check-all" aria-label="{{ _('Select all') }}"></th>
+        <th>{{ _('Name') }}</th>
+        <th>{{ _('Username') }}</th>
+        <th>{{ _('Contact') }}</th>
+        <th>{{ _('Role') }}</th>
+        <th>{{ _('Status') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in employees %}
+      <tr>
+        <td class="col-check">
+          {% if e.is_me %}
+          <input type="checkbox" disabled title="{{ _('You cannot change your own account here.') }}" aria-label="{{ _('You') }}">
+          {% else %}
+          <input type="checkbox" class="row-check" value="{{ e.username }}" aria-label="{{ _('Select') }} {{ e.username }}">
+          {% endif %}
+        </td>
+        <td class="cell-strong card-title-cell">{{ e.name }}{% if e.is_me %} <span class="badge">{{ _('You') }}</span>{% endif %}</td>
+        <td class="mono" data-label="{{ _('Username') }}">{{ e.username }}</td>
+        <td data-label="{{ _('Contact') }}"><a href="mailto:{{ e.e_mail }}">{{ e.e_mail }}</a></td>
+        <td data-label="{{ _('Role') }}">
+          {% if e.is_admin %}<span class="badge badge-brand">{{ icon('shield') }} {{ _('Company admin') }}</span>
+          {% else %}<span class="badge">{{ _('User') }}</span>{% endif %}
+        </td>
+        <td data-label="{{ _('Status') }}">
+          {% if e.is_blocked %}<span class="badge badge-danger">{{ icon('ban') }} {{ _('Blocked') }}</span>
+          {% else %}<span class="badge badge-success">{{ _('Active') }}</span>{% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="table-empty">{{ _('No records found') }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
-    <body>
-        <div class="colorbar">
-            <h2>{{dynamic_content}}</h2>
-        </div>
-        <div class="container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>{{ _('Name') }}</th>
-                        <th>{{ _('Username') }}</th>
-                        <th>{{ _('Contact') }}</th>
-                        <th>{{ _('Is Admin') }}</th>
-                        <th>{{ _('Is Blocked') }}</th>
-                        <th>{{ _('Selected') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
+<div class="selection-bar" id="selectionBar" hidden>
+  <span class="count"><span data-selection-count>0</span> {{ _('selected') }}</span>
+  <button type="button" class="btn btn-sm" data-action="clear-selection">{{ _('Cancel') }}</button>
+  <button type="button" class="btn btn-sm" data-action="grant-admin">{{ icon('shield') }} {{ _('Grant Admin privileges') }}</button>
+  <button type="button" class="btn btn-sm" data-action="remove-admin">{{ _('Remove Admin privileges') }}</button>
+  <button type="button" class="btn btn-sm" data-action="unblock">{{ _('Unblock User') }}</button>
+  <button type="button" class="btn btn-sm btn-danger" data-action="block">{{ icon('ban') }} {{ _('Block User') }}</button>
+</div>
 
-                    <div class="modern-row">
-
-                        <div class="column modern-column">
-                            <h1 class="modern-label upper">
-                                {{ _('Max records on page:') }}
-                            </h1>
-                            <input type="number" id="maxRecords" class="modern-input enhanced-input" value="10" min="1"
-                                max="100">
-                        </div>
-
-                        <div class="column modern-column">
-                            <h1 class="modern-label upper">
-                                {{ _('Sort order:') }}
-                            </h1>
-                            <select id="sortOrder" class="enhanced-select">
-                                <option value="desc">{{ _('Descending') }}</option>
-                                <option value="asc">{{ _('Ascending') }}</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modern-row">
-                        <button class="btn-grant-admin-privileges"
-                            id="btn-grant-admin-privileges">{{ _('Grant Admin privileges') }}</button>
-                        <button class="btn-remove-admin-privileges"
-                            id="btn-remove-admin-privileges">{{ _('Remove Admin privileges') }}</button>
-                        <button class="btn-grant-admin-privileges"
-                            id="btn-unblock-user">{{ _('Unblock User') }}</button>
-                        <button class="btn-remove-admin-privileges" id="btn-block-user">{{ _('Block User') }}</button>
-                    </div>
-
-                    <textarea class='text_area' id="current_page">1</textarea>
-                    <input class='sort_by' type="text" id="sortBy" value="date,id,expert guess,asphalt ratio"
-                        maxlength=128>
-                    {% if records %}
-                    {% for record in records[1:] %}
-                    {% for field in record %}
-                    <tr>
-                        {% for column in field %}
-                        <td>{{column}}</td>
-                        {% endfor %}
-                        <td>
-                            <div for="checkbox-{{ field.0 }}" class="select-checkbox-container">
-                                <label class="overlay-label">
-                                    <input type="checkbox" id="record-checkbox" data-id="{{ field.1 }}">
-                                    <span class="overlay-custom"></span>
-                                </label>
-                            </div>
-                            <!-- <input type="checkbox" class="record-checkbox" data-id="{{ field.1 }}"> -->
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% endfor %}
-                    {% else %}
-                    <p>{{ _('No records found') }}</p>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="modern-row">
-            <button class="btn-details-left" id="previous_page"
-                {{ 'disabled' if deactivate_prev else '' }}>{{ _('Previous') }}</button>
-            <button class="btn-details-right" id="next_page"
-                {{ 'disabled' if deactivate_next else '' }}>{{ _('Next') }}</button>
-        </div>
-
-        <div id="row" , class="colorbar">
-            <h3> {{ _('Register New Employee') }}</h3>
-        </div>
-        <p> {{ _('Click the button below to register a new employee. For registration, you need to know the company key, which can be viewed')}}
-            <a class='styled-href' href="/view-company-key"> {{ _('here') }} </a>.
-        </p>
-        <a href="{{ url_for('register') }}">
-            <button id='registerNewEmployee' class="custom-file-label">{{ _('Register New Employee') }}</button>
-        </a>
-
-        <script src="{{ url_for('static', filename='script_tables.js') }}"> </script>
-    </body>
-
-</html>
-
-{% endblock content %}
+<div class="card invite-card">
+  <div class="card-body">
+    <h2>{{ icon('users') }} {{ _('How does a colleague join?') }}</h2>
+    <p class="muted">{{ _('Click the button below to register a new employee. For registration, you need to know the company key, which can be viewed') }}
+      <a href="/view-company-key">{{ _('here') }}</a>.</p>
+    <a class="btn btn-sm" href="/register">{{ _('Register New Employee') }}</a>
+  </div>
+</div>
+{% endblock %}

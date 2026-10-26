@@ -1,0 +1,62 @@
+{#- Photo + segmentation viewer (driven by static/viewer.js), used on the Current Sample page and in the demo. -#}
+{% from "macros/icons.html" import icon %}
+
+{% macro model_select(models) -%}
+<select id="inference_model">
+  {% for model in models %}
+  {%- set version = model.split('_v')[1].split('_')[0].split('.')[0] if '_v' in model else model -%}
+  <option value="{{ model }}" title="{{ model }}">v{{ version }}{{ ' (' ~ _('recommended') ~ ')' if loop.first }}</option>
+  {% endfor %}
+</select>
+{%- endmacro %}
+
+{% macro viewer_card(models, replace_label=None) -%}
+<div class="card viewer" id="viewer" hidden>
+  <div class="viewer-stage" id="viewerStage">
+    <canvas id="imageCanvas"></canvas>
+    <canvas class="overlayCanvas" id="overlayCanvasBackground" hidden></canvas>
+    <canvas class="overlayCanvas" id="overlayCanvasAggregate" hidden></canvas>
+    <canvas class="overlayCanvas" id="overlayCanvasAsphalt" hidden></canvas>
+    <canvas class="loupe" id="loupe" width="220" height="220" hidden></canvas>
+    <div class="viewer-busy" id="bgProcessingLoader" hidden>
+      <div class="spinner spinner-lg"></div>
+      <span id="viewerBusyText">{{ _('Working...') }}</span>
+    </div>
+  </div>
+  <div class="viewer-controls">
+    <div class="legend" role="group" aria-label="{{ _('Masks') }}">
+      <label class="legend-item" title="Shift + A">
+        <input type="checkbox" id="redOverlayCheckbox" checked><span class="swatch swatch-bitumen"></span>{{ _('Bitumen') }}
+      </label>
+      <label class="legend-item" title="Shift + S">
+        <input type="checkbox" id="aggregateOverlayCheckbox" checked><span class="swatch swatch-aggregate"></span>{{ _('Aggregate') }}
+      </label>
+      <label class="legend-item" title="Shift + D">
+        <input type="checkbox" id="backgroundOverlayCheckbox"><span class="swatch swatch-background"></span>{{ _('Background') }}
+      </label>
+      <span class="legend-hint small muted">{{ icon('zoom') }} {{ _('Hover over the photo to magnify') }}</span>
+    </div>
+    <div class="viewer-settings">
+      <div class="field field-inline">
+        <label for="opacitySlider">{{ _('Mask Opacity:').rstrip(':') }}</label>
+        <input type="range" id="opacitySlider" min="0" max="100" step="5" value="50">
+        <output id="opacityValue" for="opacitySlider">50 %</output>
+      </div>
+      <div class="field field-inline">
+        <label for="imageType">{{ _('Image') }}</label>
+        <select id="imageType" title="Shift + C">
+          <option value="original">{{ _('Original Image') }}</option>
+          <option value="bw">{{ _('Grayscale Image') }}</option>
+        </select>
+      </div>
+      <div class="field field-inline">
+        <label for="inference_model">{{ _('Model') }}</label>
+        {{ model_select(models) }}
+      </div>
+      {% if replace_label %}
+      <label for="fileInput" class="btn btn-sm viewer-replace">{{ icon('upload') }} {{ replace_label }}</label>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{%- endmacro %}

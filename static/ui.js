@@ -135,6 +135,14 @@
         }
     })
 
+    // links with data-confirm="question" ask before they are followed
+    document.addEventListener("click", async (event) => {
+        const link = event.target.closest("a[data-confirm]")
+        if (!link) return
+        event.preventDefault()
+        if (await confirmDialog(link.dataset.confirm, { danger: true })) window.location.href = link.href
+    })
+
     // server-side flash messages -> toasts
     document.addEventListener("DOMContentLoaded", () => {
         const categories = { error: "error", danger: "error", success: "success", warning: "warning" }

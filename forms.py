@@ -87,7 +87,7 @@ class RegistrationFormUser(FlaskForm):
     company_key = StringField(lazy_gettext('Company Key'),validators=[DataRequired(),Exists(tablename='public_companies')])
     password = PasswordField(lazy_gettext('Password'),validators=[DataRequired(),RequiredLength(min=PASSWORD_LENGTH_MIN)])
     confirm_password = PasswordField(lazy_gettext('Confirm password'),validators=[DataRequired(), EqualTo('password', message=messages['passwords_must_match'])])
-    submit = SubmitField(lazy_gettext('Submit'))
+    submit = SubmitField(lazy_gettext('Register'))
     # recaptcha = RecaptchaField()
 
 class RegistrationFormCompany(FlaskForm):  
@@ -95,7 +95,7 @@ class RegistrationFormCompany(FlaskForm):
     e_mail = StringField(lazy_gettext('Email address'),
                          validators=[DataRequired(), Email(),IsUnique(tablename='public_companies', message=messages['email_already_used']),RequiredLength(min=5,max=100)])
     company_address = StringField(lazy_gettext('Company address'),validators=[DataRequired()])
-    submit = SubmitField(lazy_gettext('Submit'))
+    submit = SubmitField(lazy_gettext('Register new company'))
 
 class LoginForm(FlaskForm):
     usernameXe_mail = StringField(lazy_gettext('Username/Email'),validators=[DataRequired(),ExistsAny(tablename='public_users')])
@@ -106,23 +106,23 @@ class ChangePasswordForm(FlaskForm):
     old_password = PasswordField(lazy_gettext('Old password'),validators=[DataRequired()])
     new_password = PasswordField(lazy_gettext('New password'),validators=[DataRequired(),RequiredLength(min=PASSWORD_LENGTH_MIN)])
     confirm_new_password = PasswordField(lazy_gettext('Confirm new password'),validators=[DataRequired(), EqualTo('new_password', message=messages['passwords_must_match'])])
-    submit = SubmitField(lazy_gettext('Submit'))
+    submit = SubmitField(lazy_gettext('Change password'))
 
 class ChangeForgottenPasswordForm(FlaskForm):
     new_password = PasswordField(lazy_gettext('New password'),validators=[DataRequired(),RequiredLength(min=PASSWORD_LENGTH_MIN)])
     confirm_new_password = PasswordField(lazy_gettext('Confirm new password'),validators=[DataRequired(), EqualTo('new_password', message=messages['passwords_must_match'])])
-    submit = SubmitField(lazy_gettext('Submit'))
+    submit = SubmitField(lazy_gettext('Set new password'))
 
 class ForgottenPasswordForm(FlaskForm):
     e_mail = StringField(lazy_gettext('Your Email address'),validators=[DataRequired(), Email(),RequiredLength(min=5,max=100)])
-    submit = SubmitField(lazy_gettext('Submit'))
+    submit = SubmitField(lazy_gettext('Send reset link'))
 
 class EditPersonalInformationForm(FlaskForm):
     # default values are taken from the database
     username = StringField(lazy_gettext('Username'),validators=[IsUnique(tablename='public_users', message=messages['username_already_taken']),RequiredLength(min=0,max=50)])
     first_name = StringField(lazy_gettext('First name'))
     last_name = StringField(lazy_gettext('Last name'))
-    submit = SubmitField(lazy_gettext('Submit'))
+    submit = SubmitField(lazy_gettext('Save changes'))
 
     def validate(self, **kwargs):
         #   control that at least one field is filled in 
@@ -136,7 +136,7 @@ class EditCompanyInformationForm(FlaskForm):
     # default values are taken from the database
     company_name = StringField(lazy_gettext('Company Name'),validators=[IsUnique(tablename='companies', message=messages['company_name_already_taken']),RequiredLength(min=0,max=100)])
     company_address = StringField(lazy_gettext('Company Address'),validators=[RequiredLength(min=0,max=200)])
-    submit = SubmitField(lazy_gettext('Submit'))
+    submit = SubmitField(lazy_gettext('Save changes'))
 
     def validate(self, **kwargs):
         #   control that at least one field is filled in 
@@ -153,12 +153,12 @@ class EmailForgotPasswordForm(FlaskForm):
         validators=[DataRequired(), Email(),
         Exists(tablename='public_users'), 
         RequiredLength(min=5,max=100)])
-    submit = SubmitField(lazy_gettext('Submit'))
+    submit = SubmitField(lazy_gettext('Send reset link'))
 
 class ChangeEmailForm(FlaskForm):
     # default values are taken from the database
     e_mail = StringField(lazy_gettext('New email address'),validators=[DataRequired(), Email(), IsUnique(tablename='public_users', message=messages['email_already_used']),RequiredLength(min=5,max=100)])
-    submit = SubmitField(lazy_gettext('Submit'))
+    submit = SubmitField(lazy_gettext('Change e-mail address'))
 
 class ContactForm(FlaskForm):
     name = StringField(lazy_gettext('Your Name'),validators=[DataRequired(),RequiredLength(min=1,max=100)])
@@ -168,14 +168,14 @@ class ContactForm(FlaskForm):
         lazy_gettext('Message'),
         validators=[DataRequired(),RequiredLength(min=1,max=2000)], 
     )
-    submit = SubmitField(lazy_gettext('Submit'))
+    submit = SubmitField(lazy_gettext('Send message'))
 
 class ExportReportForm(FlaskForm):
     ordering_party_name = StringField(lazy_gettext('Ordering Party Name'),validators=[RequiredLength(min=0,max=100)])
     ordering_party_address = StringField(lazy_gettext('Ordering Party Address'),validators=[RequiredLength(min=0,max=200)])
     ordering_party_e_mail = StringField(lazy_gettext('Ordering Party Email'),validators=[RequiredLength(min=0,max=100),EmailOrNone()])
     controlling_employee = SelectField(lazy_gettext('Controller/Employee Email'),choices=[],validators=[DataRequired()])
-    submit = SubmitField(lazy_gettext('Submit'))
+    submit = SubmitField(lazy_gettext('Export report'))
 
 # class RegistrationFormCompany(FlaskForm):
 #     # in future - register companies in a smarter way

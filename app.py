@@ -1328,48 +1328,17 @@ def get_num_pages(total_items: int, page_limit: int) -> int:
 @check_authentication
 @check_is_company_admin
 def employees():
-    kwargs = request.args.to_dict() if request.args else {'page': 1}
-    sort_order, page_limit, start_sub_id, page, sort_by = get_query_args(**kwargs)
-    
-    records=[('name','contact','is_company_admin')]
-    sort_by = sort_by.split(',')  
-    sort_by = [x for x in sort_by if x in records[0]]
-    sort_columns=[records[0].index(x) for x in sort_by]
-    
-    # 
     company_id = db_api.get_user_by_id(session['user_id'])['company']
-    records.append(db_api.get_all_company_employees(company_id))
-    # Join the firs and last name
-    records[1] = [(
-        f"{x['first_name']} {x['last_name']}",
-        x['username'], 
-        x['e_mail'], 
-        x['is_company_admin'], 
-        x['is_blocked'], 
-    ) for x in records[1]]
-
-    # data sorting and slicing
-    data = records[1]
-    data.sort(key=lambda x: x[0], reverse=sort_order=='desc')
-    # replace -1 with None
-    data = [(*x,) for x in data]
-    records[1] = data
-    
-    pages = get_num_pages(len(data), page_limit)
-    redirect_response = normalize_page_or_redirect(
-        pages,
-        args=request.args.to_dict(),
-    )
-    
-    start_sub_id, max_sub_id = get_start_and_max_sub_id(page, page_limit, len(data), start_sub_id)
-    data=data[start_sub_id:max_sub_id]
-    records[1] = data
-    
-    if redirect_response:
-        return redirect_response
-    else:
-        deactivate_next, deactivate_prev, page = deactivation_pages(page, pages)
-        return render_template('employees.html',records=records,session=session,dynamic_content=_('Employee Records - Admin View'), deactivate_next=deactivate_next, deactivate_prev=deactivate_prev, page=page)
+    employees = [{
+        'name': f"{x['first_name']} {x['last_name']}",
+        'username': x['username'],
+        'e_mail': x['e_mail'],
+        'is_admin': bool(x['is_company_admin']),
+        'is_blocked': bool(x['is_blocked']),
+        'is_me': x['id'] == session['user_id'],
+    } for x in db_api.get_all_company_employees(company_id) or []]
+    employees.sort(key=lambda e: e['name'].lower())
+    return render_template('employees.html', employees=employees)
     
 @app.route('/user',methods=['GET'])
 @check_authentication
@@ -1398,24 +1367,14 @@ def company():
             
 @app.route('/register',methods=['GET','POST'])
 def register():
-    title = _("Register new company")
-    info = _("You can use the form above to register a user for your existing company. If you wish to register a new company instead, please click the button below and contact us via email.")
-    btnstr = _("Contact us!")
-    optional_content = f"""
-        <div class="colorbar">
-            <h1>{title}</h1>
-        </div>
-        <div class="home-text">
-        <p class="fancy-paragraph">
-            {info}
-        </p>
-        <a href="home#contact_form">
-            <button id='ContactUsBtn' class="custom-file-label">{btnstr}</button>
-        </a>
-    </div>
-    """
+    # shown next to the form: users join an existing company with its key, a new company registers separately
+    optional_content = Markup(
+        '<div class="auth-aside"><h2>{}</h2><p>{}</p><a class="btn" href="/register-company">{}</a></div>'
+    ).format(_("Is your company not registered yet?"),
+             _("This form registers a user of an already registered company - you need its company key from your company admin. A new company is registered first and confirmed by us."),
+             _("Register new company"))
     if session.get('authenticated', False):
-        optional_content = f""
+        optional_content = ""
 
     match request.method:
         case 'GET':

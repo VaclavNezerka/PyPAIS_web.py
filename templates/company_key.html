@@ -1,31 +1,33 @@
-<!DOCTYPE html>
 {% extends "base.html" %}
+{% from "macros/icons.html" import icon %}
+
+{% block title %}{{ _('Company Key') }}{% endblock %}
+{% block head %}<script src="{{ url_for('static', filename='script_user.js') }}" defer></script>{% endblock %}
+{% block main_class %}is-narrow{% endblock %}
+
 {% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ _('Company Key') }}</h1>
+    <p>{{ _('Colleagues join your company by entering this key when they register.') }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="/company">{{ icon('chevron-left') }} {{ _('Company') }}</a>
+  </div>
+</div>
 
-
-<html>
-
-    <head>
-        <title>{{ _('Company Key') }}</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-        <link rel="icon" type="image/vnd.icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    </head>
-
-    <body>
-        <!-- First Row: Image Upload -->
-        <div class="colorbar">
-            <h2>{{ dynamic_content }}</h2>
-        </div>
-        <div class="container modern-container">
-            <div class="row modern-row">
-                <div class="column modern-column">
-                    <p>{{ company_key }}</p>
-                </div>
-            </div>
-        </div>
-        <script src="{{ url_for('static', filename='script_user.js') }}"></script>
-    </body>
-
-</html>
-
-{% endblock content %}
+<div class="card">
+  <div class="card-body stack">
+    <div class="key-display">
+      <code id="companyKey" data-key="{{ company_key }}">{{ company_key }}</code>
+      <button type="button" class="btn" id="copyCompanyKey">{{ icon('copy') }} {{ _('Copy') }}</button>
+    </div>
+    <ol class="steps-list">
+      <li>{{ _('Send the key to your colleague.') }}</li>
+      <li>{{ _('The colleague registers at') }} <span class="mono">{{ url_for('register', _external=True) }}</span> {{ _('and enters the key.') }}</li>
+      <li>{{ _('After confirming the e-mail address, the colleague appears among the employees.') }}</li>
+    </ol>
+    <p class="small muted" id="keyHideNote">{{ _('For security, the key will be hidden in one minute.') }}</p>
+  </div>
+</div>
+{% endblock %}

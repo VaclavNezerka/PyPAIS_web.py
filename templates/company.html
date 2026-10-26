@@ -1,68 +1,57 @@
-<!DOCTYPE html>
 {% extends "base.html" %}
+{% from "macros/icons.html" import icon %}
+{% macro label(text) %}{{ text.rstrip(': ') }}{% endmacro %}
+{%- set company = dynamic_content -%}
+
+{% block title %}{{ _('Company Information') }}{% endblock %}
+
 {% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ company.company_name }}</h1>
+    <p>{{ _('Company Information') }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="/employees">{{ icon('users') }} {{ _('Employees') }}</a>
+  </div>
+</div>
 
+<div class="profile-grid">
+  <div class="card">
+    <div class="card-header">
+      <h2>{{ _('Company Information') }}</h2>
+    </div>
+    <div class="card-body">
+      <dl class="kv">
+        <dt>{{ label(_('Company Name: ')) }}</dt><dd>{{ company.company_name }}</dd>
+        <dt>{{ label(_('Address: ')) }}</dt><dd>{{ company.company_address }}</dd>
+        <dt>{{ label(_('Company E-mail: ')) }}</dt><dd>{{ company.e_mail }}</dd>
+      </dl>
+      <p class="small muted">{{ _('The company name and address are printed on every report as the providing laboratory.') }}</p>
+    </div>
+    <div class="card-footer card-footer-wrap">
+      <a class="btn btn-sm" href="/edit-company-information">{{ icon('edit') }} {{ _('Edit company information') }}</a>
+      <a class="btn btn-sm" href="/change-company-email">{{ icon('mail') }} {{ _('Change company e-mail address') }}</a>
+    </div>
+  </div>
 
-<html>
-
-    <head>
-        <title>{{ _('User Information') }}</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='new_styles.css') }}">
-        <link rel="icon" type="image/vnd.icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    </head>
-
-    <body>
-        <!-- First Row: Image Upload -->
-        <div class="colorbar">
-            <h2>{{ _('Company Information') }}</h2>
-        </div>
-        <div class="container">
-            <div class="row modern-row">
-                <div class="column modern-column">
-                    <img class="profile-picture" src="{{ url_for('static', filename='avatars/gorilla.png') }}"
-                        alt="Profile Picture">
-                </div>
-                <div class="column modern-column">
-                    <table>
-                        <tr>
-                            <td>{{ _('Company Name: ') }}</td>
-                            <td>{{ dynamic_content.company_name }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ _('Address: ') }}</td>
-                            <td>{{ dynamic_content.company_address }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ _('Company E-mail: ') }}</td>
-                            <td>{{ dynamic_content.e_mail }}</td>
-                        </tr>
-                    </table>
-                </div>
-
-                <div class="column modern-column">
-                    <div class="row">
-                        <button id="editCompanyInformationButton"
-                            type=submit>{{ _('Edit company information') }}</button>
-                    </div>
-                    <div class="row">
-                        <button id="changeCompanyEmailButton"
-                            type=submit>{{ _('Change company e-mail address') }}</button>
-                    </div>
-                    <div class="row">
-                        <button id="regenerateCompanyKeyButton" type=submit>{{ _('Regenerate company key') }}</button>
-                    </div>
-                    <div class="row">
-                        <button id="viewCompanyKeyButton" type=submit>{{ _('View company key') }}</button>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <script src="{{ url_for('static', filename='script_user.js') }}"></script>
-    </body>
-
-</html>
-
-{% endblock content %}
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>{{ icon('key') }} {{ _('Company Key') }}</h2>
+        <p>{{ _('Colleagues join your company by entering this key when they register.') }}</p>
+      </div>
+    </div>
+    <div class="card-body stack">
+      <div class="notice">{{ icon('info') }}
+        <p>{{ _('Share the key only with your colleagues. If it got into the wrong hands, generate a new one - the old key stops working.') }}</p>
+      </div>
+    </div>
+    <div class="card-footer card-footer-wrap">
+      <a class="btn btn-sm btn-primary" href="/view-company-key">{{ icon('eye') }} {{ _('View company key') }}</a>
+      <a class="btn btn-sm" href="/regenerate-company-key"
+        data-confirm="{{ _('Generate a new company key? The current key will stop working.') }}">{{ icon('refresh') }} {{ _('Regenerate company key') }}</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

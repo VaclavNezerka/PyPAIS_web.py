@@ -1,11 +1,31 @@
-<!-- login.html -->
+{% extends "base.html" %}
+{% from "macros/icons.html" import icon %}
+{% from "macros/forms.html" import render_form, recaptcha_script %}
+{%- set heading = dynamic_content or _('Form') -%}
+{%- set is_login = 'usernameXe_mail' in form -%}
 
-{%  extends "base.html" %}
+{% block title %}{{ heading }}{% endblock %}
+{% block head %}{{ recaptcha_script(recaptcha_site_key) }}{% endblock %}
 
 {% block content %}
-<html>
-    <!-- <head>Registration Form</head> -->
-    {%  include "form_plain.html" %}
-
-</html>
-{% endblock content %}
+<div class="auth-wrap{{ ' has-aside' if optional_content_below }}">
+  <div class="card auth-card">
+    <div class="card-body">
+      <h1>{{ heading }}</h1>
+      {% if is_login %}<p class="lead">{{ _('Sign in to assess your asphalt samples.') }}</p>{% endif %}
+      {{ render_form(form, recaptcha_site_key=recaptcha_site_key) }}
+      {% if is_login %}
+      <div class="auth-links">
+        <a href="/forgot_password">{{ _('Forgot your password?') }}</a>
+        <a href="/register">{{ _('Register') }}</a>
+      </div>
+      {% elif session.authenticated %}
+      <div class="auth-links">
+        <a href="{{ request.referrer or '/' }}">{{ icon('chevron-left') }} {{ _('Back') }}</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% if optional_content_below %}{{ optional_content_below }}{% endif %}
+</div>
+{% endblock %}

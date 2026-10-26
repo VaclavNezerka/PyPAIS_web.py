@@ -1,59 +1,103 @@
-<!-- login.html -->
-{%  extends "base.html" %}
+{% extends "base.html" %}
+{% from "macros/icons.html" import icon %}
+{% from "macros/forms.html" import render_form, recaptcha_script %}
+{% from "macros/viewer.html" import viewer_card %}
+
+{% block title %}{{ _('About') }}{% endblock %}
+{% block body_class %}page-home{% endblock %}
+{% block head %}
+{{ recaptcha_script(recaptcha_site_key) }}
+<script type="module" src="{{ url_for('static', filename='demo.js') }}"></script>
+{% endblock %}
 
 {% block content %}
+<section class="hero">
+  <div class="hero-text">
+    <span class="badge badge-brand">ČSN 73 6161</span>
+    <h1>AI Bitumen Adhesion Lab</h1>
+    <p class="hero-lead">{{ _('AI Bitumen Adhesion Lab is a web application for the analysis and classification of bitumen-aggregate adhesion in asphalt concrete with the support of national standards (e.g. according to ČSN 73 6161). Using a U-Net-based AI model, it precisely segments stripped and coated surfaces, delivering objective, and repeatable results. ') }}</p>
+    <p class="muted">{{ _('With an intuitive interface and useful features like automated reports, it provides researchers, engineers and professionals with fast, reliable, and science-based alternative to subjective visual assessment.') }}</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary btn-lg" href="#demo_section">{{ icon('play') }} {{ _('Try it out') }}</a>
+      {% if session.authenticated %}
+      <a class="btn btn-lg" href="/">{{ _('Current Sample') }} {{ icon('arrow-right') }}</a>
+      {% else %}
+      <a class="btn btn-lg" href="/login">{{ icon('login') }} {{ _('Login') }}</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="hero-visual">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="AIBAL">
+  </div>
+</section>
 
-<html>
-    <!-- <head>Registration Form</head> -->
+<section class="landing-section">
+  <h2 class="section-title">{{ _('How it works') }}</h2>
+  <ol class="feature-steps">
+    <li class="card">
+      <span class="feature-icon">{{ icon('camera') }}</span>
+      <h3>{{ _('Photograph the sample') }}</h3>
+      <p class="muted">{{ _('Upload a photo of the stripped aggregate or take it with the camera directly in the app.') }}</p>
+    </li>
+    <li class="card">
+      <span class="feature-icon">{{ icon('cpu') }}</span>
+      <h3>{{ _('AI detects bitumen and aggregate') }}</h3>
+      <p class="muted">{{ _('The model marks the coated and stripped surface and computes the asphalt coverage and its class.') }}</p>
+    </li>
+    <li class="card">
+      <span class="feature-icon">{{ icon('file') }}</span>
+      <h3>{{ _('Export the protocol') }}</h3>
+      <p class="muted">{{ _('Compare the result with your expert estimate and export a PDF protocol according to ČSN 73 6161.') }}</p>
+    </li>
+  </ol>
+</section>
 
-    <body>
-        <div class="homebg">
-            <div class="row modern-row">
-                <img class="logo-container" id="logo-text" src="{{ url_for('static', filename='logo-text.png') }}"
-                    alt="AI BAL Logo">
-            </div>
+<section class="landing-section" id="demo_section">
+  <h2 class="section-title">{{ _('Try it out') }}</h2>
+  <p class="section-lead muted">{{ _('Upload a photo of a sample - nothing is stored in the demo.') }}</p>
+  <div class="demo-grid">
+    <div>
+      <div class="card dropzone" id="dropzone">
+        <div class="dropzone-icon">{{ icon('image') }}</div>
+        <h3>{{ _('Upload a photo of the sample') }}</h3>
+        <p class="muted">{{ _('Drag the photo here or choose a file (JPG, PNG, HEIC).') }}</p>
+        <div class="dropzone-actions">
+          <label for="fileInput" class="btn btn-primary">{{ icon('upload') }} {{ _('Choose photo') }}</label>
         </div>
-
-        <div id="row" , class="colorbar">
-            <h2> {{ _('ABOUT') }}</h2>
+        <p class="small muted dropzone-note">{{ _('By uploading an image, you agree that it may be stored in the application repository and potentially used by the authors for training future models.') }}</p>
+      </div>
+      <input type="file" id="fileInput" accept="image/*,.heic,.heif" class="sr-only">
+      {{ viewer_card(models, replace_label=_('Upload another photo')) }}
+    </div>
+    <div class="demo-side">
+      <div class="result-tile">
+        <span class="result-label">{{ icon('cpu') }} {{ _('AI assessment') }}</span>
+        <span class="result-value" id="demoAi">–</span>
+        <span class="result-class" id="demoAiClass"></span>
+      </div>
+      <div class="card demo-cta">
+        <div class="card-body">
+          <h3>{{ _('Would you like to use this app with no limitations? Store and export these results? Contact us to create an account.') }}</h3>
+          <div class="page-actions">
+            <a class="btn btn-primary" href="/register">{{ _('Register') }}</a>
+            <a class="btn" href="#contact_form">{{ icon('mail') }} {{ _('Contact us!') }}</a>
+          </div>
         </div>
-        <div class="container">
-            <div class="row">
-                <!-- <div class="column">
-                    <img id="homeImage" src="{{ url_for('static', filename='home_image.png') }}" alt="Home Image">
-                </div> -->
-                <div class="column">
-                    <div class="home-text">
-                        <!-- <h2>{{ _('ABOUT') }}</h2> -->
-                        <!-- <p>{{ _('AI BAL is an advanced software tool designed for the analysis and classification of asphalt images. Utilizing state-of-the-art machine learning models, AI BAL provides accurate segmentation and classification of bitumen, aggregate, and background components in asphalt samples.') }}</p> -->
-                        <!-- <p>{{ _('With an intuitive interface and powerful features, AI BAL is ideal for researchers, engineers, and professionals in the field of pavement materials.') }}</p> -->
-                        <p class="fancy-paragraph">
-                            {{ _('AI Bitumen Adhesion Lab is a web application for the analysis and classification of bitumen-aggregate adhesion in asphalt concrete with the support of national standards (e.g. according to ČSN 73 6161). Using a U-Net-based AI model, it precisely segments stripped and coated surfaces, delivering objective, and repeatable results. ') }}
-                        </p>
-                        <p class="fancy-paragraph">
-                            {{ _('With an intuitive interface and useful features like automated reports, it provides researchers, engineers and professionals with fast, reliable, and science-based alternative to subjective visual assessment.') }}
-                        </p>
-                        <button id="TryDemoBtn" class="custom-file-label">{{ _('Try it out') }}</button>
-                        <p class="fancy-paragraph">
-                            {{ _('Would you like to register your company or research institute? Or does it sound interesting, but you have more questions
-                        or need adjustments for your optimal workflow—such as support for a different national standard?') }}
-                        </p>
-                        <button id='ContactUsBtn' class="custom-file-label">{{ _('Contact us!') }}</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-        <div id="demo_section">
-            {%  include "demo.html" %}
-        </div>
-
-        <div id="contact_form">
-            {%  include "form_plain.html" %}
-        </div>
-
-    </body>
-
-</html>
-<script src="{{ url_for('static', filename='script_home.js') }}"> </script>
-{% endblock content %}
+<section class="landing-section contact-grid" id="contact_form">
+  <div>
+    <h2 class="section-title">{{ _('Contact us!') }}</h2>
+    <p class="muted">{{ _('Would you like to register your company or research institute? Or does it sound interesting, but you have more questions
+                        or need adjustments for your optimal workflow—such as support for a different national standard?') }}</p>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      {{ render_form(form, recaptcha_site_key=recaptcha_site_key) }}
+    </div>
+  </div>
+</section>
+{% endblock %}
