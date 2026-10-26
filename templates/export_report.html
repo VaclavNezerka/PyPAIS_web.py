@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% from "_icons.html" import icon %}
-{% from "_forms.html" import render_form, recaptcha_script %}
+{% from "macros/icons.html" import icon %}
+{% from "macros/forms.html" import render_form, recaptcha_script %}
 
 {% block title %}{{ _('Export report') }}{% endblock %}
 {% block head %}{{ recaptcha_script(recaptcha_site_key) }}{% endblock %}

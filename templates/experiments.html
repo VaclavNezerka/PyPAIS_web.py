@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_icons.html" import icon %}
+{% from "macros/icons.html" import icon %}
 
 {% macro sort_header(key, label, cls='') -%}
 {%- set active = sort_by == key -%}

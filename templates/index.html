@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_icons.html" import icon %}
+{% from "macros/icons.html" import icon %}
 {% macro label(text) %}{{ text.rstrip(':') }}{% endmacro %}
 
 {% block title %}{{ _('Current Sample') }}{% endblock %}

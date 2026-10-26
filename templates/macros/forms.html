@@ -1,0 +1,29 @@
+{#- Rendering of WTForms forms. reCAPTCHA-protected forms keep the id/callback used by script_base.js. -#}
+{% macro render_field(field) -%}
+<div class="field{{ ' has-error' if field.errors }}">
+  {{ field.label(text=field.label.text.rstrip(':')) }}
+  {{ field(**({'aria-invalid': 'true'} if field.errors else {})) }}
+  {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+</div>
+{%- endmacro %}
+
+{% macro render_form(form, submit_label=None, recaptcha_site_key=None, secondary=None) -%}
+<form id="form-recaptcha-protected" method="post" class="form-stack" novalidate>
+  {{ form.hidden_tag() }}
+  {% for field in form if field.type not in ('CSRFTokenField', 'HiddenField', 'SubmitField') %}
+  {{ render_field(field) }}
+  {% endfor %}
+  {% for field in form if field.type == 'SubmitField' %}
+  {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+  <button type="submit" class="btn btn-primary btn-lg btn-block{{ ' g-recaptcha' if recaptcha_site_key }}"
+    {% if recaptcha_site_key %}data-sitekey="{{ recaptcha_site_key }}" data-callback="onSubmit" data-action="submit"{% endif %}>
+    {{ submit_label or field.label.text }}
+  </button>
+  {% endfor %}
+  {% if secondary %}{{ secondary }}{% endif %}
+</form>
+{%- endmacro %}
+
+{% macro recaptcha_script(recaptcha_site_key) -%}
+{% if recaptcha_site_key %}<script src="https://www.google.com/recaptcha/api.js" async defer></script>{% endif %}
+{%- endmacro %}
