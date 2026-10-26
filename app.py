@@ -201,14 +201,17 @@ limiter = flask_limiter.Limiter(
 FORM_RATE_LIMIT = "10 per minute;60 per hour"
 IMAGE_RATE_LIMIT = "30 per minute"
 
-SECRET_KEY_LENGTH = os.getenv('SECRET_KEY_LENGTH', '32')
 HASH_METHOD = os.getenv('HASH_METHOD', 'pbkdf2:sha256')
 SALT_LENGTH = os.getenv('SALT_LENGTH', '16')
 def generate_rnd_string(length):
     possible_chars=string.ascii_letters+string.digits+string.punctuation
     return ''.join(secrets.choice(possible_chars) for _ in range(int(length))) 
-# if in production, use the environment variable, otherwise use the default value
-app.secret_key=os.getenv('SECRET_KEY', generate_rnd_string(int(SECRET_KEY_LENGTH)))
+# required: a random fallback differed in every gunicorn worker (and after every restart),
+# so sessions and e-mail links signed by one worker were rejected by the others
+app.secret_key = os.getenv('SECRET_KEY')
+if not app.secret_key:
+    raise RuntimeError('SECRET_KEY is not set. Put a long random value into .env, e.g. the output of: '
+                       'python -c "import secrets; print(secrets.token_urlsafe(32))"')
 
 def generate_password_hash(password: str) -> str:
     return ws.generate_password_hash(password,method=HASH_METHOD,salt_length=int(SALT_LENGTH))
@@ -2280,10 +2283,5 @@ def translations_alerts():
     return json.dumps(json_translations), 200, {'Content-Type': 'application/json'}
 
 if __name__ == "__main__":
-    debug = True
-    if debug:
-        app.secret_key='test_secret_key'
-        app.run(debug=debug)
-    else:
-        app.secret_key='test_secret_key'
-        app.run(host='127.0.0.1', port=5000, debug=debug)
+    # development server only - production runs gunicorn (run_prod.sh); FLASK_DEBUG=1 turns on the debugger
+    app.run(host='127.0.0.1', port=5000, debug=os.getenv('FLASK_DEBUG') == '1')
