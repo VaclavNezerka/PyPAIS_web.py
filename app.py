@@ -8,6 +8,7 @@ from flask import (Flask, render_template, request, send_file,
 from flask_mail import Mail, Message
 import werkzeug.security as ws
 from werkzeug.local import LocalProxy
+from markupsafe import Markup
 from PIL import Image
 import pillow_heif
 pillow_heif.register_heif_opener()
@@ -37,7 +38,8 @@ from typing_extensions import deprecated
 from models import discover_models, load_model, add_session_to_loaded_model, pop_session_from_loaded_models, inference
 import models
 import decimal
-from flask_babel import Babel, _
+from flask_babel import Babel, _, lazy_gettext
+import math
 #Similarity controller
 import app_similarity_controller 
 similarity_controller = app_similarity_controller.ImageSimilarityController()
@@ -185,6 +187,7 @@ class TemporaryStorage:
     def __init__(self, **kwargs):
         self.user_id = None
         # values
+        self.info_sample_label = None # user's own designation of the sample (shown in the records table)
         self.info_datetime = None
         self.info_place_of_experiment = None
         self.info_sample_collection_data = None
@@ -1158,25 +1161,39 @@ def sort_records(records: list, sort_order: Literal['asc', 'desc'], sort_by: str
     return records[:page_limit]
 
 
+def sample_designation(label: str | None, collection_data: str | None) -> str:
+    """Sample designation for the records table. Older samples without one show their collection data instead (marked)."""
+    if label:
+        return label
+    if collection_data:
+        return Markup('<span class="designation-fallback" title="{}">{}</span>').format(_('Sample Collection Data:'), collection_data)
+    return ''
+
+def matches_search(query: str | None, experiment_id: int, label: str | None, collection_data: str | None) -> bool:
+    """Case-insensitive search of the records table by sample designation (or its fallback) and sample ID."""
+    query = (query or '').strip().lower()
+    return not query or query in str(experiment_id) or query in (label or collection_data or '').lower()
+
 def get_ordenary_user_experiments(**kwargs) -> tuple[list[tuple], int]:
     sort_order, page_limit, start_sub_id, page, sort_by = get_query_args(**kwargs)
-    records=[('id','time_stamp','expert_guess', 'asphalt_ratio')]
-    sort_by = sort_by.split(',')  
+    records=[('id','sample_label','time_stamp','expert_guess', 'asphalt_ratio')]
+    sort_by = sort_by.split(',')
     sort_by = [x for x in sort_by if x in records[0]]
     sort_columns=[ records[0].index(x) for x in sort_by]
     # records.append(execute_query("SELECT experiment_id, time_stamp, expert_guess, asphalt_ratio, current_state FROM experiments where user_id=%s AND current_state='finished' AND fake_deleted=false",(session['user_id'],)))
     records.append(
-        db_api.execute_query("SELECT experiment_id, time_stamp, expert_guess, asphalt_ratio, current_state FROM experiments where user_id=%s AND fake_deleted=false",(session['user_id'],)))
-    
-    # data sorting and slicing
-    data = records[1]   
-    # shorten the time_stamp to  YYYY-MM-DD HH:MM:SS
-    data = [(x[0], x[1].strftime('%Y-%m-%d  %H:%M:%S'), x[2], x[3]) for x in data]
+        db_api.execute_query("SELECT experiment_id, time_stamp, expert_guess, asphalt_ratio, current_state, info_sample_label, info_sample_collection_data FROM experiments where user_id=%s AND fake_deleted=false",(session['user_id'],)))
+
+    # data filtering, sorting and slicing
+    data = [x for x in records[1] if matches_search(kwargs.get('q'), x[0], x[5], x[6])]
+    designations = {x[0]: (x[5], x[6]) for x in data}
+    # shorten the time_stamp to  YYYY-MM-DD HH:MM:SS, designation as a lowercase sort key
+    data = [(x[0], (x[5] or x[6] or '').lower(), x[1].strftime('%Y-%m-%d  %H:%M:%S'), x[2], x[3]) for x in data]
     # Replace None values with -1
-    data = [(x[0],x[1],x[2] if x[2] is not None else 0, x[3] if x[3] is not None else -1) for x in data]
+    data = [(x[0],x[1],x[2],x[3] if x[3] is not None else 0, x[4] if x[4] is not None else -1) for x in data]
     data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='desc')
     # replace -1 with None
-    data = [(x[0],x[1], f"{x[2]*100:.2f}" if x[2]  != -1 else None, f"{x[3]*100:.2f}" if x[3] != -1 else None) for x in data]
+    data = [(x[0], sample_designation(*designations[x[0]]), x[2], f"{x[3]*100:.2f}" if x[3]  != -1 else None, f"{x[4]*100:.2f}" if x[4] != -1 else None) for x in data]
         
     pages = get_num_pages(len(data), page_limit)
     start_sub_id, max_sub_id = get_start_and_max_sub_id(page, page_limit, len(data), start_sub_id)
@@ -1219,32 +1236,35 @@ def get_query_args(**kwargs) -> dict:
 def get_admin_user_experiments(**kwargs) -> tuple[list[tuple], int]:
     sort_order, page_limit, start_sub_id, page, sort_by = get_query_args(**kwargs)
     
-    records=[('id','time_stamp','name','contact','expert_guess', 'asphalt_ratio')]
-    sort_by = sort_by.split(',')  
+    records=[('id','sample_label','time_stamp','name','contact','expert_guess', 'asphalt_ratio')]
+    sort_by = sort_by.split(',')
     sort_by = [x for x in sort_by if x in records[0]]
     sort_columns=[records[0].index(x) for x in sort_by]
-    
-    # 
+
+    #
     company_id = db_api.get_user_by_id(session['user_id'])['company']
-    records.append(db_api.get_all_company_experiments(company_id))
-    # Join the firs and last name
-    records[1] = [(
-        x['experiment_id'], 
-        x['time_stamp'].strftime('%Y-%m-%d  %H:%M:%S'), 
+    experiments = [x for x in db_api.get_all_company_experiments(company_id)
+                   if matches_search(kwargs.get('q'), x['experiment_id'], x['info_sample_label'], x['info_sample_collection_data'])]
+    designations = {x['experiment_id']: (x['info_sample_label'], x['info_sample_collection_data']) for x in experiments}
+    # Join the firs and last name, designation as a lowercase sort key
+    records.append([(
+        x['experiment_id'],
+        (x['info_sample_label'] or x['info_sample_collection_data'] or '').lower(),
+        x['time_stamp'].strftime('%Y-%m-%d  %H:%M:%S'),
         f"{x['first_name']} {x['last_name']}",
-        x['e_mail'], 
-        x['expert_guess'], 
-        x['asphalt_ratio'], 
-    ) for x in records[1]]
+        x['e_mail'],
+        x['expert_guess'],
+        x['asphalt_ratio'],
+    ) for x in experiments])
 
     # data sorting and slicing
     data = records[1]
     # Replace None values with -1
-    data = [(x[0],x[1],x[2],x[3],x[4] if x[4] is not None else 0, x[5] if x[5] is not None else -1) for x in data]
+    data = [(x[0],x[1],x[2],x[3],x[4],x[5] if x[5] is not None else 0, x[6] if x[6] is not None else -1) for x in data]
     data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='desc')
     # replace -1 with None
-    data = [(x[0],x[1],x[2],x[3],x[4] if x[4] != -1 else None, x[5] if x[5] != -1 else None) for x in data]
-    data = [(x[0], x[1], x[2], x[3], f"{x[4]*100:.2f}" if x[4] is not None else _('None'), f"{x[5]*100:.2f}" if x[5] is not None else _('None')) for x in data]
+    data = [(x[0],x[1],x[2],x[3],x[4],x[5] if x[5] != -1 else None, x[6] if x[6] != -1 else None) for x in data]
+    data = [(x[0], sample_designation(*designations[x[0]]), x[2], x[3], x[4], f"{x[5]*100:.2f}" if x[5] is not None else _('None'), f"{x[6]*100:.2f}" if x[6] is not None else _('None')) for x in data]
 
     pages = get_num_pages(len(data), page_limit)
     kwargs = request.args.to_dict() if kwargs is None else kwargs
@@ -1294,7 +1314,7 @@ def experiments():
         return redirect_response
     else:
         deactivate_next, deactivate_prev, page = deactivation_pages(page, pages)
-        return render_template(template, records=records, session=session, dynamic_content=dynamic_content, deactivate_next=deactivate_next, deactivate_prev=deactivate_prev, page=page)
+        return render_template(template, records=records, session=session, dynamic_content=dynamic_content, deactivate_next=deactivate_next, deactivate_prev=deactivate_prev, page=page, search=kwargs.get('q', ''))
     
 def get_num_pages(total_items: int, page_limit: int) -> int:
     pages = total_items // page_limit
@@ -1656,19 +1676,79 @@ def grayscale_image(image: np.ndarray) -> np.ndarray:
     return gray_image
 
 
+# Experiment columns the sample form may change directly, with the labels used in error messages
+EDITABLE_EXPERIMENT_FIELDS = {
+    'info_sample_label': lazy_gettext('Sample Designation:'),
+    'info_datetime': lazy_gettext('Date and Time:'),
+    'info_place_of_experiment': lazy_gettext('Place of Experiment:'),
+    'info_sample_collection_data': lazy_gettext('Sample Collection Data:'),
+    'info_wrapping_temperature_aggregate': lazy_gettext('Wrapping Temperature of Aggregate [°C]:'),
+    'info_wrapping_temperature_binder': lazy_gettext('Wrapping Temperature of Binder [°C]:'),
+    'info_exposing_water_temperature': lazy_gettext('Exposing Water Temperature [°C]:'),
+    'info_test_procedure': lazy_gettext('Test Procedure:'),
+    'info_comment': lazy_gettext('Comment:'),
+    'info_aggregate': lazy_gettext('Aggregate:'),
+    'info_binder': lazy_gettext('Binder:'),
+    'expert_guess': lazy_gettext('Expert Guess'),
+    'inference_model': lazy_gettext('MODEL'),
+}
+NUMERIC_EXPERIMENT_FIELDS = {'info_wrapping_temperature_aggregate', 'info_wrapping_temperature_binder', 'info_exposing_water_temperature', 'expert_guess'}
+MAX_LENGTH_EXPERIMENT_FIELDS = {'info_sample_label': 256}  # other text fields: 1024 (as the inputs' maxlength)
+
+def clean_experiment_value(name: str, value: str | None):
+    """Normalises a value of an editable experiment field sent by the client. Raises ValueError if it is invalid."""
+    if value is None:
+        return None
+    value = value.strip()
+    if value == '' or value.lower() == 'null':
+        return None  # an emptied input is stored as NULL ('' is not a valid number or timestamp)
+    if name in NUMERIC_EXPERIMENT_FIELDS:
+        number = float(value.replace(',', '.'))
+        if not math.isfinite(number) or (name == 'expert_guess' and not 0 <= number <= 1):
+            raise ValueError(value)
+        return number if name == 'expert_guess' else value.replace(',', '.')
+    if name == 'info_datetime':
+        pdl.parse(value)  # raises on an invalid timestamp
+    elif len(value) > MAX_LENGTH_EXPERIMENT_FIELDS.get(name, 1024):
+        raise ValueError(value)
+    return value
+
+def save_experiment_fields(raw_values: dict):
+    """
+    Validates the given editable fields and writes them to the user's active experiment in a single UPDATE.
+    Always answers with JSON (also when the session has expired), so the client can tell the user whether the data was saved.
+    """
+    if not session.get('authenticated', False):
+        return json.dumps({'status': 'error', 'message': _('Your session has expired. Please log in again - the last changes were not saved.')}), 401, {'Content-Type': 'application/json'}
+    values = {}
+    for name, raw in raw_values.items():
+        if name not in EDITABLE_EXPERIMENT_FIELDS:
+            return json.dumps({'status': 'error', 'field': name, 'message': f'Unknown field: {name}'}), 400, {'Content-Type': 'application/json'}
+        try:
+            values[name] = clean_experiment_value(name, raw)
+        except ValueError:  # incl. pendulum's ParserError
+            message = _('Invalid value:') + ' ' + str(EDITABLE_EXPERIMENT_FIELDS[name]).rstrip(':')
+            return json.dumps({'status': 'error', 'field': name, 'message': message}), 400, {'Content-Type': 'application/json'}
+    # the active experiment is kept in the DB (not the session), so all of the user's parallel requests agree on it
+    experiment_id = db_api.return_active_experiment_id(user_id=session['user_id'])
+    if experiment_id is None:
+        return json.dumps({'status': 'error', 'message': _('No active sample - upload an image first.')}), 409, {'Content-Type': 'application/json'}
+    if values and not db_api.update_experiment_in_db(values_dict=values, experiment_id=experiment_id):
+        return json.dumps({'status': 'error', 'message': _('Database error - the data was not saved. Please try again.')}), 500, {'Content-Type': 'application/json'}
+    return json.dumps({'status': 'success', 'experimentId': experiment_id, 'saved': list(values)}), 200, {'Content-Type': 'application/json'}
+
 @app.route('/update_value/<string:value_name>',methods=['POST'])
-@check_authentication
-@limiter.exempt 
-def update_specific_value(value_name):    
-    if storage.experiment_id is None:
-        return json.dumps({'status': 'error', 'message': 'No active experiment found'}), 404, {'Content-Type': 'application/json'}
-    value = request.form.get(value_name)
-    if value is None or value.lower() == 'null':
-        value = None
-    storage.from_dict({value_name: value})
-    response = save_specific_value(value_name)
-    return response    
-   
+@limiter.exempt
+def update_specific_value(value_name):
+    """Autosave of a single field of the sample form."""
+    return save_experiment_fields({value_name: request.form.get(value_name)})
+
+@app.route('/save-experiment-info',methods=['POST'])
+@limiter.exempt
+def save_experiment_info():
+    """Explicit save of the whole sample form (the Save button, and before the evaluation)."""
+    return save_experiment_fields(request.form.to_dict())
+
 @app.route('/save_value/<string:value_name>',methods=['POST','GET'])
 @ignore_unauthenticated
 def save_specific_value(value_name):
@@ -1801,6 +1881,10 @@ def download_file(filename):
 @app.route('/is-experiment-active',methods=['GET'])
 def is_active():
     print('Checking if experiment is active.')
+    if not session.get('authenticated', False):
+        # guests and expired sessions have no stored experiment - their user_id is a random UUID, not a DB id,
+        # so querying it ended in a "Database error" flash (e.g. for a page left open overnight)
+        return json.dumps({'status': 'success', 'active': False, 'experimentId': None, 'authenticated': False}), 200, {'Content-Type': 'application/json'}
     storage.experiment_id = db_api.return_active_experiment_id(user_id=session['user_id']) #**
     print(storage.experiment_id)
     session['experiment_id'] = storage.experiment_id #** ensure that the session is updated with the active experiment ID
@@ -1823,7 +1907,12 @@ def save_experiment(**kwargs):
 
 
     ts_dict = storage.to_dict(for_save=True)
-    ts_dict['current_state'] = state 
+    if storage.experiment_id is not None:
+        # Only write what this request changed: the storage is a snapshot loaded when the request started, so writing
+        # all of it back would overwrite values saved by other requests in the meantime (e.g. the sample information
+        # typed while /inference was running - it was silently reset to the values from before the inference).
+        ts_dict = {key: value for key, value in ts_dict.items() if key in storage._dirty_fields or key == 'asphalt_ratio'}
+    ts_dict['current_state'] = state
     if session.get('authenticated', False):
         ts_dict['user_id'] = session['user_id']
         
@@ -2052,6 +2141,12 @@ def translations_alerts():
         'blockUser': _('Are you sure, you want to block the sign in option for the following users?'),
         'unblockUser': _('Are you sure, you want to unblock the sign in option for the following users?'),
         'elsesExperiment': _('You have selected experiment of another user for editing. This action will transfer the ownership of the experiment to you (the original owner will not be able to access it). Do you want to proceed?'),
+        'saveStatusSaving': _('Saving...'),
+        'saveStatusSaved': _('All sample data saved at'),
+        'saveStatusUnsaved': _('Unsaved changes'),
+        'saveStatusError': _('NOT SAVED:'),
+        'saveFailed': _('The sample data could not be saved, so the sample was not evaluated. Please try again.'),
+        'evaluationFailed': _('The evaluation failed.'),
     }
     return json.dumps(json_translations), 200, {'Content-Type': 'application/json'}
 

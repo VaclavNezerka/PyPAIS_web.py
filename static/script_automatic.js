@@ -190,35 +190,131 @@ function replaceKeepCase(str, search, replace) {
     })
 }
 
-init_info_listeners()
-function init_info_listeners() {
-    for (const id of [
-        "info_sample_collection_data",
-        "info_place_of_experiment",
-        "info_test_procedure",
-        "info_wrapping_temperature_aggregate",
-        "info_wrapping_temperature_binder",
-        "info_exposing_water_temperature",
-        "info_datetime",
-        "info_comment",
-        "info_aggregate",
-        "info_binder",
-        "inference_model",
-    ]) {
-        // document.getElementById(id).addEventListener("change", function () {
-        document.getElementById(id).addEventListener("input", function () {
-            // console.log("Updating info field: " + id)
-            let value = this.value
-            // console.log("New value: " + value)
-            var formData = new FormData()
-            formData.append(id, value)
-            const uniqueQuery = "?nocache=" + new Date().getTime()
-            fetch("/update_value/" + id + uniqueQuery, {
-                method: "POST",
-                body: formData,
-            })
+// sample information stored with the experiment (the expert guess is handled separately)
+const INFO_FIELDS = [
+    "info_sample_label",
+    "info_sample_collection_data",
+    "info_place_of_experiment",
+    "info_test_procedure",
+    "info_wrapping_temperature_aggregate",
+    "info_wrapping_temperature_binder",
+    "info_exposing_water_temperature",
+    "info_datetime",
+    "info_comment",
+    "info_aggregate",
+    "info_binder",
+]
+
+// Saving of the sample data: every change is autosaved shortly after the typing stops, the Save button
+// (and the evaluation) store the whole form at once. All saves go through one queue, so they reach the
+// server in the order they were made, and the status next to the button tells whether the data is stored.
+const AUTOSAVE_DELAY_MS = 500
+const autosaveTimers = {}
+const unsavedFields = new Set()
+let saveQueue = Promise.resolve()
+let pendingSaves = 0
+let lastSaveError = null
+let lastSavedAt = null
+
+function fieldValue(field) {
+    if (field === "expert_guess") {
+        const value = document.getElementById("expertGuess").value
+        return value === "" ? "" : value / 100
+    }
+    return document.getElementById(field).value
+}
+
+function refreshSaveStatus() {
+    const status = document.getElementById("saveStatus")
+    status.className = "save-status"
+    if (pendingSaves > 0) {
+        status.classList.add("saving")
+        status.textContent = alerts.saveStatusSaving
+    } else if (lastSaveError !== null) {
+        status.classList.add("error")
+        status.textContent = alerts.saveStatusError + " " + lastSaveError
+    } else if (unsavedFields.size > 0) {
+        status.classList.add("unsaved")
+        status.textContent = alerts.saveStatusUnsaved
+    } else if (lastSavedAt !== null) {
+        status.classList.add("saved")
+        status.textContent =
+            alerts.saveStatusSaved + " " + lastSavedAt.toLocaleTimeString() + " ✓"
+    } else {
+        status.textContent = ""
+    }
+}
+
+// sends the fields (their values are read when the request is actually sent); resolves to true once stored
+function queueSave(url, fields) {
+    pendingSaves += 1
+    fields.forEach((field) => unsavedFields.delete(field))
+    refreshSaveStatus()
+    saveQueue = saveQueue.then(async () => {
+        const formData = new FormData()
+        fields.forEach((field) => formData.append(field, fieldValue(field)))
+        try {
+            const response = await fetch(url, { method: "POST", body: formData })
+            const data = await response.json().catch(() => ({}))
+            if (!response.ok || data.status !== "success") {
+                throw new Error(data.message || response.status + " " + response.statusText)
+            }
+            lastSaveError = null
+            lastSavedAt = new Date()
+            return true
+        } catch (error) {
+            // keep the fields marked, so the Save button sends them again
+            fields.forEach((field) => unsavedFields.add(field))
+            lastSaveError = error.message
+            return false
+        } finally {
+            pendingSaves -= 1
+            refreshSaveStatus()
+        }
+    })
+    return saveQueue
+}
+
+function saveFieldNow(field) {
+    clearTimeout(autosaveTimers[field])
+    delete autosaveTimers[field]
+    return queueSave("/update_value/" + field, [field])
+}
+
+function scheduleAutosave(field) {
+    unsavedFields.add(field)
+    refreshSaveStatus()
+    clearTimeout(autosaveTimers[field])
+    autosaveTimers[field] = setTimeout(() => saveFieldNow(field), AUTOSAVE_DELAY_MS)
+}
+
+function saveSampleData() {
+    for (const field of Object.keys(autosaveTimers)) {
+        clearTimeout(autosaveTimers[field])
+        delete autosaveTimers[field]
+    }
+    return queueSave("/save-experiment-info", [...INFO_FIELDS, "expert_guess"])
+}
+
+initSampleDataSaving()
+function initSampleDataSaving() {
+    for (const field of [...INFO_FIELDS, "inference_model"]) {
+        const input = document.getElementById(field)
+        input.addEventListener("input", () => scheduleAutosave(field))
+        // leaving the field saves it right away
+        input.addEventListener("change", () => {
+            if (field in autosaveTimers) saveFieldNow(field)
         })
     }
+    document
+        .getElementById("save_experiment_info")
+        .addEventListener("click", () => saveSampleData())
+    window.addEventListener("beforeunload", (event) => {
+        if (unsavedFields.size > 0 || pendingSaves > 0) {
+            event.preventDefault()
+            event.returnValue = ""
+        }
+    })
 }
 
 function get_overlay_masks() {
@@ -449,17 +545,7 @@ async function uploadImage() {
             const input = document.getElementById(key)
             if (input) {
                 input.value = value
-                const fromData = new FormData()
-                fromData.append(key, value)
-                // console.log("Updating default value for " + key + ": " + value)
-                fetch(`/update_value/${key}`, {
-                    method: "POST",
-                    body: fromData,
-                })
-                // await fetch(`/update_value/${key}`, {
-                //     method: "POST",
-                //     body: fromData,
-                // })
+                saveFieldNow(key)
             }
         }
         enableInputFields()
@@ -828,37 +914,17 @@ function deactivateCurrentExperiment() {
 }
 
 function disableInputFields() {
-    for (const id of [
-        "info_sample_collection_data",
-        "info_place_of_experiment",
-        "info_test_procedure",
-        "info_wrapping_temperature_aggregate",
-        "info_wrapping_temperature_binder",
-        "info_exposing_water_temperature",
-        "info_datetime",
-        "info_comment",
-        "info_aggregate",
-        "info_binder",
-    ]) {
+    for (const id of INFO_FIELDS) {
         document.getElementById(id).disabled = true
     }
+    document.getElementById("save_experiment_info").disabled = true
 }
 
 function enableInputFields() {
-    for (const id of [
-        "info_sample_collection_data",
-        "info_place_of_experiment",
-        "info_test_procedure",
-        "info_wrapping_temperature_aggregate",
-        "info_wrapping_temperature_binder",
-        "info_exposing_water_temperature",
-        "info_datetime",
-        "info_comment",
-        "info_aggregate",
-        "info_binder",
-    ]) {
+    for (const id of INFO_FIELDS) {
         document.getElementById(id).disabled = false
     }
+    document.getElementById("save_experiment_info").disabled = false
 }
 
 function loadExperiment(id) {
@@ -882,19 +948,7 @@ function loadExperiment(id) {
                 }
             }
 
-            for (const id of [
-                "info_sample_collection_data",
-                "info_place_of_experiment",
-                "info_test_procedure",
-                "info_wrapping_temperature_aggregate",
-                "info_wrapping_temperature_binder",
-                "info_exposing_water_temperature",
-                "info_datetime",
-                "info_comment",
-                "info_aggregate",
-                "info_binder",
-                "inference_model",
-            ]) {
+            for (const id of [...INFO_FIELDS, "inference_model"]) {
                 if (data[id]) {
                     document.getElementById(id).value = data[id]
                 }
@@ -961,21 +1015,21 @@ async function evaluateExperiment() {
         )
         return
     } else {
-        const formData = new FormData()
-        formData.append(
-            "expert_guess",
-            document.getElementById("expertGuess").value / 100,
-        )
         document.getElementById("evalProcessingLoader").hidden = false
-        await fetch("/update_value/expert_guess", {
-            method: "POST",
-            body: formData,
-        })
+        // evaluate only once all the sample data is confirmed stored - the page is left afterwards
+        if (!(await saveSampleData())) {
+            document.getElementById("evalProcessingLoader").hidden = true
+            alert(alerts.saveFailed + "\n" + lastSaveError)
+            return
+        }
         const uniqueQuery = "?nocache=" + new Date().getTime()
         // console.log("Evaluating the experiment...")
         fetch("/evaluate-asphalt" + uniqueQuery, { method: "POST" })
             .then((response) => response.json())
             .then((response) => {
+                if (response.status !== "success") {
+                    throw new Error(response.message)
+                }
                 document.getElementById("evalProcessingLoader").hidden = true
                 let displayNum = response.evaluation * 100
                 displayNum = displayNum.toFixed(2)
@@ -991,6 +1045,9 @@ async function evaluateExperiment() {
             .then(() => {
                 // redirect to the '/' page
                 window.location.href = "/"
+            })
+            .catch((error) => {
+                alert(alerts.evaluationFailed + "\n" + ((error && error.message) || ""))
             })
             .finally(() => {
                 document.getElementById("evalProcessingLoader").hidden = true
@@ -1017,15 +1074,8 @@ document.getElementById("expertGuess").addEventListener("input", function () {
         } else if (value > 100) {
             this.value = 100
         }
-        value = this.value
         // send the value to the server
-        var formData = new FormData()
-        formData.append("expert_guess", value / 100)
-        const uniqueQuery = "?nocache=" + new Date().getTime()
-        fetch("/update_value/expert_guess" + uniqueQuery, {
-            method: "POST",
-            body: formData,
-        })
+        scheduleAutosave("expert_guess")
     }
 })
 

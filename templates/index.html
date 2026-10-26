@@ -94,6 +94,16 @@
 
 
         <div class="row modern-row">
+            <div class="column modern-column">
+                <label for="info_sample_label" class="modern-label upper">
+                    {{ _('Sample Designation:') }}
+                </label>
+                <input type="text" id="info_sample_label" class="modern-input enhanced-input"
+                    placeholder="{{ _('Your own designation of the sample, shown in the sample records') }}" maxlength="256" />
+            </div>
+        </div>
+
+        <div class="row modern-row">
 
             <div class="column modern-column">
                 <label for="info_datetime" class="modern-label upper">
@@ -201,6 +211,11 @@
                 <input type="text" id="info_comment" class="modern-input enhanced-input"
                     placeholder="{{ _('Optional') }}" maxlength="1024" />
             </div>
+        </div>
+
+        <div class="row modern-row save-bar">
+            <button id="save_experiment_info" type="button" class="btn-details" disabled>{{ _('Save sample data') }}</button>
+            <span id="saveStatus" class="save-status" role="status" aria-live="polite"></span>
         </div>
 
 

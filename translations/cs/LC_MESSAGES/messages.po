@@ -1647,3 +1647,75 @@ msgstr "Profil uživatele"
 #~ msgid "Wrapping temperature [°C]:"
 #~ msgstr "Obalovací teplota [°C]:"
 
+
+#: app.py:1681 app_report_exporter.py:902
+msgid "Sample Designation:"
+msgstr "Označení vzorku:"
+
+#: templates/experiments.html:26 templates/experiments_admin.html:26
+msgid "Sample Designation"
+msgstr "Označení vzorku"
+
+#: templates/index.html:102
+msgid "Your own designation of the sample, shown in the sample records"
+msgstr "Vaše označení vzorku, zobrazí se v záznamech hodnocených vzorků"
+
+#: templates/index.html:217
+msgid "Save sample data"
+msgstr "Uložit údaje o vzorku"
+
+#: templates/experiments.html:59 templates/experiments_admin.html:61
+msgid "Search by sample designation:"
+msgstr "Hledat podle označení vzorku:"
+
+#: templates/experiments.html:62 templates/experiments_admin.html:64
+msgid "Designation or sample ID"
+msgstr "Označení nebo ID vzorku"
+
+#: app.py:1722
+msgid "Your session has expired. Please log in again - the last changes were not saved."
+msgstr "Vaše přihlášení vypršelo. Přihlaste se prosím znovu – poslední změny nebyly uloženy."
+
+#: app.py:1730
+msgid "Invalid value:"
+msgstr "Neplatná hodnota:"
+
+#: app.py:1735
+msgid "No active sample - upload an image first."
+msgstr "Není otevřen žádný vzorek – nejprve nahrajte snímek."
+
+#: app.py:1737
+msgid "Database error - the data was not saved. Please try again."
+msgstr "Chyba databáze – údaje nebyly uloženy. Zkuste to prosím znovu."
+
+#: app.py:2144
+msgid "Saving..."
+msgstr "Ukládám…"
+
+#: app.py:2145
+msgid "All sample data saved at"
+msgstr "Všechny údaje o vzorku uloženy v"
+
+#: app.py:2146
+msgid "Unsaved changes"
+msgstr "Neuložené změny"
+
+#: app.py:2147
+msgid "NOT SAVED:"
+msgstr "NEULOŽENO:"
+
+#: app.py:2148
+msgid "The sample data could not be saved, so the sample was not evaluated. Please try again."
+msgstr "Údaje o vzorku se nepodařilo uložit, vzorek proto nebyl vyhodnocen. Zkuste to prosím znovu."
+
+#: app.py:2149
+msgid "The evaluation failed."
+msgstr "Vyhodnocení se nezdařilo."
+
+#: templates/index.html:29
+msgid "Evaluating..."
+msgstr "Vyhodnocuji…"
+
+#: templates/index.html:67 templates/index.html:72
+msgid "Manual Camera Settings"
+msgstr "Ruční nastavení kamery"

@@ -211,6 +211,9 @@ document.getElementById("sortBy").addEventListener("change", function () {
             case "state":
                 sort_order += "current_state,"
                 break
+            case "designation":
+                sort_order += "sample_label,"
+                break
             default:
                 break
         }
@@ -242,6 +245,18 @@ document.getElementById("sortOrder").addEventListener("change", function () {
     concatenateSearchQuery("sort_order=" + sortOrder)
 })
 
+document.getElementById("searchRecords").addEventListener("change", function () {
+    // filtered on the server (across all pages), so start again from the first page
+    const params = new URLSearchParams(window.location.search)
+    if (this.value.trim() === "") {
+        params.delete("q")
+    } else {
+        params.set("q", this.value.trim())
+    }
+    params.set("page", 1)
+    window.location.search = params.toString()
+})
+
 document.addEventListener("DOMContentLoaded", function () {
     // Restore any other field states as necessary (e.g., input values, checkboxes)
 
@@ -262,6 +277,7 @@ document.addEventListener("DOMContentLoaded", function () {
             expert_guess: "Expert Guess",
             time_stamp: "Date",
             current_state: "State",
+            sample_label: "Designation",
         }
         document.getElementById("sortBy").value = sortBy
             .split(",")
