@@ -1,135 +1,129 @@
-<!-- login.html -->
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
-{%  extends "base.html" %}
+{% macro sort_header(key, label, cls='') -%}
+{%- set active = sort_by == key -%}
+{%- set next_order = ('asc' if sort_order == 'desc' else 'desc') if active else ('asc' if key in ('sample_label', 'name') else 'desc') -%}
+<th class="{{ cls }}" {% if active %}aria-sort="{{ 'ascending' if sort_order == 'asc' else 'descending' }}"{% endif %}>
+  <a class="th-sort{{ ' is-sorted' if active }}" href="{{ url_for('experiments', **dict(args, sort_by=key, sort_order=next_order, page=1)) }}">
+    {{ label }} {{ icon(('arrow-up' if sort_order == 'asc' else 'arrow-down') if active else 'sort') }}
+  </a>
+</th>
+{%- endmacro %}
+
+{% macro page_link(target, label, icon_name, disabled) -%}
+{% if disabled %}
+<span class="btn btn-sm is-disabled" aria-disabled="true">{{ icon(icon_name) }} {{ label }}</span>
+{% else %}
+<a class="btn btn-sm" href="{{ url_for('experiments', **dict(args, page=target)) }}">{{ icon(icon_name) }} {{ label }}</a>
+{% endif %}
+{%- endmacro %}
+
+{% block title %}{{ _('Sample Records') }}{% endblock %}
+{% block head %}<script src="{{ url_for('static', filename='script_tables.js') }}" defer></script>{% endblock %}
 
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
+<div class="page-header">
+  <div>
+    <h1>{{ _('Sample Records') }}</h1>
+    <p>{{ _('All samples of your company.') if is_admin else _('Your evaluated and unfinished samples.') }}</p>
+  </div>
+  <div class="page-actions">
+    <button type="button" class="btn btn-primary" data-action="new-sample">{{ icon('plus') }} {{ _('New sample') }}</button>
+  </div>
+</div>
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='new_styles.css') }}">
-        <title>{{ _('Samples Records') }}</title>
-    </head>
+<form class="toolbar" method="get" action="{{ url_for('experiments') }}">
+  <input type="hidden" name="sort_by" value="{{ sort_by }}">
+  <input type="hidden" name="sort_order" value="{{ sort_order }}">
+  <div class="field grow">
+    <label for="searchRecords">{{ _('Search by sample designation:').rstrip(':') }}</label>
+    <div class="input-with-icon">
+      {{ icon('search') }}
+      <input class="input" type="search" id="searchRecords" name="q" value="{{ search }}" maxlength="256"
+        placeholder="{{ _('Designation or sample ID') }}">
+    </div>
+  </div>
+  <div class="field">
+    <label for="pageLimit">{{ _('Max records on page:').rstrip(':') }}</label>
+    <select class="input" id="pageLimit" name="page_limit" data-autosubmit>
+      {% for n in (10, 25, 50, 100) %}<option value="{{ n }}" {{ 'selected' if n == page_limit }}>{{ n }}</option>{% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="btn">{{ icon('search') }} {{ _('Search') }}</button>
+  {% if search %}<a class="btn btn-ghost" href="{{ url_for('experiments', **dict(args, q='', page=1)) }}">{{ icon('x') }} {{ _('Clear') }}</a>{% endif %}
+</form>
 
-    <body>
-        <div class="colorbar">
-            <h2>{{dynamic_content}}</h2>
-        </div>
-        <div class="container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>{{ _('Sample ID') }}</th>
-                        <th>{{ _('Sample Designation') }}</th>
-                        <th>{{ _('Date') }}</th>
-                        <th>{{ _('Asphalt coverage - ') + _('Expert guess [%%]') }}</th>
-                        <th>{{ _('Asphalt coverage - ') + _('Model prediction [%%]') }}</th>
-                        <!-- <th>{{ _('Actions') }}</th> -->
-                        <!-- <th>{{ _('Similarity Check') }}</th> -->
-                        <th>{{ _('Selected') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
+<div class="table-wrap">
+  <table class="table table-cards" id="recordsTable" data-selection-bar="selectionBar">
+    <thead>
+      <tr>
+        <th class="col-check"><input type="checkbox" class="check-all" aria-label="{{ _('Select all') }}"></th>
+        {{ sort_header('id', _('Sample ID'), 'num') }}
+        {{ sort_header('sample_label', _('Sample Designation')) }}
+        {{ sort_header('time_stamp', _('Date')) }}
+        {% if is_admin %}{{ sort_header('name', _('Performed by')) }}{% endif %}
+        {{ sort_header('expert_guess', _('Expert Guess'), 'num') }}
+        {{ sort_header('asphalt_ratio', _('AI assessment'), 'num') }}
+        {{ sort_header('current_state', _('Status')) }}
+        <th class="col-actions"><span class="sr-only">{{ _('Actions') }}</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in records %}
+      <tr>
+        <td class="col-check"><input type="checkbox" class="row-check" value="{{ r.id }}" aria-label="{{ _('Select') }} {{ r.id }}"></td>
+        <td class="num mono" data-label="{{ _('Sample ID') }}">{{ r.id }}</td>
+        <td class="cell-truncate cell-strong designation-cell card-title-cell" title="{{ r.designation|striptags }}">
+          <button type="button" class="btn-link" data-action="open" data-id="{{ r.id }}" data-owned="{{ 'true' if r.owned else 'false' }}">
+            {%- if r.designation %}{{ r.designation }}{% else %}<span class="muted">{{ _('No designation') }}</span>{% endif -%}
+          </button>
+        </td>
+        <td class="nowrap" data-label="{{ _('Date') }}">{{ r.date }}</td>
+        {% if is_admin %}
+        <td data-label="{{ _('Performed by') }}">
+          <div>{{ r.name }}</div>
+          <div class="small muted">{{ r.contact }}</div>
+        </td>
+        {% endif %}
+        <td class="num" data-label="{{ _('Expert Guess') }}">{{ r.expert_guess or '–' }}</td>
+        <td class="num" data-label="{{ _('AI assessment') }}">{{ r.asphalt_ratio or '–' }}</td>
+        <td data-label="{{ _('Status') }}">
+          {% if r.finished %}<span class="badge badge-success">{{ icon('check') }} {{ _('Evaluated') }}</span>
+          {% else %}<span class="badge badge-warning">{{ _('In progress') }}</span>{% endif %}
+        </td>
+        <td class="col-actions">
+          <button type="button" class="btn btn-sm btn-ghost btn-icon" data-action="open" data-id="{{ r.id }}"
+            data-owned="{{ 'true' if r.owned else 'false' }}" title="{{ _('Open') }}"
+            aria-label="{{ _('Open') }} {{ r.id }}">{{ icon('eye') }}</button>
+          <a class="btn btn-sm btn-ghost btn-icon" href="/export-report/{{ r.id }}" title="{{ _('Export report') }}"
+            aria-label="{{ _('Export report') }} {{ r.id }}">{{ icon('file') }}</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="{{ 9 if is_admin else 8 }}" class="table-empty">
+          {% if search %}{{ _('No sample matches the search.') }}
+          {% else %}{{ _('No records found') }} – <a href="/">{{ _('evaluate your first sample') }}</a>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
-                    <div class="modern-row">
+<div class="pagination">
+  <span>{{ _('Page') }} {{ page }} / {{ pages }} · {{ total }} {{ _('records') }}</span>
+  <div class="pagination-buttons">
+    {{ page_link(page - 1, _('Previous'), 'chevron-left', page <= 1) }}
+    {{ page_link(page + 1, _('Next'), 'chevron-right', page >= pages) }}
+  </div>
+</div>
 
-                        <div class="column modern-column">
-                            <h1 class="modern-label upper">
-                                {{ _('Max records on page:') }}
-                            </h1>
-                            <input type="number" id="maxRecords" class="modern-input enhanced-input" value="10" min="1"
-                                max="100">
-                        </div>
-
-                        <div class="column modern-column">
-                            <h1 class="modern-label upper">
-                                {{ _('Sort order:') }}
-                            </h1>
-                            <select id="sortOrder" class="enhanced-select">
-                                <option value="desc">{{ _('Descending') }}</option>
-                                <option value="asc">{{ _('Ascending') }}</option>
-                            </select>
-                        </div>
-
-                        <div class="column modern-column">
-                            <h1 class="modern-label upper">
-                                {{ _('Search by sample designation:') }}
-                            </h1>
-                            <input type="search" id="searchRecords" class="modern-input enhanced-input" value="{{ search }}"
-                                placeholder="{{ _('Designation or sample ID') }}" maxlength="256">
-                        </div>
-                    </div>
-                    <div class="modern-row">
-                        <button class="btn-details" id="edit_selected">{{ _('Edit Selected Sample') }}</button>
-                        <button class="btn-export" id="export_selected"> {{ _('Export Selected') }}</button>
-                        <button class="btn-cancel" id="delete_selected">{{ _('Delete Selected') }}</button>
-                    </div>
-
-
-                    <textarea class='text_area' id="current_page">1</textarea>
-                    <input class='sort_by' type="text" id="sortBy" value="date,id,expert guess,asphalt ratio"
-                        maxlength=128>
-                    {% if records %}
-                    {% for record in records[1:] %}
-                    {% for field in record %}
-                    <tr>
-                        {% for column in field %}
-                        {% if loop.index0 == 1 %}
-                        <td class="designation-cell" title="{{ column|striptags }}">{{column}}</td>
-                        {% else %}
-                        <td>{{column}}</td>
-                        {% endif %}
-                        {% endfor %}
-                        <!-- <td> -->
-                        <!-- <button class="btn-details" data-id="{{ field.0 }}">{{ _('Edit') }}</button> -->
-                        <!-- <button class="btn-cancel" id="delete_{{field.0}}" -->
-                        <!-- data-id="{{field.0}}">{{ _('Delete') }}</button> -->
-                        <!-- </td> -->
-                        <!-- </td> -->
-                        <td>
-                            <!-- <div class="modern-column column"> -->
-                            <div for="checkbox-{{ field.0 }}" class="select-checkbox-container">
-                                <label class="overlay-label">
-                                    <input type="checkbox" id="record-checkbox" data-id="{{ field.0 }}">
-                                    <span class="overlay-custom"></span>
-                                </label>
-                            </div>
-                            <!-- </div> -->
-
-                            <!-- <div class="checkbox-container">
-                                <label for="checkbox-{{ field.0 }}" class="overlay-label">
-                                    <input type="checkbox" id="checkbox-{{ field.0 }}" data-id="{{ field.0 }}">
-                                </label>
-                            </div> -->
-                            <!-- <input type="checkbox" data-id="{{ field.0 }}"> -->
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% endfor %}
-                    {% if not records[1] %}
-                    <tr>
-                        <td colspan="6">{{ _('No records found') }}</td>
-                    </tr>
-                    {% endif %}
-                    {% else %}
-                    <p>{{ _('No records found') }}</p>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="modern-row">
-            <button class="btn-details-left" id="previous_page"
-                {{ 'disabled' if deactivate_prev else '' }}>{{ _('Previous') }}</button>
-            <button class="btn-details-right" id="next_page"
-                {{ 'disabled' if deactivate_next else '' }}>{{ _('Next') }}</button>
-        </div>
-        <script src="{{ url_for('static', filename='script_tables.js') }}"> </script>
-    </body>
-
-</html>
-
-{% endblock content %}
+<div class="selection-bar" id="selectionBar" hidden>
+  <span class="count"><span data-selection-count>0</span> {{ _('selected') }}</span>
+  <button type="button" class="btn btn-sm" data-action="clear-selection">{{ _('Cancel') }}</button>
+  <button type="button" class="btn btn-sm" data-action="export-selected">{{ icon('file') }} {{ _('Export report') }}</button>
+  <button type="button" class="btn btn-sm btn-danger" data-action="delete-selected">{{ icon('trash') }} {{ _('Delete') }}</button>
+</div>
+{% endblock %}

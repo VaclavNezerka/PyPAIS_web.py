@@ -177,7 +177,7 @@ def get_all_company_employees(cur, conn, company_id: int) -> list[dict]:
 @db_connection
 def get_all_company_experiments(cur, conn, company_id: int) -> list[dict]:
     cursor = conn.cursor(cursor_factory=RealDictCursor) 
-    query = 'SELECT experiment_id, time_stamp, u.first_name, u.last_name, u.e_mail, expert_guess, asphalt_ratio, info_sample_label, info_sample_collection_data  FROM experiments e JOIN users u ON e.user_id = u.id  WHERE u.company=%s AND e.fake_deleted=false;'
+    query = 'SELECT experiment_id, time_stamp, e.user_id, u.first_name, u.last_name, u.e_mail, expert_guess, asphalt_ratio, current_state, info_sample_label, info_sample_collection_data  FROM experiments e JOIN users u ON e.user_id = u.id  WHERE u.company=%s AND e.fake_deleted=false;'
     cursor.execute(query, (company_id,))
     result = cursor.fetchall()
     if not result:
@@ -186,6 +186,21 @@ def get_all_company_experiments(cur, conn, company_id: int) -> list[dict]:
     result = [dict(row) for row in result]
     return result
 
+
+@db_connection
+def get_user_experiments(cur, conn, user_id: int) -> list[dict]:
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    query = 'SELECT experiment_id, time_stamp, user_id, expert_guess, asphalt_ratio, current_state, info_sample_label, info_sample_collection_data FROM experiments WHERE user_id=%s AND fake_deleted=false;'
+    cursor.execute(query, (user_id,))
+    return [dict(row) for row in cursor.fetchall()]
+
+@db_connection
+def get_experiment_summaries(cur, conn, experiment_ids: list[int]) -> list[dict]:
+    """Sample information without the images, for listing selected samples."""
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    query = 'SELECT experiment_id, time_stamp, expert_guess, asphalt_ratio, current_state, info_sample_label, info_sample_collection_data FROM experiments WHERE experiment_id = ANY(%s) ORDER BY experiment_id;'
+    cursor.execute(query, (list(experiment_ids),))
+    return [dict(row) for row in cursor.fetchall()]
 
 # TODO: consider joining with get_all_company_experiments
 @db_connection

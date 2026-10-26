@@ -1201,33 +1201,53 @@ def matches_search(query: str | None, experiment_id: int, label: str | None, col
     query = (query or '').strip().lower()
     return not query or query in str(experiment_id) or query in (label or collection_data or '').lower()
 
-def get_ordenary_user_experiments(**kwargs) -> tuple[list[tuple], int]:
-    sort_order, page_limit, start_sub_id, page, sort_by = get_query_args(**kwargs)
-    records=[('id','sample_label','time_stamp','expert_guess', 'asphalt_ratio')]
-    sort_by = sort_by.split(',')
-    sort_by = [x for x in sort_by if x in records[0]]
-    sort_columns=[ records[0].index(x) for x in sort_by]
-    # records.append(execute_query("SELECT experiment_id, time_stamp, expert_guess, asphalt_ratio, current_state FROM experiments where user_id=%s AND current_state='finished' AND fake_deleted=false",(session['user_id'],)))
-    records.append(
-        db_api.execute_query("SELECT experiment_id, time_stamp, expert_guess, asphalt_ratio, current_state, info_sample_label, info_sample_collection_data FROM experiments where user_id=%s AND fake_deleted=false",(session['user_id'],)))
+RECORD_SORT_KEYS = ('id', 'sample_label', 'time_stamp', 'name', 'expert_guess', 'asphalt_ratio', 'current_state')
 
-    # data filtering, sorting and slicing
-    data = [x for x in records[1] if matches_search(kwargs.get('q'), x[0], x[5], x[6])]
-    designations = {x[0]: (x[5], x[6]) for x in data}
-    # shorten the time_stamp to  YYYY-MM-DD HH:MM:SS, designation as a lowercase sort key
-    data = [(x[0], (x[5] or x[6] or '').lower(), x[1].strftime('%Y-%m-%d  %H:%M:%S'), x[2], x[3]) for x in data]
-    # Replace None values with -1
-    data = [(x[0],x[1],x[2],x[3] if x[3] is not None else 0, x[4] if x[4] is not None else -1) for x in data]
-    data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='desc')
-    # replace -1 with None
-    data = [(x[0], sample_designation(*designations[x[0]]), x[2], f"{x[3]*100:.2f}" if x[3]  != -1 else None, f"{x[4]*100:.2f}" if x[4] != -1 else None) for x in data]
-        
-    pages = get_num_pages(len(data), page_limit)
-    start_sub_id, max_sub_id = get_start_and_max_sub_id(page, page_limit, len(data), start_sub_id)
-    data=data[start_sub_id:max_sub_id]
-    records[1] = data
-    return  records, pages
-    
+def format_percent(ratio) -> str | None:
+    return f"{float(ratio) * 100:.1f} %" if ratio is not None else None
+
+def get_experiment_records(is_admin: bool, **kwargs) -> tuple[list[dict], int, int]:
+    """
+    Sample records for the records table: the user's own samples, or all samples of the company for an admin.
+    Filtered by the search query, sorted and paginated. Returns (records of the page, number of pages, number of matches).
+    """
+    sort_order, page_limit, start_sub_id, page, sort_by = get_query_args(**kwargs)
+    if is_admin:
+        company_id = db_api.get_user_by_id(session['user_id'])['company']
+        rows = db_api.get_all_company_experiments(company_id) or []
+    else:
+        rows = db_api.get_user_experiments(session['user_id']) or []
+
+    records = [{
+        'id': x['experiment_id'],
+        'designation': sample_designation(x['info_sample_label'], x['info_sample_collection_data']),
+        'designation_text': x['info_sample_label'] or x['info_sample_collection_data'] or '',
+        'date': x['time_stamp'].strftime('%Y-%m-%d %H:%M'),
+        'time_stamp': x['time_stamp'],
+        'name': f"{x.get('first_name', '')} {x.get('last_name', '')}".strip(),
+        'contact': x.get('e_mail'),
+        'expert_guess': format_percent(x['expert_guess']),
+        'asphalt_ratio': format_percent(x['asphalt_ratio']),
+        'raw_expert_guess': x['expert_guess'],
+        'raw_asphalt_ratio': x['asphalt_ratio'],
+        'finished': x['current_state'] == 'finished',
+        'owned': x['user_id'] == session['user_id'],
+    } for x in rows if matches_search(kwargs.get('q'), x['experiment_id'], x['info_sample_label'], x['info_sample_collection_data'])]
+
+    sort_keys = [key for key in sort_by.split(',') if key in RECORD_SORT_KEYS] or ['time_stamp']
+    sort_values = {
+        'sample_label': lambda r: r['designation_text'].lower(),
+        'expert_guess': lambda r: float(r['raw_expert_guess']) if r['raw_expert_guess'] is not None else -1,
+        'asphalt_ratio': lambda r: float(r['raw_asphalt_ratio']) if r['raw_asphalt_ratio'] is not None else -1,
+        'current_state': lambda r: r['finished'],
+        'name': lambda r: r['name'].lower(),
+    }
+    records.sort(key=lambda r: [sort_values.get(key, lambda r: r[key])(r) for key in sort_keys], reverse=sort_order == 'desc')
+
+    pages = get_num_pages(len(records), page_limit)
+    start_sub_id, max_sub_id = get_start_and_max_sub_id(page, page_limit, len(records), start_sub_id)
+    return records[start_sub_id:max_sub_id], pages, len(records)
+
 def deactivation_pages(page: int, pages: int) -> tuple[bool, bool, int]:
     # deactivating pages 
     deactivate_next = False
@@ -1249,56 +1269,23 @@ def deactivation_pages(page: int, pages: int) -> tuple[bool, bool, int]:
     
     return deactivate_next, deactivate_prev, page 
 
+def query_int(value, default: int, minimum: int = 1, maximum: int = 10_000) -> int:
+    """Integer from a query string argument - invalid values fall back to the default instead of a 500."""
+    try:
+        return min(maximum, max(minimum, int(value)))
+    except (TypeError, ValueError):
+        return default
+
 def get_query_args(**kwargs) -> dict:
     dt = {
-        'sort_order': kwargs.get('sort_order', 'desc'),
-        'page_limit': max(1, int(kwargs.get('page_limit') or 10)),
+        'sort_order': 'asc' if kwargs.get('sort_order') == 'asc' else 'desc',
+        'page_limit': query_int(kwargs.get('page_limit'), 10, maximum=200),
         'start_id': kwargs.get('start_id', None),
-        'page': int(kwargs.get('page', 1)),
-        'sort_by': kwargs.get('sort_by', 'time_stamp,id,expert_guess,asphalt_ratio')
+        'page': query_int(kwargs.get('page'), 1),
+        'sort_by': kwargs.get('sort_by') or 'time_stamp,id,expert_guess,asphalt_ratio'
     }
-    
+
     return [value for value in dt.values()]
-
-def get_admin_user_experiments(**kwargs) -> tuple[list[tuple], int]:
-    sort_order, page_limit, start_sub_id, page, sort_by = get_query_args(**kwargs)
-    
-    records=[('id','sample_label','time_stamp','name','contact','expert_guess', 'asphalt_ratio')]
-    sort_by = sort_by.split(',')
-    sort_by = [x for x in sort_by if x in records[0]]
-    sort_columns=[records[0].index(x) for x in sort_by]
-
-    #
-    company_id = db_api.get_user_by_id(session['user_id'])['company']
-    experiments = [x for x in db_api.get_all_company_experiments(company_id)
-                   if matches_search(kwargs.get('q'), x['experiment_id'], x['info_sample_label'], x['info_sample_collection_data'])]
-    designations = {x['experiment_id']: (x['info_sample_label'], x['info_sample_collection_data']) for x in experiments}
-    # Join the firs and last name, designation as a lowercase sort key
-    records.append([(
-        x['experiment_id'],
-        (x['info_sample_label'] or x['info_sample_collection_data'] or '').lower(),
-        x['time_stamp'].strftime('%Y-%m-%d  %H:%M:%S'),
-        f"{x['first_name']} {x['last_name']}",
-        x['e_mail'],
-        x['expert_guess'],
-        x['asphalt_ratio'],
-    ) for x in experiments])
-
-    # data sorting and slicing
-    data = records[1]
-    # Replace None values with -1
-    data = [(x[0],x[1],x[2],x[3],x[4],x[5] if x[5] is not None else 0, x[6] if x[6] is not None else -1) for x in data]
-    data.sort(key=lambda x: [x[i] for i in sort_columns], reverse=sort_order=='desc')
-    # replace -1 with None
-    data = [(x[0],x[1],x[2],x[3],x[4],x[5] if x[5] != -1 else None, x[6] if x[6] != -1 else None) for x in data]
-    data = [(x[0], sample_designation(*designations[x[0]]), x[2], x[3], x[4], f"{x[5]*100:.2f}" if x[5] is not None else _('None'), f"{x[6]*100:.2f}" if x[6] is not None else _('None')) for x in data]
-
-    pages = get_num_pages(len(data), page_limit)
-    kwargs = request.args.to_dict() if kwargs is None else kwargs
-    start_sub_id, max_sub_id = get_start_and_max_sub_id(page, page_limit, len(data), start_sub_id)
-    data=data[start_sub_id:max_sub_id]
-    records[1] = data
-    return records, pages
 
 def get_start_and_max_sub_id(page: int, page_limit: int, len_data: int, start_sub_id: int = None) -> tuple[int, int]:
     start_sub_id = page_limit * (page - 1)
@@ -1307,7 +1294,8 @@ def get_start_and_max_sub_id(page: int, page_limit: int, len_data: int, start_su
 
 def normalize_page_or_redirect(total_pages, args=None) -> 'requests.Response | None':
     args = args or request.args.to_dict()
-    page = int(args.get("page", 1))
+    page = query_int(args.get("page"), 1)
+    total_pages = max(1, total_pages)
     # Clamp
     print(f'Normalizing page: {page} against total pages: {total_pages}')
     valid_page = max(1, min(page, total_pages))
@@ -1319,29 +1307,17 @@ def normalize_page_or_redirect(total_pages, args=None) -> 'requests.Response | N
 @app.route('/experiments',methods=['GET','POST'])
 @check_authentication
 def experiments():
-    kwargs = request.args.to_dict() if request.args else {'page': 1}
-    is_admin = db_api.get_user_by_id(session['user_id'])['is_company_admin']
-    page = int(kwargs.get('page', 1))
-    
-    if is_admin:
-        records, pages = get_admin_user_experiments(**kwargs)
-        template = 'experiments_admin.html'
-        dynamic_content = _('Sample Records - Admin View')
-    else:
-        records, pages = get_ordenary_user_experiments(**kwargs)
-        template = 'experiments.html'
-        dynamic_content = _('Sample Records')
+    kwargs = request.args.to_dict()
+    is_admin = bool(db_api.get_user_by_id(session['user_id'])['is_company_admin'])
+    records, pages, total = get_experiment_records(is_admin, **kwargs)
 
-    redirect_response = normalize_page_or_redirect(
-        pages,
-        args=kwargs,
-    )
-    
+    redirect_response = normalize_page_or_redirect(pages, args=kwargs)
     if redirect_response:
         return redirect_response
-    else:
-        deactivate_next, deactivate_prev, page = deactivation_pages(page, pages)
-        return render_template(template, records=records, session=session, dynamic_content=dynamic_content, deactivate_next=deactivate_next, deactivate_prev=deactivate_prev, page=page, search=kwargs.get('q', ''))
+    sort_order, page_limit, _start, page, sort_by = get_query_args(**kwargs)
+    return render_template('experiments.html', records=records, is_admin=is_admin, page=page, pages=max(1, pages),
+                           total=total, page_limit=page_limit, sort_by=sort_by.split(',')[0], sort_order=sort_order,
+                           search=kwargs.get('q', ''), args=kwargs)
     
 def get_num_pages(total_items: int, page_limit: int) -> int:
     pages = total_items // page_limit
@@ -1516,10 +1492,12 @@ def generate_company_key() -> str:
 def pick_users(session_user_id) -> list[tuple]:
     company_id = db_api.get_user_by_id(session_user_id)['company']
     users = db_api.get_users_by_company(company_id)
+    # no choice = the controller is the exporting user (see export_report)
+    myself = (None, _('Me (the exporting user)'))
     if not users:
-        users = [(None, 'None')]
+        users = [myself]
     else:
-        users = [(None, 'None')] + [(user['id'], f"{user['first_name']} {user['last_name']} ‹{user['e_mail']}›") for user in users]
+        users = [myself] + [(user['id'], f"{user['first_name']} {user['last_name']} ‹{user['e_mail']}›") for user in users]
     return users
 
 def are_experiments_accessible_by_user(user_id: int, experiment_ids: list) -> bool:
@@ -1553,23 +1531,32 @@ def validate_report_experiment_ids(experiment_ids: list) -> bool:
 @app.route('/export-report/<string:ids>',methods=['GET','POST'])
 @check_authentication
 def export_report(ids):
+    experiment_ids = validate_report_experiment_ids(ids)
+    if not experiment_ids or not are_experiments_accessible_by_user(session['user_id'], experiment_ids):
+        flash(message=_('You do not have permission to access the selected experiments.'), category='error')
+        return redirect(url_for('experiments'))
+    samples = [{
+        'id': s['experiment_id'],
+        'designation': sample_designation(s['info_sample_label'], s['info_sample_collection_data']),
+        'date': s['time_stamp'].strftime('%Y-%m-%d %H:%M'),
+        'ai': format_percent(s['asphalt_ratio']),
+        'expert': format_percent(s['expert_guess']),
+        'finished': s['current_state'] == 'finished',
+    } for s in db_api.get_experiment_summaries(experiment_ids) or []]
+
+    def render_export_form(form):
+        return render_template('export_report.html', form=form, samples=samples, recaptcha_site_key=RECAPTCHA_SITE_KEY)
+
     match request.method:
         case 'GET':
             form=forms.ExportReportForm()
             form.controlling_employee.choices = pick_users( session['user_id'])
-            return render_template('form.html',dynamic_content=_('Export report'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+            return render_export_form(form)
         case 'POST':
             form=forms.ExportReportForm()
-            form.controlling_employee.choices = pick_users( session['user_id'])  
+            form.controlling_employee.choices = pick_users( session['user_id'])
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             if form.validate_on_submit():
-                experiment_ids = validate_report_experiment_ids(ids)
-                if not experiment_ids:
-                    flash(message=_('No experiments selected for report export.'),category='error')
-                    return render_template('form.html',dynamic_content=_('Export report'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
-                if not are_experiments_accessible_by_user(session['user_id'], experiment_ids): 
-                    flash(message=_('You do not have permission to access the selected experiments.'),category='error')
-                    return render_template('form.html',dynamic_content=_('Export report'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
 
                 # generate report
                 controlling_user_id = form.controlling_employee.data  # may be None
@@ -1599,7 +1586,7 @@ def export_report(ids):
                 return response
             else:
                 flash(message=_('Form validation failed. Please check your input.'),category='error')
-                return render_template('form.html',dynamic_content=_('Export report'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+                return render_export_form(form)
 
 
 @app.route('/register-company',methods=['GET','POST'])

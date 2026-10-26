@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_forms.html" import render_form, recaptcha_script %}
+
+{% block title %}{{ _('Export report') }}{% endblock %}
+{% block head %}{{ recaptcha_script(recaptcha_site_key) }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ _('Export report') }}</h1>
+    <p>{{ _('Protocol of the adhesion test according to ČSN 73 6161 (PDF).') }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{{ url_for('experiments') }}">{{ icon('chevron-left') }} {{ _('Sample Records') }}</a>
+  </div>
+</div>
+
+<div class="export-grid">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>{{ _('Report details') }}</h2>
+        <p>{{ _('The ordering party is printed on the protocol; the controller signs it.') }}</p>
+      </div>
+    </div>
+    <div class="card-body">
+      {{ render_form(form, submit_label=_('Export report'), recaptcha_site_key=recaptcha_site_key) }}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>{{ _('Selected samples') }} ({{ samples|length }})</h2>
+        <p><a href="{{ url_for('experiments') }}">{{ _('Change the selection in the sample records') }}</a></p>
+      </div>
+    </div>
+    <div class="card-body stack">
+      {% if samples|length < 2 %}
+      <div class="notice notice-warning">{{ icon('alert') }}
+        <p>{{ _('ČSN 73 6161 requires at least two samples in one report. A report with one sample will point this out.') }}</p>
+      </div>
+      {% endif %}
+      {% if samples|rejectattr('finished')|list %}
+      <div class="notice">{{ icon('info') }}
+        <p>{{ _('Some of the selected samples have not been evaluated yet.') }}</p>
+      </div>
+      {% endif %}
+      <ul class="sample-list">
+        {% for s in samples %}
+        <li>
+          <span class="mono muted">#{{ s.id }}</span>
+          <span class="sample-list-name">{% if s.designation %}{{ s.designation }}{% else %}<span class="muted">{{ _('No designation') }}</span>{% endif %}</span>
+          <span class="small muted">{{ s.date }} · {{ _('AI assessment') }} {{ s.ai or '–' }} · {{ _('Expert Guess') }} {{ s.expert or '–' }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
