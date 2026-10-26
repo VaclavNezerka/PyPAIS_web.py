@@ -874,13 +874,8 @@ def dict_to_json(data_dict: dict, features: Iterable[str] = None) -> str:
 def check_data_ownership(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        owner_user_id = db_api.get_user_id_of_experiment(id=kwargs['id'])
-        # allow acces to the data for the company admin as well
-        is_company_admin = db_api.get_user_by_id(session['user_id'])['is_company_admin']
-        admin_company_id = db_api.get_user_by_id(session['user_id'])['company']
-        can_access = (owner_user_id == session['user_id']) or (is_company_admin and db_api.get_user_by_id(owner_user_id)['company'] == admin_company_id)
-        
-        if can_access:
+        # the owner, or an admin of the owner's company (one query)
+        if db_api.can_access_experiment(user_id=session['user_id'], experiment_id=kwargs['id']):
             return func(id=kwargs['id'])
         else:
             flash(_('You do not have permission to access this data.'), 'error')

@@ -1,9 +1,11 @@
 # DB API
 import os
+import threading
 import psycopg2 as psql
+from psycopg2 import pool as psql_pool
 from psycopg2.extras import RealDictCursor
 from functools import wraps
-from flask import app, flash
+from flask import app, flash, has_request_context
 from dataclasses import dataclass
 from sqlalchemy import values
 from typing_extensions import deprecated
@@ -21,38 +23,80 @@ dbpwd = os.getenv('DB_PASSWORD')
 db_user = os.getenv('DB_USERNAME')
 db_name = os.getenv('DB_NAME')
 db_host = os.getenv('DB_HOST')
-def open_db_connection() -> object:
-    # Opens a connection and its cursor
-    connection=psql.connect(
-        host=db_host,
-        database=db_name,
-        user=db_user,
-        password=dbpwd)
-    
-    # Disable autocommit to allow for FOR UPDATE queries (lock) and manual transaction control
-    connection.autocommit = False
-    
-    return connection, connection.cursor()
 
-def close_all(*args):
-    # closes all given objects (assume connection() and cursor())
-    for arg in args:
-        arg.close()
+# Connections are reused from a pool - opening one (with password authentication) costs tens of ms,
+# and a request makes several DB calls. Every process (gunicorn worker) has its own pool.
+DB_POOL_MIN = int(os.getenv('DB_POOL_MIN', 2))  # idle connections kept open per process
+DB_POOL_MAX = int(os.getenv('DB_POOL_MAX', 10))  # pooled connections per process; beyond that a one-off connection is used
+_pool = None
+_pool_pid = None
+_pool_lock = threading.Lock()
+
+def open_db_connection():
+    # autocommit stays off - the functions use FOR UPDATE locks and commit themselves
+    return psql.connect(host=db_host, database=db_name, user=db_user, password=dbpwd)
+
+def get_pool() -> psql_pool.ThreadedConnectionPool:
+    global _pool, _pool_pid
+    with _pool_lock:
+        # a pool inherited over fork is not used - its connections belong to the parent process
+        if _pool is None or _pool_pid != os.getpid():
+            _pool = psql_pool.ThreadedConnectionPool(DB_POOL_MIN, DB_POOL_MAX, host=db_host, database=db_name, user=db_user, password=dbpwd)
+            _pool_pid = os.getpid()
+        return _pool
+
+def checkout_connection():
+    """A working connection from the pool: (connection, pooled). When all pooled connections are in use, a one-off connection."""
+    pool = get_pool()
+    try:
+        for _ in range(DB_POOL_MAX + 1):
+            conn = pool.getconn()
+            try:
+                # a pooled connection can be lost meanwhile (e.g. a DB restart) - one round trip (~0.1 ms) to make sure
+                conn.autocommit = True
+                with conn.cursor() as cur:
+                    cur.execute('SELECT 1')
+                conn.autocommit = False
+                return conn, True
+            except psql.Error:
+                pool.putconn(conn, close=True)
+    except psql_pool.PoolError:
+        pass
+    return open_db_connection(), False
+
+def return_connection(conn, pooled: bool, broken: bool = False) -> None:
+    if not pooled:
+        conn.close()
+        return
+    # the pool rolls back an unfinished transaction (as closing the connection used to) and drops lost connections;
+    # connections above DB_POOL_MIN are closed
+    get_pool().putconn(conn, close=broken or bool(conn.closed))
 
 def db_connection(func):
-    # This function, used as decorator automatically handles the  opening and closing of connections and cursors in functions.
+    # This function, used as decorator automatically handles the connection (from the pool) and the cursor in functions.
     @wraps(func)
     def wrapper(*args,**kwargs):
-        conn, cur = open_db_connection()
+        conn, pooled = checkout_connection()
+        cur = conn.cursor()
+        broken = False
         try:
             result=func(cur,conn,*args,**kwargs)
         except Exception as e:
             print(f'Database error calling {func.__name__}: \n {e}')
-            flash('Database error.', 'error')
-            conn.rollback()
+            broken = isinstance(e, (psql.OperationalError, psql.InterfaceError))
+            try:
+                conn.rollback()
+            except psql.Error:
+                broken = True
+            if has_request_context():  # also called from the background similarity thread
+                flash('Database error.', 'error')
             result = None
         finally:
-            close_all(conn,cur)
+            try:
+                cur.close()
+            except psql.Error:
+                broken = True
+            return_connection(conn, pooled, broken)
         return result
     return wrapper
 
@@ -105,6 +149,17 @@ def get_user_id_of_experiment(cur, conn, id: str) -> int | None:
     if not response:
         return None
     return response[0][0]
+
+@db_connection
+def can_access_experiment(cur, conn, user_id: int, experiment_id: int) -> bool:
+    """The owner of the sample, or an admin of the owner's company."""
+    cur.execute(
+        'SELECT 1 FROM experiments e '
+        'JOIN users owner ON owner.id = e.user_id '
+        'JOIN users viewer ON viewer.id = %s '
+        'WHERE e.experiment_id = %s AND (e.user_id = viewer.id OR (viewer.is_company_admin AND owner.company = viewer.company))',
+        (user_id, experiment_id))
+    return cur.fetchone() is not None
 
 def hex_to_colorhash(colorhash:str, nbits=42, nbins=3):
     """Convert a hexadecimal string to an ImageHash object representing a colorhash."""
@@ -354,9 +409,7 @@ def get_user_by_id(cur, conn, user_id: int) -> dict | None:
     if not result:
         return None
     # Convert RealDictRow to a regular dict
-    result = dict(result)
-    print(result)
-    return result
+    return dict(result)
 
 @db_connection
 def get_user_info_by_id(cur, conn, user_id: str) -> dict | None:
