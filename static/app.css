@@ -53,11 +53,11 @@
     --info: #2160c4;
     --info-tint: #edf3fc;
 
-    /* segmentation masks - the same colours as REPORT_COLORS in app_report_exporter.py
-       (no blue: the samples are photographed on blue paper) */
-    --mask-bitumen: #ff6b6b;
-    --mask-aggregate: #4ecdc4;
-    --mask-background: #8c96a0;
+    /* segmentation masks: bitumen blue, aggregate red, background green - the same colours as
+       REPORT_COLORS in app_report_exporter.py (a deep blue, distinct from the light blue paper) */
+    --mask-bitumen: #1f4fff;
+    --mask-aggregate: #e8323c;
+    --mask-background: #1fa64a;
 
     --radius-sm: 4px;
     --radius: 6px;

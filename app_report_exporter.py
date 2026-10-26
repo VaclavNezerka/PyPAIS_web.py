@@ -42,9 +42,8 @@ from dotenv import load_dotenv
 REPORT_COLORS = {
     # "topic_color": "#4ecdc4",      # turquoise
     "topic_color": "#2b2b2b",      # light gray
-    "mask_asphalt": "#ff6b6b",   # red
-    # "mask_aggregate": "#1f4fd8",   # blue
-    "mask_aggregate": "#4ecdc4",      # turquoise
+    "mask_asphalt": "#1f4fff",   # blue
+    "mask_aggregate": "#e8323c",      # red
     # "warning_color": "#fff3cd",  # pale orange
     "warning_color": "#ffffff",  # white
     "warning_text_color": "#ff6b6b",   # red 
@@ -323,13 +322,13 @@ def process_image(original_image: np.ndarray, mask_asphalt: np.ndarray, mask_agg
     # Create an empty image with the same shape as the original
     processed_img = original_image.copy()
 
-    # Highlight asphalt areas in red
+    # Highlight asphalt areas in blue
     color_rgb = hex_to_RGB(REPORT_COLORS["mask_asphalt"])
-    processed_img[mask_asphalt == 1] = color_rgb  # Red color for asphalt
+    processed_img[mask_asphalt == 1] = color_rgb  # Blue color for asphalt
 
-    # Highlight aggregate areas in blue
+    # Highlight aggregate areas in red
     color_rgb_aggregate = hex_to_RGB(REPORT_COLORS["mask_aggregate"])
-    processed_img[mask_aggregate == 1] = color_rgb_aggregate  # Blue color for aggregate
+    processed_img[mask_aggregate == 1] = color_rgb_aggregate  # Red color for aggregate
 
     return processed_img
 
@@ -838,7 +837,7 @@ def add_images(pdf: list, img_original: PIL.Image,  img_processed: PIL.Image, si
     img2 = get_printable_image(img_processed, max_image_size_cm)
     table_data.append([_("Original Image"), _("Processed Image")])
     table_data.append([img1, img2])
-    table_data.append(["", _("(Bitumen - red, aggregate - turquoise)")])
+    table_data.append(["", _("(Bitumen - blue, aggregate - red)")])
     if similar_image:
         warning_box = return_similarity_warning(pdf, similar_image)
         similar_image_printable = get_printable_image(similar_image.get("similar_image"), max_image_size_cm)

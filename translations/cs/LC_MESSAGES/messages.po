@@ -2106,3 +2106,6 @@ msgstr "Tato kamera neumožňuje nastavit expoziční čas."
 
 msgid "Advanced camera settings"
 msgstr "Pokročilé nastavení kamery"
+
+msgid "(Bitumen - blue, aggregate - red)"
+msgstr "(Asfalt – modrá, kamenivo – červená)"
