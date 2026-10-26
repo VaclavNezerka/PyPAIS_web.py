@@ -2088,3 +2088,21 @@ msgstr "Neznámý model."
 
 msgid "Current password"
 msgstr "Současné heslo"
+
+msgid "Exposure time"
+msgstr "Expoziční čas"
+
+msgid "Auto"
+msgstr "Automaticky"
+
+msgid "Longest exposure this camera allows:"
+msgstr "Nejdelší expozice, kterou kamera dovolí:"
+
+msgid "This browser does not allow web pages to adjust the camera (exposure time, white balance). For manual camera settings, use Google Chrome or Microsoft Edge."
+msgstr "Tento prohlížeč neumožňuje webovým stránkám nastavovat kameru (expoziční čas, vyvážení bílé). Pro ruční nastavení kamery použijte Google Chrome nebo Microsoft Edge."
+
+msgid "This camera does not allow setting the exposure time."
+msgstr "Tato kamera neumožňuje nastavit expoziční čas."
+
+msgid "Advanced camera settings"
+msgstr "Pokročilé nastavení kamery"

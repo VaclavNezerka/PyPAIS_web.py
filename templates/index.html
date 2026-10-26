@@ -61,8 +61,22 @@
           <button type="button" class="btn" id="capture-photo-button">{{ icon('camera') }} {{ _('Capture photo') }}</button>
           <button type="button" class="btn btn-primary" id="upload-button-camera" disabled>{{ icon('check') }} {{ _('Use the Captured Image') }}</button>
         </div>
-        <details class="disclosure camera-settings" id="manualSettingsDiv">
-          <summary>{{ icon('sliders') }} {{ _('Manual Camera Settings') }} {{ icon('chevron-down') }}</summary>
+        {# exposure is always at hand; script_video.js shows it when the browser and camera allow setting it #}
+        <div class="exposure-control" id="exposureControl" hidden>
+          <label for="exposureInput">{{ _('Exposure time') }} [ms]</label>
+          <input type="range" id="exposureSlider" class="slider" aria-label="{{ _('Exposure time') }}">
+          <input type="number" id="exposureInput" class="input" min="0" step="any">
+          <label class="check"><input type="checkbox" id="exposureAuto"> {{ _('Auto') }}</label>
+          <p class="small muted exposure-limit">{{ _('Longest exposure this camera allows:') }} <span id="exposureMax"></span> ms</p>
+        </div>
+        <div class="notice" id="cameraControlsUnsupported" hidden>{{ icon('info') }}
+          <p>{{ _('This browser does not allow web pages to adjust the camera (exposure time, white balance). For manual camera settings, use Google Chrome or Microsoft Edge.') }}</p>
+        </div>
+        <div class="notice" id="exposureUnsupported" hidden>{{ icon('info') }}
+          <p>{{ _('This camera does not allow setting the exposure time.') }}</p>
+        </div>
+        <details class="disclosure camera-settings" id="manualSettingsDiv" hidden>
+          <summary>{{ icon('sliders') }} {{ _('Advanced camera settings') }} {{ icon('chevron-down') }}</summary>
           <div id="manual-cam-settings-div">
             <div id="manual-cam-settings-container"></div>
             <div id="manual-rows" class="manual-rows"></div>

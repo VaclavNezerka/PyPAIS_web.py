@@ -154,6 +154,7 @@ window.addEventListener("load", () => {
             startCamera()
         })
     document.getElementById("camera-close-button").addEventListener("click", switchOffCamera)
+    initExposureControl()
 })
 
 //
@@ -188,21 +189,25 @@ const DEFAULT_PROFILE = {
 
 const CURRENT_PROFILE = { ...DEFAULT_PROFILE }
 
+/** Exposure has its own control above the advanced settings. Values are in 100 µs units, like the browser's. */
+const EXPOSURE_ROW = {
+    key: "exposureTime",
+    mode: "exposureMode",
+    name: "Exposure",
+    unit: "ms",
+    toUi: (v) => v / 10,
+    fromUi: (v) => v * 10,
+    log: true,
+}
+const EXPOSURE_MAX = 10000 // 1 s
+
+/** The advanced settings (hidden in a disclosure). */
 const ROWS = [
     {
         key: "colorTemperature",
         mode: "whiteBalanceMode",
         name: "White balance",
         unit: "K",
-    },
-    {
-        key: "exposureTime",
-        mode: "exposureMode",
-        name: "Exposure",
-        unit: "ms",
-        toUi: (v) => v / 10,
-        fromUi: (v) => v * 10,
-        log: true,
     },
     {
         key: "exposureCompensation",
@@ -224,6 +229,7 @@ const ROWS = [
 // })
 
 function renderRows() {
+    renderExposure()
     const rows = $("manual-rows")
     rows.replaceChildren()
 
@@ -312,8 +318,71 @@ function renderRows() {
     //     ? `Not exposed for this camera here: ${missing.join(", ")}.`
     //     : ""
     // $("hint").hidden = rows.childElementCount > 0
+    // e.g. Firefox exposes no camera controls at all - then there is nothing to unfold
+    $("manualSettingsDiv").hidden = rows.childElementCount === 0
     applyProfile(CURRENT_PROFILE)
     refresh()
+}
+
+/**
+ * The exposure control above the advanced settings: a slider (log scale) and a number box in ms,
+ * up to 1 s or the camera's own maximum. Browsers without camera controls get a notice instead.
+ */
+function renderExposure() {
+    const cap = caps.exposureTime
+    const usable = isRange(cap)
+    const browserSupportsIt = !!navigator.mediaDevices.getSupportedConstraints?.().exposureTime
+    $("exposureControl").hidden = !usable
+    $("cameraControlsUnsupported").hidden = usable || browserSupportsIt
+    $("exposureUnsupported").hidden = usable || !browserSupportsIt
+    if (!usable) return
+
+    const max = Math.min(cap.max, EXPOSURE_MAX)
+    const slider = $("exposureSlider"),
+        input = $("exposureInput")
+    slider.min = Math.log2(cap.min)
+    slider.max = Math.log2(max)
+    // on the Windows power-of-two grid every slider step is one exposure the camera can really do
+    slider.step = isLog2SecondsGrid(cap) ? 1 : 0.01
+    input.min = fmt(cap.min / 10)
+    input.max = fmt(max / 10)
+    $("exposureMax").textContent = fmt(max / 10)
+    $("exposureAuto").disabled = !(
+        Array.isArray(caps.exposureMode) && caps.exposureMode.includes("continuous")
+    )
+}
+
+/** Wires the exposure control once; the camera gets the new value while the slider moves. */
+function initExposureControl() {
+    const slider = $("exposureSlider"),
+        input = $("exposureInput"),
+        auto = $("exposureAuto")
+    let pending = null,
+        running = false
+    // only the latest value is sent - a camera takes a while to switch, the slider moves faster
+    async function applyExposure(value) {
+        pending = Math.min(value, EXPOSURE_MAX)
+        if (running) return
+        running = true
+        while (pending !== null) {
+            const next = pending
+            pending = null
+            await setValue(EXPOSURE_ROW, next)
+        }
+        running = false
+    }
+    slider.addEventListener("input", () => {
+        const value = 2 ** slider.value
+        input.value = fmt(value / 10)
+        applyExposure(value)
+    })
+    input.addEventListener("change", () => {
+        const ms = +input.value
+        if (Number.isFinite(ms) && ms > 0) applyExposure(ms * 10)
+    })
+    auto.addEventListener("change", () =>
+        setMode(EXPOSURE_ROW, auto.checked ? "continuous" : "manual"),
+    )
 }
 
 renderRows.onError = (e) => {
@@ -373,6 +442,14 @@ function refresh() {
         if (sel && s[r.mode]) sel.value = s[r.mode]
         if (range && Number.isFinite(v)) range.value = r.log ? Math.log2(v) : v
         if (num && document.activeElement !== num) num.value = fmt(toUi(v))
+    }
+    if (!$("exposureControl").hidden && Number.isFinite(s.exposureTime)) {
+        // not while the user is dragging or typing - the camera reports the snapped value afterwards
+        if (document.activeElement !== $("exposureSlider"))
+            $("exposureSlider").value = Math.log2(s.exposureTime)
+        if (document.activeElement !== $("exposureInput"))
+            $("exposureInput").value = fmt(s.exposureTime / 10)
+        $("exposureAuto").checked = s.exposureMode === "continuous"
     }
 }
 refresh.onError = (e) => {
