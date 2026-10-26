@@ -2073,3 +2073,18 @@ msgstr "Obrázek"
 
 msgid "Model"
 msgstr "Model"
+
+msgid "The password is not correct."
+msgstr "Heslo není správné."
+
+msgid "We have sent a confirmation link to the new address. The e-mail address will change once you open it."
+msgstr "Na novou adresu jsme poslali potvrzovací odkaz. E-mailová adresa se změní, jakmile jej otevřete."
+
+msgid "There was an error while changing your e-mail address. Please try again."
+msgstr "Při změně e-mailové adresy došlo k chybě. Zkuste to prosím znovu."
+
+msgid "Unknown model."
+msgstr "Neznámý model."
+
+msgid "Current password"
+msgstr "Současné heslo"

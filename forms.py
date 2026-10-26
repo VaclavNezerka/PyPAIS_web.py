@@ -158,6 +158,8 @@ class EmailForgotPasswordForm(FlaskForm):
 class ChangeEmailForm(FlaskForm):
     # default values are taken from the database
     e_mail = StringField(lazy_gettext('New email address'),validators=[DataRequired(), Email(), IsUnique(tablename='public_users', message=messages['email_already_used']),RequiredLength(min=5,max=100)])
+    # a stolen session must not be enough to take over the account through a password reset to a new address
+    password = PasswordField(lazy_gettext('Current password'), validators=[DataRequired()])
     submit = SubmitField(lazy_gettext('Change e-mail address'))
 
 class ContactForm(FlaskForm):

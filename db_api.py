@@ -406,7 +406,7 @@ def save_new_company_db(cur, conn , values: dict):
     query = f"INSERT INTO public_companies ({', '.join(filtered_values.keys())}) VALUES ({', '.join(['%s'] * len(filtered_values))})"
     cur.execute(query, tuple(filtered_values.values()))
     conn.commit()
-    return None  # Success
+    return True  # db_connection returns None when the insert failed
 
 @db_connection
 def get_company_key(cur, conn, company_id: str) -> str:
@@ -478,7 +478,7 @@ def save_new_user_db(cur, conn , values: dict):
     query = f"INSERT INTO public_users ({', '.join(filtered_values.keys())}) VALUES ({', '.join(['%s'] * len(filtered_values))})"
     cur.execute(query, tuple(filtered_values.values()))
     conn.commit()
-    return None  # Success
+    return True  # db_connection returns None when the insert failed
 
 @deprecated("This function is deprecated. Use get_experiment_by_id instead.")
 @db_connection

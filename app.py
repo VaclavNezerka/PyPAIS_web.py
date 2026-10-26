@@ -97,6 +97,16 @@ def update_session_lifetime():
     else:
         app.permanent_session_lifetime = SESSION_LIFETIME_UNAUTHENTICATED
 
+@app.before_request
+def end_session_of_blocked_user():
+    # blocking takes effect right away - checking it only at login left the blocked user's session running
+    if session.get('authenticated') and request.endpoint != 'static' and db_api.is_user_blocked(user_id=session['user_id']):
+        lang = session.get('lang')
+        session.clear()
+        session['lang'] = lang
+        flash(_('Your account has been blocked. In case this should not be the case, please contact your company admin.'), 'error')
+        return redirect(url_for('login'))
+
 csp = {
     'default-src': [
         "'self'",
@@ -992,7 +1002,7 @@ def logout():
 @app.route('/change-email',methods=['GET','POST'])
 @check_authentication
 def change_email():
-    # TODO: !!! CONFIRMATION EMAIL !!!
+    # the new address is used only after it is confirmed from the e-mail sent to it (confirm_email_change)
     title = _('Change email')
     match request.method:
         case 'GET':
@@ -1002,19 +1012,37 @@ def change_email():
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form=forms.ChangeEmailForm()
             if form.validate_on_submit():
-                send_email_confirmation(
+                if not is_password_correct(password=form.password.data, user_id=session['user_id']):
+                    form.password.errors.append(_('The password is not correct.'))
+                    return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+                sent = send_email_confirmation(
                     to_mails=[form.e_mail.data],
-                    data={'e_mail': form.e_mail.data}, 
-                    confirmation='confirm_change_email_user',
-                    intro_text=_('You have requested a change of an email address.' 
+                    data={'user_id': session['user_id'], 'e_mail': form.e_mail.data},
+                    confirmation='confirm_email_change',
+                    intro_text=_('You have requested a change of an email address.'
                                 'Please confirm your new email address by clicking the button below:'),
                     title=_('AIBAL: Confirm your new email address')
                 )
-                db_api.update_users_table(values_dict={'e_mail': form.e_mail.data}, user_id=session['user_id'])
-                flash(_('Email changed successfully.'), 'success')
+                if sent:
+                    flash(_('We have sent a confirmation link to the new address. The e-mail address will change once you open it.'), 'success')
+                else:
+                    flash(_('There was an error sending your message. Please try again.'), 'error')
                 return redirect('/user')
             else:
                 return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
+
+@app.route('/confirm_email_change/<token>')
+@confirm_request
+def confirm_email_change(token: str):
+    """Switches the user's e-mail address to the confirmed new one."""
+    data = serializer.loads(token, salt='confirm_email_change-salt', max_age=MAX_TOKEN_AGE)
+    if db_api.get_user_id(email=data['e_mail']) is not None:
+        flash(_('This email address is already used. Please use a different one.'), 'error')
+    elif db_api.update_users_table(values_dict={'e_mail': data['e_mail']}, user_id=data['user_id']):
+        flash(_('Email changed successfully.'), 'success')
+    else:
+        flash(_('There was an error while changing your e-mail address. Please try again.'), 'error')
+    return redirect('/user' if session.get('authenticated') else url_for('login'))
 
 @app.route('/change-company-email',methods=['GET','POST'])
 @check_authentication
@@ -1030,6 +1058,9 @@ def change_company_email():
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form=forms.ChangeEmailForm()
             if form.validate_on_submit():
+                if not is_password_correct(password=form.password.data, user_id=session['user_id']):
+                    form.password.errors.append(_('The password is not correct.'))
+                    return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
                 company_id = db_api.get_user_by_id(session['user_id'])['company']
                 db_api.update_companies_table(values_dict={'e_mail': form.e_mail.data}, company_id=company_id)
                 flash(_('Email changed successfully.'), 'success')
@@ -1103,7 +1134,9 @@ def change_password():
                 authenticated = is_password_correct(password=form.old_password.data, user_id=session['user_id'])
                 if authenticated:
                     new_password_hash=generate_password_hash(form.new_password.data)
-                    db_api.update_users_table(values_dict={'pwd': new_password_hash}, user_id=session['user_id'])
+                    if not db_api.update_users_table(values_dict={'pwd': new_password_hash}, user_id=session['user_id']):
+                        flash(_('Database error - the data was not saved. Please try again.'), 'error')
+                        return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY), 500
                     flash(_('Password changed successfully.'), 'success')
                     return redirect('/user'), 302
                 else:
@@ -1231,6 +1264,10 @@ def login():
                 authenticated = is_password_correct(password=form.password.data, user_id=user_id)
                 print(f'User {user_id} authenticated {authenticated}.')
                 if authenticated:
+                    # a new session id at login (session fixation); the guest data of the old session is not needed
+                    lang = session.get('lang')
+                    session.clear()
+                    session['lang'] = lang
                     session['authenticated'] = True
                     print(f'User {user_id} authenticated successfully.')
                     session['user_id'] = user_id
@@ -1238,6 +1275,7 @@ def login():
                     session['is_admin'] = False
                     if db_api.get_user_by_id(user_id=user_id)['is_company_admin']:
                         session['is_admin'] = True
+                    app.session_interface.regenerate(session)  # after filling it - regenerate() skips an empty session
                     print(' Session after login:')
                     print(session)
                     return redirect('/'), 302   
@@ -1454,14 +1492,6 @@ def register():
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form=forms.RegistrationFormUser()
             if form.validate_on_submit():
-                intro_text = _('Thank you for signing up! Please confirm your email address by clicking the link below:')
-                send_email_confirmation(
-                    to_mails=[form.e_mail.data],
-                    data={'e_mail': form.e_mail.data},
-                    confirmation='confirm_email',
-                    intro_text=intro_text,
-                    title=_('AIBAL: Please confirm your email address')
-                )
                 print('Form validated successfully.')
                 form.password.data=generate_password_hash(form.password.data)
                 company_id=db_api.get_company_id_by_key(form.company_key.data)
@@ -1473,8 +1503,16 @@ def register():
                     'company': company_id,
                     'pwd': form.password.data
                 }
-                result = db_api.save_new_user_db(values=user_dict)
-                if result is None:
+                result = db_api.save_new_user_db(values=user_dict)  # True, or None when the insert failed
+                if result:
+                    # the confirmation e-mail only after the account really exists
+                    send_email_confirmation(
+                        to_mails=[form.e_mail.data],
+                        data={'e_mail': form.e_mail.data},
+                        confirmation='confirm_email',
+                        intro_text=_('Thank you for signing up! Please confirm your email address by clicking the link below:'),
+                        title=_('AIBAL: Please confirm your email address')
+                    )
                     if session.get('authenticated', False) and session.get('is_admin', False):
                         # do not log out the admin user who is registering a new user
                         flash(message=_('User registered successfully. The user will be notified via the provided email address.'), category='success')
@@ -1483,13 +1521,13 @@ def register():
                         flash(message=_('Registration successful. Please confirm your email via the link sent to your email address (the process may take a few minutes).'),category='success')
                         return redirect(url_for('login')), 302
                 else:
-                    flash(message=_('Database error:') + f'{result}', category='error')
+                    flash(message=_('Database error - the data was not saved. Please try again.'), category='error')
                     return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY, optional_content_below=optional_content), 500
             else:
                 flash(message=_('Form validation failed. Please check your input.'),category='error')
                 return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY, optional_content_below=optional_content)
 
-@app.route('/regenerate-company-key',methods=['GET'])
+@app.route('/regenerate-company-key',methods=['POST'])
 @check_authentication
 @check_is_company_admin
 def regenerate_company_key():
@@ -1634,28 +1672,28 @@ def register_company():
                     'e_mail': form.e_mail.data,
                     'company_key': generate_company_key(),
                 }
-                result = db_api.save_new_company_db(values=values)
-                # send email to admin for confirmation
-                intro_text = _('A new company registration with the following details has been requested:')
-                request_details = {
-                    _('Company Name'): form.company_name.data,
-                    _('Company Address'): form.company_address.data,
-                    _('Contact Email'): form.e_mail.data,
-                }
-                send_email_confirmation(
-                    to_mails=ADMIN_EMAIL_ADDRESSES,
-                    data={'e_mail': form.e_mail.data, 'company_name': form.company_name.data, 'company_id': db_api.get_company_id_by_key(values['company_key'])},
-                    confirmation='confirm_company_registration_admin',
-                    intro_text=intro_text,
-                    request_details=request_details,
-                    title=_('AIBAL: New company registration request')
-                )
-                if result is None:
+                result = db_api.save_new_company_db(values=values)  # True, or None when the insert failed
+                if result:
+                    # send email to admin for confirmation (only for a company that really was stored)
+                    intro_text = _('A new company registration with the following details has been requested:')
+                    request_details = {
+                        _('Company Name'): form.company_name.data,
+                        _('Company Address'): form.company_address.data,
+                        _('Contact Email'): form.e_mail.data,
+                    }
+                    send_email_confirmation(
+                        to_mails=ADMIN_EMAIL_ADDRESSES,
+                        data={'e_mail': form.e_mail.data, 'company_name': form.company_name.data, 'company_id': db_api.get_company_id_by_key(values['company_key'])},
+                        confirmation='confirm_company_registration_admin',
+                        intro_text=intro_text,
+                        request_details=request_details,
+                        title=_('AIBAL: New company registration request')
+                    )
                     flash(message=_('Registration successful. Please confirm this request in your ADMIN mail account.'),category='success')
                     return redirect(url_for('login')), 302
                 else:
-                    flash(message=_('Database error:') + f'{result}', category='error')
-                    return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY), 500
+                    flash(message=_('Database error - the data was not saved. Please try again.'), category='error')
+                    return render_template('form.html',dynamic_content=_('Register new company'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY), 500
             else:
                 flash(message=_('Form validation failed. Please check your input.'),category='error')
                 return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
@@ -1792,20 +1830,7 @@ def save_experiment_info():
     """Explicit save of the whole sample form (the Save button, and before the evaluation)."""
     return save_experiment_fields(request.form.to_dict())
 
-@app.route('/save_value/<string:value_name>',methods=['POST','GET'])
-@ignore_unauthenticated
-def save_specific_value(value_name):
-    try:
-        value_name = value_name.lower()
-        # value = ts[session['user_id']].values.__dict__[value_name]
-        value = getattr(storage, value_name)
-        db_api.update_experiment_in_db(values_dict={value_name: value}, experiment_id=storage.experiment_id)
-        return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
-    except Exception as e:
-        return json.dumps({'status': 'error'}), 200, {'Content-Type': 'application/json'}
-
-
-@app.route('/evaluate-asphalt',methods=['GET', 'POST'])
+@app.route('/evaluate-asphalt',methods=['POST'])
 @check_session_timeout
 def evaluate_asphalt():
     evaluation = storage.get_asphalt_ratio()
@@ -1821,7 +1846,7 @@ def evaluate_asphalt():
     }), 200, {'Content-Type': 'application/json'}
 
 # TODO: CORRECT THE METHOD - should be DELETE
-@app.route('/delete-experiment/<int:id>',methods=['GET', 'POST'])
+@app.route('/delete-experiment/<int:id>',methods=['POST'])
 @check_authentication
 @check_data_ownership
 def delete_experiment(id):
@@ -1844,7 +1869,7 @@ def delete_experiment(id):
         status = 'error'
     return json.dumps({'status': status}), 200 if status == 'success' else 500, {'Content-Type': 'application/json'}
 
-@app.route('/deactivate-current-experiment',methods=['GET', 'POST'])
+@app.route('/deactivate-current-experiment',methods=['POST'])
 @check_authentication
 def deactivate_current_experiment():
     id = db_api.return_active_experiment_id(user_id=session['user_id'])
@@ -1852,7 +1877,7 @@ def deactivate_current_experiment():
     storage = None
     return deactivate_experiment(id)
 
-@app.route('/deactivate-experiment/<int:id>',methods=['GET', 'POST'])
+@app.route('/deactivate-experiment/<int:id>',methods=['POST'])
 @check_authentication
 @check_data_ownership
 def deactivate_experiment_caller(id):
@@ -1867,7 +1892,7 @@ def deactivate_experiment(id):
     storage.experiment_id = None #**
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
 
-@app.route('/activate-experiment/<int:id>',methods=['GET', 'POST']) 
+@app.route('/activate-experiment/<int:id>',methods=['POST'])
 @check_authentication
 @check_data_ownership
 def activate_experiment_caller(id):

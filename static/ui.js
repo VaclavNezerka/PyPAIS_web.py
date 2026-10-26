@@ -135,12 +135,21 @@
         }
     })
 
-    // links with data-confirm="question" ask before they are followed
+    // links and forms with data-confirm="question" ask before they are followed / submitted
     document.addEventListener("click", async (event) => {
         const link = event.target.closest("a[data-confirm]")
         if (!link) return
         event.preventDefault()
         if (await confirmDialog(link.dataset.confirm, { danger: true })) window.location.href = link.href
+    })
+    document.addEventListener("submit", async (event) => {
+        const form = event.target.closest("form[data-confirm]")
+        if (!form || form.dataset.confirmed) return
+        event.preventDefault()
+        if (await confirmDialog(form.dataset.confirm, { danger: true })) {
+            form.dataset.confirmed = "1"
+            form.submit()
+        }
     })
 
     // server-side flash messages -> toasts

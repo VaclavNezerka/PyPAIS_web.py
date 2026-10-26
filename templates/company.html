@@ -49,8 +49,10 @@
     </div>
     <div class="card-footer card-footer-wrap">
       <a class="btn btn-sm btn-primary" href="/view-company-key">{{ icon('eye') }} {{ _('View company key') }}</a>
-      <a class="btn btn-sm" href="/regenerate-company-key"
-        data-confirm="{{ _('Generate a new company key? The current key will stop working.') }}">{{ icon('refresh') }} {{ _('Regenerate company key') }}</a>
+      <form method="post" action="/regenerate-company-key"
+        data-confirm="{{ _('Generate a new company key? The current key will stop working.') }}">
+        <button type="submit" class="btn btn-sm">{{ icon('refresh') }} {{ _('Regenerate company key') }}</button>
+      </form>
     </div>
   </div>
 </div>
