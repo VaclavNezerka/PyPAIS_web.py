@@ -4,7 +4,7 @@ import pendulum as pdl
 import requests
 from flask import (Flask, render_template, request, send_file, 
                    send_from_directory, flash, redirect,
-                   session, url_for, abort, g)
+                   session, url_for, abort, g, has_request_context)
 from flask_mail import Mail, Message
 import werkzeug.security as ws
 from werkzeug.local import LocalProxy
@@ -267,6 +267,10 @@ class TemporaryStorage:
             return cls()  # return an empty instance if no experiment_id is provided
         else:
             exp_dict = db_api.get_experiment_by_id(experiment_id)  # ensure the experiment exists in the database
+            if not exp_dict:
+                # the sample was deleted (e.g. from the records) - forget it instead of failing on every request
+                session['experiment_id'] = None
+                return cls()
             return cls(**exp_dict)  # initialize the UserTemporaryStorage instance with the data from the database
 
     @classmethod
@@ -466,6 +470,10 @@ class UserTemporaryStorage(TemporaryStorage):
             return cls()  # return an empty instance if no experiment_id is provided
         else:
             exp_dict = db_api.get_experiment_by_id(experiment_id)  # ensure the experiment exists in the database
+            if not exp_dict:
+                # the sample was deleted (e.g. from the records) - forget it instead of failing on every request
+                session['experiment_id'] = None
+                return cls()
             return cls(**exp_dict)  # initialize the UserTemporaryStorage instance with the data from the database
 
     @classmethod
@@ -490,16 +498,12 @@ class GuestTemporaryStorage(TemporaryStorage):
     """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-    def _self_to_session(self):
-        """
-        Saves the current state of the object to the session.
-        Necessary to ensure that the changes are refrected in every request / worker.
-        """
-        session['storage'] = zlib.compress(pickle.dumps(self))
-    
     def __setattr__(self, name: str, value):
-        super().__setattr__(name, value)    
-        self._self_to_session()
+        super().__setattr__(name, value)
+        # written back to the session once per request (save_guest_storage) - pickling the photo and masks
+        # on every attribute change cost hundreds of MB of work per upload
+        if has_request_context():
+            g.guest_storage_dirty = True
 
 serializer = URLSafeTimedSerializer(app.secret_key)
 
@@ -782,17 +786,26 @@ def _get_storage() -> TemporaryStorage:
         else:
             storage_obj = g.storage
     else:
-        storage_data = session.get('storage')
-        if storage_data:
-            # decompress + unpickle
-            storage_obj: GuestTemporaryStorage = pickle.loads(zlib.decompress(storage_data))
-        else:
-            # Create new storage if none exists
-            storage_obj = GuestTemporaryStorage(user_id=session['user_id'])
-            # Save back into session
-            session['storage'] = zlib.compress(pickle.dumps(storage_obj))
-    
+        # guests keep their sample in the session; it is unpickled once per request (the proxy calls this function
+        # on every attribute access) and saved back once by save_guest_storage
+        if getattr(g, 'guest_storage', None) is None:
+            storage_data = session.get('storage')
+            if storage_data:
+                g.guest_storage = pickle.loads(zlib.decompress(storage_data))
+                g.guest_storage_dirty = False
+            else:
+                g.guest_storage = GuestTemporaryStorage(user_id=session['user_id'])
+                g.guest_storage_dirty = True
+        storage_obj = g.guest_storage
+
     return storage_obj
+
+@app.after_request
+def save_guest_storage(response):
+    # runs before Flask-Session stores the session
+    if getattr(g, 'guest_storage_dirty', False) and getattr(g, 'guest_storage', None) is not None:
+        session['storage'] = zlib.compress(pickle.dumps(g.guest_storage))
+    return response
 
 
 
@@ -1820,10 +1833,16 @@ def delete_experiment(id):
         else:
             query = 'DELETE FROM experiments WHERE experiment_id=%s'
             db_api.execute_query(query, (id,))
+        # deleting the sample that is open on the Current Sample page closes it
+        if db_api.return_active_experiment_id(user_id=session['user_id']) == id:
+            db_api.update_experiment_active_status(user_id=session['user_id'], active=False)
+        if session.get('experiment_id') == id:
+            session['experiment_id'] = None
         status = 'success'
-    except:
+    except Exception as e:
+        print(f'Deleting experiment {id} failed: {e}')
         status = 'error'
-    return json.dumps({'status': status}), 200, {'Content-Type': 'application/json'}
+    return json.dumps({'status': status}), 200 if status == 'success' else 500, {'Content-Type': 'application/json'}
 
 @app.route('/deactivate-current-experiment',methods=['GET', 'POST'])
 @check_authentication
@@ -1932,11 +1951,14 @@ def is_active():
         # guests and expired sessions have no stored experiment - their user_id is a random UUID, not a DB id,
         # so querying it ended in a "Database error" flash (e.g. for a page left open overnight)
         return json.dumps({'status': 'success', 'active': False, 'experimentId': None, 'authenticated': False}), 200, {'Content-Type': 'application/json'}
-    storage.experiment_id = db_api.return_active_experiment_id(user_id=session['user_id']) #**
-    print(storage.experiment_id)
-    session['experiment_id'] = storage.experiment_id #** ensure that the session is updated with the active experiment ID
-    if storage.experiment_id is not None:
-        return json.dumps({'status': 'success', 'active': True, 'experimentId': storage.experiment_id}), 200, {'Content-Type': 'application/json'}
+    experiment_id = db_api.return_active_experiment_id(user_id=session['user_id'])
+    if experiment_id is not None and not db_api.get_experiment_timestamp_by_id(experiment_id):
+        # the open sample no longer exists (deleted, e.g. by a company admin) - close it
+        db_api.update_experiment_active_status(user_id=session['user_id'], active=False)
+        experiment_id = None
+    session['experiment_id'] = experiment_id #** ensure that the session is updated with the active experiment ID
+    if experiment_id is not None:
+        return json.dumps({'status': 'success', 'active': True, 'experimentId': experiment_id}), 200, {'Content-Type': 'application/json'}
     else:
         return json.dumps({'status': 'success', 'active': False, 'experimentId': None}), 200, {'Content-Type': 'application/json'}
 
@@ -2027,10 +2049,12 @@ def process_image():
     storage.from_dict({
         'experiment_id': None,
         'color': image.copy(),
-        'asphalt_mask': np.zeros(image.shape[:2], dtype=int),
-        'aggregate_mask': np.zeros(image.shape[:2], dtype=int),
-        'asphalt_mask_manual_corrections': np.zeros(image.shape[:2], dtype=int), # TODO consider replacement with NONE - if no corrections are made, we do not need to store the array
-        'aggregate_mask_manual_corrections': np.zeros(image.shape[:2], dtype=int), # TODO consider replacement with NONE - if no corrections are made, we do not need to store the array
+        # masks are 0/1 - uint8 instead of int64 keeps the stored blobs 8x smaller
+        'asphalt_mask': np.zeros(image.shape[:2], dtype=np.uint8),
+        'aggregate_mask': np.zeros(image.shape[:2], dtype=np.uint8),
+        # no manual corrections exist yet (get_masks_corrected treats None as none) - no need to store zero arrays
+        'asphalt_mask_manual_corrections': None,
+        'aggregate_mask_manual_corrections': None,
         'img_width': image.shape[1],
         'img_height': image.shape[0],
     })
@@ -2095,9 +2119,9 @@ def inference_image():
     )
     # save the masks to the storage
     storage.from_dict({
-        'asphalt_mask': asphalt_mask.astype(int),
-        'aggregate_mask': aggregate_mask.astype(int),
-        'background_mask': background_mask.astype(int)
+        'asphalt_mask': asphalt_mask.astype(np.uint8),
+        'aggregate_mask': aggregate_mask.astype(np.uint8),
+        'background_mask': background_mask.astype(np.uint8)
     })
     # save to db
     save_experiment(state='started')
