@@ -25,6 +25,16 @@ def discover_models(deprecated=False) -> list[str]:
     models.sort(reverse=True)
     return models
 
+def model_path(model_name: str) -> str:
+    """
+    Path of a shipped model file. The name can come from a request and the file is unpickled by torch.load,
+    so only the files found by discover_models() (and 'deprecated/<file>' for old samples) are accepted.
+    """
+    allowed = set(discover_models()) | {os.path.join('deprecated', m) for m in discover_models(deprecated=True)}
+    if model_name not in allowed:
+        raise ValueError(f"Unknown model: {model_name}")
+    return os.path.join(os.path.dirname(__file__), 'models', model_name)
+
 def pop_session_from_loaded_models(session_id: str) -> None:
     """
     Remove a session from the loaded models tracking. If the session is the last one using a model, the model will be removed from memory.
@@ -210,8 +220,7 @@ def inference(model_name: str, input_data: torch.Tensor, session_id: str) -> tor
     print(list(torch_loaded_models.keys()))
     if model_name not in list(torch_loaded_models.keys()):
         print(f"Model {model_name} not loaded for session {session_id}. Loading now...")
-        print(os.path.join(os.path.dirname(__file__), 'models', model_name))
-        load_model(os.path.join(os.path.dirname(__file__), 'models', model_name), model_name, session_id)
+        load_model(model_path(model_name), model_name, session_id)
     
     print(list(torch_loaded_models.keys()))
     if session_id not in torch_loaded_models[model_name]["active_users"]:

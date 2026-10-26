@@ -2012,10 +2012,11 @@ def to_base64(image_array: np.ndarray) -> str:
 
 @app.route('/inference',methods=['POST'])
 def inference_image():
-    storage.inference_model = request.form.get('model_name', None) #**
-
-    if storage.inference_model is None:
-        return json.dumps({'status': 'error', 'message': 'Model name is required.'}), 400, {'Content-Type': 'application/json'}
+    model_name = request.form.get('model_name', None)
+    if model_name not in discover_models():
+        # the name ends up in torch.load - only the shipped models can be used
+        return json.dumps({'status': 'error', 'message': _('Unknown model.')}), 400, {'Content-Type': 'application/json'}
+    storage.inference_model = model_name #**
     
     if storage.color is None:
         return json.dumps({'status': 'error', 'message': 'No color image provided.'}), 200, {'Content-Type': 'application/json'}
