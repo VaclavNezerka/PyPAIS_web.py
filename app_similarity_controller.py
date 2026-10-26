@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 import io
+import os
 import PIL
 import numpy as np
 import cv2
@@ -17,14 +18,20 @@ This module provides functions to compute similarity scores between images using
     1. when an image is uploaded, its perceptual hash (phash), average hash (ahash), difference hash (dhash), and color hash (colorhash) are computed.
     2. These hashes are compared against a database of precomputed hashes for existing images 
      WITHIN THE SAME COMPANY using Hamming distance.
-    3. AT MOST X= e.g. 50 images with the lowest Hamming distance for each hash type are selected as potential matches.
-    4. For these selected images, two similarity scores are computed:
+    3. AT MOST X = SIMILARITY_CANDIDATES_PER_HASH images with the lowest Hamming distance for each hash type are selected as potential matches.
+    4. For these selected images, two similarity scores are computed on images downscaled to SIMILARITY_IMAGE_SIDE px
+       (full resolution cost ~0.7 s and a 67 MB histogram per pair, with practically the same scores):
         a. Histogram Similarity Score using correlation method.
         b. Structural Similarity Index (SSIM).
     5. If any of these similarity scores exceed predefined thresholds (e.g., 0.9 for histogram similarity and 0.85 for SSIM), the images are flagged as similar.
     6. A list of n = e.g. 10 most similar images based on these scores is returned for further review.
     7. The most similar image is assumed the one with any metric the highest.
 """
+
+SIMILARITY_IMAGE_SIDE = 256  # px, longer side of the compared images
+HISTOGRAM_BINS = 32  # per colour channel
+SIMILARITY_CANDIDATES_PER_HASH = int(os.getenv('SIMILARITY_CANDIDATES_PER_HASH', 5))  # 4 hash types -> at most 4x this many images are compared
+SIMILARITY_WORKERS = int(os.getenv('SIMILARITY_WORKERS', 1))  # background threads per process (the checks queue up)
 
 def cv2_image_from_bytes(image_bytes: bytes) -> cv2.Mat:
     """
@@ -45,7 +52,7 @@ class ImageSimilarityController:
     This class is responsible for controlling the image uniqueness in the background.
     """
 
-    def __init__(self, max_workers: int = 8, checks_per_hash_type: int = 50, similarity_thresholds: dict = {"histogram": 0.0, "ssim": 0.0}, n_similar: int = 10) -> None:
+    def __init__(self, max_workers: int = SIMILARITY_WORKERS, checks_per_hash_type: int = SIMILARITY_CANDIDATES_PER_HASH, similarity_thresholds: dict = {"histogram": 0.0, "ssim": 0.0}, n_similar: int = 10) -> None:
         self.executor = threading.ThreadPoolExecutor(max_workers=max_workers)
         self.checks_per_hash_type = checks_per_hash_type
         self.similarity_thresholds = similarity_thresholds
@@ -54,17 +61,25 @@ class ImageSimilarityController:
     def _check_image_uniqness(self, user_id: int, experiment_id: int, target_image: PIL.Image.Image) -> None:
         """
         Check whether the image has been uploaded before by the user or someone in the same organization.
-        """   
-        experiment_ids, hashes = db_api.get_comparing_image_hashes(user_id, experiment_id)
+        """
+        try:
+            self._compare_with_company_images(user_id, experiment_id, target_image)
+        except Exception as e:
+            # runs in the executor - an exception would otherwise disappear silently
+            print(f'Similarity check of experiment {experiment_id} failed: {e!r}')
+
+    def _compare_with_company_images(self, user_id: int, experiment_id: int, target_image: PIL.Image.Image) -> None:
+        experiment_ids, hashes = db_api.get_comparing_image_hashes(user_id, experiment_id) or ([], {})
         target_hashes = db_api.get_image_hashes_by_experiment_id(experiment_id)
         similar_image_indices = get_kNN_images(
             target_image_hashes=target_hashes,
             compare_images_hashes=hashes,
             n_max_per_hash_type=self.checks_per_hash_type
-        )
+        ) if experiment_ids and target_hashes else []
         similar_experiment_ids = [experiment_ids[i] for i in similar_image_indices]
 
-        target_image = cv2.cvtColor(np.array(target_image), cv2.COLOR_RGB2BGR)  # Convert PIL Image to OpenCV format
+        # RGB like the stored images (converting only this one to BGR made every histogram score ~0)
+        target_image = downscale(np.array(target_image))
 
         # heap to store the most similar images
         heap_hist = []
@@ -73,6 +88,8 @@ class ImageSimilarityController:
         for sim_exp_id in similar_experiment_ids:
             # Load images from DB
             compare_image = db_api.load_image_by_experiment_id(sim_exp_id)
+            if compare_image is None:
+                continue
             compare_image = cv2_image_from_bytes(compare_image)
             # Compute similarity scores
             scores = get_image_scores(target_image, compare_image)
@@ -111,6 +128,20 @@ class ImageSimilarityController:
         # self._check_image_uniqness(user_id, experiment_id)
 
 
+def downscale(image: np.ndarray, side: int = SIMILARITY_IMAGE_SIDE) -> np.ndarray:
+    """The image with its longer side reduced to `side` px (smaller images are kept)."""
+    scale = side / max(image.shape[:2])
+    if scale >= 1:
+        return image
+    size = (max(1, round(image.shape[1] * scale)), max(1, round(image.shape[0] * scale)))
+    return cv2.resize(image, size, interpolation=cv2.INTER_AREA)
+
+def color_histogram(image) -> np.ndarray:
+    hist = cv2.calcHist([image], [0, 1, 2], None, [HISTOGRAM_BINS] * 3, [0, 256, 0, 256, 0, 256])
+    hist[-1, -1, -1] = 0  # ignore (near) white pixels
+    cv2.normalize(hist, hist, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+    return hist
+
 def similarity_score_histogram(image1, image2):
     """
     Compute the histogram similarity score between two images using correlation method.
@@ -122,17 +153,7 @@ def similarity_score_histogram(image1, image2):
     Returns:
         metric_val: Similarity score based on histogram correlation.
     """
-
-    hist_img1 = cv2.calcHist([image1], [0, 1, 2], None, [256, 256, 256], [0, 256, 0, 256, 0, 256])
-    hist_img1[255, 255, 255] = 0 #ignore all white pixels
-    cv2.normalize(hist_img1, hist_img1, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
-
-    hist_img2 = cv2.calcHist([image2], [0, 1, 2], None, [256, 256, 256], [0, 256, 0, 256, 0, 256])
-    hist_img2[255, 255, 255] = 0  #ignore all white pixels
-    cv2.normalize(hist_img2, hist_img2, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
-    # Find the metric value
-    metric_val = cv2.compareHist(hist_img1, hist_img2, cv2.HISTCMP_CORREL)
-    return metric_val
+    return cv2.compareHist(color_histogram(image1), color_histogram(image2), cv2.HISTCMP_CORREL)
 
 def similarity_score_ssim(image1, image2, in_0_1_range=True):
     """
@@ -150,10 +171,10 @@ def similarity_score_ssim(image1, image2, in_0_1_range=True):
         score: Structural Similarity Index (SSIM) between the two images.
             
     """ 
-    gray_img1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
-    gray_img2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+    gray_img1 = cv2.cvtColor(image1, cv2.COLOR_RGB2GRAY)
+    gray_img2 = cv2.cvtColor(image2, cv2.COLOR_RGB2GRAY)
     if gray_img1.shape != gray_img2.shape:
-        gray_img2 = cv2.resize(gray_img2, (gray_img1.shape[1], gray_img1.shape[0]))
+        gray_img2 = cv2.resize(gray_img2, (gray_img1.shape[1], gray_img1.shape[0]), interpolation=cv2.INTER_AREA)
 
     score = ssim(gray_img1, gray_img2, full=False, gaussian_weights=True)
     if in_0_1_range:
@@ -162,14 +183,15 @@ def similarity_score_ssim(image1, image2, in_0_1_range=True):
 
 def get_image_scores(image1: cv2.Mat, image2: cv2.Mat) -> dict[str, float]:
     """
-    Compute similarity scores between two images using histogram correlation and SSIM.
+    Compute similarity scores between two images using histogram correlation and SSIM (on downscaled images).
 
     Args:
-        image1: First input image (cv2 Mat object).
-        image2: Second input image (cv2 Mat object).
+        image1: First input image (RGB array).
+        image2: Second input image (RGB array).
     Returns:
         scores: Dictionary containing histogram similarity score and SSIM score.
     """
+    image1, image2 = downscale(image1), downscale(image2)
     hist_score = similarity_score_histogram(image1, image2)
     ssim_score = similarity_score_ssim(image1, image2, in_0_1_range=True)
     return {'histogram_score': hist_score, 'ssim_score': ssim_score}

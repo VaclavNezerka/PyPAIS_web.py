@@ -171,11 +171,11 @@ def hex_to_colorhash(colorhash:str, nbits=42, nbins=3):
 def store_similar_images(cur, conn, experiment_id: int, similar_by_histogram: list[int, float], similar_by_ssim: list[int, float]) -> None:
     cur.execute('SELECT 1 FROM experiments WHERE experiment_id=%s FOR UPDATE', (experiment_id,))
     query = 'UPDATE experiments SET similarity_controll_done=True, similar_hist_id=%s, similar_ssim_id=%s, similar_hist_value=%s, similar_ssim_value=%s WHERE experiment_id=%s'
-    print('image storing')
+    # (None, None) = nothing to compare with (e.g. the company's first sample)
+    (hist_value, hist_id), (ssim_value, ssim_id) = similar_by_histogram, similar_by_ssim
     cur.execute(query, (
-        int(similar_by_histogram[1]), int(similar_by_ssim[1]), 
-        float(similar_by_histogram[0]), float(similar_by_ssim[0]), experiment_id))
-    print('ok')
+        None if hist_id is None else int(hist_id), None if ssim_id is None else int(ssim_id),
+        None if hist_value is None else float(hist_value), None if ssim_value is None else float(ssim_value), experiment_id))
     conn.commit()
 
 @db_connection
@@ -260,7 +260,9 @@ def get_experiment_summaries(cur, conn, experiment_ids: list[int]) -> list[dict]
 # TODO: consider joining with get_all_company_experiments
 @db_connection
 def get_comparing_image_hashes(cur, conn, user_id: int, experiment_id: int) -> tuple[list, dict]:
-    query = 'SELECT experiment_id, phash, ahash, dhash, colorhash FROM experiments e JOIN users u_exp ON e.user_id = u_exp.id JOIN users u ON u_exp.company = u.company WHERE u.id=%s AND e.experiment_id !=%s'
+    # samples without hashes (e.g. older ones) cannot be compared
+    query = ('SELECT experiment_id, phash, ahash, dhash, colorhash FROM experiments e JOIN users u_exp ON e.user_id = u_exp.id JOIN users u ON u_exp.company = u.company '
+             'WHERE u.id=%s AND e.experiment_id !=%s AND e.phash IS NOT NULL AND e.ahash IS NOT NULL AND e.dhash IS NOT NULL AND e.colorhash IS NOT NULL')
     response = execute_query(query, (user_id, experiment_id))
     # 
     # return response
