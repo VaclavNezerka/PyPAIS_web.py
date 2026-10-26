@@ -331,6 +331,23 @@ video {
     text-decoration: underline;
 }
 
+.app-footer .footer-paper {
+    margin-top: 6px;
+}
+
+.app-footer .footer-paper a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--brand);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.app-footer .footer-paper a:hover {
+    text-decoration: underline;
+}
+
 .footer-logos {
     display: flex;
     gap: 16px;

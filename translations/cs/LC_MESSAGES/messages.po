@@ -2107,5 +2107,8 @@ msgstr "Tato kamera neumožňuje nastavit expoziční čas."
 msgid "Advanced camera settings"
 msgstr "Pokročilé nastavení kamery"
 
-msgid "(Bitumen - blue, aggregate - red, background - green)"
-msgstr "(Asfalt – modrá, kamenivo – červená, pozadí – zelená)"
+msgid "(Bitumen - blue, aggregate - red)"
+msgstr "(Asfalt – modrá, kamenivo – červená)"
+
+msgid "How the segmentation models were trained is described in our paper."
+msgstr "Jak byly segmentační modely trénovány, popisuje náš článek."

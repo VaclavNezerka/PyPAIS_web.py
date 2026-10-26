@@ -927,8 +927,8 @@ msgid "Processed Image"
 msgstr "Immagine elaborata"
 
 #: app_report_exporter.py:840
-msgid "(Bitumen - blue, aggregate - red, background - green)"
-msgstr "(Bitume - blu, aggregato - rosso, sfondo - verde)"
+msgid "(Bitumen - blue, aggregate - red)"
+msgstr "(Bitume - blu, aggregato - rosso)"
 
 #: app_report_exporter.py:910
 msgid "Sample ID:"
@@ -1950,3 +1950,5 @@ msgstr "Immagine in scala di grigi"
 msgid "Model"
 msgstr "Modello"
 
+msgid "How the segmentation models were trained is described in our paper."
+msgstr "Il nostro articolo descrive come sono stati addestrati i modelli di segmentazione."
