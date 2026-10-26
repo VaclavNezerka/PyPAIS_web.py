@@ -38,6 +38,7 @@ from reportlab.platypus import Flowable
 from xml.sax.saxutils import escape as xml_escape
 from dotenv import load_dotenv
 
+# mask colours must match --mask-bitumen / --mask-aggregate in static/app.css (the app's viewer)
 REPORT_COLORS = {
     # "topic_color": "#4ecdc4",      # turquoise
     "topic_color": "#2b2b2b",      # light gray
@@ -830,7 +831,7 @@ def add_images(pdf: list, img_original: PIL.Image,  img_processed: PIL.Image, si
     img2 = get_printable_image(img_processed, max_image_size_cm)
     table_data.append([_("Original Image"), _("Processed Image")])
     table_data.append([img1, img2])
-    table_data.append(["", _("(Asphalt - RED, Aggregate - BLUE)")])
+    table_data.append(["", _("(Bitumen - red, aggregate - turquoise)")])
     if similar_image:
         warning_box = return_similarity_warning(pdf, similar_image)
         similar_image_printable = get_printable_image(similar_image.get("similar_image"), max_image_size_cm)

@@ -1,36 +1,35 @@
+// language switcher (navbar) - the choice is kept in the session and in localStorage
+async function switchLanguage(lang) {
+    await fetch("/switch-language/" + lang, { method: "POST" })
+    try {
+        localStorage.setItem("preferredLang", lang)
+    } catch (e) {}
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     const currentLang = document.body.dataset.currentLang
-    const preferredLang = localStorage.getItem("preferredLang")
+    let preferredLang = null
+    try {
+        preferredLang = localStorage.getItem("preferredLang")
+    } catch (e) {}
 
-    if (preferredLang && preferredLang !== currentLang) {
-        await fetch(`/switch-language/${preferredLang}`, { method: "POST" })
-        // console.log("Language switched to:", preferredLang)
-        document.body.dataset.currentLang = preferredLang
+    // a new session starts in the browser's language - restore the user's choice
+    // (at most once per 10 s, so a failing switch can't cause a reload loop)
+    const lastRestore = Number(sessionStorage.getItem("langRestoreAt") || 0)
+    if (preferredLang && preferredLang !== currentLang && Date.now() - lastRestore > 10000) {
+        sessionStorage.setItem("langRestoreAt", String(Date.now()))
+        await switchLanguage(preferredLang)
         location.reload()
+        return
     }
 
-    document.getElementById("current-lang-icon").src =
-        "/static/language_icons/icon_" + currentLang + ".png"
-
-    document.querySelectorAll(".lang-menu a").forEach((link) => {
-        link.addEventListener("click", async (e) => {
-            // e.preventDefault();
-            const langBtn = document.getElementById("current-lang-btn")
-            const selectedLang = link.id
-            langBtn.value = selectedLang
-            if (selectedLang !== currentLang) {
-                switchLanguage(selectedLang).then(() => {
-                    location.reload()
-                })
+    document.querySelectorAll("#langMenu [data-lang]").forEach((button) => {
+        button.addEventListener("click", async () => {
+            const lang = button.dataset.lang
+            if (lang !== currentLang) {
+                await switchLanguage(lang)
+                location.reload()
             }
         })
     })
 })
-
-// // Save the choice locally
-async function switchLanguage(lang) {
-    document.getElementById("current-lang-icon").src =
-        "/static/language_icons/icon_" + lang + ".png"
-    await fetch("/switch-language/" + lang, { method: "POST" })
-    localStorage.setItem("preferredLang", lang)
-}

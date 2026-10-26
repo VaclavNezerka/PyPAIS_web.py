@@ -38,12 +38,13 @@ from typing_extensions import deprecated
 from models import discover_models, load_model, add_session_to_loaded_model, pop_session_from_loaded_models, inference
 import models
 import decimal
-from flask_babel import Babel, _, lazy_gettext
+from flask_babel import Babel, _, lazy_gettext, get_locale as get_babel_locale
+from werkzeug.exceptions import HTTPException
 import math
 #Similarity controller
 import app_similarity_controller 
 similarity_controller = app_similarity_controller.ImageSimilarityController()
-from app_report_exporter import exporter_registry
+from app_report_exporter import exporter_registry, get_CSN_73_6161_classification, get_CSN_73_6161_word_classification
 # Apps
 import forms 
 from functools import wraps
@@ -154,11 +155,16 @@ def send_email(subject: str, recipients: list[str], body: str, request_details: 
 def get_locale():
     lang = session.get('lang', None) 
     if lang is None:
-        lang = request.accept_languages.best_match(app.config['BABEL_SUPPORTED_LOCALES'])
+        lang = request.accept_languages.best_match(app.config['BABEL_SUPPORTED_LOCALES']) or app.config['BABEL_DEFAULT_LOCALE']
         session['lang'] = lang
     return lang
 
 babel = Babel(app, locale_selector=get_locale)
+
+@app.context_processor
+def inject_template_globals():
+    # the language actually used for the page (drives <html lang>, the flag in the navbar and ui.js texts)
+    return {'current_lang': str(get_babel_locale() or app.config['BABEL_DEFAULT_LOCALE'])}
 
 limiter = flask_limiter.Limiter(
     app=app,
@@ -885,16 +891,37 @@ def home():
                 flash(_('There was an error sending your message. Please try again.'), 'error')
                 return render_template('home.html', session=session, models=models, form=form, dynamic_content=title, recaptcha_site_key = RECAPTCHA_SITE_KEY), 200
 
+@app.errorhandler(400)
+@app.errorhandler(403)
 @app.errorhandler(404)
-def page_not_found(error):
-    return render_template('404.html', session=session), 404
+@app.errorhandler(405)
+@app.errorhandler(413)
+@app.errorhandler(429)
+@app.errorhandler(500)
+def http_error(error):
+    code = error.code if isinstance(error, HTTPException) and error.code else 500
+    titles = {
+        400: _('The request could not be processed'),
+        403: _('You do not have permission to access this page.'),
+        404: _('Page not found'),
+        405: _('The request could not be processed'),
+        413: _('The uploaded file is too large'),
+        429: _('Too many requests - please wait a moment and try again'),
+        500: _('Something went wrong on our side'),
+    }
+    # show descriptions the app passed to abort(); werkzeug's generic English ones are replaced by the title
+    custom = isinstance(error, HTTPException) and code != 500 and error.description != type(error).description
+    message = error.description if custom else _('If the problem persists, please contact us.')
+    return render_template('error.html', code=code, title=titles.get(code, titles[500]), message=message), code
 
 
 
 @app.route('/logout')
 def logout():
     print('Logging out user.')
+    lang = session.get('lang')
     session.clear()  # Clear all session data to ensure complete logout
+    session['lang'] = lang  # ... but keep the chosen language
     return redirect(url_for('login'))
 
 #TODO - consider joining with edit_personal_information (Must be done together with FE editing)
@@ -1768,7 +1795,14 @@ def evaluate_asphalt():
     evaluation = storage.get_asphalt_ratio()
     save_experiment(state='finished')
     print('Asphalt ratio evaluated:', evaluation)
-    return json.dumps({'status': 'success', 'evaluation': evaluation}), 200, {'Content-Type': 'application/json'}
+    expert_guess = storage.expert_guess if storage.expert_guess not in (None, '') else None
+    return json.dumps({
+        'status': 'success',
+        'evaluation': evaluation,
+        'experimentId': storage.experiment_id,
+        **adhesion_classification(evaluation),
+        'expert': adhesion_classification(expert_guess),
+    }), 200, {'Content-Type': 'application/json'}
 
 # TODO: CORRECT THE METHOD - should be DELETE
 @app.route('/delete-experiment/<int:id>',methods=['GET', 'POST'])
@@ -1861,14 +1895,24 @@ def load_experiment(id):
             flash(_('No active experiment found.'), 'error')
             return redirect('/queue'), 302          
     response = db_api.get_experiment_by_id(id)
+    if not response:
+        return json.dumps({'status': 'error', 'message': _('No sample data found.')}), 404, {'Content-Type': 'application/json'}
     storage.from_dict(response)
-    
-    
+
+    # stored masks are shown as they are - re-running the model on every opening changed the state and owner of the sample
+    has_masks = any(mask is not None and np.any(mask) for mask in (storage.asphalt_mask, storage.aggregate_mask))
     dict_response = {
         'status': 'success',
-        'gray': grayscale_image(storage.color)
-     }
-    dict_response.update(storage.to_dict())
+        'experimentId': id,
+        'current_state': response.get('current_state'),
+        'has_masks': has_masks,
+        'color': storage.color,
+        'gray': grayscale_image(storage.color),
+        # sample information for the form (raw mask arrays are not sent)
+        **storage.to_dict(features=EDITABLE_EXPERIMENT_FIELDS),
+    }
+    if has_masks:
+        dict_response.update(mask_overlays())
     return dict_to_json(dict_response), 200, {'Content-Type': 'application/json'}
 
 
@@ -2045,19 +2089,32 @@ def inference_image():
     # save to db
     save_experiment(state='started')
 
-    # return the masks with manual corrections
-    asphalt_mask, aggregate_mask, background_mask = storage.get_masks_with_manual_corrections()
+    # return the masks with manual corrections and the resulting assessment
+    json_response = {'status': 'success', 'experimentId': storage.experiment_id, **mask_overlays()}
+    return json.dumps(json_response), 200, {'Content-Type': 'application/json'}
 
-    json_response = {
-        'status': 'success',
+
+def adhesion_classification(ratio: float | None) -> dict:
+    """Asphalt coverage (0-1) as a percentage with its ČSN 73 6161 class, for the client."""
+    if ratio is None:
+        return {'asphalt_ratio': None, 'asphalt_percent': None, 'class': None, 'class_word': None}
+    percent = round(float(ratio) * 100, 2)
+    return {
+        'asphalt_ratio': float(ratio),
+        'asphalt_percent': percent,
+        'class': get_CSN_73_6161_classification(percent),
+        'class_word': get_CSN_73_6161_word_classification(percent),
+    }
+
+def mask_overlays() -> dict:
+    """The masks of the current sample (with manual corrections) as transparent PNG overlays + the AI assessment."""
+    asphalt_mask, aggregate_mask, background_mask = storage.get_masks_with_manual_corrections()
+    return {
         'asphalt_mask': to_base64(bool_to_image_array(asphalt_mask)),
         'aggregate_mask': to_base64(bool_to_image_array(aggregate_mask)),
-        'background_mask': to_base64(bool_to_image_array(background_mask))
+        'background_mask': to_base64(bool_to_image_array(background_mask)),
+        **adhesion_classification(storage.get_asphalt_ratio()),
     }
-    json_response = dict_to_json(json_response)
-
-    # return json.dumps(json_response), 200, {'Content-Type': 'application/json'}
-    return json_response, 200, {'Content-Type': 'application/json'}
 
 
 def encode_to_png(image):
@@ -2147,6 +2204,22 @@ def translations_alerts():
         'saveStatusError': _('NOT SAVED:'),
         'saveFailed': _('The sample data could not be saved, so the sample was not evaluated. Please try again.'),
         'evaluationFailed': _('The evaluation failed.'),
+        'subtitleEmpty': _('Upload a photo of the sample to start the assessment.'),
+        'sampleId': _('Sample ID'),
+        'classLabel': _('Class'),
+        'processingPhoto': _('Processing the photo...'),
+        'runningModel': _('The model is detecting bitumen and aggregate...'),
+        'loadingSample': _('Loading the sample...'),
+        'evaluating': _('Evaluating...'),
+        'uploadFailed': _('The photo could not be processed.'),
+        'inferenceFailed': _('The automatic detection failed.'),
+        'notAnImage': _('Please choose an image file (JPG, PNG or HEIC).'),
+        'defaultsApplied': _('Default values were filled in.'),
+        'noDefaultsToApply': _('There are no default values for the empty fields. You can set them in your profile.'),
+        'waitForModel': _('Wait until the automatic detection has finished.'),
+        'confirm': _('Confirm'),
+        'cancel': _('Cancel'),
+        'delete': _('Delete'),
     }
     return json.dumps(json_translations), 200, {'Content-Type': 'application/json'}
 

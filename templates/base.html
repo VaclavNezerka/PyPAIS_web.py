@@ -1,72 +1,58 @@
-<!-- base.html -->
-
 <!DOCTYPE html>
+{% from "_icons.html" import icon %}
+{#- pages set their name with {% block title %}; it is only rendered into <title> below -#}
+{%- if false %}{% block title %}{% endblock %}{% endif -%}
+{%- set page_title = self.title() | trim -%}
+<html lang="{{ current_lang }}">
 
-<!-- <html lang="en"> -->
-<html lang="{{ session.get('lang', 'en') }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page_title ~ ' · ' if page_title }}AIBAL</title>
+  <link rel="icon" type="image/vnd.icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <script src="{{ url_for('static', filename='ui.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='script_base.js') }}" defer></script>
+  {% block head %}{% endblock %}
+</head>
 
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='new_styles.css') }}">
-    <link rel="icon" type="image/vnd.icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <script src="{{ url_for('static', filename='script_base.js') }}"></script>
-    <script src="https://www.google.com/recaptcha/api.js"></script>
-    <title>AIBAL</title>
-  </head>
+<body class="{% block body_class %}{% endblock %}" data-current-lang="{{ current_lang }}">
+  <a class="sr-only" href="#main">{{ _('Skip to content') }}</a>
 
-  <body data-current-lang="{{ session.get('lang', 'en') }}">
+  {% include 'navbar.html' %}
 
-    <!-- <body> -->
-    <div class="page-container">
+  <main id="main" class="app-main {% block main_class %}{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="app-footer">
+    <div class="app-footer-inner">
       <div>
-        {% include 'navbar.html' %}
+        <p>&copy; {{ _('2025 David Šilhánek, Václav Nežerka.') }}
+          {{ _('Development supported by') }}
+          <a href="https://tacr.gov.cz/en/technology-agency-of-the-czech-republic/">{{ _('Technology Agency of the Czech Republic') }}</a>,
+          {{ _('project CL02000145.') }}</p>
+        <p class="small">{{ _('Flag icons') }}: <a href="https://www.flaticon.com/free-icons/uk-flag">Freepik / Flaticon</a></p>
       </div>
-      {% with messages = get_flashed_messages() %}
-      {% for message in messages %}
-      <div class="flash-message" data-message="{{ message }}"></div>
-      <!-- <script>
-        let message="{{ message }}";
-        alert(message)
-      </script>   -->
-      {% endfor %}
-      {% endwith %}
-
-      <div class="content">
-        {% block content %}
-        {% endblock %}
+      <div class="footer-logos">
+        <img src="{{ url_for('static', filename='CVUT_logo_white.png') }}" alt="ČVUT v Praze">
+        <img src="{{ url_for('static', filename='TACR_logo_white.png') }}" alt="TA ČR">
       </div>
     </div>
+  </footer>
 
-    <footer class="footer">
-      <div class="container">
-        <p>&copy; {{ _('2025 David Šilhánek, Václav Nežerka.') }}
-        </p>
-        <br>
-        <p>{{ _('All rights reserved excluding icons which are where created by artists on the') }}
-          <a class="footer-link" href="https://www.flaticon.com/" title="Flaticon">Flaticon</a>
-          {{ _('platform, namely:') }}
-        </p>
-        <p>
-          <a class="footer-link" href="https://www.flaticon.com/free-icons/user" title="user icons">User icons -
-            manshagraphics,</a>
-          <a class="footer-link" href="https://www.flaticon.com/free-icons/animals" title="animals icons">Animals icons
-            - Freepik,</a>
-          <a class="footer-link" href="https://www.flaticon.com/free-icons/uk-flag" title="uk flag icons">Flag icons -
-            Freepik</a>
-        </p>
-        <br>
-        <p>
-          {{ _('Development supported by') }}
-          <a class="footer-link" href="https://tacr.gov.cz/en/technology-agency-of-the-czech-republic/">
-            {{ _('Technology Agency of the Czech Republic') }}</a>, {{ _('project CL02000145.') }}<br>
-        </p>
-
-        <img src="{{ url_for('static', filename='CVUT_logo_white.png') }}" alt="CVUT Logo" class="footer-logo">
-        <img src="{{ url_for('static', filename='TACR_logo_white.png') }}" alt="TACR Logo" class="footer-logo">
-      </div>
-    </footer>
-  </body>
+  {#- flash messages are shown as toasts by ui.js -#}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <ul id="flashMessages" hidden>
+    {% for category, message in messages %}
+    <li data-category="{{ category }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endwith %}
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+  {% block scripts %}{% endblock %}
+</body>
 
 </html>

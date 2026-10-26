@@ -1,83 +1,62 @@
-<!DOCTYPE html>
+{% from "_icons.html" import icon %}
+{%- set ep = request.endpoint -%}
+<header class="app-header">
+  <div class="app-header-inner">
+    <a class="brand" href="{{ '/' if session.authenticated else '/home' }}">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="">
+      <span>AIBAL<span class="brand-sub">Bitumen Adhesion Lab</span></span>
+    </a>
 
-<html lang="en">
-
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="icon" type="image/vnd.icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <title>{{ _('Navbar') }}</title>
-  </head>
-
-  <body>
-
-    <nav class="navbar">
+    <nav class="app-nav" id="appNav" aria-label="{{ _('Main navigation') }}">
       {% if session.authenticated %}
-      <div class="hamburger" id="hamburger">
-        &#9776; <!-- ☰ -->
-      </div>
-      <div class="menu" id="menu">
-        <ul class="menu" id="menu">
-          <!-- <li><a href="/">{{ _('Current Experiment') }}</a></li> -->
-          <!-- <li><a href="/queue">{{ _('Queue') }}</a></li> -->
-          <!-- <li><a href="/experiments">{{ _('Experiment History') }}</a></li> -->
-          <li><a href="/">{{ _('Current Sample') }}</a></li>
-          <li><a href="/experiments">{{ _('Sample Records') }}</a></li>
-          {% if session.is_admin == True %}
-          <li><a href="/employees">{{ _('Employees') }}</a></li>
-          <li><a href="/company">{{ _('Company') }}</a></li>
-          {% endif %}
-        </ul>
-      </div>
-      <div class="antimenu" id="antimenu">
-        <ul class="navbar-right">
-          <!-- <li><a href="/user">{{ _('User') }}</a></li> -->
-          <!-- <li><a href="/user">{{ _('User') }}</a></li> -->
-          <li>
-            {% include "user_nav_element.html" %}
-          </li>
-          <!-- <li><a href="/logout">{{ _('Logout') }}</a></li> -->
-          <li>
-            {% include "language_switcher.html" %}
-          </li>
-        </ul>
-      </div>
-      </ul>
-      {% else %}
-      <div class="hamburger" id="hamburger">
-        &#9776; <!-- ☰ -->
-      </div>
-      <div class="menu" id="menu">
-        <ul class="menu" id="menu">
-          <li><a href="/home">{{ _('About') }}</a></li>
-          <li><a href="/login">{{ _('Login') }}</a></li>
-          <li><a href="/register">{{ _('Register') }}</a></li>
-        </ul>
-      </div>
-      <div class="antimenu" id="antimenu">
-        <ul class="navbar-right">
-          <li>
-            {% include "language_switcher.html" %}
-          </li>
-        </ul>
-      </div>
+      <a href="/" class="{{ 'is-active' if ep == 'index' }}">{{ icon('image') }} {{ _('Current Sample') }}</a>
+      <a href="/experiments" class="{{ 'is-active' if ep in ('experiments', 'export_report') }}">{{ icon('list') }} {{ _('Sample Records') }}</a>
+      {% if session.is_admin == True %}
+      <a href="/employees" class="{{ 'is-active' if ep == 'employees' }}">{{ icon('users') }} {{ _('Employees') }}</a>
+      <a href="/company" class="{{ 'is-active' if ep in ('company', 'view_company_key') }}">{{ icon('building') }} {{ _('Company') }}</a>
       {% endif %}
-
-      <!-- 🌐 Language Switcher -->
-      <!-- <div class="language-switcher"> -->
-      <!-- <a href="?lang=en" title="English">
-      <img src="/static/language_icons/icon_en.png" alt="English">
-    </a>
-    <a href="?lang=cs" title="Česky">
-      <img src="/static/language_icons/icon_cs.png" alt="Česky">
-    </a>
-  </div> -->
-
-
+      {% else %}
+      <a href="/home" class="{{ 'is-active' if ep == 'home' }}">{{ _('About') }}</a>
+      <a href="/home#demo_section">{{ _('Demo') }}</a>
+      <a href="/home#contact_form">{{ _('Contact') }}</a>
+      {% endif %}
     </nav>
 
-  </body>
-  <script src="{{ url_for('static', filename='script_navbar.js') }}"></script>
+    <div class="header-tools">
+      <details class="dropdown" id="langMenu">
+        <summary class="btn btn-ghost btn-sm" aria-label="{{ _('Language') }}">
+          <img class="flag" src="{{ url_for('static', filename='language_icons/icon_' ~ current_lang ~ '.png') }}" alt="">
+          {{ current_lang | upper }} {{ icon('chevron-down') }}
+        </summary>
+        <div class="dropdown-menu">
+          <button type="button" data-lang="cs"><img class="flag" src="{{ url_for('static', filename='language_icons/icon_cs.png') }}" alt=""> Čeština</button>
+          <button type="button" data-lang="en"><img class="flag" src="{{ url_for('static', filename='language_icons/icon_en.png') }}" alt=""> English</button>
+        </div>
+      </details>
 
-</html>
+      {% if session.authenticated %}
+      <details class="dropdown" id="userMenu">
+        <summary class="btn btn-ghost btn-sm" aria-label="{{ _('User Profile') }}">
+          <span class="avatar">{{ (session.user_email or '?')[:1] }}</span>
+          <span class="user-name">{{ session.user_email }}</span>
+          {{ icon('chevron-down') }}
+        </summary>
+        <div class="dropdown-menu">
+          <div class="menu-label"><strong>{{ session.user_email }}</strong>{{ _('Company admin') if session.is_admin else _('User') }}</div>
+          <a href="/user">{{ icon('user') }} {{ _('User Profile') }}</a>
+          <a href="/user#personalized_settings">{{ icon('sliders') }} {{ _('Default values') }}</a>
+          <a href="/logout">{{ icon('logout') }} {{ _('Logout') }}</a>
+        </div>
+      </details>
+      {% else %}
+      <a class="btn btn-ghost btn-sm" href="/login">{{ icon('login') }} {{ _('Login') }}</a>
+      <a class="btn btn-primary btn-sm" href="/register">{{ _('Register') }}</a>
+      {% endif %}
+
+      <button type="button" class="btn btn-ghost btn-icon nav-toggle" id="navToggle" aria-controls="appNav"
+        aria-expanded="false" aria-label="{{ _('Menu') }}">{{ icon('menu') }}</button>
+    </div>
+  </div>
+</header>
+<script src="{{ url_for('static', filename='script_navbar.js') }}" defer></script>
+<script src="{{ url_for('static', filename='script_lang.js') }}" defer></script>

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card error-page">
+  <img src="{{ url_for('static', filename='logo.png') }}" alt="">
+  <div class="code">{{ _('Error') }} {{ code }}</div>
+  <h1>{{ title }}</h1>
+  <p>{{ message }}</p>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="{{ '/' if session.authenticated else '/home' }}">{{ _('Back to the app') }}</a>
+    {% if request.referrer %}<a class="btn" href="{{ request.referrer }}">{{ _('Previous page') }}</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

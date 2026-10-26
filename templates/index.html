@@ -1,313 +1,256 @@
-<!DOCTYPE html>
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% macro label(text) %}{{ text.rstrip(':') }}{% endmacro %}
+
+{% block title %}{{ _('Current Sample') }}{% endblock %}
+{% block body_class %}page-workbench{% endblock %}
+{% block head %}
+<script type="module" src="{{ url_for('static', filename='script_automatic.js') }}"></script>
+<script src="{{ url_for('static', filename='script_video.js') }}" defer></script>
+{% endblock %}
+
 {% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ _('Current Sample') }}</h1>
+    <p id="sampleSubtitle">{{ _('Upload a photo of the sample to start the assessment.') }}</p>
+  </div>
+  <ol class="stepper" id="stepper" aria-label="{{ _('Progress') }}">
+    <li class="step is-current" data-step="photo"><span class="step-num">1</span>{{ _('Photo') }}</li>
+    <li class="step" data-step="info"><span class="step-num">2</span>{{ _('Sample data') }}</li>
+    <li class="step" data-step="assess"><span class="step-num">3</span>{{ _('Assessment') }}</li>
+    <li class="step" data-step="report"><span class="step-num">4</span>{{ _('Report') }}</li>
+  </ol>
+</div>
 
+<div class="workbench is-empty" id="workbench">
+  <section class="workbench-viewer" aria-label="{{ _('Photo') }}">
 
+    {# ---------- empty state ---------- #}
+    <div class="card dropzone" id="dropzone">
+      <div class="dropzone-icon">{{ icon('image') }}</div>
+      <h2>{{ _('Upload a photo of the sample') }}</h2>
+      <p class="muted">{{ _('Drag the photo here or choose a file (JPG, PNG, HEIC).') }}</p>
+      <div class="dropzone-actions">
+        <label for="fileInput" class="btn btn-primary btn-lg">{{ icon('upload') }} {{ _('Choose photo') }}</label>
+        <button type="button" class="btn btn-lg" id="take-photo-open-button">{{ icon('camera') }} {{ _('Take a Photo') }}</button>
+      </div>
+      <p class="small muted dropzone-note">{{ _('By uploading an image, you agree that it may be stored in the application repository and potentially used by the authors for training future models.') }}</p>
+    </div>
+    <input type="file" id="fileInput" accept="image/*,.heic,.heif" class="sr-only">
 
-<html>
-
-    <head>
-        <title>{{ _('Image Processing with NN') }}</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='new_styles.css') }}">
-        <link rel="icon" type="image/vnd.icon" href="{{ url_for('static', filename='favicon.ico') }}">
-
-        <script type="module" src="{{ url_for('static', filename='script_automatic.js') }}"></script>
-    </head>
-
-    <body>
-        <div id="row" , class="colorbar">
-            <!-- <h2> {{ _('Current Experiment') }}</h2> -->
-            <h2> {{ _('Current Sample') }}</h2>
+    {# ---------- camera ---------- #}
+    <div class="card camera-panel" id="capturedImageDiv" hidden>
+      <div class="card-header">
+        <h2>{{ icon('camera') }} {{ _('Camera') }}</h2>
+        <button type="button" class="btn btn-ghost btn-icon" id="camera-close-button" aria-label="{{ _('Close') }}">{{ icon('x') }}</button>
+      </div>
+      <div class="card-body">
+        <div class="camera-grid">
+          <figure class="camera-frame">
+            <video id="video" playsinline muted>{{ _('Video stream not available.') }}</video>
+            <figcaption class="small muted">{{ _('Live view') }}</figcaption>
+          </figure>
+          <figure class="camera-frame">
+            <canvas id="outputCanvas"><img id="capturedImage" src="" alt=""></canvas>
+            <figcaption class="small muted">{{ _('Captured photo') }}</figcaption>
+          </figure>
         </div>
-
-
-
-        <div id="evalProcessingLoader" class="eval-processing-loader" hidden>
-            <div class="eval-loader-content">
-                <div class="eval-loader-spinner"></div>
-                <span class="eval-loader-text">{{ _('Evaluating...') }}</span>
-            </div>
+        <div class="camera-actions">
+          <button type="button" class="btn" id="capture-photo-button">{{ icon('camera') }} {{ _('Capture photo') }}</button>
+          <button type="button" class="btn btn-primary" id="upload-button-camera" disabled>{{ icon('check') }} {{ _('Use the Captured Image') }}</button>
         </div>
+        <details class="disclosure camera-settings" id="manualSettingsDiv">
+          <summary>{{ icon('sliders') }} {{ _('Manual Camera Settings') }} {{ icon('chevron-down') }}</summary>
+          <div id="manual-cam-settings-div">
+            <div id="manual-cam-settings-container"></div>
+            <div id="manual-rows" class="manual-rows"></div>
+            <p class="missing small muted" id="missing"></p>
+          </div>
+        </details>
+      </div>
+    </div>
 
-
-        <div class="container">
-            <!-- First Row: Image Upload -->
-            <div class="row">
-                <input type="file" id="fileInput" accept="image/*" class="custom-file-input"></input>
-                <label for="fileInput" class="custom-file-label">{{ _('Upload Image') }}</label>
-                <!-- <button for="fileInput" class="custom-file-label">{{ _('Take a Photo') }}</button> -->
-            </div>
-            <div id="takePhotoDiv" class="row">
-                <p class="text-gray-500">
-                    {{ _('or') }}
-                </p>
-                <div class="row">
-                    <button class="custom-file-label" id="take-photo-open-button">{{ _('Take a Photo') }}</button>
-                </div>
-            </div>
-
-            <div id="capturedImageDiv" class="row">
-                <div class="camera column modern-column">
-                    <video id="video">Video stream not available.</video>
-                    <button id="capture-photo-button" class="custom-file-label">{{ _('Capture photo') }}</button>
-                </div>
-
-                <div class="column modern-column">
-                    <canvas id="outputCanvas">
-                        <img id="capturedImage" src="" alt="Captured Image">
-                    </canvas>
-                    <button id="upload-button-camera"
-                        class="custom-file-label">{{ _('Use the Captured Image') }}</button>
-                </div>
-
-            </div>
-            <div id="manualSettingsDiv" class="row">
-                <div class="column modern-column" , id="manual-cam-settings-div" , min-width="2000px">
-                    <h3>{{ _('Manual Camera Settings') }}</h3>
-                    <div id="manual-cam-settings-container"></div>
-
-                    <div id="manual-rows" class="manual-rows"></div>
-                    <p class="missing text-gray-500" id="missing"></p>
-                    <!-- <button id="auto" class="custom-file-label">{{ _('Manual Camera Settings') }}</button> -->
-                </div>
-            </div>
-
-            <p class="text-gray-500">
-                {{ _('By uploading an image, you agree that it may be stored in the application repository and potentially used by the authors for training future models.') }}
-            </p>
+    {# ---------- photo with segmentation ---------- #}
+    <div class="card viewer" id="viewer" hidden>
+      <div class="viewer-stage" id="viewerStage">
+        <canvas id="imageCanvas"></canvas>
+        <canvas class="overlayCanvas" id="overlayCanvasBackground" hidden></canvas>
+        <canvas class="overlayCanvas" id="overlayCanvasAggregate" hidden></canvas>
+        <canvas class="overlayCanvas" id="overlayCanvasAsphalt" hidden></canvas>
+        <canvas class="loupe" id="loupe" width="220" height="220" hidden></canvas>
+        <div class="viewer-busy" id="bgProcessingLoader" hidden>
+          <div class="spinner spinner-lg"></div>
+          <span id="viewerBusyText">{{ _('Working...') }}</span>
         </div>
-
-        <div id="row" , class="colorbar2">
-            <h3>{{ _('Basic Information') }} - ČSN 73 6161</h3>
+      </div>
+      <div class="viewer-controls">
+        <div class="legend" role="group" aria-label="{{ _('Masks') }}">
+          <label class="legend-item" title="Shift + A">
+            <input type="checkbox" id="redOverlayCheckbox" checked><span class="swatch swatch-bitumen"></span>{{ _('Bitumen') }}
+          </label>
+          <label class="legend-item" title="Shift + S">
+            <input type="checkbox" id="aggregateOverlayCheckbox" checked><span class="swatch swatch-aggregate"></span>{{ _('Aggregate') }}
+          </label>
+          <label class="legend-item" title="Shift + D">
+            <input type="checkbox" id="backgroundOverlayCheckbox"><span class="swatch swatch-background"></span>{{ _('Background') }}
+          </label>
+          <span class="legend-hint small muted">{{ icon('zoom') }} {{ _('Hover over the photo to magnify') }}</span>
         </div>
-        <div class="loading" id="workingMessage">
-            {{ _('Working...') }}
+        <div class="viewer-settings">
+          <div class="field field-inline">
+            <label for="opacitySlider">{{ label(_('Mask Opacity:')) }}</label>
+            <input type="range" id="opacitySlider" min="0" max="100" step="5" value="50">
+            <output id="opacityValue" for="opacitySlider">50 %</output>
+          </div>
+          <div class="field field-inline">
+            <label for="imageType">{{ _('Image') }}</label>
+            <select id="imageType" title="Shift + C">
+              <option value="original">{{ _('Original Image') }}</option>
+              <option value="bw">{{ _('Grayscale Image') }}</option>
+            </select>
+          </div>
+          <div class="field field-inline">
+            <label for="inference_model">{{ _('Model') }}</label>
+            <select id="inference_model">
+              {% for model in models %}
+              {%- set version = model.split('_v')[1].split('_')[0].split('.')[0] if '_v' in model else model -%}
+              <option value="{{ model }}" title="{{ model }}">v{{ version }}{{ ' (' ~ _('recommended') ~ ')' if loop.first }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <label for="fileInput" class="btn btn-sm viewer-replace">{{ icon('upload') }} {{ _('Upload another photo') }}</label>
         </div>
-        <div id="row" , class="colorbar1">
-            <h3>{{ _('Experiment data') }}
-            </h3>
-            <a class="styled-href" id="personalizeSettingsButton" href="/user#personalized_settings">
-                {{ _('Are there repeatedly filled values? Click here to set their default for automatic filling.') }}
-            </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="workbench-panel" id="workbenchPanel" hidden>
+    <div class="card" id="experiment_info_section">
+      <div class="card-header">
+        <div>
+          <h2>{{ _('Sample data') }}</h2>
+          <p>{{ _('Basic Information') }} – ČSN 73 6161</p>
         </div>
-
-
-        <div class="row modern-row">
-            <div class="column modern-column">
-                <label for="info_sample_label" class="modern-label upper">
-                    {{ _('Sample Designation:') }}
-                </label>
-                <input type="text" id="info_sample_label" class="modern-input enhanced-input"
-                    placeholder="{{ _('Your own designation of the sample, shown in the sample records') }}" maxlength="256" />
-            </div>
+        <details class="dropdown">
+          <summary class="btn btn-sm">{{ icon('sliders') }} {{ _('Default values') }} {{ icon('chevron-down') }}</summary>
+          <div class="dropdown-menu">
+            <button type="button" id="applyDefaultsButton">{{ icon('check') }} {{ _('Fill in empty fields') }}</button>
+            <a href="/user#personalized_settings" id="personalizeSettingsButton">{{ icon('edit') }} {{ _('Edit default values') }}</a>
+          </div>
+        </details>
+      </div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="field span-2">
+            <label for="info_sample_label">{{ label(_('Sample Designation:')) }}</label>
+            <input type="text" id="info_sample_label" maxlength="256"
+              placeholder="{{ _('Your own designation of the sample, shown in the sample records') }}">
+          </div>
+          <div class="field">
+            <label for="info_datetime">{{ label(_('Date and Time:')) }}</label>
+            <input type="datetime-local" id="info_datetime">
+          </div>
+          <div class="field">
+            <label for="info_place_of_experiment">{{ label(_('Place of Experiment:')) }}</label>
+            <input type="text" id="info_place_of_experiment" maxlength="1024" placeholder="{{ _('Your lab Address') }}">
+          </div>
+          <div class="field">
+            <label for="info_aggregate">{{ label(_('Aggregate:')) }}</label>
+            <input type="text" id="info_aggregate" maxlength="1024" placeholder="{{ _('Information about the aggregate.') }}">
+          </div>
+          <div class="field">
+            <label for="info_binder">{{ label(_('Binder:')) }}</label>
+            <input type="text" id="info_binder" maxlength="1024" placeholder="{{ _('Information about the binder.') }}">
+          </div>
+          <div class="field">
+            <label for="info_wrapping_temperature_aggregate">{{ label(_('Wrapping Temperature of Aggregate [°C]:')) }}</label>
+            <input type="number" id="info_wrapping_temperature_aggregate" step="any" placeholder="160">
+          </div>
+          <div class="field">
+            <label for="info_wrapping_temperature_binder">{{ label(_('Wrapping Temperature of Binder [°C]:')) }}</label>
+            <input type="number" id="info_wrapping_temperature_binder" step="any" placeholder="160">
+          </div>
+          <div class="field">
+            <label for="info_exposing_water_temperature">{{ label(_('Exposing Water Temperature [°C]:')) }}</label>
+            <input type="number" id="info_exposing_water_temperature" step="any" placeholder="20">
+          </div>
+          <div class="field">
+            <label for="info_test_procedure">{{ label(_('Test Procedure:')) }}</label>
+            <input type="text" id="info_test_procedure" maxlength="1024" placeholder="{{ _('A brief description of the testing procedure') }}">
+          </div>
+          <div class="field span-2">
+            <label for="info_sample_collection_data">{{ label(_('Sample Collection Data:')) }}</label>
+            <input type="text" id="info_sample_collection_data" maxlength="1024" placeholder="{{ _('Information about the mixture.') }}">
+          </div>
         </div>
+      </div>
+    </div>
 
-        <div class="row modern-row">
-
-            <div class="column modern-column">
-                <label for="info_datetime" class="modern-label upper">
-                    {{ _('Date and Time:') }}
-                </label>
-                <input type="datetime-local" id="info_datetime" class="modern-input enhanced-input"
-                    placeholder="{{ _('YYYY-MM-DD HH:MM') }}" maxlength="1024" />
-            </div>
-
-            <div class="column modern-column">
-                <label for="info_place_of_experiment" class="modern-label upper">
-                    {{ _('Place of Experiment:') }}
-                </label>
-                <input type="text" id="info_place_of_experiment" class="modern-input enhanced-input"
-                    placeholder="{{ _('Your lab Address') }}" maxlength="1024" />
-            </div>
-
-            <!-- Information -->
-            <div class="column modern-column">
-                <label for="info_sample_collection_data" class="modern-label upper">
-                    {{ _('Sample Collection Data:') }}
-                </label>
-                <input type="text" id="info_sample_collection_data" class="modern-input enhanced-input"
-                    placeholder="{{ _('Information about the mixture.') }}" maxlength="1024" />
-            </div>
-
-
+    <div class="card" id="assessment_section">
+      <div class="card-header">
+        <div>
+          <h2>{{ _('Assessment') }}</h2>
+          <p>{{ _('Asphalt coverage of the aggregate surface') }}</p>
         </div>
-
-        <div class="row modern-row">
-
-            <div class="column modern-column">
-                <!-- <label for="info_wrapping_temperature" class="modern-label upper">
-                    {{ _('Wrapping Temperature [°C]:') }}
-                </label>
-                <input type="number" id="info_wrapping_temperature" class="modern-input enhanced-input"
-                    placeholder="{{ _('80') }}" /> -->
-                <label for="info_wrapping_temperature_aggregate" class="modern-label upper">
-                    {{ _('Wrapping Temperature of Aggregate [°C]:') }}
-                </label>
-                <input type="number" id="info_wrapping_temperature_aggregate" class="modern-input enhanced-input"
-                    placeholder="{{ _('80') }}" />
-            </div>
-            <div class="column modern-column">
-                <label for="info_wrapping_temperature_binder" class="modern-label upper">
-                    {{ _('Wrapping Temperature of Binder [°C]:') }}
-                </label>
-                <input type="number" id="info_wrapping_temperature_binder" class="modern-input enhanced-input"
-                    placeholder="{{ _('80') }}" />
-            </div>
-
-            <!-- Information -->
-            <div class="column modern-column">
-                <label for="info_exposing_water_temperature" class="modern-label upper">
-                    {{ _('Exposing Water Temperature [°C]:') }}
-                </label>
-                <input type="number" id="info_exposing_water_temperature" class="modern-input enhanced-input"
-                    placeholder="{{ _('20') }}" />
-            </div>
-
+      </div>
+      <div class="card-body">
+        <div class="assessment-grid">
+          <div class="result-tile" id="aiResult">
+            <span class="result-label">{{ icon('cpu') }} {{ _('AI assessment') }}</span>
+            <span class="result-value" id="aiPercent">–</span>
+            <span class="result-class" id="aiClass"></span>
+          </div>
+          <div class="field">
+            <label for="expertGuess">{{ _('Expert Guess') }} [%]</label>
+            <input type="number" id="expertGuess" min="0" max="100" step="1" inputmode="numeric"
+              placeholder="{{ _('Expert Guess of Adhesion Rate') }}">
+            <span class="field-hint">{{ _('Your visual estimate, required for the evaluation.') }}</span>
+          </div>
+          <div class="field span-2">
+            <label for="info_comment">{{ label(_('Comment:')) }}</label>
+            <input type="text" id="info_comment" maxlength="1024" placeholder="{{ _('Optional') }}">
+          </div>
         </div>
-        <div class="row modern-row">
-            <div class="column modern-column">
-                <label for="info_aggregate" class="modern-label upper">
-                    {{ _('Aggregate:') }}
-                </label>
-                <input type="text" id="info_aggregate" class="modern-input enhanced-input"
-                    placeholder="{{ _('Information about the aggregate.') }}" maxlength="1024" />
-            </div>
+      </div>
+    </div>
+  </section>
+</div>
 
-            <div class="column modern-column">
-                <label for="info_binder" class="modern-label upper">
-                    {{ _('Binder:') }}
-                </label>
-                <input type="text" id="info_binder" class="modern-input enhanced-input"
-                    placeholder="{{ _('Information about the binder.') }}" maxlength="1024" />
-            </div>
+<div class="action-bar" id="actionBar" hidden>
+  <span id="saveStatus" class="save-status" role="status" aria-live="polite"></span>
+  <div class="action-bar-buttons" id="editActions">
+    <button id="save_experiment_info" type="button" class="btn">{{ icon('save') }} {{ _('Save sample data') }}</button>
+    <button id="index_evaluation" type="button" class="btn btn-primary">{{ _('Save and Evaluate') }} {{ icon('arrow-right') }}</button>
+  </div>
+  <div class="action-bar-buttons" id="doneActions" hidden>
+    <a class="btn" id="doneExport" href="#">{{ icon('file') }} {{ _('Export report') }}</a>
+    <a class="btn btn-primary" href="/">{{ icon('plus') }} {{ _('New sample') }}</a>
+  </div>
+</div>
 
-            <div class="column modern-column">
-                <label for="info_test_procedure" class="modern-label upper">
-                    {{ _('Test Procedure:') }}
-                </label>
-                <input type="text" id="info_test_procedure" class="modern-input enhanced-input"
-                    placeholder="{{ _('A brief description of the testing procedure') }}" maxlength="1024" />
-            </div>
-        </div>
-
-        <div id="row" , class="colorbar1">
-            <h3>{{ _('Assessment') }}</h3>
-        </div>
-        <div class="row modern-row">
-            <!-- Expert Guess -->
-            <div class="column modern-column">
-                <label for="expertGuess" class="modern-label upper">
-                    {{ _('Expert Guess') }} [%]:
-                </label>
-                <input type="number" id="expertGuess" class="modern-input enhanced-input"
-                    placeholder="{{ _('Expert Guess of Adhesion Rate') }}" , step="1" , min="0" , max="100" />
-            </div>
-            <!-- Comment -->
-            <div class="column modern-column">
-                <label for="info_comment" class="modern-label upper">
-                    {{ _('Comment:') }}
-                </label>
-                <input type="text" id="info_comment" class="modern-input enhanced-input"
-                    placeholder="{{ _('Optional') }}" maxlength="1024" />
-            </div>
-        </div>
-
-        <div class="row modern-row save-bar">
-            <button id="save_experiment_info" type="button" class="btn-details" disabled>{{ _('Save sample data') }}</button>
-            <span id="saveStatus" class="save-status" role="status" aria-live="polite"></span>
-        </div>
-
-
-        <div id="row" , class="colorbar2">
-            <h3>{{ _('Automatic Phase Detection') }}</h3>
-        </div>
-        <div class="loading" id="workingMessage">
-            {{ _('Working...') }}
-        </div>
-
-
-        <div class="row modern-row">
-            <div class="column modern-column">
-                <h3 for="info" class="modern-label upper">
-                    {{ _('MODEL') }}
-                </h3>
-                <select id="inference_model" class="enhanced-select">
-                    {% for model in models %}
-                    <option class="option" value="{{ model }}">{{ model }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="column modern-column">
-                <h3 for="info" class="modern-label upper">
-                    {{ _('Mask Opacity:') }}
-                </h3>
-                <div class="slider-group">
-                    <input type="range" id="opacitySlider" min="0" max="100" value="50" class="slider">
-                    <input type="text" id="opacityValue" value="50" size="2" class="enhanced-input">
-                </div>
-            </div>
-            <div class="modern-column column">
-                <div class="overlay-options">
-                    <label class="overlay-label">
-                        <input type="checkbox" id="redOverlayCheckbox" checked>
-                        <span class="overlay-custom"></span>
-                        {{ _('Display mask - Bitumen') }} <span class="shortcut">(Shift + A)</span>
-                    </label>
-
-                    <label class="overlay-label">
-                        <input type="checkbox" id="aggregateOverlayCheckbox" checked>
-                        <span class="overlay-custom"></span>
-                        {{ _('Display mask - Aggregate') }} <span class="shortcut">(Shift + S)</span>
-                    </label>
-
-                    <label class="overlay-label">
-                        <input type="checkbox" id="backgroundOverlayCheckbox">
-                        <span class="overlay-custom"></span>
-                        {{ _('Display mask - Background') }} <span class="shortcut">(Shift + D)</span>
-                    </label>
-                </div>
-            </div>
-
-        </div>
-
-        <select id="imageType">
-            <option value="original">("shift + c") {{ _('Original Image') }}</option>
-            <!-- <option value="original_no_bg">("c") Removed Background</option> -->
-            <option value="bw">("shift + c") {{ _('Grayscale Image') }}</option>
-        </select>
-
-        <!-- Second Row: Intensity Image and Controls -->
-        <div class="row">
-            <div class="column">
-                <img id="defaultImage" src="{{ url_for('static', filename='logo.png') }}" alt="Default Image">
-                <div class="img-magnifier-container">
-                    <canvas id="imageCanvas"></canvas>
-
-                    <!-- BG Processing Loader -->
-                    <div id="bgProcessingLoader" class="bg-processing-loader" hidden>
-                        <div class="bg-loader-spinner"></div>
-                        <span class="bg-loader-text">{{_('Working...')}}</span>
-                    </div>
-
-                    <canvas class="overlayCanvas" id="overlayCanvasAsphalt"></canvas>
-                    <canvas class="overlayCanvas" id="overlayCanvasAggregate"></canvas>
-                    <canvas class="overlayCanvas" id="overlayCanvasBackground"></canvas>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="container">
-            <div class="row">
-                <button id='index_evaluation' type="submit">{{ _('Save and Evaluate') }}</button>
-            </div>
-        </div>
-
-    </body>
-    <script src="{{ url_for('static', filename='script_video.js') }}"></script>
-
-</html>
-
-
-{% endblock content %}
+<dialog class="ui-dialog result-dialog" id="resultDialog">
+  <div class="ui-dialog-body">
+    <h2>{{ icon('check-circle') }} {{ _('Sample evaluated') }}</h2>
+    <p id="resultSample"></p>
+    <div class="result-compare">
+      <div class="result-tile">
+        <span class="result-label">{{ icon('cpu') }} {{ _('AI assessment') }}</span>
+        <span class="result-value" id="resultAi">–</span>
+        <span class="result-class" id="resultAiClass"></span>
+      </div>
+      <div class="result-tile">
+        <span class="result-label">{{ icon('user') }} {{ _('Expert Guess') }}</span>
+        <span class="result-value" id="resultExpert">–</span>
+        <span class="result-class" id="resultExpertClass"></span>
+      </div>
+    </div>
+    <p class="small muted">{{ _('ČSN 73 6161 requires at least two samples in one report. You can export the report from the sample records at any time.') }}</p>
+  </div>
+  <div class="ui-dialog-actions">
+    <a class="btn" href="/experiments">{{ icon('list') }} {{ _('Sample Records') }}</a>
+    <a class="btn" id="resultExport" href="#">{{ icon('file') }} {{ _('Export report') }}</a>
+    <a class="btn btn-primary" href="/">{{ icon('plus') }} {{ _('New sample') }}</a>
+  </div>
+</dialog>
+{% endblock %}

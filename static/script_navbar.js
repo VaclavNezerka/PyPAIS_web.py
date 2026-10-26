@@ -1,6 +1,8 @@
-const menu = document.getElementById("menu")
+// mobile navigation toggle
+const navToggle = document.getElementById("navToggle")
+const appNav = document.getElementById("appNav")
 
-hamburger.addEventListener("click", () => {
-    menu.classList.toggle("active")
-    antimenu.classList.toggle("active")
+navToggle?.addEventListener("click", () => {
+    const open = appNav.classList.toggle("is-open")
+    navToggle.setAttribute("aria-expanded", String(open))
 })

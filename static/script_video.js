@@ -51,9 +51,11 @@ window.addEventListener("load", () => {
     const video = document.getElementById("video")
     const canvas = document.getElementById("outputCanvas")
     const photo = document.getElementById("capturedImage")
-    const startButton = document.getElementById("capture-photo-button")
+    const captureButton = document.getElementById("capture-photo-button")
+    const cameraPanel = document.getElementById("capturedImageDiv")
 
-    startButton.addEventListener("click", () => {
+    function startCamera() {
+        if (video.srcObject) return
         navigator.mediaDevices
             .getUserMedia({
                 video: { width: { ideal: 5472 }, height: { ideal: 3648 } },
@@ -68,8 +70,9 @@ window.addEventListener("load", () => {
             })
             .catch((err) => {
                 console.error(`An error occurred: ${err}`)
+                window.ui?.toast(String(err.message || err), "error")
             })
-    })
+    }
 
     video.addEventListener("canplay", (ev) => {
         if (!streaming) {
@@ -79,9 +82,10 @@ window.addEventListener("load", () => {
         }
     })
 
-    startButton.addEventListener("click", (ev) => {
-        takePicture()
+    captureButton.addEventListener("click", (ev) => {
         ev.preventDefault()
+        if (!video.srcObject) startCamera()
+        else takePicture()
     })
 
     function clearPhoto() {
@@ -97,18 +101,13 @@ window.addEventListener("load", () => {
         const stream = video.srcObject
         if (stream) {
             unlockCamera(track)
-            const tracks = stream.getTracks()
-            tracks.forEach((track) => track.stop())
+            stream.getTracks().forEach((track) => track.stop())
             video.srcObject = null
-            // switch off the camera and hide the captured image
-            document.getElementById("capturedImageDiv").style.display = "none"
-            document.getElementById("manualSettingsDiv").style.display = "none"
-            // stop using the camera
-            document.mediaDevices.getUserMedia({
-                video: { width: { ideal: 5472 }, height: { ideal: 3648 } },
-                audio: false,
-            })
         }
+        // hide the camera panel; without a photo the upload area comes back
+        cameraPanel.hidden = true
+        const viewer = document.getElementById("viewer")
+        if (!viewer || viewer.hidden) document.getElementById("dropzone").hidden = false
     }
 
     clearPhoto()
@@ -150,9 +149,11 @@ window.addEventListener("load", () => {
     document
         .getElementById("take-photo-open-button")
         .addEventListener("click", () => {
-            document.getElementById("capturedImageDiv").style.display = "flex"
-            document.getElementById("manualSettingsDiv").style.display = "flex"
+            document.getElementById("dropzone").hidden = true
+            cameraPanel.hidden = false
+            startCamera()
         })
+    document.getElementById("camera-close-button").addEventListener("click", switchOffCamera)
 })
 
 //

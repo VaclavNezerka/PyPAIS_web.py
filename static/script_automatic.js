@@ -1,194 +1,10 @@
+// Current Sample page (workbench): photo upload / camera, segmentation viewer, sample data with autosave,
+// assessment and evaluation. The camera itself is handled by script_video.js.
 import base64toBlob from "./utils.js"
 
-const alerts = await fetch("/translations-alerts", { method: "GET" }).then(
-    (response) => response.json(),
-)
-// global variables
-let konvaStage
-let staticUrl
-let isDrawing = false
-
-function loadNewImage(newImageUrl) {
-    viewer.open({
-        type: "image",
-        url: newImageUrl,
-    })
-}
-
-let uploadedImageURL_color = null
-let uploadedImageURL_gray = null
-let uploadedImageURL_nobg = null
-
-let uploadedImageURL_mask_aggregate = null
-let uploadedImageURL_mask_asphalt = null
-let uploadedImageURL_mask_bg = null
-
-let uploadedImageURL_gray_blur = null
-let uploadedImageURL_nobg_blur = null
-
-let uploadedImageURL_redOverlay = null
-let entropyURL = null
-let uploadedImage = new Image()
-let uploadedImageOverlay = new Image()
-let uploadedImageOverlay_asphalt = new Image()
-let uploadedImageOverlay_aggregate = new Image()
-let uploadedImageOverlay_bg = new Image()
-
-function hexToRgba(hex, alpha = 1) {
-    // Remove '#' if present
-    hex = hex.replace("#", "")
-
-    // Handle shorthand (#abc)
-    if (hex.length === 3) {
-        hex = hex
-            .split("")
-            .map((c) => c + c)
-            .join("")
-    }
-
-    const r = parseInt(hex.slice(0, 2), 16)
-    const g = parseInt(hex.slice(2, 4), 16)
-    const b = parseInt(hex.slice(4, 6), 16)
-
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`
-}
-
-// Access CSS variables for label settings
-const rootStyles = getComputedStyle(document.documentElement)
-
-// Theme colors
-let aggregateColor = hexToRgba(
-    rootStyles.getPropertyValue("--myBlue").trim(),
-    1,
-)
-let backgroundColor = hexToRgba(
-    rootStyles.getPropertyValue("--myPaleGreen").trim(),
-    1,
-)
-let bitumenColor = hexToRgba(
-    rootStyles.getPropertyValue("--myPaleRed").trim(),
-    1,
-)
-
-// Highcontrast colors
-bitumenColor = "rgba(0, 0, 255, 1)"
-aggregateColor = "rgba(255, 0, 0, 1)"
-backgroundColor = "rgba(0, 255, 0, 1)"
-
-const labelSettings = {
-    background: {
-        stroke: backgroundColor,
-        fill: backgroundColor,
-        strokeWidth: 2,
-    },
-    aggregate: { stroke: aggregateColor, fill: aggregateColor, strokeWidth: 2 },
-    asphalt: { stroke: bitumenColor, fill: bitumenColor, strokeWidth: 2 },
-    magnify: 3,
-    mask_opacity: 0.5,
-}
-
-// helper declarations because of the global scope
-let grayscaleImageData = null
-let originalEntropyImageData = null
-
-uploadedImage.onload = function () {
-    var canvas = document.getElementById("imageCanvas")
-    var ctx = canvas.getContext("2d", { willReadFrequently: true })
-    // clear the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    canvas.width = this.width
-    canvas.height = this.height
-    ctx.drawImage(this, 0, 0, canvas.width, canvas.height)
-
-    magnify("imageCanvas", labelSettings.magnify)
-}
-
-function displayed_mask(canvasId, image, color) {
-    var canvas = document.getElementById(canvasId)
-    var ctx = canvas.getContext("2d", { willReadFrequently: true })
-    // clear the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    canvas.width = image.width
-    canvas.height = image.height
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
-
-    // create an array from the string
-    let colorArray = color.match(/[\d.]+/g).map(Number)
-    const imgArray = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    const maskImageData = colorizeMask(imgArray, colorArray)
-    // const data = maskImageData.data; // Uint8ClampedArray [r,g,b,a, r,g,b,a, ...]
-    createImageBitmap(maskImageData).then((bitmap) => {
-        ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
-    })
-    magnify(canvasId, labelSettings.magnify)
-}
-
-uploadedImageOverlay_asphalt.onload = function () {
-    displayed_mask("overlayCanvasAsphalt", this, labelSettings.asphalt.fill)
-}
-uploadedImageOverlay_aggregate.onload = function () {
-    displayed_mask("overlayCanvasAggregate", this, labelSettings.aggregate.fill)
-}
-uploadedImageOverlay_bg.onload = function () {
-    displayed_mask(
-        "overlayCanvasBackground",
-        this,
-        labelSettings.background.fill,
-    )
-}
-
-uploadImage.onerror = function () {
-    console.error("Failed to load image at URL: " + this.src)
-    console.error
-}
-
-let requestedImage = null
-let displayImageBlur = false
-let displayAsphaltMask = true
-let displayAggregateMask = true
-let displayBackgroundMask = false
-
-disableControls() // Disable controls on page load
-
-function enableControls() {
-    // Find all sliders and input boxes and enable them
-    document.querySelectorAll(".slider-group input").forEach((input) => {
-        input.disabled = false
-    })
-}
-
-// Call disableControls initially to disable them when the page loads
-function disableControls() {
-    document.querySelectorAll(".slider-group input").forEach((input) => {
-        input.disabled = true
-    })
-}
-
-document.querySelectorAll('input[type="number"]').forEach((input) => {
-    input.addEventListener("wheel", (event) => event.preventDefault())
-})
-
-document.getElementById("fileInput").addEventListener("change", uploadImage)
-
-// auxiliary functions for the string manipulation
-function matchCase(text, pattern) {
-    let result = ""
-    for (let i = 0; i < text.length; i++) {
-        if (i < pattern.length && pattern[i] === pattern[i].toUpperCase()) {
-            result += text[i].toUpperCase()
-        } else {
-            result += text[i].toLowerCase()
-        }
-    }
-    return result
-}
-
-function replaceKeepCase(str, search, replace) {
-    const regex = new RegExp(search, "gi")
-    return str.replace(regex, (match) => {
-        return matchCase(replace, match)
-    })
-}
+const alerts = await fetch("/translations-alerts", { method: "GET" }).then((response) => response.json())
+const ui = window.ui
+const $ = (id) => document.getElementById(id)
 
 // sample information stored with the experiment (the expert guess is handled separately)
 const INFO_FIELDS = [
@@ -204,10 +20,230 @@ const INFO_FIELDS = [
     "info_aggregate",
     "info_binder",
 ]
+// fields that describe one particular sample - cleared when a new photo starts a new sample
+const PER_SAMPLE_FIELDS = ["info_sample_label", "info_comment", "info_sample_collection_data"]
 
-// Saving of the sample data: every change is autosaved shortly after the typing stops, the Save button
-// (and the evaluation) store the whole form at once. All saves go through one queue, so they reach the
-// server in the order they were made, and the status next to the button tells whether the data is stored.
+const state = {
+    hasImage: false,
+    hasMasks: false,
+    evaluated: false,
+    experimentId: null,
+    busy: false,
+}
+
+// ---------------------------------------------------------------------------------------------
+// Viewer: photo + colour mask overlays (the colours are shared with the PDF report via CSS)
+// ---------------------------------------------------------------------------------------------
+const rootStyles = getComputedStyle(document.documentElement)
+const LAYERS = {
+    asphalt: {
+        canvas: $("overlayCanvasAsphalt"),
+        toggle: $("redOverlayCheckbox"),
+        color: rootStyles.getPropertyValue("--mask-bitumen").trim(),
+    },
+    aggregate: {
+        canvas: $("overlayCanvasAggregate"),
+        toggle: $("aggregateOverlayCheckbox"),
+        color: rootStyles.getPropertyValue("--mask-aggregate").trim(),
+    },
+    background: {
+        canvas: $("overlayCanvasBackground"),
+        toggle: $("backgroundOverlayCheckbox"),
+        color: rootStyles.getPropertyValue("--mask-background").trim(),
+    },
+}
+const imageUrls = { original: null, bw: null }
+
+function hexToRgb(hex) {
+    hex = hex.replace("#", "")
+    if (hex.length === 3) hex = [...hex].map((c) => c + c).join("")
+    return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16))
+}
+
+function loadImage(url) {
+    return new Promise((resolve, reject) => {
+        const img = new Image()
+        img.onload = () => resolve(img)
+        img.onerror = reject
+        img.src = url
+    })
+}
+
+function pngUrl(base64) {
+    return URL.createObjectURL(base64toBlob(base64, "image/png"))
+}
+
+function setImages(colorBase64, grayBase64) {
+    for (const key of Object.keys(imageUrls)) {
+        if (imageUrls[key]) URL.revokeObjectURL(imageUrls[key])
+    }
+    imageUrls.original = pngUrl(colorBase64)
+    imageUrls.bw = pngUrl(grayBase64)
+}
+
+async function drawPhoto() {
+    const url = imageUrls[$("imageType").value] || imageUrls.original
+    if (!url) return
+    const img = await loadImage(url)
+    const canvas = $("imageCanvas")
+    canvas.width = img.naturalWidth
+    canvas.height = img.naturalHeight
+    canvas.getContext("2d").drawImage(img, 0, 0)
+}
+
+// masks come as transparent PNGs - paint the opaque pixels in the layer colour
+async function drawMask(layer, base64) {
+    const img = await loadImage(pngUrl(base64))
+    const canvas = layer.canvas
+    canvas.width = img.naturalWidth
+    canvas.height = img.naturalHeight
+    const ctx = canvas.getContext("2d", { willReadFrequently: true })
+    ctx.drawImage(img, 0, 0)
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    const [r, g, b] = hexToRgb(layer.color)
+    const data = pixels.data
+    for (let i = 0; i < data.length; i += 4) {
+        if (data[i + 3] > 127) {
+            data[i] = r
+            data[i + 1] = g
+            data[i + 2] = b
+            data[i + 3] = 255
+        } else {
+            data[i + 3] = 0
+        }
+    }
+    ctx.putImageData(pixels, 0, 0)
+    URL.revokeObjectURL(img.src)
+}
+
+async function setMasks(data) {
+    await Promise.all([
+        drawMask(LAYERS.asphalt, data.asphalt_mask),
+        drawMask(LAYERS.aggregate, data.aggregate_mask),
+        drawMask(LAYERS.background, data.background_mask),
+    ])
+    state.hasMasks = true
+    applyLayerVisibility()
+}
+
+function opacity() {
+    return Number($("opacitySlider").value) / 100
+}
+
+function applyLayerVisibility() {
+    for (const layer of Object.values(LAYERS)) {
+        layer.canvas.hidden = !(state.hasMasks && layer.toggle.checked)
+        layer.canvas.style.opacity = opacity()
+    }
+}
+
+function setViewerBusy(text) {
+    state.busy = Boolean(text)
+    $("bgProcessingLoader").hidden = !text
+    if (text) $("viewerBusyText").textContent = text
+}
+
+// magnifying loupe that follows the cursor and shows the photo together with the visible masks
+function initLoupe() {
+    const stage = $("viewerStage")
+    const loupe = $("loupe")
+    const ZOOM = 3
+    const ctx = loupe.getContext("2d")
+
+    stage.addEventListener("mousemove", (event) => {
+        const photo = $("imageCanvas")
+        if (!state.hasImage || state.busy) return
+        const rect = photo.getBoundingClientRect()
+        const x = event.clientX - rect.left
+        const y = event.clientY - rect.top
+        if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
+            loupe.hidden = true
+            return
+        }
+        const scale = photo.width / rect.width
+        const size = loupe.width
+        const region = (size / ZOOM) * scale
+        const sx = x * scale - region / 2
+        const sy = y * scale - region / 2
+        ctx.clearRect(0, 0, size, size)
+        ctx.globalAlpha = 1
+        ctx.drawImage(photo, sx, sy, region, region, 0, 0, size, size)
+        for (const layer of Object.values(LAYERS)) {
+            if (!layer.canvas.hidden) {
+                ctx.globalAlpha = opacity()
+                ctx.drawImage(layer.canvas, sx, sy, region, region, 0, 0, size, size)
+            }
+        }
+        const half = loupe.offsetWidth / 2
+        loupe.style.left = x - half + "px"
+        loupe.style.top = y - half + "px"
+        loupe.hidden = false
+    })
+    stage.addEventListener("mouseleave", () => (loupe.hidden = true))
+}
+
+function showResult(element, classElement, result) {
+    if (!result || result.asphalt_percent === null || result.asphalt_percent === undefined) {
+        element.textContent = "–"
+        classElement.textContent = ""
+        return
+    }
+    element.textContent = result.asphalt_percent.toFixed(1) + " %"
+    classElement.textContent = result.class
+        ? alerts.classLabel + " " + result.class + (result.class_word ? " · " + result.class_word : "")
+        : ""
+}
+
+// ---------------------------------------------------------------------------------------------
+// Page states, stepper
+// ---------------------------------------------------------------------------------------------
+function showWorkbench() {
+    $("workbench").classList.remove("is-empty")
+    $("dropzone").hidden = true
+    $("viewer").hidden = false
+    $("workbenchPanel").hidden = false
+    $("actionBar").hidden = false
+}
+
+function setFormEnabled(enabled) {
+    for (const id of [...INFO_FIELDS, "expertGuess"]) $(id).disabled = !enabled
+    $("save_experiment_info").disabled = !enabled
+    $("index_evaluation").disabled = !enabled
+}
+
+function updateStepper() {
+    const labelFilled = $("info_sample_label").value.trim() !== ""
+    const guessFilled = $("expertGuess").value !== ""
+    const done = {
+        photo: state.hasImage,
+        info: state.hasImage && labelFilled,
+        assess: state.hasMasks && guessFilled,
+        report: state.evaluated,
+    }
+    let currentSet = false
+    for (const step of document.querySelectorAll("#stepper .step")) {
+        const isDone = done[step.dataset.step]
+        step.classList.toggle("is-done", isDone)
+        const isCurrent = !isDone && !currentSet
+        step.classList.toggle("is-current", isCurrent)
+        if (isCurrent) {
+            currentSet = true
+            step.setAttribute("aria-current", "step")
+        } else {
+            step.removeAttribute("aria-current")
+        }
+    }
+    const label = $("info_sample_label").value.trim()
+    $("sampleSubtitle").textContent = !state.hasImage
+        ? alerts.subtitleEmpty
+        : (state.experimentId ? alerts.sampleId + " " + state.experimentId : "") + (label ? " · " + label : "")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Saving of the sample data: every change is autosaved shortly after the typing stops, the Save
+// button (and the evaluation) store the whole form at once. All saves go through one queue, so they
+// reach the server in the order they were made, and the status tells whether the data is stored.
+// ---------------------------------------------------------------------------------------------
 const AUTOSAVE_DELAY_MS = 500
 const autosaveTimers = {}
 const unsavedFields = new Set()
@@ -218,14 +254,14 @@ let lastSavedAt = null
 
 function fieldValue(field) {
     if (field === "expert_guess") {
-        const value = document.getElementById("expertGuess").value
+        const value = $("expertGuess").value
         return value === "" ? "" : value / 100
     }
-    return document.getElementById(field).value
+    return $(field).value
 }
 
 function refreshSaveStatus() {
-    const status = document.getElementById("saveStatus")
+    const status = $("saveStatus")
     status.className = "save-status"
     if (pendingSaves > 0) {
         status.classList.add("saving")
@@ -238,8 +274,7 @@ function refreshSaveStatus() {
         status.textContent = alerts.saveStatusUnsaved
     } else if (lastSavedAt !== null) {
         status.classList.add("saved")
-        status.textContent =
-            alerts.saveStatusSaved + " " + lastSavedAt.toLocaleTimeString() + " ✓"
+        status.textContent = alerts.saveStatusSaved + " " + lastSavedAt.toLocaleTimeString() + " ✓"
     } else {
         status.textContent = ""
     }
@@ -296,19 +331,228 @@ function saveSampleData() {
     return queueSave("/save-experiment-info", [...INFO_FIELDS, "expert_guess"])
 }
 
-initSampleDataSaving()
-function initSampleDataSaving() {
-    for (const field of [...INFO_FIELDS, "inference_model"]) {
-        const input = document.getElementById(field)
-        input.addEventListener("input", () => scheduleAutosave(field))
+async function saveWithFeedback() {
+    if (await saveSampleData()) ui.toast(alerts.saveStatusSaved + " " + lastSavedAt.toLocaleTimeString(), "success")
+    else ui.toast(alerts.saveStatusError + " " + lastSaveError, "error")
+}
+
+// default values from the user's profile; only empty fields are filled unless overwrite is set
+async function applyDefaults({ overwrite = false, announce = false } = {}) {
+    const response = await fetch("/get-default-experiment-info?nocache=" + Date.now())
+    const defaults = (await response.json()).data || {}
+    const filled = []
+    for (const field of INFO_FIELDS) {
+        const value = defaults[field]
+        if (value === null || value === undefined || value === "") continue
+        const input = $(field)
+        if (overwrite || input.value === "") {
+            input.value = value
+            filled.push(saveFieldNow(field))
+        }
+    }
+    await Promise.all(filled)
+    if (announce) ui.toast(filled.length ? alerts.defaultsApplied : alerts.noDefaultsToApply, filled.length ? "success" : "info")
+    updateStepper()
+}
+
+// ---------------------------------------------------------------------------------------------
+// Photo upload, inference, opening a stored sample
+// ---------------------------------------------------------------------------------------------
+function localNowForInput() {
+    const now = new Date()
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+    return now.toISOString().slice(0, 16)
+}
+
+async function runInference() {
+    setViewerBusy(alerts.runningModel)
+    try {
+        const formData = new FormData()
+        formData.append("model_name", $("inference_model").value)
+        const response = await fetch("/inference?nocache=" + Date.now(), { method: "POST", body: formData })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok || data.status !== "success") throw new Error(data.message || response.statusText)
+        if (data.experimentId) state.experimentId = data.experimentId
+        await setMasks(data)
+        showResult($("aiPercent"), $("aiClass"), data)
+    } catch (error) {
+        ui.toast(alerts.inferenceFailed + " " + (error.message || ""), "error")
+    } finally {
+        setViewerBusy(null)
+        updateStepper()
+    }
+}
+
+async function uploadPhoto(file) {
+    if (!file) return
+    if (file.type && !file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
+        ui.toast(alerts.notAnImage, "warning")
+        return
+    }
+    showWorkbench()
+    setViewerBusy(alerts.processingPhoto)
+    try {
+        const formData = new FormData()
+        formData.append("file", file)
+        const response = await fetch("/process-image", { method: "POST", body: formData })
+        if (!response.ok) throw new Error(response.status + " " + response.statusText)
+        const data = await response.json()
+        setImages(data.color, data.gray)
+        await drawPhoto()
+        state.hasImage = true
+        state.hasMasks = false
+        state.evaluated = false
+        applyLayerVisibility()
+        showResult($("aiPercent"), $("aiClass"), null)
+
+        const active = await fetch("/is-experiment-active").then((r) => r.json())
+        state.experimentId = active.experimentId
+
+        // a new photo starts a new sample: clear what belongs to the previous one, keep the series data
+        for (const field of PER_SAMPLE_FIELDS) $(field).value = ""
+        $("expertGuess").value = ""
+        $("info_datetime").value = localNowForInput()
+        setFormEnabled(true)
+        await Promise.all([...PER_SAMPLE_FIELDS, "expert_guess", "info_datetime", "inference_model"].map(saveFieldNow))
+        await applyDefaults()
+    } catch (error) {
+        setViewerBusy(null)
+        ui.toast(alerts.uploadFailed + " " + (error.message || ""), "error")
+        return
+    }
+    await runInference()
+    $("info_sample_label").focus()
+}
+
+function inputDateTime(value) {
+    // "2026-10-26 09:47:31" (DB) -> "2026-10-26T09:47" (datetime-local input)
+    return value ? String(value).replace(" ", "T").slice(0, 16) : ""
+}
+
+async function openSample(id) {
+    showWorkbench()
+    setFormEnabled(false)
+    setViewerBusy(alerts.loadingSample)
+    try {
+        const response = await fetch("/load-experiment/" + id + "?nocache=" + Date.now())
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok || data.status !== "success") throw new Error(data.message || alerts.noExperiment)
+
+        state.experimentId = data.experimentId
+        for (const field of INFO_FIELDS) {
+            const value = data[field]
+            $(field).value = value === null || value === undefined ? "" : field === "info_datetime" ? inputDateTime(value) : value
+        }
+        $("expertGuess").value =
+            data.expert_guess === null || data.expert_guess === undefined ? "" : Math.round(data.expert_guess * 100)
+        const model = $("inference_model")
+        if (data.inference_model && [...model.options].some((o) => o.value === data.inference_model)) {
+            model.value = data.inference_model
+        }
+
+        setImages(data.color, data.gray)
+        await drawPhoto()
+        state.hasImage = true
+        setFormEnabled(true)
+        if (data.has_masks) {
+            await setMasks(data)
+            showResult($("aiPercent"), $("aiClass"), data)
+            setViewerBusy(null)
+        } else {
+            await runInference()
+        }
+    } catch (error) {
+        setViewerBusy(null)
+        ui.toast(error.message, "error")
+    }
+    updateStepper()
+}
+
+// ---------------------------------------------------------------------------------------------
+// Evaluation
+// ---------------------------------------------------------------------------------------------
+async function evaluateSample() {
+    if ($("expertGuess").value === "") {
+        ui.toast(alerts.expertGuessEmpty, "warning")
+        $("expertGuess").focus()
+        return
+    }
+    if (!state.hasMasks) {
+        ui.toast(alerts.waitForModel, "warning")
+        return
+    }
+    ui.busy(true, alerts.evaluating)
+    try {
+        // evaluate only once all the sample data is confirmed stored
+        if (!(await saveSampleData())) throw new Error(alerts.saveFailed + " " + lastSaveError)
+        const response = await fetch("/evaluate-asphalt?nocache=" + Date.now(), { method: "POST" })
+        const data = await response.json().catch(() => ({}))
+        if (data.status !== "success") throw new Error(alerts.evaluationFailed + " " + (data.message || ""))
+
+        // the sample is finished - the next visit of this page starts a new one
+        await fetch("/deactivate-current-experiment", { method: "POST" })
+        state.evaluated = true
+        state.experimentId = data.experimentId || state.experimentId
+        setFormEnabled(false)
+        $("editActions").hidden = true
+        $("doneActions").hidden = false
+        const exportUrl = "/export-report/" + state.experimentId
+        $("doneExport").href = exportUrl
+        $("resultExport").href = exportUrl
+        updateStepper()
+
+        const label = $("info_sample_label").value.trim()
+        $("resultSample").textContent = alerts.sampleId + " " + state.experimentId + (label ? " · " + label : "")
+        showResult($("resultAi"), $("resultAiClass"), data)
+        showResult($("resultExpert"), $("resultExpertClass"), data.expert)
+        showResult($("aiPercent"), $("aiClass"), data)
+        $("resultDialog").showModal()
+    } catch (error) {
+        ui.toast(error.message, "error")
+    } finally {
+        ui.busy(false)
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Wiring
+// ---------------------------------------------------------------------------------------------
+function initInputs() {
+    for (const field of INFO_FIELDS) {
+        const input = $(field)
+        input.addEventListener("input", () => {
+            scheduleAutosave(field)
+            updateStepper()
+        })
         // leaving the field saves it right away
         input.addEventListener("change", () => {
             if (field in autosaveTimers) saveFieldNow(field)
         })
     }
-    document
-        .getElementById("save_experiment_info")
-        .addEventListener("click", () => saveSampleData())
+    $("expertGuess").addEventListener("input", function () {
+        if (this.value !== "") {
+            const value = Number(this.value)
+            if (value < 0) this.value = 0
+            else if (value > 100) this.value = 100
+        }
+        scheduleAutosave("expert_guess")
+        updateStepper()
+    })
+    $("inference_model").addEventListener("change", async () => {
+        await saveFieldNow("inference_model")
+        if (state.hasImage) await runInference()
+    })
+
+    $("save_experiment_info").addEventListener("click", saveWithFeedback)
+    $("index_evaluation").addEventListener("click", evaluateSample)
+    $("applyDefaultsButton").addEventListener("click", () => {
+        $("applyDefaultsButton").closest("details").removeAttribute("open")
+        applyDefaults({ announce: true })
+    })
+    $("resultDialog").addEventListener("click", (event) => {
+        if (event.target === $("resultDialog")) $("resultDialog").close()
+    })
+
     window.addEventListener("beforeunload", (event) => {
         if (unsavedFields.size > 0 || pendingSaves > 0) {
             event.preventDefault()
@@ -317,944 +561,64 @@ function initSampleDataSaving() {
     })
 }
 
-function get_overlay_masks() {
-    let formData = new FormData()
-    formData.append("imageId", "gray")
-
-    fetch("/get-overlay-masks", { method: "POST", body: formData })
-        .then((response) => response.json())
-        .then((data) => {
-            asphaltMaskURL = URL.createObjectURL(
-                base64toBlob(data.asphalt_mask, "image/png"),
-            )
-            aggregateMaskURL = URL.createObjectURL(
-                base64toBlob(data.aggregate_mask, "image/png"),
-            )
-            backgroundMaskURL = URL.createObjectURL(
-                base64toBlob(data.background_mask, "image/png"),
-            )
-        })
-        .catch((error) => {
-            console.error("Error during mask fetch:", error)
-        })
-}
-
-function get_image_grayscale() {
-    fetch("/get-image-grayscale", { method: "GET" })
-        .then((response) => response.json())
-        .then((data) => {
-            uploadedImageURL_gray = URL.createObjectURL(
-                base64toBlob(data.gray, "image/png"),
-            )
-        })
-        .catch((error) => {
-            console.error("Error during image grayscle fetch:", error)
-        })
-}
-
-function get_image_color() {
-    fetch("/get-image-color", { method: "GET" })
-        .then((response) => response.json())
-        .then((data) => {
-            uploadedImageURL_gray = URL.createObjectURL(
-                base64toBlob(data.color, "image/png"),
-            )
-        })
-        .catch((error) => {
-            console.error("Error during image color fetch:", error)
-        })
-}
-
-function get_images() {
-    get_image_grayscale()
-    get_image_color()
-}
-
-function unlockControls() {
-    // Find all sliders and input boxes and enable them
-    document.querySelectorAll(".slider-group input").forEach((input) => {
-        input.disabled = false
+function initViewerControls() {
+    for (const layer of Object.values(LAYERS)) layer.toggle.addEventListener("change", applyLayerVisibility)
+    $("opacitySlider").addEventListener("input", () => {
+        $("opacityValue").textContent = $("opacitySlider").value + " %"
+        applyLayerVisibility()
     })
-}
+    $("imageType").addEventListener("change", drawPhoto)
 
-function inference() {
-    const model_name = document.getElementById("inference_model").value
-    let formData = new FormData()
-    formData.append("model_name", model_name)
-
-    const uniqueQuery = "?nocache=" + new Date().getTime()
-    return fetch("/inference" + uniqueQuery, { method: "POST", body: formData })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.status === "success") {
-                //    uploadedImageOverlay.src = URL.createObjectURL(base64toBlob(data.asphalt_mask, 'image/png'));
-                uploadedImageURL_mask_asphalt = URL.createObjectURL(
-                    base64toBlob(data.asphalt_mask, "image/png"),
-                )
-                uploadedImageURL_mask_aggregate = URL.createObjectURL(
-                    base64toBlob(data.aggregate_mask, "image/png"),
-                )
-                uploadedImageURL_mask_bg = URL.createObjectURL(
-                    base64toBlob(data.background_mask, "image/png"),
-                )
-
-                uploadedImageOverlay_aggregate.src =
-                    uploadedImageURL_mask_aggregate
-                uploadedImageOverlay_asphalt.src = uploadedImageURL_mask_asphalt
-                uploadedImageOverlay_bg.src = uploadedImageURL_mask_bg
-            }
-        })
-        .catch((error) => {
-            console.error("Error during inference:", error)
-        })
-}
-
-function colorizeMask(maskImageData, color = [255, 0, 0]) {
-    const data = maskImageData.data // Uint8ClampedArray [r,g,b,a, r,g,b,a, ...]
-
-    for (let i = 0; i < data.length; i += 4) {
-        const a = data[i + 3]
-        const on = a > 127 // opacity threshold to determine if the pixel is "on"
-
-        if (on) {
-            if (Array.isArray(color) && color.length === 4) {
-                data[i] = color[0] // R
-                data[i + 1] = color[1] // G
-                data[i + 2] = color[2] // B
-            }
-            data[i + 3] = 255 // A (fully opaque)
-        } else {
-            // transparent background
-            data[i + 3] = 0
-        }
-    }
-
-    return maskImageData
-}
-
-function overlayMask(baseUrl, maskUrl) {
-    const base = new Image()
-    const mask = new Image()
-
-    Promise.all([
-        new Promise((r) => {
-            base.onload = r
-            base.src = baseUrl
-        }),
-        new Promise((r) => {
-            mask.onload = r
-            mask.src = maskUrl
-        }),
-    ]).then(() => {
-        const canvas = document.getElementById("imageCanvas")
-        const ctx = canvas.getContext("2d")
-        canvas.width = base.width
-        canvas.height = base.height
-
-        ctx.drawImage(base, 0, 0)
-        ctx.drawImage(mask, 0, 0)
-    })
-}
-
-async function createImageURLs(data) {
-    return new Promise((resolve) => {
-        uploadedImageURL_color = URL.createObjectURL(
-            base64toBlob(data.color, "image/png"),
-        )
-        uploadedImageURL_gray = URL.createObjectURL(
-            base64toBlob(data.gray, "image/png"),
-        )
-        resolve()
-    })
-}
-
-document
-    .getElementById("upload-button-camera")
-    .addEventListener("click", () => {
-        uploadImage()
-    })
-
-const bgProcessingLoader = document.getElementById("bgProcessingLoader")
-
-function showBgProcessingLoader() {
-    bgProcessingLoader.hidden = false
-    bgProcessingLoader.setAttribute("aria-busy", "true")
-}
-
-function hideBgProcessingLoader() {
-    bgProcessingLoader.hidden = true
-    bgProcessingLoader.removeAttribute("aria-busy")
-}
-
-async function uploadImage() {
-    document.getElementById("defaultImage").style.display = "none"
-    displayWorkingMessage()
-
-    // get the file from the input
-
-    const fileInput = document.getElementById("fileInput")
-    if (fileInput.files.length === 0) return
-    const file = fileInput.files[0]
-
-    // get upload time
-    const now = new Date()
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
-
-    let formData = new FormData()
-    formData.append("file", file)
-
-    // 1️⃣ Wait for image processing
-    const data_image = await fetch("/process-image", {
-        method: "POST",
-        body: formData,
-    })
-
-    const data = await data_image.json()
-
-    document.getElementById("info_datetime").value = now
-        .toISOString()
-        .slice(0, 16)
-    // update the info_datetime field in the database
-    formData = new FormData()
-    formData.append(
-        "info_datetime",
-        document.getElementById("info_datetime").value,
-    )
-    await fetch("/update_value/info_datetime", {
-        method: "POST",
-        body: formData,
-    })
-    // update the inference_model field in the database
-    formData = new FormData()
-    formData.append(
-        "inference_model",
-        document.getElementById("inference_model").value,
-    )
-    await fetch("/update_value/inference_model", {
-        method: "POST",
-        body: formData,
-    })
-
-    await createImageURLs(data)
-
-    // 2️⃣ Wait for default experiment info
-    const defaultResponse = await fetch("/get-default-experiment-info")
-    const defaultData = await defaultResponse.json()
-    if (defaultData.status === "success") {
-        for (const [key, value] of Object.entries(defaultData.data)) {
-            const input = document.getElementById(key)
-            if (input) {
-                input.value = value
-                saveFieldNow(key)
-            }
-        }
-        enableInputFields()
-    }
-
-    // 3️⃣ Only now continue with inference
-    inference()
-        // .then(() => {
-        //     document.getElementById("defaultImage").style.display = "none"
-        // })
-        .then(() => getImageType())
-        .then(() => unlockControls())
-        // .then(() => enableInputFields())
-        .then(() => removeWorkingMessage())
-    // .then(() => console.log("Image processed successfully."))
-}
-
-function removeBackground(formData) {
-    return new Promise((resolve, reject) => {
-        const uniqueQuery = "?nocache=" + new Date().getTime()
-        fetch("/remove-background" + uniqueQuery, {
-            method: "POST",
-            body: formData,
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                let url = URL.createObjectURL(
-                    base64toBlob(data.nobg, "image/png"),
-                )
-                uploadedImageURL_nobg = url
-                if (uploadedImageURL_nobg_blur == null) {
-                    uploadedImageURL_nobg_blur = url
-                }
-                let url2 = URL.createObjectURL(
-                    base64toBlob(data.original_image, "image/png"),
-                )
-                uploadedImageURL_color = url2
-                resolve()
-            })
-            .catch((error) => {
-                console.error("Error:", error)
-                reject(error)
-            })
-    })
-}
-
-function fetchGrayscaleData(formData) {
-    return new Promise((resolve, reject) => {
-        const uniqueQuery = "?nocache=" + new Date().getTime()
-        fetch("/grayscale-data" + uniqueQuery, {
-            method: "POST",
-            body: formData,
-        })
-            .then((response) => response.blob())
-            .then((blob) => {
-                let url = URL.createObjectURL(blob)
-                uploadedImageURL_gray = url
-                if (uploadedImageURL_gray_blur == null) {
-                    uploadedImageURL_gray_blur = url
-                }
-            })
-            .then(() => {
-                resolve()
-            })
-            .catch((error) => {
-                console.error("Error:", error)
-                reject(error)
-            })
-    })
-}
-
-function fetchOriginalEntropyData() {
-    return new Promise((resolve, reject) => {
-        var formData = new FormData()
-
-        const uniqueQuery = "?nocache=" + new Date().getTime()
-        fetch("/entropy" + uniqueQuery, { method: "POST", body: formData })
-            .then((response) => response.blob())
-            .then((blob) => {
-                var url = URL.createObjectURL(blob)
-                var img = new Image()
-                img.onload = function () {
-                    var canvas = document.createElement("canvas")
-                    var ctx = canvas.getContext("2d")
-                    canvas.width = img.width
-                    canvas.height = img.height
-                    ctx.drawImage(img, 0, 0)
-
-                    originalEntropyImageData = ctx.getImageData(
-                        0,
-                        0,
-                        canvas.width,
-                        canvas.height,
-                    )
-                    // drawEntropyHistogram(); // Draw the histogram using the fetched entropy data
-                    resolve() // Resolve the promise after the histogram is drawn
-                }
-                img.onerror = reject // Reject the promise on error
-                img.src = url
-            })
-            .catch((error) => {
-                console.error("Error:", error)
-                reject(error) // Reject the promise on fetch error
-            })
-    })
-}
-
-function processImage() {
-    return new Promise((resolve, reject) => {
-        var formData = new FormData()
-        formData.append("imageId", "gray")
-
-        const uniqueQuery = "?nocache=" + new Date().getTime()
-        fetch("/apply-mask" + uniqueQuery, { method: "POST", body: formData })
-            .then((response) => response.json())
-            .then((data) => {
-                let overlayBlob = base64toBlob(data.overlay, "image/png")
-                let entropyBlob = base64toBlob(data.entropy, "image/png")
-                uploadedImageURL_redOverlay = URL.createObjectURL(overlayBlob)
-                // uploadedImageOverlay.src = uploadedImageURL_redOverlay;
-                uploadedImageOverlay_asphalt.src = uploadedImageURL_redOverlay
-                entropyURL = URL.createObjectURL(entropyBlob)
-                resolve()
-            })
-            // .then( () => {getImageType()})
-            .catch((error) => {
-                console.error("Error:", error)
-                reject(error)
-            })
-    })
-}
-
-function TF(a) {
-    return new Promise((resolve, reject) => {
-        try {
-            a = !a
-            resolve(a)
-        } catch (error) {
-            reject(error)
+    // keyboard shortcuts - not while typing into a field
+    document.addEventListener("keydown", (event) => {
+        if (!event.shiftKey || !event.key || event.ctrlKey || event.metaKey || event.altKey) return
+        if (event.target.closest("input, textarea, select, [contenteditable]")) return
+        const toggle = { a: LAYERS.asphalt.toggle, s: LAYERS.aggregate.toggle, d: LAYERS.background.toggle }[
+            event.key.toLowerCase()
+        ]
+        if (toggle) {
+            toggle.checked = !toggle.checked
+            applyLayerVisibility()
+        } else if (event.key.toLowerCase() === "c" && state.hasImage) {
+            const select = $("imageType")
+            select.selectedIndex = (select.selectedIndex + 1) % select.options.length
+            drawPhoto()
+        } else if (event.key.toLowerCase() === "e" && state.hasImage && !state.evaluated) {
+            evaluateSample()
         }
     })
+    initLoupe()
 }
 
-async function changeDisplayAsphalt() {
-    displayAsphaltMask = await TF(displayAsphaltMask)
-    redrawCanvases()
-}
-
-async function changeDisplayAggregate() {
-    displayAggregateMask = await TF(displayAggregateMask)
-    redrawCanvases()
-}
-
-async function changeDisplayBackground() {
-    displayBackgroundMask = await TF(displayBackgroundMask)
-    redrawCanvases()
-}
-
-function getImageType() {
-    let imageType = document.getElementById("imageType").value
-    switch (imageType) {
-        case "original":
-            uploadedImage.src = uploadedImageURL_color
-            break
-        case "original_no_bg":
-            uploadedImage.src = uploadedImageURL_nobg
-            break
-        case "bw":
-            uploadedImage.src = uploadedImageURL_gray
-            break
-    }
-
-    if (displayAsphaltMask) {
-        // console.log("Displaying asphalt mask")
-        uploadedImageOverlay_asphalt.src = uploadedImageURL_mask_asphalt
-        document.getElementById("overlayCanvasAsphalt").style.display = "block"
-        document.getElementById("overlayCanvasAsphalt").style.opacity =
-            labelSettings.mask_opacity
-    } else {
-        document.getElementById("overlayCanvasAsphalt").style.display = "none"
-    }
-    if (displayAggregateMask) {
-        uploadedImageOverlay_aggregate.src = uploadedImageURL_mask_aggregate
-        document.getElementById("overlayCanvasAggregate").style.display =
-            "block"
-        document.getElementById("overlayCanvasAggregate").style.opacity =
-            labelSettings.mask_opacity
-    } else {
-        document.getElementById("overlayCanvasAggregate").style.display = "none"
-    }
-    if (displayBackgroundMask) {
-        uploadedImageOverlay_bg.src = uploadedImageURL_mask_bg
-        document.getElementById("overlayCanvasBackground").style.display =
-            "block"
-        document.getElementById("overlayCanvasBackground").style.opacity =
-            labelSettings.mask_opacity
-    } else {
-        document.getElementById("overlayCanvasBackground").style.display =
-            "none"
-    }
-}
-
-// this function displays a "working" message on the page while the image is being processed
-function displayWorkingMessage() {
-    // let workingMessage = document.getElementById("workingMessage")
-    // workingMessage.style.display = "block"
-    document.querySelectorAll("#workingMessage").forEach((el) => {
-        el.style.display = "block"
+function initUpload() {
+    $("fileInput").addEventListener("change", () => {
+        const file = $("fileInput").files[0]
+        $("fileInput").value = ""
+        uploadPhoto(file)
     })
-    showBgProcessingLoader()
-}
-// this function removes the "working" message from the page
-function removeWorkingMessage() {
-    document.querySelectorAll(".loading").forEach((el) => {
-        el.style.display = "none"
-    })
-    hideBgProcessingLoader()
-}
+    // the camera (script_video.js) puts the captured photo into #fileInput
+    $("upload-button-camera").addEventListener("click", () => uploadPhoto($("fileInput").files[0]))
 
-async function validateAndUpdate() {
-    displayWorkingMessage()
-    await processImage()
-    redrawCanvases()
-    removeWorkingMessage()
-}
-
-function magnify(imgID, zoom) {
-    var img, glass, w, h, bw
-    img = document.getElementById(imgID)
-    glass = document.createElement("DIV")
-    glass.setAttribute("class", "img-magnifier-glass")
-    img.parentElement.insertBefore(glass, img)
-
-    // Setup the properties for the magnifying glass
-    if (img.tagName === "CANVAS") {
-        glass.style.backgroundImage = "url('" + img.toDataURL() + "')"
-    } else {
-        // for image
-        glass.style.backgroundImage = "url('" + img.src + "')"
-    }
-    glass.style.backgroundRepeat = "no-repeat"
-    glass.style.backgroundSize =
-        img.clientWidth * zoom + "px " + img.clientHeight * zoom + "px"
-    bw = 3
-    w = glass.offsetWidth / 2
-    h = glass.offsetHeight / 2
-
-    // Function to move the magnifier glass with the mouse
-    function moveMagnifier(e) {
-        var pos, x, y
-        e.preventDefault()
-        pos = getCursorPos(e)
-        x = pos.x
-        y = pos.y
-
-        // Update the position of the magnifier glass
-        glass.style.left = x - w + "px"
-        glass.style.top = y - h + "px"
-        // Set the background position of the magnifier glass
-        glass.style.backgroundPosition =
-            "-" + (x * zoom - w + bw) + "px -" + (y * zoom - h + bw) + "px"
-    }
-
-    function getCursorPos(e) {
-        var a,
-            x = 0,
-            y = 0
-        e = e || window.event
-        a = img.getBoundingClientRect()
-        x = e.pageX - a.left - window.pageXOffset
-        y = e.pageY - a.top - window.pageYOffset
-
-        // since the canvas adjust its size to the screen, we need to scale the cursor position
-        return { x: x, y: y }
-    }
-
-    // Add event listeners for moving and hiding the magnifier glass
-    img.addEventListener("mousemove", moveMagnifier)
-    glass.addEventListener("mousemove", moveMagnifier)
-
-    // Improved handling for hiding the magnifying glass
-    // Apply 'mouseleave' event to both image and glass
-    img.addEventListener("mouseleave", function () {
-        glass.style.visibility = "hidden"
-    })
-    glass.addEventListener("mouseleave", function () {
-        glass.style.visibility = "hidden"
-    })
-
-    // Optional: Show the glass when entering the image area
-    img.addEventListener("mouseenter", function () {
-        glass.style.visibility = "visible"
-    })
-
-    img.addEventListener("mouseenter", function () {
-        glass.style.visibility = "visible"
-    })
-
-    img.addEventListener("mousemove", moveMagnifier)
-}
-
-function removeMagnifier(imgID) {
-    var img = document.getElementById(imgID)
-    var glass = img.parentElement.getElementsByClassName(
-        "img-magnifier-glass",
-    )[0]
-    if (glass) {
-        glass.remove()
-    }
-}
-
-function redrawCanvases() {
-    if (uploadedImage.src) {
-        getImageType()
-    }
-}
-
-function activateExperiment() {
-    return new Promise((resolve, reject) => {
-        // TODO: Control this function
-        const uniqueQuery = "?nocache=" + new Date().getTime()
-        fetch("/activate-experiment" + uniqueQuery, { method: "POST" })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.status === "success") {
-                    resolve()
-                } else {
-                    reject()
-                }
-            })
-            .catch((error) => {
-                console.error("Error:", error)
-                reject()
-            })
-    })
-}
-
-function deactivateCurrentExperiment() {
-    return new Promise((resolve, reject) => {
-        fetch("is-experiment-active", { method: "GET" })
-            .then((response) => response.json())
-            .then((data) => {
-                // console.log(data)
-                if (data.active === false) {
-                    resolve()
-                } else {
-                    return fetch(
-                        "/deactivate-experiment/" + String(data.experimentId),
-                        { method: "POST" },
-                    )
-                }
-            })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.status === "success") {
-                    resolve()
-                } else {
-                    reject()
-                }
-            })
-            .catch((error) => {
-                console.error("Error:", error)
-                reject()
-            })
-    })
-}
-
-function disableInputFields() {
-    for (const id of INFO_FIELDS) {
-        document.getElementById(id).disabled = true
-    }
-    document.getElementById("save_experiment_info").disabled = true
-}
-
-function enableInputFields() {
-    for (const id of INFO_FIELDS) {
-        document.getElementById(id).disabled = false
-    }
-    document.getElementById("save_experiment_info").disabled = false
-}
-
-function loadExperiment(id) {
-    displayWorkingMessage()
-    fetch("/load-experiment/" + String(id), { method: "GET" })
-        .then((response) => response.json())
-        // .then(data => console.log(data))
-        .then((data) => {
-            // console.log(data)
-            if (data.status === "error") {
-                alert(alerts.noExperiment)
-                removeWorkingMessage()
-                return
-            }
-
-            if (data.expertGuess !== null && !isNaN(data.expert_guess)) {
-                if (data.expert_guess > 0) {
-                    document.getElementById("expertGuess").value = Math.round(
-                        data.expert_guess * 100,
-                    )
-                }
-            }
-
-            for (const id of [...INFO_FIELDS, "inference_model"]) {
-                if (data[id]) {
-                    document.getElementById(id).value = data[id]
-                }
-            }
-            // document.getElementById("info").value = data.info
-
-            // set the image URLs
-            uploadedImageURL_color = URL.createObjectURL(
-                base64toBlob(data.color, "image/png"),
-            )
-            uploadedImageURL_gray = URL.createObjectURL(
-                base64toBlob(data.gray, "image/png"),
-            )
+    for (const zone of [$("dropzone"), $("viewerStage")]) {
+        zone.addEventListener("dragover", (event) => {
+            event.preventDefault()
+            zone.classList.add("is-dragover")
         })
-        .then(() => {
-            document.getElementById("defaultImage").style.display = "none"
+        zone.addEventListener("dragleave", () => zone.classList.remove("is-dragover"))
+        zone.addEventListener("drop", (event) => {
+            event.preventDefault()
+            zone.classList.remove("is-dragover")
+            uploadPhoto(event.dataTransfer.files[0])
         })
-        .then(() => enableInputFields()) // Enable controls after everything is loaded
-        .then(() => inference())
-        .then(() => getImageType())
-        .then(() => enableControls()) // Enable controls after everything is loaded
-        .catch((error) => {
-            console.error("Error:", error)
-        })
-        .finally(() => removeWorkingMessage())
-}
-
-document.querySelectorAll("#inference_model").forEach((element) => {
-    element.addEventListener("change", function () {
-        displayWorkingMessage()
-        inference()
-            .then(() => {
-                redrawCanvases()
-            })
-            .then(() => removeWorkingMessage())
-    })
-})
-
-// Global event listeners
-document
-    .getElementById("redOverlayCheckbox")
-    .addEventListener("change", function () {
-        changeDisplayAsphalt()
-    })
-document
-    .getElementById("aggregateOverlayCheckbox")
-    .addEventListener("change", function () {
-        changeDisplayAggregate()
-    })
-document
-    .getElementById("backgroundOverlayCheckbox")
-    .addEventListener("change", function () {
-        changeDisplayBackground()
-    })
-document.getElementById("imageType").addEventListener("change", redrawCanvases)
-
-async function evaluateExperiment() {
-    console.log("Starting evaluation...")
-    // await dispatchEvents() // Ensure all change events are dispatched - i.e. values saved to db and processed before evaluation
-    if (document.getElementById("expertGuess").value === "") {
-        alert(
-            // "Please fill the expert guess field before evaluating the experiment."
-            alerts.expertGuessEmpty,
-        )
-        return
-    } else {
-        document.getElementById("evalProcessingLoader").hidden = false
-        // evaluate only once all the sample data is confirmed stored - the page is left afterwards
-        if (!(await saveSampleData())) {
-            document.getElementById("evalProcessingLoader").hidden = true
-            alert(alerts.saveFailed + "\n" + lastSaveError)
-            return
-        }
-        const uniqueQuery = "?nocache=" + new Date().getTime()
-        // console.log("Evaluating the experiment...")
-        fetch("/evaluate-asphalt" + uniqueQuery, { method: "POST" })
-            .then((response) => response.json())
-            .then((response) => {
-                if (response.status !== "success") {
-                    throw new Error(response.message)
-                }
-                document.getElementById("evalProcessingLoader").hidden = true
-                let displayNum = response.evaluation * 100
-                displayNum = displayNum.toFixed(2)
-                alert(
-                    alerts.evaluationCompleted +
-                        "\n" +
-                        alerts.evaluationResults +
-                        displayNum +
-                        "%",
-                )
-            })
-            .then(() => deactivateCurrentExperiment())
-            .then(() => {
-                // redirect to the '/' page
-                window.location.href = "/"
-            })
-            .catch((error) => {
-                alert(alerts.evaluationFailed + "\n" + ((error && error.message) || ""))
-            })
-            .finally(() => {
-                document.getElementById("evalProcessingLoader").hidden = true
-            })
     }
 }
 
-document
-    .getElementById("index_evaluation")
-    .addEventListener("click", async function () {
-        evaluateExperiment()
-    })
-// window.addEventListener('resize', function() { magnify('imageCanvas', 4); }); // this ensures the magnifying glass is redrawn when the window is resized
-window.addEventListener("resize", redrawCanvases) // this ensures the magnifying glass is redrawn when the window is resized
+initInputs()
+initViewerControls()
+initUpload()
+setFormEnabled(false)
+updateStepper()
 
-// when the user leaves the expertGuess field and the value is not empty, the min and max values will be updated
-document.getElementById("expertGuess").addEventListener("input", function () {
-    let value = Number(this.value)
-    if (value !== "") {
-        // convert to number
-        value = Number(value)
-        if (value < 0) {
-            this.value = 0
-        } else if (value > 100) {
-            this.value = 100
-        }
-        // send the value to the server
-        scheduleAutosave("expert_guess")
-    }
-})
-
-// if the user visits the page '/' and the experiment is active, load the experiment
-
-disableInputFields()
-initPage() // Disable controls until we know if there's an active experiment
-function initPage() {
-    // console.log("Running on DOMContentLoaded event")
-    fetch("/is-experiment-active")
-        .then((response) => response.json())
-        .then((data) => {
-            // console.log(data)
-            if (data.active === true) {
-                console.log(
-                    "Experiment is active. Loading experiment data...",
-                    data.experimentId,
-                )
-                loadExperiment(data.experimentId)
-            }
-        })
-}
-
-function changeOverlayOpacity() {
-    let value = document.getElementById("opacitySlider").value
-    document.getElementById("opacityValue").value = value
-    labelSettings.mask_opacity = value / 100
-    redrawCanvases()
-}
-
-document
-    .getElementById("opacitySlider")
-    .addEventListener("change", changeOverlayOpacity)
-document.getElementById("opacityValue").addEventListener("change", function () {
-    let value = Math.min(100, Math.max(0, parseInt(this.value)))
-    document.getElementById("opacitySlider").value = value
-    document.getElementById("opacityValue").value = value
-    changeOverlayOpacity()
-})
-
-// keyboard shortcuts
-document.addEventListener("keydown", function (event) {
-    // Prevents an error when event.key is undefined (e.g., when confirming auto-fill prompts )
-    if (!event.key) {
-        return
-    }
-    const eventKey = event.key.toLowerCase()
-    // shif + ...
-    switch (eventKey) {
-        case "a":
-            if (event.shiftKey) {
-                document.getElementById("redOverlayCheckbox").checked =
-                    !document.getElementById("redOverlayCheckbox").checked
-                changeDisplayAsphalt()
-            }
-            break
-        case "s":
-            if (event.shiftKey) {
-                document.getElementById("aggregateOverlayCheckbox").checked =
-                    !document.getElementById("aggregateOverlayCheckbox").checked
-                changeDisplayAggregate()
-            }
-            break
-        case "d":
-            if (event.shiftKey) {
-                document.getElementById("backgroundOverlayCheckbox").checked =
-                    !document.getElementById("backgroundOverlayCheckbox")
-                        .checked
-                changeDisplayBackground()
-            }
-            break
-        case "e":
-            // evaluate the experiment
-            if (event.shiftKey) {
-                evaluateExperiment()
-            }
-            break
-        case "c":
-            if (event.shiftKey) {
-                // change the image type
-                let imageType = document.getElementById("imageType")
-                imageType.selectedIndex =
-                    (imageType.selectedIndex + 1) % imageType.options.length
-                redrawCanvases()
-            }
-            break
-    }
-})
-
-document.querySelectorAll(".custom-select").forEach((select) => {
-    const trigger = select.querySelector(".select-trigger")
-    trigger.addEventListener("click", () => {
-        select.classList.toggle("open")
-    })
-
-    select.querySelectorAll(".option").forEach((option) => {
-        option.addEventListener("click", () => {
-            trigger.textContent = option.textContent + " ▼"
-            select.classList.remove("open")
-        })
-    })
-})
-
-function getFormattedDateTime() {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, "0")
-    const day = String(now.getDate()).padStart(2, "0")
-    const hours = String(now.getHours()).padStart(2, "0")
-    const minutes = String(now.getMinutes()).padStart(2, "0")
-    return `${year}-${month}-${day} ${hours}:${minutes}`
-}
-
-async function getDefaultExperimentInfo() {
-    return new Promise((resolve, reject) => {
-        const uniqueQuery = "?nocache=" + new Date().getTime()
-        fetch("/get-default-experiment-info" + uniqueQuery, { method: "GET" })
-            .then((response) => response.json())
-            .then((data) => {
-                data.datetime = getFormattedDateTime()
-                // console.log("Default experiment info:", data)
-                resolve(data)
-            })
-            .catch((error) => {
-                console.error("Error:", error)
-                reject(error)
-            })
-    })
-}
-
-function populateExperimentInfo(info) {
-    document.getElementById("info_datetime").value = info.datetime
-    document.getElementById("info_sample_collection_data").value =
-        info.info_sample_collection_data
-    document.getElementById("info_place_of_experiment").value =
-        info.info_place_of_experiment
-    document.getElementById("info_test_procedure").value =
-        info.info_test_procedure
-    document.getElementById("info_wrapping_temperature_aggregate").value =
-        info.info_wrapping_temperature_aggregate
-    document.getElementById("info_wrapping_temperature_binder").value =
-        info.info_wrapping_temperature_binder
-    document.getElementById("info_exposing_water_temperature").value =
-        info.info_exposing_water_temperature
-    document.getElementById("info_comment").value = info.info_comment
-}
-
-function initializeMask() {
-    fetch("/get-corrected-mask", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({}),
-    })
-        .then((response) => response.json())
-        .then((data) => {
-            mask_bg = URL.createObjectURL(base64toBlob(data.bg, "image/png"))
-            mask_aggregate = URL.createObjectURL(
-                base64toBlob(data.aggregate, "image/png"),
-            )
-            mask_asphalt = URL.createObjectURL(
-                base64toBlob(data.asphalt, "image/png"),
-            )
-
-            imageMaskBg.src = mask_bg
-            imageMaskAsphalt.src = mask_asphalt
-            imageMaskAggregate.src = mask_aggregate
-        })
-        .catch((error) => {
-            console.error("Error initializing mask:", error)
-        })
-}
-
-document
-    .querySelector("#personalizeSettingsButton")
-    .addEventListener("click", function () {
-        window.location.href = "/useruser#personalized_settings"
-        document.getElementById("experiment_info_section").scrollIntoView({
-            behavior: "smooth",
-        })
-    })
+// continue with the sample that is open for this user (if any)
+const active = await fetch("/is-experiment-active").then((response) => response.json())
+if (active.active) openSample(active.experimentId)
