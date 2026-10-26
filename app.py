@@ -827,13 +827,14 @@ def check_authentication(func):
     return wrapper
 
 def check_is_company_admin(func):
+    """Company admins only (a NULL flag counts as no admin). Use below @check_authentication."""
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if db_api.get_user_by_id(session['user_id'])['is_company_admin']:
+        user = db_api.get_user_by_id(session['user_id']) if session.get('authenticated') else None
+        if user and user['is_company_admin']:
             return func(*args, **kwargs)
-        else:
-            flash(_('You do not have permission to access this page.'), 'error')
-            return redirect(url_for('login')), 302
+        # 403 instead of a redirect to the login page, which logged the user out
+        abort(403, description=_('You do not have permission to access this page.'))
     return wrapper
 
 def ignore_unauthenticated(func):
@@ -954,6 +955,7 @@ def change_email():
 
 @app.route('/change-company-email',methods=['GET','POST'])
 @check_authentication
+@check_is_company_admin
 def change_company_email():
     # TODO: !!! CONFIRMATION EMAIL !!!
     title = _('Change company email')
@@ -999,6 +1001,7 @@ def edit_personal_information():
 
 @app.route('/edit-company-information',methods=['GET','POST'])
 @check_authentication
+@check_is_company_admin
 def edit_company_information():
     match request.method:
         case 'GET':
@@ -1080,18 +1083,25 @@ def is_password_correct(password: str, user_id: int) -> bool:
     true_pwd_hash = db_api.get_password_hash(user_id=user_id)
     return ws.check_password_hash(pwhash=true_pwd_hash,password=password)
 
+def company_member_id(username: str | None) -> int:
+    """
+    ID of the user with the given username in the current admin's company. Aborts with 400 for unknown users,
+    users of other companies and the admin's own account (admin actions must not cross company boundaries).
+    """
+    user_id = db_api.get_user_id(username=username) if username else None
+    member = db_api.get_user_by_id(user_id=user_id) if user_id is not None else None
+    if member is None or member['company'] != db_api.get_user_by_id(user_id=session['user_id'])['company']:
+        abort(400, description=_('User with the provided username does not exist'))
+    if user_id == session['user_id']:
+        abort(400, description=_('You cannot change your own account here.'))
+    return user_id
+
 @app.route('/change-user-blockade',methods=['POST'])
 @check_authentication
+@check_is_company_admin
 def change_user_blockade():
-    # admin code verification  - TODO: wrap in a decorator
     print('Changing user blockade...')
-    if db_api.get_user_by_id(user_id=session['user_id'])['is_company_admin'] is False:
-        abort(403, description=_('You do not have permission to perform this action.'))
-    # user to be altered 
-    username = request.form.get('username',None)
-    user_to_alter_id = db_api.get_user_id(username=username)
-    if user_to_alter_id is None:
-        abort(400, description=_('User with the provided username does not exist'))
+    user_to_alter_id = company_member_id(request.form.get('username', None))
 
     # get the future status
     will_be_blocked = request.form.get('will_be_blocked','false').lower() == 'true'
@@ -1120,16 +1130,10 @@ def return_max_page(total_pages, endpoint, **kwargs):
 
 @app.route('/change-admin-privileges',methods=['POST'])
 @check_authentication
+@check_is_company_admin
 def change_admin_privileges():
-    # admin code verification - TODO: wrap in a decorator
     print('Changing admin privileges...')
-    if db_api.get_user_by_id(user_id=session['user_id'])['is_company_admin'] is False:
-        abort(403, description=_('You do not have permission to perform this action.'))
-    # user to be granted  
-    username = request.form.get('username',None)
-    user_to_alter_id = db_api.get_user_id(username=username)
-    if user_to_alter_id is None:
-        abort(400, description=_('User with the provided username does not exist'))
+    user_to_alter_id = company_member_id(request.form.get('username', None))
 
     # get the future status
     will_be_admin = request.form.get('will_be_admin','false').lower() == 'true'
