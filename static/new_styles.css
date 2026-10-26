@@ -597,3 +597,49 @@ textarea {
 .row-manual .held {
     display: none;
 }
+
+/* Saving of the sample data (Current Sample page) */
+.save-bar {
+    align-items: center;
+    gap: 16px;
+}
+
+.save-bar .btn-details {
+    font-size: 16px;
+    padding: 10px 24px;
+}
+
+.save-bar .btn-details:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.save-status {
+    font-weight: 600;
+}
+
+.save-status.saved {
+    color: var(--myDarkGreen);
+}
+
+.save-status.saving,
+.save-status.unsaved {
+    color: var(--myPalePaleGray);
+}
+
+.save-status.error {
+    color: var(--myDarkRed);
+}
+
+/* Sample designation in the sample records tables */
+.designation-cell {
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.designation-fallback {
+    color: var(--myPalePaleGray);
+    font-style: italic;
+}

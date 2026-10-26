@@ -30,11 +30,12 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import mm, cm
-from reportlab.lib.enums import TA_JUSTIFY, TA_RIGHT, TA_CENTER
+from reportlab.lib.enums import TA_JUSTIFY, TA_RIGHT, TA_CENTER, TA_LEFT
 from reportlab.graphics.shapes import Drawing, Rect, String
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Flowable
+from xml.sax.saxutils import escape as xml_escape
 from dotenv import load_dotenv
 
 REPORT_COLORS = {
@@ -84,6 +85,12 @@ style_justify_right = ParagraphStyle(
     name="JustifiedRight",
     parent=style_justify,
     alignment=TA_RIGHT,
+)
+
+style_left = ParagraphStyle(
+    name="Left",
+    parent=style_justify,
+    alignment=TA_LEFT,
 )
 
 styles.add(ParagraphStyle(
@@ -627,9 +634,15 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
             except ValueError:
                 exp_guesses[-1] = 0.0
 
+    # specimen ID together with the user's designation of the sample (if any)
+    specimens = []
+    for eid, exp in zip(experiment_ids, experiments.values()):
+        label = exp.get('info_sample_label')
+        specimens.append(Paragraph(xml_escape(f"{eid} – {label}" if label not in (None, '', '-') else str(eid)), style_left))
+
     table_data.extend(
         [ items for items in zip(
-            experiment_ids, 
+            specimens,
             # [f"{100*db_api.get_experiment_by_id(eid).get('expert_guess', 0) ):.2f}" for eid in experiment_ids],
             [f"{100*exp_guess:.2f}" for exp_guess in exp_guesses],
             [f"{100*exp.get('asphalt_ratio', 0):.2f}" for exp in experiments.values()],
@@ -892,6 +905,7 @@ def add_experiment_record(pdf: list, experiment: Dict[str, Any], similar: dict =
 
     left_column = [
         Paragraph(_("Sample ID:") + f" {experiment.get('experiment_id', '-')}", styles["Heading3"]),
+        Paragraph(_("Sample Designation:") + f" {xml_escape(str(experiment.get('info_sample_label', '-')))}", style_left),
         Paragraph(_("Date:") + f" {experiment.get('info_datetime', '-')}", style_justify),
         Paragraph(_("Place of Experiment:") + f" {experiment.get('info_place_of_experiment', '-')}", style_justify),
         Paragraph(_("Sample Collection Data:") + f" {experiment.get('info_sample_collection_data', '-')}", style_justify),

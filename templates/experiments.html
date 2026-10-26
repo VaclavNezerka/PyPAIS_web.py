@@ -23,6 +23,7 @@
                 <thead>
                     <tr>
                         <th>{{ _('Sample ID') }}</th>
+                        <th>{{ _('Sample Designation') }}</th>
                         <th>{{ _('Date') }}</th>
                         <th>{{ _('Asphalt coverage - ') + _('Expert guess [%%]') }}</th>
                         <th>{{ _('Asphalt coverage - ') + _('Model prediction [%%]') }}</th>
@@ -52,6 +53,14 @@
                                 <option value="asc">{{ _('Ascending') }}</option>
                             </select>
                         </div>
+
+                        <div class="column modern-column">
+                            <h1 class="modern-label upper">
+                                {{ _('Search by sample designation:') }}
+                            </h1>
+                            <input type="search" id="searchRecords" class="modern-input enhanced-input" value="{{ search }}"
+                                placeholder="{{ _('Designation or sample ID') }}" maxlength="256">
+                        </div>
                     </div>
                     <div class="modern-row">
                         <button class="btn-details" id="edit_selected">{{ _('Edit Selected Sample') }}</button>
@@ -68,7 +77,11 @@
                     {% for field in record %}
                     <tr>
                         {% for column in field %}
+                        {% if loop.index0 == 1 %}
+                        <td class="designation-cell" title="{{ column|striptags }}">{{column}}</td>
+                        {% else %}
                         <td>{{column}}</td>
+                        {% endif %}
                         {% endfor %}
                         <!-- <td> -->
                         <!-- <button class="btn-details" data-id="{{ field.0 }}">{{ _('Edit') }}</button> -->
@@ -96,6 +109,11 @@
                     </tr>
                     {% endfor %}
                     {% endfor %}
+                    {% if not records[1] %}
+                    <tr>
+                        <td colspan="6">{{ _('No records found') }}</td>
+                    </tr>
+                    {% endif %}
                     {% else %}
                     <p>{{ _('No records found') }}</p>
                     {% endif %}

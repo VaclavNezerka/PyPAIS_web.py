@@ -177,7 +177,7 @@ def get_all_company_employees(cur, conn, company_id: int) -> list[dict]:
 @db_connection
 def get_all_company_experiments(cur, conn, company_id: int) -> list[dict]:
     cursor = conn.cursor(cursor_factory=RealDictCursor) 
-    query = 'SELECT experiment_id, time_stamp, u.first_name, u.last_name, u.e_mail, expert_guess, asphalt_ratio  FROM experiments e JOIN users u ON e.user_id = u.id  WHERE u.company=%s AND e.fake_deleted=false;'
+    query = 'SELECT experiment_id, time_stamp, u.first_name, u.last_name, u.e_mail, expert_guess, asphalt_ratio, info_sample_label, info_sample_collection_data  FROM experiments e JOIN users u ON e.user_id = u.id  WHERE u.company=%s AND e.fake_deleted=false;'
     cursor.execute(query, (company_id,))
     result = cursor.fetchall()
     if not result:
@@ -520,6 +520,7 @@ def update_experiment_in_db(cur ,conn, values_dict: dict, experiment_id: str) ->
     values = tuple(values_dict.values()) + (str(experiment_id),)
     cur.execute(command, values)
     conn.commit()
+    return True  # db_connection returns None when the update failed
 
 @db_connection
 def update_users_table(cur,conn, values_dict: dict, user_id: int) -> None:
