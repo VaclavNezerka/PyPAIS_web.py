@@ -19,6 +19,7 @@ import cv2
 import time
 from datetime import timedelta
 import secrets
+import hashlib
 import string
 import os
 import db_api
@@ -29,7 +30,9 @@ from rich.traceback import install
 from typing import Iterable, Literal, cast
 from flask_talisman import Talisman
 import flask_limiter
+from flask_limiter.util import get_remote_address
 import threading
+import warnings
 from werkzeug.middleware.proxy_fix import ProxyFix
 install()
 
@@ -63,6 +66,12 @@ RECAPTCHA_SITE_KEY=os.getenv('RECAPTCHA_SITE_KEY')
 RECAPTCHA_SECRET_KEY=os.getenv('RECAPTCHA_SECRET_KEY')
 
 app = Flask(__name__) # set debug to False for production
+
+# UPLOAD LIMITS - request size and the size of decoded images (anybody can upload in the demo)
+MAX_IMAGE_SIDE = 1920  # longer side of the stored and evaluated photo
+app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_UPLOAD_MB', '40')) * 1024 * 1024
+Image.MAX_IMAGE_PIXELS = int(os.getenv('MAX_IMAGE_MEGAPIXELS', '100')) * 1_000_000
+warnings.simplefilter('error', Image.DecompressionBombWarning)  # over the limit is an error, not just a warning
 
 
 # SESSION CONFIGURATION - FOR MULTIPLE WORKERS AND PERSISTENT SESSIONS
@@ -101,7 +110,7 @@ csp = {
     'img-src': ["'self'", "data:", "blob:"],
 }
 # TODO - check this configuration on the server
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # if behind a proxy, e.g., nginx, apache
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)  # behind one proxy, e.g., nginx, apache (x_for: real client address for rate limits)
 Talisman(app, content_security_policy=csp, force_https=False) # for security headers, force https
 
 
@@ -166,11 +175,21 @@ def inject_template_globals():
     # the language actually used for the page (drives <html lang>, the flag in the navbar and ui.js texts)
     return {'current_lang': str(get_babel_locale() or app.config['BABEL_DEFAULT_LOCALE'])}
 
+def rate_limit_key() -> str:
+    # logged-in users per account, everybody else per client address (ProxyFix x_for provides the real one);
+    # the random user_id of guests is not used - it changes with every new session
+    return f"user:{session['user_id']}" if session.get('authenticated') else get_remote_address()
+
 limiter = flask_limiter.Limiter(
     app=app,
-    key_func=lambda: session.get('user_id', request.remote_addr),
-    default_limits=["500 per day", "500 per hour"]   
+    key_func=rate_limit_key,
+    default_limits=["500 per day", "500 per hour"],
+    # e.g. redis://localhost:6379 - otherwise every gunicorn worker counts separately
+    storage_uri=os.getenv('RATELIMIT_STORAGE_URI', 'memory://'),
 )
+# stricter limits for forms that send e-mails or check passwords, and for the expensive image endpoints
+FORM_RATE_LIMIT = "10 per minute;60 per hour"
+IMAGE_RATE_LIMIT = "30 per minute"
 
 SECRET_KEY_LENGTH = os.getenv('SECRET_KEY_LENGTH', '32')
 HASH_METHOD = os.getenv('HASH_METHOD', 'pbkdf2:sha256')
@@ -485,6 +504,33 @@ class GuestTemporaryStorage(TemporaryStorage):
 serializer = URLSafeTimedSerializer(app.secret_key)
 
 
+# Public address of the app (e.g. https://aibal.example.cz) for links in e-mails. Without it the links are built
+# from the request's Host / X-Forwarded-Host header, which a client can forge to point e-mailed tokens elsewhere.
+APP_BASE_URL = os.getenv('APP_BASE_URL', '').rstrip('/')
+if not APP_BASE_URL:
+    print('WARNING: APP_BASE_URL is not set - links in e-mails are built from the request host header.')
+
+def external_url(endpoint: str, **values) -> str:
+    """Absolute URL of an endpoint for e-mails and texts shown to users (based on APP_BASE_URL when set)."""
+    if APP_BASE_URL:
+        return APP_BASE_URL + url_for(endpoint, **values)
+    return url_for(endpoint, _external=True, **values)
+
+app.jinja_env.globals['external_url'] = external_url
+
+def password_fingerprint(user_id: int | None) -> str:
+    """Changes whenever the user's password changes - binds e-mailed password links to it, so they work only once."""
+    pwd_hash = db_api.get_password_hash(user_id=user_id) if user_id is not None else None
+    return hashlib.sha256((pwd_hash or '').encode()).hexdigest()[:16]
+
+def load_password_token(token: str, salt: str) -> tuple[str, int]:
+    """E-mail and user ID from a password link; raises BadSignature when the password was changed since it was sent."""
+    data = serializer.loads(token, salt=salt, max_age=MAX_TOKEN_AGE)
+    user_id = db_api.get_user_id(email=data['e_mail'])
+    if user_id is None or data.get('pwd') != password_fingerprint(user_id):
+        raise BadSignature('password link already used')
+    return data['e_mail'], user_id
+
 def send_email_confirmation(to_mails: list[str], data: dict, confirmation: Literal ['confirm_email_first', 'confirm_email_change', 'confirm_company_registration_admin', 'confirm_password_reset', 'forgot_password'], intro_text: str, request_details: dict = {}, title: str = 'AIBAL') -> bool:
     """Send an email confirmation link to the user.
     
@@ -497,7 +543,7 @@ def send_email_confirmation(to_mails: list[str], data: dict, confirmation: Liter
     """
     try:
         token = serializer.dumps(data, salt=f'{confirmation}-salt')
-        confirm_url = url_for(confirmation, token=token, _external=True)
+        confirm_url = external_url(confirmation, token=token)
         
         template = 'mail_confirm.html'
 
@@ -526,15 +572,16 @@ def confirm_request(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
+        except SignatureExpired:  # a subclass of BadSignature - must be caught first
+            flash(_('The confirmation link has expired.'), 'danger')
+            return redirect(url_for('home'))
         except BadSignature:
             flash(_('The confirmation link is invalid'), 'danger')
-            return redirect(url_for('home'))
-        except SignatureExpired:
-            flash(_('The confirmation link has expired.'), 'danger')
             return redirect(url_for('home'))
     return wrapper
 
 @app.route('/forgot_password', methods=['GET', 'POST'])
+@limiter.limit(FORM_RATE_LIMIT, methods=['POST'], key_func=get_remote_address)
 def forgot_password_form():
     dynamic_content = _('Forgot your password? Enter your email address.')
     form = forms.EmailForgotPasswordForm()
@@ -550,7 +597,7 @@ def forgot_password_form():
                     # send email with confirmation link
                     send_email_confirmation(
                         to_mails=[e_mail_address],
-                        data={'e_mail': e_mail_address}, 
+                        data={'e_mail': e_mail_address, 'pwd': password_fingerprint(user)},
                         confirmation='forgot_password',
                         intro_text=_('You have requested to reset your password. Please click the button below to reset your password:'),
                         title=_('AIBAL: Password Reset Request')
@@ -565,7 +612,7 @@ def forgot_password(token: str):
     """Confirm the user's email address using the provided token."""
     match request.method: 
         case 'GET':
-            email = serializer.loads(token, salt='forgot_password-salt', max_age=MAX_TOKEN_AGE)['e_mail']  # token valid for 1 hour
+            email, user_id = load_password_token(token, 'forgot_password-salt')  # valid for MAX_TOKEN_AGE, until the password changes
             db_api.confirm_user_email(email)
             form = forms.ChangeForgottenPasswordForm()
             flash(_('You can now reset your password!'), 'success')
@@ -574,10 +621,11 @@ def forgot_password(token: str):
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form = forms.ChangeForgottenPasswordForm()
             if form.validate_on_submit():
-                email = serializer.loads(token, salt='forgot_password-salt', max_age=MAX_TOKEN_AGE)['e_mail']  # token valid for 1 hour
+                email, user_id = load_password_token(token, 'forgot_password-salt')
                 password_hash = generate_password_hash(form.new_password.data)
-                user_id = db_api.get_user_id(email=email)
-                db_api.update_users_table(values_dict={'pwd': password_hash}, user_id=user_id)
+                if not db_api.update_users_table(values_dict={'pwd': password_hash}, user_id=user_id):
+                    flash(_('There was an error setting your password. Please try again.'), 'danger')
+                    return render_template('form.html', form=form, token=token, recaptcha_site_key=RECAPTCHA_SITE_KEY), 500
                 flash(_('Your password has been set. You can now log in!'), 'success')
             else:
                 flash(_('There was an error setting your password. Please try again.'), 'danger')
@@ -600,7 +648,7 @@ def confirm_company_registration_user(token: str):
     """Confirm the user's email address using the provided token."""
     match request.method: 
         case 'GET':
-            email = serializer.loads(token, salt='confirm_company_registration_user-salt', max_age=MAX_TOKEN_AGE)['e_mail']  # token valid for 1 hour
+            email, user_id = load_password_token(token, 'confirm_company_registration_user-salt')  # valid until the password is set
             db_api.confirm_user_email(email)
             print(f'Confirming company registration for user email: {email}')
             form = forms.ChangeForgottenPasswordForm()
@@ -610,10 +658,11 @@ def confirm_company_registration_user(token: str):
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
             form = forms.ChangeForgottenPasswordForm()
             if form.validate_on_submit():
-                email = serializer.loads(token, salt='confirm_company_registration_user-salt', max_age=MAX_TOKEN_AGE)['e_mail']  # token valid for 1 hour
+                email, user_id = load_password_token(token, 'confirm_company_registration_user-salt')
                 password_hash = generate_password_hash(form.new_password.data)
-                user_id = db_api.get_user_id(email=email)
-                db_api.update_users_table(values_dict={'pwd': password_hash}, user_id=user_id)
+                if not db_api.update_users_table(values_dict={'pwd': password_hash}, user_id=user_id):
+                    flash(_('There was an error setting your password. Please try again.'), 'danger')
+                    return render_template('form.html', form=form, token=token, recaptcha_site_key=RECAPTCHA_SITE_KEY), 500
                 flash(_('Your password has been set. You can now log in!'), 'success')
             else:
                 flash(_('There was an error setting your password. Please try again.'), 'danger')
@@ -646,7 +695,7 @@ def confirm_company_registration_admin(token: str):
     print(datadict)
     send_email_confirmation(
         to_mails=[datadict['e_mail']],
-        data={'e_mail': datadict['e_mail']}, 
+        data={'e_mail': datadict['e_mail'], 'pwd': password_fingerprint(user_id)},
         confirmation='confirm_company_registration_user',
         intro_text=_('Welcome to AIBAL! Your company registration has been confirmed by the AIBAL administrator.' \
                      'The administrator account for your company has been created automatically (with this email address currently used as a login username - you can change any credentials later).' \
@@ -865,6 +914,7 @@ def is_users_experiment(id: int):
     
     
 @app.route('/home', methods=['GET','POST'])
+@limiter.limit(FORM_RATE_LIMIT, methods=['POST'], key_func=get_remote_address)
 def home():
     models = discover_models()
     title = _('Contact us!')
@@ -1142,6 +1192,7 @@ def change_admin_privileges():
 
 
 @app.route('/login',methods=['GET','POST'])
+@limiter.limit(FORM_RATE_LIMIT, methods=['POST'], key_func=get_remote_address)
 def login():
     if 'authenticated' in session and session['authenticated']:
         logout()
@@ -1370,6 +1421,7 @@ def company():
     return render_template('company.html',session=session,dynamic_content=company_data_dict)
             
 @app.route('/register',methods=['GET','POST'])
+@limiter.limit(FORM_RATE_LIMIT, methods=['POST'], key_func=get_remote_address)
 def register():
     # shown next to the form: users join an existing company with its key, a new company registers separately
     optional_content = Markup(
@@ -1553,6 +1605,7 @@ def export_report(ids):
 
 
 @app.route('/register-company',methods=['GET','POST'])
+@limiter.limit(FORM_RATE_LIMIT, methods=['POST'], key_func=get_remote_address)
 def register_company():
     match request.method:
         case 'GET':
@@ -1934,7 +1987,7 @@ def downscale_image(image: np.ndarray, scale_factor: float = None) -> np.ndarray
     --------
         np.ndarray: The downscaled image as a numpy array.
     """
-    max_size = 1920
+    max_size = MAX_IMAGE_SIDE
     if scale_factor is None:
         # compute scale factor based on the image size such that the maximum dimension is 1200 pixels
         scale_factor = 1.0
@@ -1949,20 +2002,28 @@ def downscale_image(image: np.ndarray, scale_factor: float = None) -> np.ndarray
     return downscaled_image
 
 def polish_input_image_file(file) -> np.ndarray:
-    image = Image.open(file.stream).convert("RGB")
+    image = Image.open(file.stream)  # raises for images over Image.MAX_IMAGE_PIXELS (decompression bombs)
+    # large JPEGs are decoded at a reduced scale right away - still at least 2x the final size (see downscale_image)
+    image.draft('RGB', (2 * MAX_IMAGE_SIDE, 2 * MAX_IMAGE_SIDE))
+    image = image.convert("RGB")
     np_image = np.array(image)
     np_image = downscale_image(np_image, scale_factor=None)
     return np_image.astype(np.uint8)
 
 @app.route('/process-image',methods=['POST'])
+@limiter.limit(IMAGE_RATE_LIMIT)
 def process_image():
     """
     This function processes the image and returns the processed image.
     It should be called when the user wants to process the image.
     """
-    file = request.files['file']
-    image = polish_input_image_file(file)
-    
+    file = request.files.get('file')
+    try:
+        image = polish_input_image_file(file)
+    except (AttributeError, OSError, ValueError, Image.DecompressionBombError, Image.DecompressionBombWarning) as e:
+        print(f'Rejected upload: {e!r}')
+        return json.dumps({'status': 'error', 'message': _('Please choose an image file (JPG, PNG or HEIC).')}), 400, {'Content-Type': 'application/json'}
+
     storage.from_dict({
         'experiment_id': None,
         'color': image.copy(),
@@ -2015,6 +2076,7 @@ def to_base64(image_array: np.ndarray) -> str:
 
 
 @app.route('/inference',methods=['POST'])
+@limiter.limit(IMAGE_RATE_LIMIT)
 def inference_image():
     model_name = request.form.get('model_name', None)
     if model_name not in discover_models():

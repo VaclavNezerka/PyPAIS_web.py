@@ -542,8 +542,9 @@ def update_users_table(cur,conn, values_dict: dict, user_id: int) -> None:
     cur.execute('SELECT 1 FROM users WHERE id=%s FOR UPDATE', (user_id,))
     command = f'UPDATE users SET ' + ', '.join([f"{key}=%s" for key in values_dict.keys()]) + ' WHERE id=%s'
     values = tuple(values_dict.values()) + (user_id,)
-    cur.execute(command, values)   
+    cur.execute(command, values)
     conn.commit()
+    return True  # db_connection returns None when the update failed
 
 @db_connection
 def update_companies_table(cur,conn, values_dict: dict, company_id: int) -> None:

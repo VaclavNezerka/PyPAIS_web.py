@@ -24,7 +24,7 @@
     </div>
     <ol class="steps-list">
       <li>{{ _('Send the key to your colleague.') }}</li>
-      <li>{{ _('The colleague registers at') }} <span class="mono">{{ url_for('register', _external=True) }}</span> {{ _('and enters the key.') }}</li>
+      <li>{{ _('The colleague registers at') }} <span class="mono">{{ external_url('register') }}</span> {{ _('and enters the key.') }}</li>
       <li>{{ _('After confirming the e-mail address, the colleague appears among the employees.') }}</li>
     </ol>
     <p class="small muted" id="keyHideNote">{{ _('For security, the key will be hidden in one minute.') }}</p>
