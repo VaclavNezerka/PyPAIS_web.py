@@ -288,25 +288,14 @@ function renderRows() {
             num.min = toUi(caption.min)
             num.max = toUi(caption.max)
             num.step = "any"
+            // the profile is updated in apply() once the camera has accepted the value
             range.addEventListener("input", () => {
                 num.value = fmt(toUi(r.log ? 2 ** range.value : +range.value))
-                // adjust current profile
-                CURRENT_PROFILE[r.key] = r.log ? 2 ** range.value : +range.value
             })
-            range.addEventListener(
-                "change",
-                () => setValue(r, r.log ? 2 ** range.value : +range.value),
-                // adjust current profile
-                (CURRENT_PROFILE[r.key] = r.log
-                    ? 2 ** range.value
-                    : +range.value),
+            range.addEventListener("change", () =>
+                setValue(r, r.log ? 2 ** range.value : +range.value),
             )
-            num.addEventListener(
-                "change",
-                () => setValue(r, fromUi(+num.value)),
-                // adjust current profile
-                (CURRENT_PROFILE[r.key] = fromUi(+num.value)),
-            )
+            num.addEventListener("change", () => setValue(r, fromUi(+num.value)))
             row.append(range, num)
         } else {
             row.append(
@@ -333,10 +322,23 @@ renderRows.onError = (e) => {
 async function apply(set, what) {
     try {
         await track.applyConstraints({ advanced: [set] })
+        rememberInProfile(set)
     } catch (e) {
         console.error(`${what}: the camera refused it. ${describe(e)}`, true)
     }
     refresh()
+}
+
+/** Keep what the user set, so the camera gets it again when it is opened next time. */
+function rememberInProfile(set) {
+    for (const [key, value] of Object.entries(set)) {
+        CURRENT_PROFILE[key] = value
+        // on Windows 'gain' is the exposureCompensation control - lockCamera() accepts only one of them
+        if (key === "exposureCompensation") delete CURRENT_PROFILE.gain
+        // back in auto mode the value is the camera's own (on Windows sending a value would switch to manual)
+        const group = GROUPS.find(([modeKey]) => modeKey === key)
+        if (group && value !== "manual") delete CURRENT_PROFILE[group[1]]
+    }
 }
 
 function setValue(r, raw) {
@@ -377,12 +379,15 @@ refresh.onError = (e) => {
     console.error("refresh error:", e)
 }
 
-function applyProfile(profile) {
-    lockCamera(track, profile, { platform })
-    for (const r of ROWS) {
-        if (!isRange(caps[r.key])) continue
-        $(`in-${r.key}`).value = profile[r.key]
+async function applyProfile(profile) {
+    try {
+        // 'not fully locked' is normal: the profile also lists controls a camera may not have (ISO, focus...)
+        console.info(formatReport(await lockCamera(track, profile, { platform })))
+    } catch (e) {
+        console.error(`Camera settings could not be locked: ${describe(e)}`)
+        window.ui?.toast(String(e.message || e), "error")
     }
+    refresh() // the rows show what the camera really holds now
 }
 
 function detectPlatform() {
@@ -493,6 +498,11 @@ function resolveTarget(key, target, cap, current) {
     return snapToCapability(key, v, cap)
 }
 
+/** A failed applyConstraints() as text, e.g. "OverconstrainedError (exposureTime): ..." */
+function describe(e) {
+    return `${e.name}${e.constraint ? ` (${e.constraint})` : ""}: ${e.message}`
+}
+
 async function tryApply(track, constraintSet) {
     try {
         // Bare values in the first advanced set: the long-standing form for these
@@ -501,7 +511,7 @@ async function tryApply(track, constraintSet) {
         await track.applyConstraints({ advanced: [constraintSet] })
         return null
     } catch (e) {
-        return `${e.name}${e.constraint ? ` (${e.constraint})` : ""}: ${e.message}`
+        return describe(e)
     }
 }
 
