@@ -351,6 +351,8 @@ def esc(value, default: str = '-') -> str:
     """Text for reportlab Paragraph markup - user data must not be parsed as markup (e.g. '<frakce 8/16>' or '<img>')."""
     if value is None or value == '' or value == 'None':
         return default
+    if isinstance(value, float):
+        value = f"{value:g}"  # numeric columns (e.g. temperatures): 165 instead of 165.0
     return xml_escape(str(value))
 
 def as_float(value) -> float | None:
