@@ -24,7 +24,7 @@ import concurrent.futures as cf
 # PDF generation imports
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Table, TableStyle,
-    Spacer, Image as RLImage, PageBreak, Frame, PageTemplate, ListFlowable
+    Spacer, Image as RLImage, PageBreak, Frame, PageTemplate, ListFlowable, KeepTogether
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.pagesizes import A4
@@ -67,18 +67,28 @@ styles["Heading2"].fontName = "DejaVu-Bold"
 styles["Heading3"].fontName = "DejaVu-Bold"
 styles["Heading4"].fontName = "DejaVu-Bold"
 
-# styles["Heading1"].fontSize = 16
-# styles["Heading2"].fontSize = 14
-# styles["Heading3"].fontSize = 12
-# styles["Heading4"].fontSize = 11
+# compact headings - the report used to need two pages per sample
+styles["Title"].spaceAfter = 4
+styles["Heading2"].fontSize = 12
+styles["Heading2"].leading = 15
+styles["Heading2"].spaceBefore = 6
+styles["Heading2"].spaceAfter = 3
+styles["Heading3"].fontSize = 11
+styles["Heading3"].leading = 14
+styles["Heading3"].spaceBefore = 2
+styles["Heading3"].spaceAfter = 3
+styles["Heading4"].fontSize = 10
+styles["Heading4"].leading = 13
+styles["Heading4"].spaceBefore = 4
+styles["Heading4"].spaceAfter = 2
 
 style_justify = ParagraphStyle(
     name="Justified",
     # parent=styles["Normal"],
     parent=styles["Unicode"],
     alignment=TA_JUSTIFY,
-    fontSize=10.5,
-    leading=14,
+    fontSize=9.5,
+    leading=12.5,
 )
 
 style_justify_right = ParagraphStyle(
@@ -91,6 +101,14 @@ style_left = ParagraphStyle(
     name="Left",
     parent=style_justify,
     alignment=TA_LEFT,
+)
+
+# "Label: value" cells of the sample information grid
+style_field = ParagraphStyle(
+    name="Field",
+    parent=style_left,
+    fontSize=8.5,
+    leading=10.5,
 )
 
 # mask colour legend under the processed image - wraps within the image column (longer in some languages)
@@ -142,16 +160,30 @@ pdfmetrics.registerFont(
 
 
 
+def fitted_font_size(text: str, font: str, size: float, max_width: float, min_size: float = 5) -> float:
+    """The font size (at most `size`) at which the text fits into max_width - long words of some languages."""
+    width = pdfmetrics.stringWidth(text, font, size)
+    return size if width <= max_width else max(min_size, size * max_width / width)
+
+
 class EnergyLabel(Flowable):
-    def __init__(self, adhesion_rate: float, width=50, spacing=0, bar_height=20, arrow_tip=20):
+    """
+    Class scale of CSN 73 6161 (A-G, unclassifiable) with the adhesion rate and its rating in a box on the left and
+    the reached class marked on the right. Sized for half of the page, so both assessments sit side by side.
+    """
+    bar_height = 13
+    bar_gap = 1
+    box_width = 68
+    arrow_tip = 7
+    arrow_base = 30   # width of the class A arrow; each next class is arrow_step longer
+    arrow_step = 11
+    marker_width = 36
+
+    def __init__(self, adhesion_rate: float):
         super().__init__()
-        self.rating = get_CSN_73_6161_classification(adhesion_rate) 
-        self.word_rating = get_CSN_73_6161_word_classification(adhesion_rate) 
+        self.rating = get_CSN_73_6161_classification(adhesion_rate)
+        self.word_rating = get_CSN_73_6161_word_classification(adhesion_rate)
         self.adhesion_rate = adhesion_rate
-        self.width = width
-        self.bar_height = bar_height
-        self.spacing = spacing
-        self.arrow_tip = arrow_tip
 
         self.classes = [
             "A",
@@ -175,107 +207,70 @@ class EnergyLabel(Flowable):
             colors.HexColor("#160001"),
         ]
 
-        self.height = len(self.classes)*(self.bar_height+self.spacing)
+        self.arrows_x = self.box_width + 6
+        longest_arrow = self.arrow_base + (len(self.classes) - 1) * self.arrow_step
+        self.marker_x = self.arrows_x + longest_arrow + self.arrow_tip + 4
+        self.width = self.marker_x + self.marker_width
+        self.height = len(self.classes) * (self.bar_height + self.bar_gap) - self.bar_gap
 
-    def draw_arrow(self, c, x, y, width, height, color, text):
+    def draw_label(self, c, x, y, max_width, text):
+        size = fitted_font_size(text, "DejaVu-Bold", 9, max_width)
+        c.setFillColor(colors.white)
+        c.setFont("DejaVu-Bold", size)
+        c.drawString(x, y + (self.bar_height - 0.7 * size) / 2, text)
+
+    def draw_arrow(self, c, x, y, width, color, text):
+        """Bar of one class, pointing right."""
         c.setFillColor(color)
-        c.setStrokeColor(color)
-
-        arrow_tip = self.arrow_tip
-
         path = c.beginPath()
         path.moveTo(x, y)
-        path.lineTo(x + width - arrow_tip, y)
-        path.lineTo(x + width, y + height / 2)
-        path.lineTo(x + width - arrow_tip, y + height)
-        path.lineTo(x, y + height)
+        path.lineTo(x + width - self.arrow_tip, y)
+        path.lineTo(x + width, y + self.bar_height / 2)
+        path.lineTo(x + width - self.arrow_tip, y + self.bar_height)
+        path.lineTo(x, y + self.bar_height)
         path.close()
-
         c.drawPath(path, fill=1, stroke=0)
+        self.draw_label(c, x + 4, y, width - self.arrow_tip - 6, text)
 
-        c.setFillColor(colors.white)
-        c.setFont("DejaVu-Bold", 14)
-        c.drawString(x + 15, y + height / 2 - 6, text)
-    def draw_arrow_left(self, c, x, y, width, height, color, text):
+    def draw_marker(self, c, x, y, color, text):
+        """The reached class, pointing left at its bar."""
         c.setFillColor(color)
-        c.setStrokeColor(color)
-
-        arrow_tip = self.arrow_tip
-
         path = c.beginPath()
         path.moveTo(x, y)
-        path.lineTo(x + width - arrow_tip, y)
-        path.lineTo(x + width - arrow_tip, y + height)
-        path.lineTo(x, y + height)
-        path.lineTo(x - arrow_tip, y + height/2)
+        path.lineTo(x + self.marker_width, y)
+        path.lineTo(x + self.marker_width, y + self.bar_height)
+        path.lineTo(x, y + self.bar_height)
+        path.lineTo(x - self.arrow_tip, y + self.bar_height / 2)
         path.close()
-
         c.drawPath(path, fill=1, stroke=0)
-        c.setFillColor(colors.white)
-        c.setFont("DejaVu-Bold", 14)
-        c.drawString(x + 15, y + height / 2 - 6, text)
+        self.draw_label(c, x + 3, y, self.marker_width - 5, text)
 
     def draw_left_box(self, c):
-        box_width = 130
-        box_height = (self.bar_height+self.spacing)*len(self.classes)-self.spacing
-
         c.setFillColor(colors.white)
         c.setStrokeColor(colors.black)
-        c.rect(0, self.height - box_height, box_width, box_height, fill=1)
+        c.setLineWidth(0.8)
+        c.rect(0, 0, self.box_width, self.height, fill=1)
 
+        center, text_width = self.box_width / 2, self.box_width - 6
         c.setFillColor(colors.black)
-        c.setFont("DejaVu", 12)
-        c.drawCentredString(box_width / 2,
-                            self.height - box_height * 1.25 / 5,
-                            _("Adhesion")
+        lines = (
+            (_("Adhesion"), "DejaVu", 7.5, 0.78),
+            (f"{self.adhesion_rate:.0f} %", "DejaVu-Bold", 14, 0.55),
+            (_("Rating"), "DejaVu", 7.5, 0.33),
+            (self.word_rating, "DejaVu-Bold", 9, 0.13),
         )
-        c.setFont("DejaVu-Bold", 18)
-        c.drawCentredString(box_width / 2,
-                            self.height - box_height * 2 / 5,
-                            f"{self.adhesion_rate:.0f} %")
+        for text, font, size, position in lines:
+            c.setFont(font, fitted_font_size(text, font, size, text_width))
+            c.drawCentredString(center, self.height * position, text)
 
-        c.setFont("DejaVu", 12)
-        c.drawCentredString(box_width / 2,
-                            self.height - box_height * 3.25 / 5,
-                            _("Rating"))
-        c.setFont("DejaVu-Bold", 14)
-        c.drawCentredString(box_width / 2,
-                            self.height - box_height * 4 / 5,
-                            self.word_rating)
-
-        return box_width + 15  # spacing before arrows
     def draw(self):
         c = self.canv
-
-        offset_x = self.draw_left_box(c)
-
-        bar_height = self.bar_height
-        spacing = self.spacing
-        start_y = self.height - bar_height
-
-        # dra
-
+        self.draw_left_box(c)
         for i, (cls, col) in enumerate(zip(self.classes, self.colors)):
-            y = start_y - i * (bar_height + spacing)
-            width = self.width + i * 20
-            self.draw_arrow(c, offset_x, y, width, bar_height, col, cls)
-
-        # Draw highlighted rating on right
-        if self.rating in self.classes:
-            idx = self.classes.index(self.rating)
-            y = start_y - idx * (bar_height + spacing)
-            width = self.width + len(self.classes)*self.arrow_tip
-
-            self.draw_arrow_left(
-                c,
-                offset_x + width,
-                y,
-                155,
-                bar_height,
-                self.colors[idx],
-                self.rating,
-            )
-
+            y = self.height - self.bar_height - i * (self.bar_height + self.bar_gap)
+            self.draw_arrow(c, self.arrows_x, y, self.arrow_base + i * self.arrow_step, col, cls)
+            if cls == self.rating:
+                self.draw_marker(c, self.marker_x, y, col, cls)
 
 
 def experiment_masks(experiment: Dict[str, Any], experiment_id: int) -> tuple[np.ndarray, np.ndarray]:
@@ -471,11 +466,11 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=A4,
                             rightMargin=20*mm, leftMargin=20*mm,
-                            topMargin=30*mm, bottomMargin=25*mm, **metadata)
+                            topMargin=29*mm, bottomMargin=18*mm, **metadata)
     else:
         doc = SimpleDocTemplate(f"test_report.pdf", pagesize=A4,
                             rightMargin=20*mm, leftMargin=20*mm,
-                            topMargin=30*mm, bottomMargin=25*mm, **metadata)
+                            topMargin=29*mm, bottomMargin=18*mm, **metadata)
     pdf = []
 
     # REUSE THE SAME SEPARATOR THROUGHOUT THE DOCUMENT
@@ -491,7 +486,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     # pdf.append(PageBreak())
     pdf.append(Spacer(1, 0.2 * cm))
     pdf.append(Paragraph(_("Bitumen Adhesion Test Protocol"), styles["Title"]))
-    pdf.append(Spacer(1, 0.3 * cm))
+    pdf.append(Spacer(1, 0.15 * cm))
 
     n_samples = len(experiment_ids)
     text = _("""
@@ -499,7 +494,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     with all relevant information according to the CSN 73 6161 standard.
     The adhesion test was performed on """) + f"{n_samples}" + _(""" samples of asphalt mixtures. The detailes about each specimen included below, the overview is at the end of the document.""")
     pdf.append(Paragraph(text, style_justify))
-    pdf.append(Spacer(1, 0.3 * cm))
+    pdf.append(Spacer(1, 0.15 * cm))
 
     text = _("""
     Both the visual expert assesment and the AI-based quantitative analysis are included in this report.
@@ -526,7 +521,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     dat2 = party_details_data(pdf, li)
 
     list_ = ["", ""]
-    pdf.append(Spacer(0,25))
+    pdf.append(Spacer(1, 0.2 * cm))
     list_.append([dat1, dat2])
     pdf = two_col_text_layout(pdf, list_, doc=doc)
 
@@ -534,9 +529,8 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         Paragraph(_("The proceeding employee"), styles["Heading2"]),
         Paragraph(_("Name:") + f" {esc(user_info.get('first_name'))} {esc(user_info.get('last_name'), '')}", style_justify),
         Paragraph(_("Contact:") + f" {esc(user_info.get('e_mail'))}", style_justify),
-        Spacer(1, 1.0 * cm),
+        Spacer(1, 0.8 * cm),
         Paragraph(_("Signature: ..................................................."), style_justify),
-        Spacer(1, 0.3 * cm),
     ]
 
     # Responsible Employees
@@ -552,16 +546,13 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         Paragraph(_("The controll performed by"), styles["Heading2"]),
         Paragraph(_("Name:") + f" {esc(controlling_employee.get('first_name'))} {esc(controlling_employee.get('last_name'), '')}", style_justify),
         Paragraph(_("Contact:") + f" {esc(controlling_employee.get('e_mail'))}", style_justify),
-        Spacer(1, 1.0 * cm),
+        Spacer(1, 0.8 * cm),
         Paragraph(_("Signature: ..................................................."), style_justify),
-        Spacer(1, 0.3 * cm),
     ]
 
     table_data = ["", ""]
     table_data.append([left_column, right_column])
-    pdf.append(Spacer(0,25))
     pdf = two_col_text_layout(pdf, table_data, doc=doc)
-    pdf.append(PageBreak())
 
 
 
@@ -587,19 +578,17 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
             experiment["asphalt_ratio"] = covered / total if total else None
 
         similar_dict = get_similar_experiment(experiment)
-        # Add experiment record to PDF
-        pdf.append(Spacer(1, 0.4 * cm))
-        pdf.append(separator)
-        pdf.append(Spacer(1, 0.2 * cm))
-        pdf = add_experiment_record(pdf, experiment, similar=similar_dict, doc=doc)
+        # a sample stays on one page: its information, photos and similarity warning (the photos keep their size)
+        block = [Spacer(1, 0.3 * cm), separator, Spacer(1, 0.1 * cm)]
+        block = add_experiment_record(block, experiment, similar=similar_dict, doc=doc)
 
         processed_image = process_image(
             original_image,
             asphalt_mask,
             aggregate_mask
         )
-        pdf = add_images(
-            pdf, 
+        block = add_images(
+            block,
             # img_original=memory_to_np_array(experiment.get("color")), 
             img_original=original_image, 
             img_processed=processed_image,
@@ -607,6 +596,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
             max_image_size_cm=[doc.width/2, doc.width/2],
             doc=doc
         )
+        pdf.append(KeepTogether(block))
 
         # Collect assessments - missing values are left out of the statistics (they used to count as 0 %)
         assessments_expert_guess.append(as_float(experiment.get("expert_guess")))
@@ -627,20 +617,26 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     stats_expert = compute_statistics(assessments_expert_guess)
     stats_automatic = compute_statistics(assessments_automatic)
 
-    labels = []
+    titles, labels = [], []
     for title, stats in ((_("Resulting assesment - expert"), stats_expert), (_("Resulting assesment - automatic"), stats_automatic)):
-        labels.append(Paragraph(title, styles["Heading2"]))
+        titles.append(Paragraph(title, styles["Heading4"]))
         labels.append(EnergyLabel(stats["average"]) if stats["average"] is not None else Paragraph("-", style_justify))
-        labels.append(Spacer(1, 0.2 * cm))
-    pdf[energy_label_position:energy_label_position] = labels
+    # titles in their own row - the graphics stay level when one title wraps (e.g. in German)
+    results = Table([titles, labels], colWidths=[doc.width / 2.0] * 2)
+    results.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, 0), "BOTTOM"),
+        ("VALIGN", (0, 1), (-1, 1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    pdf[energy_label_position:energy_label_position] = [results, Spacer(1, 0.1 * cm)]
 
     # pdf.insert(energy_label_position-1,Spacer(0,20))
 
 
     # PRINT FINAL SUMMARY
     # Final - table
-    pdf.append(PageBreak())
-    pdf.append(Paragraph(_("Tabular overview"), styles["Heading2"]))
+    overview_title = Paragraph(_("Tabular overview"), styles["Heading2"])
     table_data = [[
         Paragraph(_("Specimen ID"), styles["TableHeader"]),
         Paragraph(_("Visual Expert Assessment [%]"), styles["TableHeader"]), 
@@ -661,11 +657,12 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
             [percent(exp.get('asphalt_ratio')) for exp in experiments.values()],
         )]
     )
-    pdf = add_table(pdf, table_data, colWidths=[doc.width/3]*3)
-    pdf.append(Spacer(1, 1.0 * cm))
+    pdf.append(Spacer(1, 0.4 * cm))
+    pdf.append(KeepTogether(add_table([overview_title], table_data, colWidths=[doc.width/3]*3)))
+    pdf.append(Spacer(1, 0.4 * cm))
 
     # Final summary + issues
-    pdf.append(Paragraph(_("Report Conclusion"), styles["Heading2"]))
+    conclusion_title = Paragraph(_("Report Conclusion"), styles["Heading2"])
     # pdf.append(Paragraph(_("Summary"), styles["Heading3"]))
     items = []
     if stats_expert['average'] is not None:
@@ -676,7 +673,8 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
         items.append(Paragraph(_("The worst adhesion rate (") +f"{stats_expert['worst']:.2f}" + _(" %) observed is class ") + f"{stats_expert['worst_classification']} " + _("according to expert visual assesment."), style_justify))
     if stats_automatic['worst'] is not None:
         items.append(Paragraph(_("The worst adhesion rate (") +f"{stats_automatic['worst']:.2f}" + _(" %) observed is class ") + f"{stats_automatic['worst_classification']} " + _("according to AI-based analysis."), style_justify))
-    pdf = add_itemized_list(pdf, items)
+    # a heading never ends a page alone
+    pdf.append(KeepTogether(add_itemized_list([conclusion_title], items)))
     pdf.append(Paragraph(_("The final considered class is: ") + f"{stats_expert['average_classification']}", styles["Heading4"]))
     pdf.append(Paragraph(_("The adhesion between aggregate and binder is classified as: ") + f"{stats_expert['average_word_classification']}", styles["Heading4"]))
     
@@ -694,10 +692,8 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     if automatic_values and max(automatic_values) - min(automatic_values) > 0.1:
         issues.append(_("Significant variance detected between AI-based assessments (>10%) of different samples. The CSN 73 6161 standard requires experiment repetition. Consider this in case that the AI based results seem reliable."))
     if len(issues) > 0:
-        pdf.append(Paragraph(_("Concerns"), styles["Heading2"]))
         items = [Paragraph(issue, style_justify) for issue in issues]
-        pdf = add_itemized_list(pdf, items)
-        pdf.append(Spacer(1, 1.0 * cm))
+        pdf.append(KeepTogether(add_itemized_list([Paragraph(_("Concerns"), styles["Heading2"])], items)))
     
     # Responsible Employees
     controlling_employee = user_info
@@ -708,7 +704,7 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
             controlling_employee = user_info
     
 
-    pdf.append(Spacer(1, 1.0 * cm))
+    pdf.append(Spacer(1, 0.6 * cm))
     pdf.append(Paragraph(_("This report was generated using AIBAL on ") + f"{report_date.to_datetime_string()}.", style_justify_right))
     
     
@@ -858,7 +854,9 @@ def add_images(pdf: list, img_original: PIL.Image,  img_processed: PIL.Image, si
         # pdf.append(Spacer(1, 0.2 * cm))
     # pdf = add_table(pdf, table_data, col_widths=[max_image_size_cm[0], max_image_size_cm[0]])
     pdf = add_table(pdf, table_data, colWidths=[doc.width/2.0]*2)
-    return pdf   
+    # tight rows around the photos (the photos themselves keep their size)
+    pdf[-1].setStyle(TableStyle([("TOPPADDING", (0, 0), (-1, -1), 1.5), ("BOTTOMPADDING", (0, 0), (-1, -1), 1.5)]))
+    return pdf
 
 def get_resized_dimensions(img: PIL.Image.Image, max_image_size_cm: list) -> tuple:
     if isinstance(img, np.ndarray):
@@ -919,32 +917,43 @@ def add_experiment_record(pdf: list, experiment: Dict[str, Any], similar: dict =
     """
 
     # missing values are printed as '-' (without changing the caller's data, which the statistics use)
-    left_column = [
-        Paragraph(_("Sample ID:") + f" {esc(experiment.get('experiment_id'))}", styles["Heading3"]),
-        Paragraph(_("Sample Designation:") + f" {esc(experiment.get('info_sample_label'))}", style_left),
-        Paragraph(_("Date:") + f" {esc(experiment.get('info_datetime'))}", style_justify),
-        Paragraph(_("Place of Experiment:") + f" {esc(experiment.get('info_place_of_experiment'))}", style_justify),
-        Paragraph(_("Sample Collection Data:") + f" {esc(experiment.get('info_sample_collection_data'))}", style_justify),
-        Paragraph(_("Aggregate:") + f" {esc(experiment.get('info_aggregate'))}", style_justify),
-        Paragraph(_("Binder:") + f" {esc(experiment.get('info_binder'))}", style_justify),
-        Paragraph(_("Wrapping temperature aggregate [°C]:") + f" {esc(experiment.get('info_wrapping_temperature_aggregate'))}", style_justify),
-        Paragraph(_("Wrapping temperature binder [°C]:") + f" {esc(experiment.get('info_wrapping_temperature_binder'))}", style_justify),
-        Paragraph(_("Exposing water temperature [°C]:") + f" {esc(experiment.get('info_exposing_water_temperature'))}", style_justify),
-        Paragraph(_("Test procedure:") + f" {esc(experiment.get('info_test_procedure'))}", style_justify),
-    ]
+    def field(label: str, value: str, bold: bool = False) -> Paragraph:
+        value = f"<b>{value}</b>" if bold else value
+        return Paragraph(f'<font color="#5f6368">{label}</font> {value}', style_field)
 
-    right_column = [
-        Paragraph(_("Assessment - Adhesion Rate:"), styles["Heading4"]),
-        Paragraph(_("Inference Model:") + f" {esc(experiment.get('inference_model'))}", style_justify),
-        Paragraph(_("Automatic Assessment [%]:") + f" {percent(experiment.get('asphalt_ratio'))}", style_justify),
-        Paragraph(_("Visual based Expert Guess [%]:") + f" {percent(experiment.get('expert_guess'))}", style_justify),
-        Paragraph(_("Comment:") + f" {esc(experiment.get('info_comment'))}", style_justify),
+    # "Label: value" pairs in two columns - half the height of the former one-per-line list
+    rows = [
+        [field(_("Date:"), esc(experiment.get('info_datetime'))),
+         field(_("Place of Experiment:"), esc(experiment.get('info_place_of_experiment')))],
+        [field(_("Sample Collection Data:"), esc(experiment.get('info_sample_collection_data'))),
+         field(_("Test procedure:"), esc(experiment.get('info_test_procedure')))],
+        [field(_("Aggregate:"), esc(experiment.get('info_aggregate'))),
+         field(_("Binder:"), esc(experiment.get('info_binder')))],
+        [field(_("Wrapping temperature aggregate [°C]:"), esc(experiment.get('info_wrapping_temperature_aggregate'))),
+         field(_("Wrapping temperature binder [°C]:"), esc(experiment.get('info_wrapping_temperature_binder')))],
+        [field(_("Exposing water temperature [°C]:"), esc(experiment.get('info_exposing_water_temperature'))),
+         field(_("Inference Model:"), esc(experiment.get('inference_model')))],
+        [field(_("Automatic Assessment [%]:"), percent(experiment.get('asphalt_ratio')), bold=True),
+         field(_("Visual based Expert Guess [%]:"), percent(experiment.get('expert_guess')), bold=True)],
+        [field(_("Comment:"), esc(experiment.get('info_comment'))), ""],
     ]
-    table_data = [["", ""]]
-    table_data.append([left_column, right_column])
-    pdf = two_col_text_layout(pdf, table_data, doc=doc)
-    pdf.append(Spacer(1, 0.2 * cm))
-    return pdf    
+    grid = Table(rows, colWidths=[doc.width / 2.0] * 2)
+    grid.setStyle(TableStyle([
+        ("SPAN", (0, -1), (1, -1)),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("ROWBACKGROUNDS", (0, 0), (-1, -1), [colors.HexColor("#f3f4f5"), colors.white]),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+        ("TOPPADDING", (0, 0), (-1, -1), 1),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 1.5),
+    ]))
+    title = _("Sample ID:") + f" {esc(experiment.get('experiment_id'))}"
+    if esc(experiment.get('info_sample_label'), ''):
+        title += " · " + _("Sample Designation:") + f" {esc(experiment.get('info_sample_label'))}"
+    pdf.append(Paragraph(title, styles["Heading3"]))
+    pdf.append(grid)
+    pdf.append(Spacer(1, 0.1 * cm))
+    return pdf
 
 def first_page(canvas, doc, report_id: str):
     styled_header_footer(canvas, doc, report_id)
