@@ -484,10 +484,11 @@ def confirm_user_email(cur, conn, email: str) -> None:
     conn.commit()
 
 @db_connection
-def confirm_company_registration(cur, conn, email: str) -> None:
-    cur.execute('SELECT 1 FROM public_companies WHERE e_mail=%s FOR UPDATE', (email,))
-    query = "UPDATE public_companies SET confirmed_by_admin=True WHERE e_mail=%s"
-    cur.execute(query, (email,))
+def confirm_company_registration(cur, conn, company_id: int) -> None:
+    # by id - company e-mail addresses need not be unique
+    cur.execute('SELECT 1 FROM public_companies WHERE company_id=%s FOR UPDATE', (company_id,))
+    query = "UPDATE public_companies SET confirmed_by_admin=True WHERE company_id=%s"
+    cur.execute(query, (company_id,))
     conn.commit()
 
 @db_connection

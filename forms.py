@@ -162,6 +162,12 @@ class ChangeEmailForm(FlaskForm):
     password = PasswordField(lazy_gettext('Current password'), validators=[DataRequired()])
     submit = SubmitField(lazy_gettext('Change e-mail address'))
 
+class ChangeCompanyEmailForm(FlaskForm):
+    # the company's contact address is not a login - it may be anyone's, also a user's or another company's
+    e_mail = StringField(lazy_gettext('New email address'),validators=[DataRequired(), Email(), RequiredLength(min=5,max=100)])
+    password = PasswordField(lazy_gettext('Current password'), validators=[DataRequired()])
+    submit = SubmitField(lazy_gettext('Change e-mail address'))
+
 class ContactForm(FlaskForm):
     name = StringField(lazy_gettext('Your Name'),validators=[DataRequired(),RequiredLength(min=1,max=100)])
     email = StringField(lazy_gettext('Email address'),validators=[DataRequired(), Email(),RequiredLength(min=5,max=100)])

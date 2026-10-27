@@ -50,12 +50,9 @@ if (table) {
 }
 
 // ---------- sample records ----------
-async function openSample(id, owned) {
+async function openSample(id) {
     await alertsLoaded
-    if (!owned) {
-        const ok = await ui.confirmDialog(alerts.elsesExperiment, { confirmLabel: alerts.confirm, cancelLabel: alerts.cancel })
-        if (!ok) return
-    }
+    // a company admin may open a colleague's sample too - its owner stays the same
     const response = await post("/activate-experiment/" + id)
     if (response.ok) window.location.href = "/"
     else ui.toast(alerts.noExperiment, "error")
@@ -126,7 +123,7 @@ document.addEventListener("click", (event) => {
     const button = event.target.closest("[data-action]")
     if (!button) return
     const action = button.dataset.action
-    if (action === "open") openSample(button.dataset.id, button.dataset.owned !== "false")
+    if (action === "open") openSample(button.dataset.id)
     else if (action === "export-selected") exportSelected()
     else if (action === "delete-selected") deleteSelected()
     else if (action === "clear-selection") {

@@ -75,7 +75,7 @@
         <td class="col-check"><input type="checkbox" class="row-check" value="{{ r.id }}" aria-label="{{ _('Select') }} {{ r.id }}"></td>
         <td class="num" data-label="{{ _('Sample ID') }}">{{ r.id }}</td>
         <td class="cell-truncate cell-strong designation-cell card-title-cell" title="{{ r.designation|striptags }}">
-          <button type="button" class="btn-link" data-action="open" data-id="{{ r.id }}" data-owned="{{ 'true' if r.owned else 'false' }}">
+          <button type="button" class="btn-link" data-action="open" data-id="{{ r.id }}">
             {%- if r.designation %}{{ r.designation }}{% else %}<span class="muted">{{ _('No designation') }}</span>{% endif -%}
           </button>
         </td>
@@ -93,8 +93,7 @@
           {% else %}<span class="badge badge-warning">{{ _('In progress') }}</span>{% endif %}
         </td>
         <td class="col-actions">
-          <button type="button" class="btn btn-sm btn-ghost btn-icon" data-action="open" data-id="{{ r.id }}"
-            data-owned="{{ 'true' if r.owned else 'false' }}" title="{{ _('Open') }}"
+          <button type="button" class="btn btn-sm btn-ghost btn-icon" data-action="open" data-id="{{ r.id }}" title="{{ _('Open') }}"
             aria-label="{{ _('Open') }} {{ r.id }}">{{ icon('eye') }}</button>
           <a class="btn btn-sm btn-ghost btn-icon" href="/export-report/{{ r.id }}" title="{{ _('Export report') }}"
             aria-label="{{ _('Export report') }} {{ r.id }}">{{ icon('file') }}</a>

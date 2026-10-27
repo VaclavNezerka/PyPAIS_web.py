@@ -709,8 +709,7 @@ def confirm_company_registration_admin(token: str):
     print(token)
     """Confirm a registration of a new company using the provided token."""
     datadict = serializer.loads(token, salt='confirm_company_registration_admin-salt', max_age=MAX_TOKEN_AGE)  # token valid for 1 hour
-    # TODO: implement logic 
-    db_api.confirm_company_registration(datadict['e_mail'])
+    db_api.confirm_company_registration(datadict['company_id'])
     
     # create the company administrator account automatically
     user_data = {
@@ -1066,11 +1065,11 @@ def change_company_email():
     title = _('Change company email')
     match request.method:
         case 'GET' | 'HEAD':
-            form=forms.ChangeEmailForm()
+            form=forms.ChangeCompanyEmailForm()
             return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
-            form=forms.ChangeEmailForm()
+            form=forms.ChangeCompanyEmailForm()
             if form.validate_on_submit():
                 if not is_password_correct(password=form.password.data, user_id=session['user_id']):
                     form.password.errors.append(_('The password is not correct.'))
@@ -1351,7 +1350,6 @@ def get_experiment_records(is_admin: bool, **kwargs) -> tuple[list[dict], int, i
         'raw_expert_guess': x['expert_guess'],
         'raw_asphalt_ratio': x['asphalt_ratio'],
         'finished': x['current_state'] == 'finished',
-        'owned': x['user_id'] == session['user_id'],
     } for x in rows if matches_search(kwargs.get('q'), x['experiment_id'], x['info_sample_label'], x['info_sample_collection_data'])]
 
     sort_keys = [key for key in sort_by.split(',') if key in RECORD_SORT_KEYS] or ['time_stamp']
@@ -2022,9 +2020,10 @@ def save_experiment(**kwargs):
         # typed while /inference was running - it was silently reset to the values from before the inference).
         ts_dict = {key: value for key, value in ts_dict.items() if key in storage._dirty_fields or key == 'asphalt_ratio'}
     ts_dict['current_state'] = state
-    if session.get('authenticated', False):
+    # the owner is set once, on creation - a company admin who opens and edits a colleague's sample must not take it over
+    if storage.experiment_id is None and session.get('authenticated', False):
         ts_dict['user_id'] = session['user_id']
-        
+
     if storage.experiment_id is None:
         storage.experiment_id = db_api.insert_experiment_to_db(values_dict=ts_dict) #**
         session['experiment_id'] = storage.experiment_id #** ensure that the session is updated with the new experiment ID
@@ -2273,7 +2272,6 @@ def translations_alerts():
         'removeAdmin': _('Are you sure, you want to remove admin privileges from the following users?'),
         'blockUser': _('Are you sure, you want to block the sign in option for the following users?'),
         'unblockUser': _('Are you sure, you want to unblock the sign in option for the following users?'),
-        'elsesExperiment': _('You have selected experiment of another user for editing. This action will transfer the ownership of the experiment to you (the original owner will not be able to access it). Do you want to proceed?'),
         'saveStatusSaving': _('Saving...'),
         'saveStatusSaved': _('All sample data saved at'),
         'saveStatusUnsaved': _('Unsaved changes'),
