@@ -97,6 +97,7 @@ spec:
               path: /home
               port: http
             periodSeconds: 5
+            timeoutSeconds: 5
             failureThreshold: 36
           readinessProbe:
             httpGet:

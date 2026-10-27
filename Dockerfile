@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.27
 # AIBAL web app with GPU inference - built for the e-INFRA CZ (CERIT-SC) Kubernetes platform,
 # see deploy/README.md. Runs as a non-root numeric user on port 8080, as the platform requires.
 FROM python:3.11-slim-bookworm
@@ -34,7 +35,9 @@ COPY deploy/requirements.txt /tmp/requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r /tmp/requirements.txt
 
-COPY . /app
+# the models (1.2 GB) get a layer of their own, so an update of the code uploads only a few MB
+COPY models /app/models
+COPY --exclude=models . /app
 # translations are compiled in the repo; this only makes sure the .mo files match the .po files
 RUN pybabel compile -d translations -f
 

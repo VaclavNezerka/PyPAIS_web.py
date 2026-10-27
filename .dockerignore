@@ -16,6 +16,7 @@ node_modules/
 *.sql
 PyPAIS_DB.session.sql
 TODO.py
+.coverage
 push_to_server.sh
 run_prod.sh
 run_secure.sh
