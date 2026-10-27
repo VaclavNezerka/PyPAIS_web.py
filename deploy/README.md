@@ -107,14 +107,17 @@ and this PC afterwards - it contains all user data (`*.dump` is git-ignored).
 
 ## 6. Secret settings
 
-1. Copy `deploy/aibal.env.example` to `deploy/aibal.env` and fill it in with the values of the current
-   server's `.env` (SECRET_KEY, mail, admin addresses, reCAPTCHA).
-2. In the reCAPTCHA admin console (https://www.google.com/recaptcha/admin), add `aibal.dyn.cloud.e-infra.cz`
-   to the site's domains - otherwise logging in fails.
-3. Store them in the cluster:
+1. Copy `deploy/aibal.env.example` to `aibal.env` and fill it in with the values of the current server's
+   `.env` (SECRET_KEY, mail, admin addresses). Keep it outside synced folders (OneDrive, ownCloud) - it holds
+   the mail password; AIBAL's lives in `C:\Users\vacla\pgsql\dumps\aibal.env`. The server's `.env` is a hidden
+   file: `ls -a` lists it, and WinSCP shows it after Ctrl+Alt+H.
+2. reCAPTCHA: the new address has its own reCAPTCHA v3 site (registered in October 2026 at
+   https://www.google.com/recaptcha/admin, domain `aibal.dyn.cloud.e-infra.cz`), so its two keys differ from
+   the old server's. Without a matching secret key nobody can log in.
+3. Store them in the cluster (and after a change, `kubectl rollout restart deployment/aibal`):
 
 ```powershell
-kubectl create secret generic aibal-secrets --from-env-file=deploy/aibal.env
+kubectl create secret generic aibal-secrets --from-env-file=C:\Users\vacla\pgsql\dumps\aibal.env --dry-run=client -o yaml | kubectl apply -f -
 ```
 
 ## 7. Start the app
@@ -144,8 +147,7 @@ kubectl set image deployment/aibal app=cerit.io/<user>/aibal:<new tag>
 
 New database migrations: put them into `db_migrations/` and apply them before the new version starts
 (e.g. through `kubectl port-forward svc/aibal-db-rw 15432:5432` and `psql`).
-Changed secrets: re-create the secret (`kubectl create secret generic aibal-secrets --from-env-file=deploy/aibal.env --dry-run=client -o yaml | kubectl apply -f -`)
-and `kubectl rollout restart deployment/aibal`.
+Changed secrets: re-run the command of step 6.3 and `kubectl rollout restart deployment/aibal`.
 
 ## Troubleshooting
 
