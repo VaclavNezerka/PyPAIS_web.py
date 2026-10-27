@@ -70,6 +70,9 @@ app = Flask(__name__) # set debug to False for production
 
 # UPLOAD LIMITS - request size and the size of decoded images (anybody can upload in the demo)
 MAX_IMAGE_SIDE = 1920  # longer side of the stored and evaluated photo
+# share of the photo the model has to find as bitumen or aggregate - below it the photo shows no sample
+# (real samples cover 25-60 % of their photo, plots or photos of other things about 1 %)
+MIN_SAMPLE_AREA = float(os.getenv('MIN_SAMPLE_AREA', '0.05'))
 app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_UPLOAD_MB', '40')) * 1024 * 1024
 Image.MAX_IMAGE_PIXELS = int(os.getenv('MAX_IMAGE_MEGAPIXELS', '100')) * 1_000_000
 warnings.simplefilter('error', Image.DecompressionBombWarning)  # over the limit is an error, not just a warning
@@ -933,8 +936,10 @@ def ignore_unauthenticated(func):
     return wrapper
 
 @app.route('/')
-@check_authentication
 def index():
+    # visitors start on the landing page with the demo, signed-in users on their current sample
+    if not session.get('authenticated'):
+        return redirect(url_for('home'))
     models = discover_models()
     return render_template('index.html', session=session, models=models), 200
 
@@ -1575,7 +1580,8 @@ def pick_users(session_user_id) -> list[tuple]:
     if not users:
         users = [myself]
     else:
-        users = [myself] + [(user['id'], f"{user['first_name']} {user['last_name']} ‹{user['e_mail']}›") for user in users]
+        users = [myself] + [(user['id'], f"{user['first_name']} {user['last_name']} ‹{user['e_mail']}›") for user in users
+                            if user['id'] != session_user_id]
     return users
 
 def are_experiments_accessible_by_user(user_id: int, experiment_ids: list) -> bool:
@@ -1845,6 +1851,10 @@ def save_experiment_info():
 @app.route('/evaluate-asphalt',methods=['POST'])
 @check_session_timeout
 def evaluate_asphalt():
+    asphalt_mask, aggregate_mask, background_mask = storage.get_masks_with_manual_corrections()
+    if not sample_found(asphalt_mask, aggregate_mask):
+        message = _('No asphalt sample was found in the photo, so the sample cannot be evaluated.')
+        return json.dumps({'status': 'error', 'message': message}), 409, {'Content-Type': 'application/json'}
     evaluation = storage.get_asphalt_ratio()
     save_experiment(state='finished')
     print('Asphalt ratio evaluated:', evaluation)
@@ -1973,6 +1983,11 @@ def load_experiment(id):
     }
     if has_masks:
         dict_response.update(mask_overlays())
+    owner_id = response.get('user_id')
+    if owner_id is not None and owner_id != session.get('user_id'):
+        # a company admin opened a colleague's sample - the page says whose it is
+        owner = db_api.get_user_info_by_id(owner_id) or {}
+        dict_response['owner'] = f"{owner.get('first_name') or ''} {owner.get('last_name') or ''}".strip() or owner.get('e_mail')
     return dict_to_json(dict_response), 200, {'Content-Type': 'application/json'}
 
 
@@ -2181,14 +2196,23 @@ def adhesion_classification(ratio: float | None) -> dict:
         'class_word': get_CSN_73_6161_word_classification(percent),
     }
 
+def sample_found(asphalt_mask, aggregate_mask) -> bool:
+    """Whether the model found a sample in the photo at all (see MIN_SAMPLE_AREA)."""
+    if asphalt_mask is None or aggregate_mask is None:
+        return False
+    return bool(np.count_nonzero(asphalt_mask) + np.count_nonzero(aggregate_mask) >= MIN_SAMPLE_AREA * np.size(asphalt_mask))
+
 def mask_overlays() -> dict:
     """The masks of the current sample (with manual corrections) as transparent PNG overlays + the AI assessment."""
     asphalt_mask, aggregate_mask, background_mask = storage.get_masks_with_manual_corrections()
+    found = sample_found(asphalt_mask, aggregate_mask)
     return {
         'asphalt_mask': to_base64(bool_to_image_array(asphalt_mask)),
         'aggregate_mask': to_base64(bool_to_image_array(aggregate_mask)),
         'background_mask': to_base64(bool_to_image_array(background_mask)),
-        **adhesion_classification(storage.get_asphalt_ratio()),
+        # no percentage and class for a photo without a sample - "0 %, unclassifiable" looked like a result
+        'sample_found': found,
+        **adhesion_classification(storage.get_asphalt_ratio() if found else None),
     }
 
 
@@ -2281,6 +2305,9 @@ def translations_alerts():
         'subtitleEmpty': _('Upload a photo of the sample to start the assessment.'),
         'sampleId': _('Sample ID'),
         'classLabel': _('Class'),
+        'noSampleFound': _('No sample found'),
+        'noSampleFoundHint': _('The model found no asphalt sample in this photo. Upload a photo of the tested sample on a plain background.'),
+        'sampleOf': _('Sample of'),
         'processingPhoto': _('Processing the photo...'),
         'runningModel': _('The model is detecting bitumen and aggregate...'),
         'loadingSample': _('Loading the sample...'),

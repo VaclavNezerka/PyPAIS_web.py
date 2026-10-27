@@ -16,7 +16,8 @@ async function runInference() {
         const data = await response.json().catch(() => ({}))
         if (!response.ok || data.status !== "success") throw new Error(data.message || response.statusText)
         await viewer.setMasks(data)
-        showResult($("demoAi"), $("demoAiClass"), data, alerts.classLabel)
+        showResult($("demoAi"), $("demoAiClass"), data, alerts.classLabel, alerts.noSampleFound)
+        if (data.sample_found === false) ui.toast(alerts.noSampleFoundHint, "warning")
     } catch (error) {
         ui.toast(alerts.inferenceFailed + " " + (error.message || ""), "error")
     } finally {

@@ -68,9 +68,8 @@
 <div class="card invite-card">
   <div class="card-body">
     <h2>{{ icon('users') }} {{ _('How does a colleague join?') }}</h2>
-    <p class="muted">{{ _('Click the button below to register a new employee. For registration, you need to know the company key, which can be viewed') }}
-      <a href="/view-company-key">{{ _('here') }}</a>.</p>
-    <a class="btn btn-sm" href="/register">{{ _('Register New Employee') }}</a>
+    <p class="muted">{{ _('Colleagues register themselves with the company key. Open the key to see how to invite them; once they confirm their e-mail address, they appear in this list.') }}</p>
+    <a class="btn btn-sm" href="/view-company-key">{{ icon('key') }} {{ _('View company key') }}</a>
   </div>
 </div>
 {% endblock %}

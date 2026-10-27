@@ -25,12 +25,15 @@ const PER_SAMPLE_FIELDS = ["info_sample_label", "info_comment", "info_sample_col
 
 const viewer = createViewer({ onEvaluateShortcut: () => !state.evaluated && evaluateSample() })
 const state = {
-    evaluated: false,
+    evaluated: false, // evaluated on this page
+    finished: false, // an evaluated sample opened from the records
+    sampleFound: null, // false when the model found no sample in the photo
+    owner: null, // name of the colleague whose sample a company admin opened
     experimentId: null,
 }
 
 function showResult(element, classElement, result) {
-    renderResult(element, classElement, result, alerts.classLabel)
+    renderResult(element, classElement, result, alerts.classLabel, alerts.noSampleFound)
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -52,12 +55,14 @@ function setFormEnabled(enabled) {
 
 function updateStepper() {
     const labelFilled = $("info_sample_label").value.trim() !== ""
-    const guessFilled = $("expertGuess").value !== ""
+    const evaluated = state.evaluated || state.finished
     const done = {
         photo: viewer.state.hasImage,
-        info: viewer.state.hasImage && labelFilled,
-        assess: viewer.state.hasMasks && guessFilled,
-        report: state.evaluated,
+        info: viewer.state.hasImage && (labelFilled || evaluated),
+        // the assessment is completed by the evaluation, not by typing the expert guess
+        assess: evaluated,
+        // the report is the last step - it stays the current one once the sample is evaluated
+        report: false,
     }
     let currentSet = false
     for (const step of document.querySelectorAll("#stepper .step")) {
@@ -73,9 +78,10 @@ function updateStepper() {
         }
     }
     const label = $("info_sample_label").value.trim()
+    const owner = state.owner ? " · " + alerts.sampleOf + " " + state.owner : ""
     $("sampleSubtitle").textContent = !viewer.state.hasImage
         ? alerts.subtitleEmpty
-        : (state.experimentId ? alerts.sampleId + " " + state.experimentId : "") + (label ? " · " + label : "")
+        : (state.experimentId ? alerts.sampleId + " " + state.experimentId : "") + (label ? " · " + label : "") + owner
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -214,6 +220,8 @@ async function runInference() {
         if (data.experimentId) state.experimentId = data.experimentId
         await viewer.setMasks(data)
         showResult($("aiPercent"), $("aiClass"), data)
+        state.sampleFound = data.sample_found !== false
+        if (!state.sampleFound) ui.toast(alerts.noSampleFoundHint, "warning")
     } catch (error) {
         ui.toast(alerts.inferenceFailed + " " + (error.message || ""), "error")
     } finally {
@@ -239,7 +247,7 @@ async function uploadPhoto(file) {
         viewer.setImages(data.color, data.gray)
         await viewer.drawPhoto()
         viewer.clearMasks()
-        state.evaluated = false
+        Object.assign(state, { evaluated: false, finished: false, sampleFound: null, owner: null })
         showResult($("aiPercent"), $("aiClass"), null)
 
         const active = await fetch("/is-experiment-active").then((r) => r.json())
@@ -276,6 +284,8 @@ async function openSample(id) {
         if (!response.ok || data.status !== "success") throw new Error(data.message || alerts.noExperiment)
 
         state.experimentId = data.experimentId
+        state.finished = data.current_state === "finished"
+        state.owner = data.owner || null
         for (const field of INFO_FIELDS) {
             const value = data[field]
             $(field).value = value === null || value === undefined ? "" : field === "info_datetime" ? inputDateTime(value) : value
@@ -293,6 +303,7 @@ async function openSample(id) {
         if (data.has_masks) {
             await viewer.setMasks(data)
             showResult($("aiPercent"), $("aiClass"), data)
+            state.sampleFound = data.sample_found !== false
             viewer.setBusy(null)
         } else {
             await runInference()
@@ -315,6 +326,10 @@ async function evaluateSample() {
     }
     if (!viewer.state.hasMasks) {
         ui.toast(alerts.waitForModel, "warning")
+        return
+    }
+    if (state.sampleFound === false) {
+        ui.toast(alerts.noSampleFoundHint, "warning")
         return
     }
     ui.busy(true, alerts.evaluating)

@@ -358,8 +358,9 @@ def as_float(value) -> float | None:
         return None
 
 def percent(value) -> str:
+    # one decimal, as in the app (records, evaluation)
     number = as_float(value)
-    return f"{100 * number:.2f}" if number is not None else '-'
+    return f"{100 * number:.1f}" if number is not None else '-'
 
 def memory_to_np_array(memory: bytes) -> np.ndarray:
     buffer = io.BytesIO(bytes(memory))
@@ -666,13 +667,13 @@ def csn_73_6161_exporter(experiment_ids: Iterable[int], report_id: str, user_id:
     # pdf.append(Paragraph(_("Summary"), styles["Heading3"]))
     items = []
     if stats_expert['average'] is not None:
-        items.append(Paragraph(_("The average adhesion rate across all samples is") + f" {stats_expert['average']:.2f} ± {stats_expert['stddev']:.2f} % " + _("according to expert visual assesment, which correspondes to calss") + f" {stats_expert['average_classification']}. ", style_justify))
+        items.append(Paragraph(_("The average adhesion rate across all samples is") + f" {stats_expert['average']:.1f} ± {stats_expert['stddev']:.1f} % " + _("according to expert visual assesment, which correspondes to calss") + f" {stats_expert['average_classification']}. ", style_justify))
     if stats_automatic['average'] is not None:
-        items.append(Paragraph(_("The average adhesion rate across all samples is") + f" {stats_automatic['average']:.2f} ± {stats_automatic['stddev']:.2f} % " + _("according to AI-based analysis, which correspondes to calss") + f" {stats_automatic['average_classification']}. ", style_justify))
+        items.append(Paragraph(_("The average adhesion rate across all samples is") + f" {stats_automatic['average']:.1f} ± {stats_automatic['stddev']:.1f} % " + _("according to AI-based analysis, which correspondes to calss") + f" {stats_automatic['average_classification']}. ", style_justify))
     if stats_expert['worst'] is not None:
-        items.append(Paragraph(_("The worst adhesion rate (") +f"{stats_expert['worst']:.2f}" + _(" %) observed is class ") + f"{stats_expert['worst_classification']} " + _("according to expert visual assesment."), style_justify))
+        items.append(Paragraph(_("The worst adhesion rate (") +f"{stats_expert['worst']:.1f}" + _(" %) observed is class ") + f"{stats_expert['worst_classification']} " + _("according to expert visual assesment."), style_justify))
     if stats_automatic['worst'] is not None:
-        items.append(Paragraph(_("The worst adhesion rate (") +f"{stats_automatic['worst']:.2f}" + _(" %) observed is class ") + f"{stats_automatic['worst_classification']} " + _("according to AI-based analysis."), style_justify))
+        items.append(Paragraph(_("The worst adhesion rate (") +f"{stats_automatic['worst']:.1f}" + _(" %) observed is class ") + f"{stats_automatic['worst_classification']} " + _("according to AI-based analysis."), style_justify))
     # a heading never ends a page alone
     pdf.append(KeepTogether(add_itemized_list([conclusion_title], items)))
     pdf.append(Paragraph(_("The final considered class is: ") + f"{stats_expert['average_classification']}", styles["Heading4"]))

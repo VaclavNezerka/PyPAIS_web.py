@@ -26,7 +26,13 @@ function pngUrl(base64) {
 }
 
 // AI / expert result (asphalt_percent, class, class_word) into a value and a class element
-export function showResult(element, classElement, result, classLabel) {
+export function showResult(element, classElement, result, classLabel, noSampleLabel = "") {
+    if (result && result.sample_found === false) {
+        // the model found no sample in the photo - no percentage that would look like a result
+        element.textContent = "–"
+        classElement.textContent = noSampleLabel
+        return
+    }
     if (!result || result.asphalt_percent === null || result.asphalt_percent === undefined) {
         element.textContent = "–"
         classElement.textContent = ""
