@@ -46,7 +46,7 @@ spec:
       containers:
         - name: app
           # the image pushed by deploy/build_push.ps1 (tag = commit); updates: kubectl set image deployment/aibal app=...
-          image: cerit.io/nezervac/aibal:8e70957
+          image: cerit.io/nezervac/aibal:9e4216e
           imagePullPolicy: Always
           ports:
             - name: http
