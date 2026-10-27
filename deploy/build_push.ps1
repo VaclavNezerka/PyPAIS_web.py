@@ -1,6 +1,6 @@
 # Builds the AIBAL image and pushes it to the e-INFRA (CERIT-SC) Harbor registry.
 # Needs Docker Desktop and a prior "docker login cerit.io" (user name + CLI secret from https://hub.cerit.io).
-#   .\deploy\build_push.ps1 -User <your-harbor-user>
+#   powershell -ExecutionPolicy Bypass -File deploy\build_push.ps1 -User <your-harbor-user>
 # Prints the image name to put into deploy/k8s/app.yaml (or to use with kubectl set image).
 param(
     [Parameter(Mandatory = $true)][string]$User,

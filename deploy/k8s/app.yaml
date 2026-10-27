@@ -45,8 +45,8 @@ spec:
         fsGroupChangePolicy: OnRootMismatch
       containers:
         - name: app
-          # set to the image pushed by deploy/build_push.ps1, e.g. cerit.io/<user>/aibal:<tag>
-          image: cerit.io/CHANGE-ME/aibal:latest
+          # the image pushed by deploy/build_push.ps1 (tag = commit); updates: kubectl set image deployment/aibal app=...
+          image: cerit.io/nezervac/aibal:5136f09
           imagePullPolicy: Always
           ports:
             - name: http

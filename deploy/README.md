@@ -28,24 +28,28 @@ Commands below are for PowerShell in the repository folder (`PyPAIS_web.py`).
 ## 1. Tools on this PC
 
 ```powershell
-winget install Docker.DockerDesktop     # then start Docker Desktop once
-winget install Kubernetes.kubectl
+winget install Docker.DockerDesktop     # then start Docker Desktop once; it brings kubectl too
 ```
+
+Open a new terminal afterwards, so `docker` and `kubectl` are on the PATH. Windows blocks `.ps1` scripts by
+default, so the scripts below are started with `powershell -ExecutionPolicy Bypass -File ...` (this allows
+just that one script and changes no setting).
 
 ## 2. Access to the cluster
 
 1. Log in at **https://rancher.cloud.e-infra.cz** with your e-INFRA CZ account. The first login creates your
-   personal project and namespace.
-2. Create a namespace for AIBAL in the Rancher GUI (Namespaces → Create; not with kubectl, or it is not linked
-   to your project). Names are unique across the cluster, e.g. `aibal-cvut`.
-3. Open the cluster (drop-down in the upper left), download its **kubeconfig** and save it as
-   `%USERPROFILE%\.kube\config`.
-4. Use the namespace by default and check the access:
+   personal project and namespace `<surname>-ns` (AIBAL runs in `nezerka-ns`).
+2. On the Home page, click the cluster **kuba-cluster**, then the **Download KubeConfig** icon in the upper
+   right, and save the file as `%USERPROFILE%\.kube\config`.
+3. Use the namespace by default and check the access:
 
 ```powershell
-kubectl config set-context --current --namespace=aibal-cvut
+kubectl config set-context --current --namespace=nezerka-ns
 kubectl get pods
 ```
+
+A separate namespace is possible too: create it in the Rancher GUI (Namespaces → Create), not with kubectl,
+or it is not linked to your project and its quota.
 
 ## 3. Build and push the image
 
@@ -54,11 +58,14 @@ kubectl get pods
 
 ```powershell
 docker login cerit.io
-.\deploy\build_push.ps1 -User <your-harbor-user>
+powershell -ExecutionPolicy Bypass -File deploy\build_push.ps1 -User <your-harbor-user>
 ```
 
-3. Put the printed image name (`cerit.io/<user>/aibal:<commit>`) into `deploy/k8s/app.yaml` instead of
-   `cerit.io/CHANGE-ME/aibal:latest`.
+The image has about 17 GB (PyTorch with CUDA alone is 8 GB): the first build and push take long, later
+ones only send the changed app layer. Keep the VPN off for them.
+
+3. Put the printed image name (`cerit.io/<user>/aibal:<commit>`) into `deploy/k8s/app.yaml`
+   (`cerit.io/nezervac/aibal:5136f09` is the first deployed version).
 
 The registry is readable by the whole cluster - never put secrets into the image (`.dockerignore` keeps
 `.env` out).
@@ -76,23 +83,27 @@ If it is above ~15 GB, raise `storage.size` in `postgres.yaml` first.
 
 ## 5. Move the data from the current server
 
-1. Stop the app on the current server (`webhost-gpu.fsv.cvut.cz`), so nothing changes after the dump.
-2. On the current server, with `DB_USERNAME` / `DB_NAME` / `DB_PASSWORD` from its `.env`:
+The current app runs on `webhost-03.fsv.cvut.cz` in `/var/www/sites/aibal.fsv.cvut.cz/app/` (reached over
+the CTU VPN, e.g. with WinSCP; its database accepts only local connections).
+
+1. Stop the app on the current server, so nothing changes after the dump.
+2. Dump the database there with the login from the app's `.env` - in WinSCP: Commands → Open Terminal:
 
 ```bash
-PGPASSWORD=<DB_PASSWORD> pg_dump -Fc -h localhost -U <DB_USERNAME> -d <DB_NAME> -f ~/aibal_prod.dump
+cd /var/www/sites/aibal.fsv.cvut.cz/app && v() { sed -n "s/^$1=//p" .env | tr -d "\r\"'"; } && PGPASSWORD="$(v DB_PASSWORD)" pg_dump -Fc -h "$(v DB_HOST)" -U "$(v DB_USERNAME)" -d "$(v DB_NAME)" -f ~/aibal_prod.dump && ls -lh ~/aibal_prod.dump
 ```
 
-3. Copy it to this PC and restore it into the new database. The script also applies `db_migrations/`
-   (the sample designation column) and prints the number of companies, users and samples to compare:
+3. Download `~/aibal_prod.dump` to this PC, outside synced folders. Restore it into the new database. The
+   script copies the dump into the database pod, restores it there, applies `db_migrations/` and prints the
+   number of companies, users and samples to compare:
 
 ```powershell
-scp silhada2@webhost-gpu.fsv.cvut.cz:~/aibal_prod.dump .
-.\deploy\restore_db.ps1 -Dump .\aibal_prod.dump
+powershell -ExecutionPolicy Bypass -File deploy\restore_db.ps1 -Dump C:\path\aibal_prod.dump
 ```
 
-The restore was tested with a dump of the local database into a fresh database owned by a normal user,
-as the operator creates it. Delete the dump afterwards - it contains all user data (`*.dump` is git-ignored).
+The October 2026 dump (84 MB; 3 companies, 9 users, 41 samples) restored in under 2 minutes. The script only
+restores into an empty database and prints how to empty it otherwise. Delete the dump from the old server
+and this PC afterwards - it contains all user data (`*.dump` is git-ignored).
 
 ## 6. Secret settings
 
@@ -127,7 +138,7 @@ against the loss of one node. For daily backups kept 30 days, get an S3 bucket w
 ## Updating the app
 
 ```powershell
-.\deploy\build_push.ps1 -User <your-harbor-user>
+powershell -ExecutionPolicy Bypass -File deploy\build_push.ps1 -User <your-harbor-user>
 kubectl set image deployment/aibal app=cerit.io/<user>/aibal:<new tag>
 ```
 
