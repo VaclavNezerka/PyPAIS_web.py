@@ -9,8 +9,10 @@ ARG TORCH_CUDA=cu126
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    # the CUDA wheels are several GB - slow connections need patience
+    PIP_DEFAULT_TIMEOUT=300 \
+    PIP_RETRIES=10 \
     # the root filesystem is not writable for the app user - caches go to /tmp (an emptyDir in Kubernetes)
     HOME=/tmp \
     MPLCONFIGDIR=/tmp/matplotlib \
@@ -24,10 +26,13 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-RUN pip install torch==${TORCH_VERSION} torchvision==${TORCHVISION_VERSION} \
+# downloads are kept in a build cache (not in the image), so a failed or repeated build does not fetch them again
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install torch==${TORCH_VERSION} torchvision==${TORCHVISION_VERSION} \
         --index-url https://download.pytorch.org/whl/${TORCH_CUDA}
 COPY deploy/requirements.txt /tmp/requirements.txt
-RUN pip install -r /tmp/requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r /tmp/requirements.txt
 
 COPY . /app
 # translations are compiled in the repo; this only makes sure the .mo files match the .po files
