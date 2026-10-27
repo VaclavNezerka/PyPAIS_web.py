@@ -145,8 +145,13 @@ powershell -ExecutionPolicy Bypass -File deploy\build_push.ps1 -User <your-harbo
 kubectl set image deployment/aibal app=cerit.io/<user>/aibal:<new tag>
 ```
 
-New database migrations: put them into `db_migrations/` and apply them before the new version starts
-(e.g. through `kubectl port-forward svc/aibal-db-rw 15432:5432` and `psql`).
+New database migrations: put them into `db_migrations/` (the folder's `*.sql` files are git-ignored, add
+them with `git add -f`) and apply them in the database pod, as the app's database user:
+
+```powershell
+$pod = kubectl get cluster.postgresql.cnpg.io aibal-db -o "jsonpath={.status.currentPrimary}"
+Get-Content db_migrations\<file>.sql -Raw | kubectl exec -i $pod -c postgres -- psql -d aibal -v ON_ERROR_STOP=1 -X -c "SET ROLE aibal" -f -
+```
 Changed secrets: re-run the command of step 6.3 and `kubectl rollout restart deployment/aibal`.
 
 ## Troubleshooting
