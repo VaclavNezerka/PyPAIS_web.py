@@ -897,9 +897,8 @@ def check_data_ownership(func):
         # the owner, or an admin of the owner's company (one query)
         if db_api.can_access_experiment(user_id=session['user_id'], experiment_id=kwargs['id']):
             return func(id=kwargs['id'])
-        else:
-            flash(_('You do not have permission to access this data.'), 'error')
-            return redirect('/'), 302
+        # all guarded routes are called by fetch(): a JSON 403 - a redirect arrived there as "200 OK" with a page
+        return json.dumps({'status': 'error', 'message': _('You do not have permission to access this data.')}), 403, {'Content-Type': 'application/json'}
     return wrapper
 
 
@@ -1939,6 +1938,7 @@ def activate_experiment(id):
 
 @app.route('/load-experiment/<int:id>',methods=['GET'])
 @check_authentication
+@check_data_ownership  # it also makes the sample the user's working sample - later autosaves write into it
 def load_experiment(id):
     """
     Loads the experiment data from the database (expects a dictionary) into the user-specific temporary storage.
