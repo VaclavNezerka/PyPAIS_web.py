@@ -620,7 +620,7 @@ def forgot_password_form():
     dynamic_content = _('Forgot your password? Enter your email address.')
     form = forms.EmailForgotPasswordForm()
     match request.method:
-        case 'GET':
+        case 'GET' | 'HEAD':
             return render_template('form.html', form=form, dynamic_content=dynamic_content, recaptcha_site_key=RECAPTCHA_SITE_KEY), 200
         case 'POST':
             verify_recaptcha_or_abort(request.form.get('g-recaptcha-response',''))
@@ -645,7 +645,7 @@ def forgot_password_form():
 def forgot_password(token: str):
     """Confirm the user's email address using the provided token."""
     match request.method: 
-        case 'GET':
+        case 'GET' | 'HEAD':
             email, user_id = load_password_token(token, 'forgot_password-salt')  # valid for MAX_TOKEN_AGE, until the password changes
             db_api.confirm_user_email(email)
             form = forms.ChangeForgottenPasswordForm()
@@ -681,7 +681,7 @@ def confirm_email(token: str):
 def confirm_company_registration_user(token: str):
     """Confirm the user's email address using the provided token."""
     match request.method: 
-        case 'GET':
+        case 'GET' | 'HEAD':
             email, user_id = load_password_token(token, 'confirm_company_registration_user-salt')  # valid until the password is set
             db_api.confirm_user_email(email)
             print(f'Confirming company registration for user email: {email}')
@@ -956,7 +956,7 @@ def home():
     models = discover_models()
     title = _('Contact us!')
     match request.method:
-        case 'GET':
+        case 'GET' | 'HEAD':
             form = forms.ContactForm()
             return render_template('home.html', session=session, models=models, form=form, dynamic_content=title, recaptcha_site_key = RECAPTCHA_SITE_KEY), 200
         case 'POST':
@@ -1019,7 +1019,7 @@ def change_email():
     # the new address is used only after it is confirmed from the e-mail sent to it (confirm_email_change)
     title = _('Change email')
     match request.method:
-        case 'GET':
+        case 'GET' | 'HEAD':
             form=forms.ChangeEmailForm()
             return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
@@ -1065,7 +1065,7 @@ def change_company_email():
     # TODO: !!! CONFIRMATION EMAIL !!!
     title = _('Change company email')
     match request.method:
-        case 'GET':
+        case 'GET' | 'HEAD':
             form=forms.ChangeEmailForm()
             return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
@@ -1088,7 +1088,7 @@ def change_company_email():
 @check_authentication
 def edit_personal_information():
     match request.method:
-        case 'GET':
+        case 'GET' | 'HEAD':
             form=forms.EditPersonalInformationForm()
             return render_template('form.html',dynamic_content=_('Change personal information'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
@@ -1112,7 +1112,7 @@ def edit_personal_information():
 @check_is_company_admin
 def edit_company_information():
     match request.method:
-        case 'GET':
+        case 'GET' | 'HEAD':
             form=forms.EditCompanyInformationForm()
             return render_template('form.html',dynamic_content=_('Change personal information'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
@@ -1137,7 +1137,7 @@ def edit_company_information():
 def change_password():
     title = _('Change password')
     match request.method:
-        case 'GET':
+        case 'GET' | 'HEAD':
             form=forms.ChangePasswordForm()
             return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
@@ -1257,7 +1257,7 @@ def login():
     if 'authenticated' in session and session['authenticated']:
         logout()
     match request.method:
-        case 'GET':
+        case 'GET' | 'HEAD':
             form=forms.LoginForm()
             return render_template('form.html',dynamic_content=_('Login'),form=form, session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
@@ -1498,7 +1498,7 @@ def register():
         optional_content = ""
 
     match request.method:
-        case 'GET':
+        case 'GET' | 'HEAD':
             form=forms.RegistrationFormUser()
 
             return render_template('form.html',dynamic_content=_('Register new user'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY, optional_content_below=optional_content)
@@ -1628,7 +1628,7 @@ def export_report(ids):
         return render_template('export_report.html', form=form, samples=samples, recaptcha_site_key=RECAPTCHA_SITE_KEY)
 
     match request.method:
-        case 'GET':
+        case 'GET' | 'HEAD':
             form=forms.ExportReportForm()
             form.controlling_employee.choices = pick_users( session['user_id'])
             return render_export_form(form)
@@ -1673,7 +1673,7 @@ def export_report(ids):
 @limiter.limit(FORM_RATE_LIMIT, methods=['POST'], key_func=get_remote_address)
 def register_company():
     match request.method:
-        case 'GET':
+        case 'GET' | 'HEAD':
             form=forms.RegistrationFormCompany()
             return render_template('form.html',dynamic_content=_('Register new company'),form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
         case 'POST':
