@@ -35,7 +35,7 @@ PURGE_SECONDS = 6 * 3600
 QUEUE_LIMIT = 20_000  # rows kept while the database is unavailable; beyond that new rows are dropped
 
 # files and data the pages load for themselves - they say nothing about what people do
-SKIPPED_ENDPOINTS = {'static', 'send_static', 'send_node_modules', 'download_file', 'translations_alerts'}
+SKIPPED_ENDPOINTS = {'static', 'send_static', 'send_node_modules', 'download_file', 'translations_alerts', 'healthz'}
 AUTOSAVE_ENDPOINTS = {'update_specific_value', 'save_experiment_info', 'save_experiment', 'update_default_experiment_info'}
 # a URL token (confirmation links) must never be stored - matched routes are logged by their rule, e.g. /confirm_email/<token>
 MAX_PATH = 256

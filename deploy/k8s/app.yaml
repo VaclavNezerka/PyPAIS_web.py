@@ -91,24 +91,26 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
-          # importing torch takes a while; inference blocks a worker for a few seconds - lenient probes
+          # importing torch takes a while; inference blocks a worker for a few seconds - lenient probes.
+          # /healthz has no rate limit: on /home the checks hit the limit of 500 a day per address and the app
+          # was restarted every ~3 hours
           startupProbe:
             httpGet:
-              path: /home
+              path: /healthz
               port: http
             periodSeconds: 5
             timeoutSeconds: 5
             failureThreshold: 36
           readinessProbe:
             httpGet:
-              path: /home
+              path: /healthz
               port: http
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 4
           livenessProbe:
             httpGet:
-              path: /home
+              path: /healthz
               port: http
             periodSeconds: 30
             timeoutSeconds: 15

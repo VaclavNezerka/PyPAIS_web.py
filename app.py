@@ -983,6 +983,15 @@ def is_users_experiment(id: int):
     
     
     
+@app.route('/healthz')
+@limiter.exempt
+def healthz():
+    """Health check of the cluster (deploy/k8s/app.yaml). No rate limit - the checks all come from one address and
+    a page counted against the daily limit started failing after ~1000 checks, so the cluster restarted the app
+    every ~3 hours. Does not touch the session (no session row per check) or the database (a database outage
+    should not restart the app)."""
+    return 'ok', 200, {'Content-Type': 'text/plain'}
+
 @app.route('/home', methods=['GET','POST'])
 @limiter.limit(FORM_RATE_LIMIT, methods=['POST'], key_func=get_remote_address)
 def home():
