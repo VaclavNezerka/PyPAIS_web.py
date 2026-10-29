@@ -42,13 +42,18 @@ from typing_extensions import deprecated
 from models import discover_models
 import models
 import decimal
-from flask_babel import Babel, _, lazy_gettext, get_locale as get_babel_locale
+from flask_babel import Babel, _, lazy_gettext, get_locale as get_babel_locale, format_decimal
 from werkzeug.exceptions import HTTPException
 import math
 #Similarity controller
 import app_similarity_controller 
 similarity_controller = app_similarity_controller.ImageSimilarityController()
 from app_report_exporter import exporter_registry, get_CSN_73_6161_classification, get_CSN_73_6161_word_classification
+import activity
+from activity import track
+import activity_report
+import csv
+import jinja2
 # Apps
 import forms 
 from functools import wraps
@@ -70,6 +75,7 @@ app = Flask(__name__) # set debug to False for production
 
 # UPLOAD LIMITS - request size and the size of decoded images (anybody can upload in the demo)
 MAX_IMAGE_SIDE = 1920  # longer side of the stored and evaluated photo
+CAMERA_PHOTO_NAME = 'aibal-camera.jpg'  # file name of photos taken with the camera on the sample page (script_video.js)
 # share of the photo the model has to find as bitumen or aggregate - below it the photo shows no sample
 # (real samples cover 25-60 % of their photo, plots or photos of other things about 1 %)
 MIN_SAMPLE_AREA = float(os.getenv('MIN_SAMPLE_AREA', '0.05'))
@@ -105,6 +111,7 @@ def update_session_lifetime():
 def end_session_of_blocked_user():
     # blocking takes effect right away - checking it only at login left the blocked user's session running
     if session.get('authenticated') and request.endpoint != 'static' and db_api.is_user_blocked(user_id=session['user_id']):
+        track('session_ended_blocked')
         lang = session.get('lang')
         session.clear()
         session['lang'] = lang
@@ -232,6 +239,9 @@ app.secret_key = os.getenv('SECRET_KEY')
 if not app.secret_key:
     raise RuntimeError('SECRET_KEY is not set. Put a long random value into .env, e.g. the output of: '
                        'python -c "import secrets; print(secrets.token_urlsafe(32))"')
+
+# ACTIVITY LOG - every request becomes a row of activity_log for the developers' report (see activity.py)
+activity_log = activity.ActivityLog(app)
 
 def generate_password_hash(password: str) -> str:
     return ws.generate_password_hash(password,method=HASH_METHOD,salt_length=int(SALT_LENGTH))
@@ -610,9 +620,11 @@ def confirm_request(func):
         try:
             return func(*args, **kwargs)
         except SignatureExpired:  # a subclass of BadSignature - must be caught first
+            track('link_expired')
             flash(_('The confirmation link has expired.'), 'danger')
             return redirect(url_for('home'))
         except BadSignature:
+            track('link_invalid')
             flash(_('The confirmation link is invalid'), 'danger')
             return redirect(url_for('home'))
     return wrapper
@@ -630,6 +642,7 @@ def forgot_password_form():
             if form.validate_on_submit():
                 e_mail_address = form.e_mail.data
                 user = db_api.get_user_id(email=e_mail_address)
+                track('password_reset_requested', known_address=user is not None, account=user)
                 if user is not None:
                     # send email with confirmation link
                     send_email_confirmation(
@@ -663,6 +676,7 @@ def forgot_password(token: str):
                 if not db_api.update_users_table(values_dict={'pwd': password_hash}, user_id=user_id):
                     flash(_('There was an error setting your password. Please try again.'), 'danger')
                     return render_template('form.html', form=form, token=token, recaptcha_site_key=RECAPTCHA_SITE_KEY), 500
+                track('password_reset', account=user_id)
                 flash(_('Your password has been set. You can now log in!'), 'success')
             else:
                 flash(_('There was an error setting your password. Please try again.'), 'danger')
@@ -676,6 +690,7 @@ def confirm_email(token: str):
     """Confirm the user's email address using the provided token."""
     email = serializer.loads(token, salt='confirm_email-salt', max_age=MAX_TOKEN_AGE)['e_mail']  # token valid for ... hours
     db_api.confirm_user_email(email)
+    track('email_confirmed', account=db_api.get_user_id(email=email))
     flash(_('Your email address has been confirmed. You can now log in!'), 'success')
     return redirect(url_for('login'))
 
@@ -700,6 +715,7 @@ def confirm_company_registration_user(token: str):
                 if not db_api.update_users_table(values_dict={'pwd': password_hash}, user_id=user_id):
                     flash(_('There was an error setting your password. Please try again.'), 'danger')
                     return render_template('form.html', form=form, token=token, recaptcha_site_key=RECAPTCHA_SITE_KEY), 500
+                track('invitation_accepted', account=user_id)
                 flash(_('Your password has been set. You can now log in!'), 'success')
             else:
                 flash(_('There was an error setting your password. Please try again.'), 'danger')
@@ -726,6 +742,7 @@ def confirm_company_registration_admin(token: str):
     db_api.save_new_user_db(user_data)
     user_id = db_api.get_user_id(email=user_data['e_mail'])
     db_api.change_admin_privileges(user_id, True)
+    track('company_confirmed', company=datadict['company_id'], account=user_id)
     
     # send notification to the company admin
     print(datadict)
@@ -752,6 +769,7 @@ def verify_recaptcha(response_token: str) -> bool:
     try:
         r = requests.post(verify_url).json()
         print(f"reCAPTCHA verification response: {r}")
+        activity.add_details(recaptcha=r.get('score'))
         if r['success'] == True and r['score'] >= 0.85:
             return True
         else:
@@ -765,6 +783,7 @@ def verify_recaptcha_or_abort(response_token: str) -> bool:
     if verify_recaptcha(response_token)==True:
         pass
     else:
+        track('recaptcha_failed')
         abort(400, description=_('reCAPTCHA verification failed. Please try again.'))
 
 
@@ -876,6 +895,7 @@ def switch_language(lang_code: str):
     print(f'Switching language to: {lang_code}')
     if lang_code not in app.config['LANGUAGES']:
         abort(404)
+    track('language_switched', previous=session.get('lang'), to=lang_code)
     session['lang'] = lang_code
     return json.dumps({'lang': lang_code}), 200
 
@@ -922,6 +942,15 @@ def check_is_company_admin(func):
         if user and user['is_company_admin']:
             return func(*args, **kwargs)
         # 403 instead of a redirect to the login page, which logged the user out
+        abort(403, description=_('You do not have permission to access this page.'))
+    return wrapper
+
+def check_is_developer(func):
+    """Developers only (users.is_developer, granted by SQL - see db_migrations). Use below @check_authentication."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if session.get('authenticated') and db_api.is_user_developer(user_id=session['user_id']):
+            return func(*args, **kwargs)
         abort(403, description=_('You do not have permission to access this page.'))
     return wrapper
 
@@ -973,6 +1002,7 @@ def home():
                 request_details = {'Name': form.name.data,  'e-mail': form.email.data,}
                 # TODO: use template
                 r = send_email(subject=subject, recipients=ADMIN_EMAIL_ADDRESSES, body=form.message.data, request_details=request_details)
+                track('contact_sent', delivered=bool(r))
                 if r:
                     flash(_('Your message has been sent successfully.'), 'success')
                     return redirect(url_for('home')), 302
@@ -992,6 +1022,9 @@ def home():
 @app.errorhandler(500)
 def http_error(error):
     code = error.code if isinstance(error, HTTPException) and error.code else 500
+    if code == 500:
+        original = getattr(error, 'original_exception', None) or error
+        activity.add_details(error=f'{type(original).__name__}: {original}'[:300])
     titles = {
         400: _('The request could not be processed'),
         403: _('You do not have permission to access this page.'),
@@ -1011,6 +1044,8 @@ def http_error(error):
 @app.route('/logout')
 def logout():
     print('Logging out user.')
+    if session.get('authenticated'):
+        track('logout')
     lang = session.get('lang')
     session.clear()  # Clear all session data to ensure complete logout
     session['lang'] = lang  # ... but keep the chosen language
@@ -1041,6 +1076,7 @@ def change_email():
                                 'Please confirm your new email address by clicking the button below:'),
                     title=_('AIBAL: Confirm your new email address')
                 )
+                track('email_change_requested', sent=bool(sent))
                 if sent:
                     flash(_('We have sent a confirmation link to the new address. The e-mail address will change once you open it.'), 'success')
                 else:
@@ -1057,6 +1093,7 @@ def confirm_email_change(token: str):
     if db_api.get_user_id(email=data['e_mail']) is not None:
         flash(_('This email address is already used. Please use a different one.'), 'error')
     elif db_api.update_users_table(values_dict={'e_mail': data['e_mail']}, user_id=data['user_id']):
+        track('email_changed', account=data['user_id'])
         flash(_('Email changed successfully.'), 'success')
     else:
         flash(_('There was an error while changing your e-mail address. Please try again.'), 'error')
@@ -1081,6 +1118,7 @@ def change_company_email():
                     return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
                 company_id = db_api.get_user_by_id(session['user_id'])['company']
                 db_api.update_companies_table(values_dict={'e_mail': form.e_mail.data}, company_id=company_id)
+                track('company_email_changed', company=company_id)
                 flash(_('Email changed successfully.'), 'success')
                 return redirect('/company')
             else:
@@ -1106,6 +1144,7 @@ def edit_personal_information():
                         if field.name == 'csrf_token':
                             continue
                         db_api.update_users_table(values_dict={field.name: field.data}, user_id=session['user_id'])
+                track('profile_edited', fields=[f.name for f in form if f.data and f.name not in ('csrf_token', 'submit')])
                 flash(_('Personal information updated successfully.'), 'success')
                 return redirect('/user')
             else:
@@ -1131,6 +1170,7 @@ def edit_company_information():
                             continue
                         company_id = db_api.get_user_by_id(session['user_id'])['company']
                         db_api.update_companies_table(values_dict={field.name: field.data}, company_id=company_id)
+                track('company_edited', fields=[f.name for f in form if f.data and f.name not in ('csrf_token', 'submit')])
                 flash(_('Company information updated successfully.'), 'success')
                 return redirect('/company')
             else:
@@ -1155,6 +1195,7 @@ def change_password():
                     if not db_api.update_users_table(values_dict={'pwd': new_password_hash}, user_id=session['user_id']):
                         flash(_('Database error - the data was not saved. Please try again.'), 'error')
                         return render_template('form.html',dynamic_content=title,form=form,session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY), 500
+                    track('password_changed')
                     flash(_('Password changed successfully.'), 'success')
                     return redirect('/user'), 302
                 else:
@@ -1220,6 +1261,7 @@ def change_user_blockade():
     # get the future status
     will_be_blocked = request.form.get('will_be_blocked','false').lower() == 'true'
     db_api.change_user_blockade(user_id=user_to_alter_id, is_blocked=will_be_blocked)
+    track('user_blocked' if will_be_blocked else 'user_unblocked', account=user_to_alter_id)
     return json.dumps({'status': 'success'}), 200
 
 def return_max_page(total_pages, endpoint, **kwargs):
@@ -1252,6 +1294,7 @@ def change_admin_privileges():
     # get the future status
     will_be_admin = request.form.get('will_be_admin','false').lower() == 'true'
     db_api.change_admin_privileges(user_id=user_to_alter_id, is_admin=will_be_admin)
+    track('admin_granted' if will_be_admin else 'admin_revoked', account=user_to_alter_id)
     return json.dumps({'status': 'success'}), 200
 
 
@@ -1272,10 +1315,12 @@ def login():
                 
                 # check if the email is confirmed
                 if not db_api.is_user_email_confirmed(user_id=user_id):
+                    track('login_failed', reason='unknown_account' if user_id is None else 'unconfirmed_email', account=user_id)
                     flash(_('Please confirm your email address before logging in.'), 'error')
                     return redirect(url_for('login')), 302
                 # check if the user is blocked
                 if db_api.is_user_blocked(user_id=user_id):
+                    track('login_failed', reason='blocked', account=user_id)
                     flash(_('Your account has been blocked. In case this should not be the case, please contact your company admin.'), 'error')
                     return redirect(url_for('login')), 302
                 
@@ -1293,15 +1338,19 @@ def login():
                     session['is_admin'] = False
                     if db_api.get_user_by_id(user_id=user_id)['is_company_admin']:
                         session['is_admin'] = True
+                    session['is_developer'] = db_api.is_user_developer(user_id=user_id)
                     app.session_interface.regenerate(session)  # after filling it - regenerate() skips an empty session
+                    track('login', by_email='@' in form.usernameXe_mail.data)
                     print(' Session after login:')
                     print(session)
                     return redirect('/'), 302   
                 else:
+                    track('login_failed', reason='wrong_password', account=user_id)
                     flash(_('Invalid username/email or password.'), 'error')
                     return render_template('form.html', dynamic_content=_('Login'), form=form, session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
             else:
                 # form validation failed - user is notified by flash messages in the form
+                track('login_failed', reason='unknown_account' if form.usernameXe_mail.errors else 'incomplete_form')
                 return render_template('form.html', dynamic_content=_('Login'), form=form, session=session, recaptcha_site_key = RECAPTCHA_SITE_KEY)
 
 def sort_records(records: list, sort_order: Literal['asc', 'desc'], sort_by: str, page_limit: int) -> list:
@@ -1522,6 +1571,8 @@ def register():
                 }
                 result = db_api.save_new_user_db(values=user_dict)  # True, or None when the insert failed
                 if result:
+                    track('user_registered', company=company_id, account=db_api.get_user_id(email=form.e_mail.data),
+                          by_admin=bool(session.get('authenticated')))
                     # the confirmation e-mail only after the account really exists
                     send_email_confirmation(
                         to_mails=[form.e_mail.data],
@@ -1551,6 +1602,7 @@ def regenerate_company_key():
     # TODO - add confirmation email!
     company_id = db_api.get_user_by_id(session['user_id'])['company']
     db_api.update_company_key(company_id=company_id)
+    track('company_key_regenerated', company=company_id)
     flash(message=_('Company key regenerated successfully.'), category='success')
     return redirect('/company'), 302
 
@@ -1660,6 +1712,8 @@ def export_report(ids):
                     controlling_user_id=controlling_user_id,
                     ordering_party = ordering_party,
                 )
+                track('report_exported', samples=len(experiment_ids), ids=experiment_ids[:50], report=report_id,
+                      kb=round(len(report_bytes) / 1024), ordering_party=bool(ordering_party['name']), lang=session.get('lang'))
 
                 response = send_file(
                     io.BytesIO(report_bytes),
@@ -1692,6 +1746,7 @@ def register_company():
                 }
                 result = db_api.save_new_company_db(values=values)  # True, or None when the insert failed
                 if result:
+                    track('company_registered', company=db_api.get_company_id_by_key(values['company_key']))
                     # send email to admin for confirmation (only for a company that really was stored)
                     intro_text = _('A new company registration with the following details has been requested:')
                     request_details = {
@@ -1853,18 +1908,22 @@ def save_experiment_info():
 def evaluate_asphalt():
     asphalt_mask, aggregate_mask, background_mask = storage.get_masks_with_manual_corrections()
     if not sample_found(asphalt_mask, aggregate_mask):
+        track('evaluation_refused', experiment_id=storage.experiment_id)
         message = _('No asphalt sample was found in the photo, so the sample cannot be evaluated.')
         return json.dumps({'status': 'error', 'message': message}), 409, {'Content-Type': 'application/json'}
     evaluation = storage.get_asphalt_ratio()
     save_experiment(state='finished')
     print('Asphalt ratio evaluated:', evaluation)
     expert_guess = storage.expert_guess if storage.expert_guess not in (None, '') else None
+    result, expert = adhesion_classification(evaluation), adhesion_classification(expert_guess)
+    track('sample_evaluated', experiment_id=storage.experiment_id, ai_percent=result['asphalt_percent'],
+          expert_percent=expert['asphalt_percent'], ai_class=result['class'], model=storage.inference_model)
     return json.dumps({
         'status': 'success',
         'evaluation': evaluation,
         'experimentId': storage.experiment_id,
-        **adhesion_classification(evaluation),
-        'expert': adhesion_classification(expert_guess),
+        **result,
+        'expert': expert,
     }), 200, {'Content-Type': 'application/json'}
 
 # TODO: CORRECT THE METHOD - should be DELETE
@@ -1886,6 +1945,7 @@ def delete_experiment(id):
         if session.get('experiment_id') == id:
             session['experiment_id'] = None
         status = 'success'
+        track('sample_deleted', experiment_id=id, kept=experiment_state == 'finished')
     except Exception as e:
         print(f'Deleting experiment {id} failed: {e}')
         status = 'error'
@@ -1895,6 +1955,7 @@ def delete_experiment(id):
 @check_authentication
 def deactivate_current_experiment():
     id = db_api.return_active_experiment_id(user_id=session['user_id'])
+    track('sample_closed', experiment_id=id)
     session['experiment_id'] = None
     storage = None
     return deactivate_experiment(id)
@@ -1984,6 +2045,7 @@ def load_experiment(id):
     if has_masks:
         dict_response.update(mask_overlays())
     owner_id = response.get('user_id')
+    track('sample_opened', experiment_id=id, own=owner_id == session.get('user_id'), state=response.get('current_state'))
     if owner_id is not None and owner_id != session.get('user_id'):
         # a company admin opened a colleague's sample - the page says whose it is
         owner = db_api.get_user_info_by_id(owner_id) or {}
@@ -2098,6 +2160,7 @@ def process_image():
         image = polish_input_image_file(file)
     except (AttributeError, OSError, ValueError, Image.DecompressionBombError, Image.DecompressionBombWarning) as e:
         print(f'Rejected upload: {e!r}')
+        track('photo_rejected', reason=type(e).__name__, extension=os.path.splitext(getattr(file, 'filename', '') or '')[1][:10])
         return json.dumps({'status': 'error', 'message': _('Please choose an image file (JPG, PNG or HEIC).')}), 400, {'Content-Type': 'application/json'}
 
     storage.from_dict({
@@ -2130,6 +2193,10 @@ def process_image():
         print('in the background thread.')
     print('Similarity check should be running in the background thread.')
 
+    track('photo_uploaded', experiment_id=storage.experiment_id,
+          source='camera' if getattr(file, 'filename', '') == CAMERA_PHOTO_NAME else 'file',
+          width=image.shape[1], height=image.shape[0], megapixels=round(image.shape[0] * image.shape[1] / 1e6, 2),
+          kb=round((request.content_length or 0) / 1024), type=(getattr(file, 'mimetype', '') or '')[:40])
     response_dict = {
         'status': 'success',
         'color': storage.color,
@@ -2166,10 +2233,12 @@ def inference_image():
         return json.dumps({'status': 'error', 'message': 'No color image provided.'}), 200, {'Content-Type': 'application/json'}
     
     # # get model prediction and save it to the sessions
+    started = time.perf_counter()
     asphalt_mask, aggregate_mask, background_mask = models.inference_on_numpy(
         np_image=storage.color,
         model_name=storage.inference_model,
     )
+    inference_ms = round((time.perf_counter() - started) * 1000)
     # save the masks to the storage
     storage.from_dict({
         'asphalt_mask': asphalt_mask.astype(np.uint8),
@@ -2181,6 +2250,8 @@ def inference_image():
 
     # return the masks with manual corrections and the resulting assessment
     json_response = {'status': 'success', 'experimentId': storage.experiment_id, **mask_overlays()}
+    track('inference', experiment_id=storage.experiment_id, model=model_name, ms=inference_ms,
+          sample_found=json_response['sample_found'], ai_percent=json_response['asphalt_percent'])
     return json.dumps(json_response), 200, {'Content-Type': 'application/json'}
 
 
@@ -2248,6 +2319,76 @@ def get_inner_shape(shape_object):
 
 
 
+# DEVELOPERS - the activity report of the whole site (activity_report.py, templates/developer*.html)
+@app.template_filter('local_time')
+def local_time_filter(value, fmt: str = 'D. M. YYYY HH:mm') -> str:
+    """A timestamp in the report's time zone (naive ones, as in experiments.time_stamp, are taken as local)."""
+    if value is None:
+        return '—'
+    moment = pdl.instance(value) if value.tzinfo else pdl.instance(value, tz=activity_report.TZ)
+    return moment.in_tz(activity_report.TZ).format(fmt)
+
+@app.template_filter('num')
+def number_filter(value, digits: int = 0) -> str:
+    """A number in the page's language (1 234,5 in Czech); '—' for none."""
+    if value is None or isinstance(value, jinja2.Undefined):
+        return '—'
+    return format_decimal(round(float(value), digits), format='#,##0' + ('.' + '0' * digits if digits else ''))
+
+def developer_template_args() -> dict:
+    return {'periods': activity_report.PERIODS, 'event_labels': activity_report.EVENT_LABELS, 'tz': activity_report.TZ,
+            'retention_days': activity.RETENTION_DAYS}
+
+@app.route('/developer', methods=['GET'])
+@check_authentication
+@check_is_developer
+def developer():
+    days = activity_report.period_days(request.args.get('days'))
+    report = activity_report.build_report(days, include_developers=request.args.get('devs') == '1')
+    return render_template('developer.html', report=report, **developer_template_args())
+
+@app.route('/developer/events', methods=['GET'])
+@check_authentication
+@check_is_developer
+def developer_events():
+    filters = activity_report.event_filters(request.args)
+    page = query_int(request.args.get('page'), 1)
+    rows, total = activity_report.events(filters, page)
+    pages = max(1, math.ceil(total / activity_report.EVENTS_PER_PAGE))
+    # the filters as query arguments, for the paging links and the CSV download
+    filter_args = {k: ('1' if v is True else v) for k, v in filters.items() if v not in (None, False)}
+    return render_template('developer_events.html', rows=rows, total=total, page=min(page, pages), pages=pages,
+                           filters=filters, filter_args=filter_args, choices=activity_report.filter_choices(),
+                           per_page=activity_report.EVENTS_PER_PAGE, **developer_template_args())
+
+@app.route('/developer/events.csv', methods=['GET'])
+@check_authentication
+@check_is_developer
+def developer_events_csv():
+    filters = activity_report.event_filters(request.args)
+    columns = ['time', 'event', 'user_id', 'username', 'company_name', 'visitor', 'method', 'endpoint', 'path', 'status',
+               'duration_ms', 'lang', 'device', 'browser', 'os', 'is_bot', 'ip_prefix', 'referrer', 'experiment_id', 'details']
+
+    def cell(row, column):
+        value = row.get(column)
+        if column == 'time':
+            return local_time_filter(value, 'YYYY-MM-DD HH:mm:ss')
+        if column == 'details':
+            return json.dumps(value, ensure_ascii=False) if value else ''
+        text = '' if value is None else str(value)
+        # a spreadsheet must not run what visitors typed into the address (e.g. a requested path "=cmd|...")
+        return "'" + text if text[:1] in ('=', '+', '-', '@') else text
+
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(columns)
+    for row in activity_report.events_for_csv(filters):
+        writer.writerow([cell(row, c) for c in columns])
+    name = f"aibal_activity_{pdl.now(activity_report.TZ).format('YYYYMMDD_HHmm')}.csv"
+    # the BOM makes Excel read the file as UTF-8
+    return '\ufeff' + buffer.getvalue(), 200, {'Content-Type': 'text/csv; charset=utf-8',
+                                                'Content-Disposition': f'attachment; filename="{name}"'}
+
 @app.route('/get-default-experiment-info', methods=['GET'])
 @check_authentication
 def get_default_experiment_info():
@@ -2263,6 +2404,7 @@ def update_default_experiment_info():
     field = data.get('field')
     value = data.get('value')
     print(f'Updating default experiment info: {field} = {value}')
+    track('defaults_updated', field=str(field)[:64])
     # Update the default experiment info in the database
     db_api.update_default_experiment_info(user_id=session['user_id'], field=field, value=value)
     return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}

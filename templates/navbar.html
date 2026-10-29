@@ -43,9 +43,12 @@
           {{ icon('chevron-down') }}
         </summary>
         <div class="dropdown-menu">
-          <div class="menu-label"><strong>{{ session.user_email }}</strong>{{ _('Company admin') if session.is_admin else _('User') }}</div>
+          <div class="menu-label"><strong>{{ session.user_email }}</strong>{{ _('Company admin') if session.is_admin else _('User') }}{{ ' · ' ~ _('Developer') if session.is_developer }}</div>
           <a href="/user">{{ icon('user') }} {{ _('User Profile') }}</a>
           <a href="/user#personalized_settings">{{ icon('sliders') }} {{ _('Default values') }}</a>
+          {% if session.is_developer %}
+          <a href="/developer">{{ icon('activity') }} {{ _('Site activity') }}</a>
+          {% endif %}
           <a href="/logout">{{ icon('logout') }} {{ _('Logout') }}</a>
         </div>
       </details>

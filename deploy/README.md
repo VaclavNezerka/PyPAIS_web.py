@@ -154,6 +154,21 @@ Get-Content db_migrations\<file>.sql -Raw | kubectl exec -i $pod -c postgres -- 
 ```
 Changed secrets: re-run the command of step 6.3 and `kubectl rollout restart deployment/aibal`.
 
+## Developer accounts and the activity report
+
+Every request is recorded in the table `activity_log` (migration `2026-10-29_developer_activity_log.sql`);
+developers see the report at `/developer` (link in the user menu) with the event log and a CSV download.
+The role is granted only in the database, never in the app - in the database pod:
+
+```powershell
+kubectl exec -i $pod -c postgres -- psql -d aibal -X -c "SET ROLE aibal" -c "UPDATE users SET is_developer = true WHERE username = '<username>'"
+```
+
+The user sees the link after the next login. No IP addresses or cookies are stored (see `activity.py`); rows
+older than `ACTIVITY_RETENTION_DAYS` (default 400) are deleted. `ACTIVITY_LOG=0` in `aibal.env` turns the
+recording off. A fresh dump of the old server has no activity log and no developers: `restore_db.ps1` applies
+the migration, the role has to be granted again.
+
 ## Troubleshooting
 
 - **Pod stays Pending with "Insufficient nvidia.com/mig-1g.10gb"** - no free A100 slice. In `app.yaml`

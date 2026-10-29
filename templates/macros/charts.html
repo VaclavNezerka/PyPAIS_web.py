@@ -1,0 +1,99 @@
+{#- Charts of the developers' report. The geometry comes from activity_report.py (column_chart, bars, heatmap);
+    developer.js adds the tooltips and sets the widths of the horizontal bars (no inline styles under the CSP).
+    Every value is also readable without hovering: columns have a table view, bar lists show their numbers. -#}
+
+{#- Columns of one series, or a stack of two (series: the names of the parts, emphasised one first). -#}
+{% macro columns(chart, label, series=[]) -%}
+<figure class="chart" data-series="{{ series | tojson | forceescape }}">
+  <div class="chart-scroll">
+    <svg class="chart-svg" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="{{ label }}">
+      {%- for t in chart.ticks %}
+      <line class="chart-grid" x1="{{ chart.left }}" x2="{{ chart.right }}" y1="{{ t.y | round(1) }}" y2="{{ t.y | round(1) }}"/>
+      <text class="chart-tick" x="{{ chart.left - 6 }}" y="{{ (t.y + 4) | round(1) }}" text-anchor="end">{{ t.label }}</text>
+      {%- endfor %}
+      <line class="chart-baseline" x1="{{ chart.left }}" x2="{{ chart.right }}" y1="{{ chart.baseline }}" y2="{{ chart.baseline }}"/>
+      {%- for c in chart.columns %}
+      <g class="chart-col" tabindex="0" data-tip="{{ c.tip }}" data-values="{{ c['values'] | join(',') }}"
+        aria-label="{{ c.tip }}: {{ c['values'] | join(' / ') }}">
+        <rect class="chart-hit" x="{{ c.band_x | round(1) }}" y="0" width="{{ c.band_w | round(1) }}" height="{{ chart.baseline }}"/>
+        {%- for s in c.segments %}<path class="chart-bar part-{{ s.part }}" d="{{ s.path }}"/>{% endfor %}
+      </g>
+      {%- endfor %}
+      {%- for l in chart.x_labels %}
+      <text class="chart-xlabel" x="{{ l.x | round(1) }}" y="{{ chart.height - 6 }}" text-anchor="middle">{{ l.label }}</text>
+      {%- endfor %}
+      {%- if chart.peak %}
+      {#- the one direct label: the highest column -#}
+      <text class="chart-peak" x="{{ (chart.peak.x + chart.peak.w / 2) | round(1) }}" y="{{ (chart.peak.top - 5) | round(1) }}" text-anchor="middle">{{ chart.peak.value | num }}</text>
+      {%- endif %}
+    </svg>
+  </div>
+  {%- if series | length > 1 %}
+  <figcaption class="chart-legend">
+    {%- for name in series %}<span><i class="swatch part-{{ loop.index0 }}"></i>{{ name }}</span>{% endfor %}
+  </figcaption>
+  {%- endif %}
+</figure>
+{%- endmacro %}
+
+{#- The columns as a table, folded. rows: (label, value) or (label, [values]). -#}
+{% macro table_view(rows, headers) -%}
+<details class="table-view">
+  <summary>{{ _('Show as table') }}</summary>
+  <div class="table-view-body">
+    <table class="table table-compact">
+      <thead><tr>{% for h in headers %}<th class="{{ 'num' if not loop.first }}">{{ h }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {%- for label, value in rows %}
+        <tr><td>{{ label }}</td>{% if value is iterable and value is not string %}{% for v in value %}<td class="num">{{ v | num }}</td>{% endfor %}{% else %}<td class="num">{{ value | num }}</td>{% endif %}</tr>
+        {%- endfor %}
+      </tbody>
+    </table>
+  </div>
+</details>
+{%- endmacro %}
+
+{#- Horizontal bars with their numbers (one series). names: translations of raw labels; share: also the share in %. -#}
+{% macro hbars(data, names={}, empty=None, share=False, mono=False) -%}
+{% if data.rows %}
+<ul class="hbars">
+  {%- for r in data.rows %}
+  {%- set name = names.get(r.label, r.label) %}
+  <li tabindex="0" data-tip="{{ name }}" data-values="{{ r.n }}">
+    <span class="hbar-label{{ ' mono' if mono }}" title="{{ name }}">{{ name }}</span>
+    <span class="hbar-track"><span class="hbar" data-share="{{ r.share | round(4) }}"></span></span>
+    <span class="hbar-value">{{ r.n | num }}{% if share %} <small>{{ r.percent | num }} %</small>{% endif %}</span>
+  </li>
+  {%- endfor %}
+</ul>
+{% else %}
+<p class="empty-note">{{ empty or _('Nothing recorded in this period.') }}</p>
+{% endif %}
+{%- endmacro %}
+
+{#- Weekday x hour: how many actions people did, in 5 steps of one hue. -#}
+{% macro heatmap(data) -%}
+<div class="heatmap" role="table" aria-label="{{ _('Actions by weekday and hour') }}">
+  <div class="heat-row heat-head" role="row">
+    <span role="columnheader"></span>
+    {%- for h in range(24) %}<span class="heat-hour" role="columnheader">{{ h if h % 3 == 0 }}</span>{% endfor %}
+    <span class="heat-total" role="columnheader">{{ _('Total') }}</span>
+  </div>
+  {%- for row in data.grid %}
+  <div class="heat-row" role="row">
+    <span class="heat-day" role="rowheader">{{ row.day }}</span>
+    {%- for c in row.cells %}
+    <span class="heat-cell heat-{{ c.level }}" role="cell" tabindex="0" data-tip="{{ row.day }} {{ c.hour }}:00–{{ c.hour + 1 }}:00"
+      data-values="{{ c.n }}" aria-label="{{ row.day }} {{ c.hour }}:00: {{ c.n }}"></span>
+    {%- endfor %}
+    <span class="heat-total" role="cell">{{ row.total | num }}</span>
+  </div>
+  {%- endfor %}
+</div>
+<div class="heat-legend">
+  <span>{{ _('fewer') }}</span>
+  {%- for level in range(6) %}<i class="heat-cell heat-{{ level }}"></i>{% endfor %}
+  <span>{{ _('more') }}</span>
+  <span class="muted">· {{ _('busiest hour') }}: {{ data.max | num }}</span>
+</div>
+{%- endmacro %}

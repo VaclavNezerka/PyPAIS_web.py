@@ -1550,6 +1550,799 @@ msgstr ""
 "postup, jak je pozvat; po potvrzení e-mailové adresy se objeví v tomto "
 "seznamu."
 
+msgid "24 hours"
+msgstr "24 hodin"
+
+msgid "7 days"
+msgstr "7 dní"
+
+msgid "30 days"
+msgstr "30 dní"
+
+msgid "90 days"
+msgstr "90 dní"
+
+msgid "1 year"
+msgstr "1 rok"
+
+msgid "Page view"
+msgstr "Zobrazení stránky"
+
+msgid "Request"
+msgstr "Požadavek"
+
+msgid "Autosave"
+msgstr "Automatické uložení"
+
+msgid "Signed in"
+msgstr "Přihlášení"
+
+msgid "Failed login"
+msgstr "Neúspěšné přihlášení"
+
+msgid "Signed out"
+msgstr "Odhlášení"
+
+msgid "Blocked user signed out"
+msgstr "Blokovaný uživatel odhlášen"
+
+msgid "User registered"
+msgstr "Registrace uživatele"
+
+msgid "Company registered"
+msgstr "Registrace organizace"
+
+msgid "Company confirmed"
+msgstr "Organizace potvrzena"
+
+msgid "E-mail confirmed"
+msgstr "E-mail potvrzen"
+
+msgid "Company admin set password"
+msgstr "Správce organizace nastavil heslo"
+
+msgid "Password reset requested"
+msgstr "Žádost o obnovu hesla"
+
+msgid "Password reset"
+msgstr "Heslo obnoveno"
+
+msgid "Password changed"
+msgstr "Heslo změněno"
+
+msgid "E-mail change requested"
+msgstr "Žádost o změnu e-mailu"
+
+msgid "E-mail changed"
+msgstr "E-mail změněn"
+
+msgid "Company e-mail changed"
+msgstr "E-mail organizace změněn"
+
+msgid "Profile edited"
+msgstr "Profil upraven"
+
+msgid "Company details edited"
+msgstr "Údaje organizace upraveny"
+
+msgid "User blocked"
+msgstr "Uživatel zablokován"
+
+msgid "User unblocked"
+msgstr "Uživatel odblokován"
+
+msgid "Admin rights granted"
+msgstr "Udělena práva správce"
+
+msgid "Admin rights removed"
+msgstr "Odebrána práva správce"
+
+msgid "Company key regenerated"
+msgstr "Nový klíč organizace"
+
+msgid "Expired link opened"
+msgstr "Otevřen prošlý odkaz"
+
+msgid "Invalid link opened"
+msgstr "Otevřen neplatný odkaz"
+
+msgid "reCAPTCHA failed"
+msgstr "reCAPTCHA neprošla"
+
+msgid "Contact form sent"
+msgstr "Odeslán kontaktní formulář"
+
+msgid "Language switched"
+msgstr "Změna jazyka"
+
+msgid "Photo uploaded"
+msgstr "Nahrána fotografie"
+
+msgid "Photo rejected"
+msgstr "Fotografie odmítnuta"
+
+msgid "AI detection"
+msgstr "Detekce AI"
+
+msgid "Evaluation refused (no sample)"
+msgstr "Vyhodnocení odmítnuto (bez vzorku)"
+
+msgid "Sample opened"
+msgstr "Otevřen vzorek"
+
+msgid "New sample started"
+msgstr "Zahájen nový vzorek"
+
+msgid "Sample deleted"
+msgstr "Smazán vzorek"
+
+msgid "Report exported"
+msgstr "Exportován protokol"
+
+msgid "Default values changed"
+msgstr "Změněny výchozí hodnoty"
+
+msgid "Visitors"
+msgstr "Návštěvníci"
+
+msgid "Page views"
+msgstr "Zobrazení stránek"
+
+msgid "Signed-in users"
+msgstr "Přihlášení uživatelé"
+
+msgid "Active companies"
+msgstr "Aktivní organizace"
+
+msgid "Logins"
+msgstr "Počet přihlášení"
+
+msgid "New users"
+msgstr "Noví uživatelé"
+
+msgid "Photos uploaded"
+msgstr "Nahrané fotografie"
+
+msgid "Demo uploads by guests"
+msgstr "Fotografie v ukázce (hosté)"
+
+msgid "Samples evaluated"
+msgstr "Vyhodnocené vzorky"
+
+msgid "Reports exported"
+msgstr "Exportované protokoly"
+
+msgid "Server errors"
+msgstr "Chyby serveru"
+
+msgid "Median page time"
+msgstr "Medián načtení stránky"
+
+msgid "Week of"
+msgstr "Týden od"
+
+msgid "Mon"
+msgstr "Po"
+
+msgid "Tue"
+msgstr "Út"
+
+msgid "Wed"
+msgstr "St"
+
+msgid "Thu"
+msgstr "Čt"
+
+msgid "Fri"
+msgstr "Pá"
+
+msgid "Sat"
+msgstr "So"
+
+msgid "Sun"
+msgstr "Ne"
+
+msgid "Site activity"
+msgstr "Aktivita webu"
+
+msgid "per hour"
+msgstr "po hodinách"
+
+msgid "per day"
+msgstr "po dnech"
+
+msgid "per week"
+msgstr "po týdnech"
+
+msgid "Computer"
+msgstr "Počítač"
+
+msgid "Phone"
+msgstr "Telefon"
+
+msgid "Tablet"
+msgstr "Tablet"
+
+msgid "Wrong password"
+msgstr "Špatné heslo"
+
+msgid "Unknown account"
+msgstr "Neznámý účet"
+
+msgid "E-mail not confirmed"
+msgstr "Nepotvrzený e-mail"
+
+msgid "Blocked account"
+msgstr "Blokovaný účet"
+
+msgid "Incomplete form"
+msgstr "Neúplný formulář"
+
+#, python-format
+msgid ""
+"Everything that happened on the website in the last %(period)s, for the "
+"developers."
+msgstr ""
+"Vše, co se na webu stalo v posledním období (%(period)s) – přehled pro "
+"vývojáře."
+
+#, python-format
+msgid "Times are in %(tz)s."
+msgstr "Časy jsou v pásmu %(tz)s."
+
+msgid "Event log"
+msgstr "Záznam událostí"
+
+msgid "Download CSV"
+msgstr "Stáhnout CSV"
+
+msgid "Period"
+msgstr "Období"
+
+msgid "Include developers' own activity"
+msgstr "Včetně aktivity vývojářů"
+
+msgid "Sections"
+msgstr "Oddíly"
+
+msgid "Overview"
+msgstr "Přehled"
+
+msgid "Companies and users"
+msgstr "Organizace a uživatelé"
+
+msgid "Samples and AI"
+msgstr "Vzorky a AI"
+
+msgid "Traffic"
+msgstr "Návštěvnost"
+
+msgid "Performance and errors"
+msgstr "Výkon a chyby"
+
+msgid "Security"
+msgstr "Bezpečnost"
+
+msgid ""
+"The activity log is still empty - it records from this version on. "
+"Samples, users and companies below come from their own tables and reach "
+"further back."
+msgstr ""
+"Záznam aktivity je zatím prázdný – zaznamenává se od této verze aplikace."
+" Vzorky, uživatelé a organizace níže pocházejí z vlastních tabulek a "
+"sahají dál do minulosti."
+
+#, python-format
+msgid ""
+"The activity log started on %(date)s - the period before has no activity "
+"data. Samples, users and companies come from their own tables."
+msgstr ""
+"Záznam aktivity začal %(date)s – pro dřívější část období data o aktivitě"
+" nejsou. Vzorky, uživatelé a organizace pocházejí z vlastních tabulek."
+
+msgid ""
+"Visitors are told apart without cookies, by a code that changes every "
+"day: somebody who comes on three days counts three times. Bots and "
+"crawlers are left out of visitors and page views."
+msgstr ""
+"Návštěvníci se rozlišují bez cookies, podle kódu, který se každý den "
+"mění: kdo přijde ve třech dnech, počítá se třikrát. Roboti a prohledávače"
+" se do návštěvníků ani zobrazení stránek nepočítají."
+
+msgid "total"
+msgstr "celkem"
+
+msgid "Time"
+msgstr "Čas"
+
+msgid "When the site is used"
+msgstr "Kdy se web používá"
+
+msgid "Actions of people (page views and what they did) by weekday and hour"
+msgstr "Akce lidí (zobrazení stránek a provedené úkony) podle dne v týdnu a hodiny"
+
+msgid "Latest actions"
+msgstr "Poslední akce"
+
+msgid "Without page views and single requests"
+msgstr "Bez zobrazení stránek a jednotlivých požadavků"
+
+msgid "All events"
+msgstr "Všechny události"
+
+msgid "sample"
+msgstr "vzorek"
+
+msgid "Nothing recorded in this period."
+msgstr "V tomto období nebylo nic zaznamenáno."
+
+msgid "Companies"
+msgstr "Organizace"
+
+msgid "Users"
+msgstr "Uživatelé"
+
+msgid "Evaluated / all samples (all time)"
+msgstr "Vyhodnocené / všechny vzorky (od začátku)"
+
+msgid "Samples"
+msgstr "Vzorky"
+
+msgid "New in period"
+msgstr "Nové v období"
+
+msgid "Last sample"
+msgstr "Poslední vzorek"
+
+msgid "Active users"
+msgstr "Aktivní uživatelé"
+
+msgid "Uploads"
+msgstr "Nahrání"
+
+msgid "Reports"
+msgstr "Protokoly"
+
+msgid "Last seen"
+msgstr "Naposledy aktivní"
+
+msgid "registered"
+msgstr "registrace"
+
+msgid "Confirmed"
+msgstr "Potvrzena"
+
+msgid "Waiting for confirmation"
+msgstr "Čeká na potvrzení"
+
+msgid "admins"
+msgstr "správci"
+
+msgid ""
+"Users: with a confirmed e-mail / all. Samples: evaluated / all, without "
+"deleted ones, since the start. The other columns cover the selected "
+"period."
+msgstr ""
+"Uživatelé: s potvrzeným e-mailem / všichni. Vzorky: vyhodnocené / "
+"všechny, bez smazaných, od začátku. Ostatní sloupce se týkají zvoleného "
+"období."
+
+msgid "Last login"
+msgstr "Poslední přihlášení"
+
+msgid "Devices"
+msgstr "Zařízení"
+
+msgid "Developer"
+msgstr "Vývojář"
+
+msgid "Admin"
+msgstr "Správce"
+
+msgid "Samples created"
+msgstr "Vytvořené vzorky"
+
+msgid "by signed-in users"
+msgstr "přihlášenými uživateli"
+
+msgid "Unfinished"
+msgstr "Nedokončené"
+
+msgid "Deleted"
+msgstr "Smazané"
+
+msgid "AI detections"
+msgstr "Detekce AI"
+
+msgid "of them in the demo"
+msgstr "z toho v ukázce"
+
+msgid "No sample in photo"
+msgstr "Bez vzorku na fotografii"
+
+msgid "evaluation refused"
+msgstr "odmítnutá vyhodnocení"
+
+msgid "Photos rejected"
+msgstr "Odmítnuté fotografie"
+
+msgid "not an image or too large"
+msgstr "nejde o obrázek nebo je příliš velký"
+
+msgid "Samples opened again"
+msgstr "Znovu otevřené vzorky"
+
+msgid "of them a colleague's"
+msgstr "z toho vzorky kolegů"
+
+msgid "AI and expert"
+msgstr "AI a odborník"
+
+msgid "Evaluated samples of the period with an expert estimate"
+msgstr "Vyhodnocené vzorky období s odborným odhadem"
+
+msgid "Samples compared"
+msgstr "Porovnané vzorky"
+
+msgid "Mean difference"
+msgstr "Průměrný rozdíl"
+
+msgid "percentage points"
+msgstr "procentních bodů"
+
+msgid "AI minus expert"
+msgstr "AI minus odborník"
+
+msgid "positive: AI sees more bitumen"
+msgstr "kladná hodnota: AI vidí více asfaltu"
+
+msgid "Within 5 points"
+msgstr "Do 5 bodů"
+
+msgid "Within 10 points"
+msgstr "Do 10 bodů"
+
+msgid "No evaluated sample with an expert estimate in this period."
+msgstr "V tomto období není žádný vyhodnocený vzorek s odborným odhadem."
+
+msgid "ČSN 73 6161 classes"
+msgstr "Třídy podle ČSN 73 6161"
+
+msgid "AI assessment of the evaluated samples"
+msgstr "Hodnocení AI u vyhodnocených vzorků"
+
+msgid "Detection"
+msgstr "Detekce"
+
+msgid "How long the model took"
+msgstr "Jak dlouho model počítal"
+
+msgid "Median"
+msgstr "Medián"
+
+#, python-format
+msgid "95 %% of runs within"
+msgstr "95 %% běhů do"
+
+msgid "Slowest"
+msgstr "Nejpomalejší"
+
+msgid "Models run"
+msgstr "Použité modely"
+
+msgid "Photos"
+msgstr "Fotografie"
+
+msgid "Uploads of the period"
+msgstr "Nahrané v období"
+
+msgid "Uploaded"
+msgstr "Nahráno"
+
+msgid "From the camera"
+msgstr "Z kamery"
+
+msgid "Demo (guests)"
+msgstr "Ukázka (hosté)"
+
+msgid "Median size"
+msgstr "Medián velikosti"
+
+msgid "megapixels after downscaling"
+msgstr "megapixelů po zmenšení"
+
+msgid "Median upload"
+msgstr "Medián nahraného souboru"
+
+msgid "PDF reports exported in the period"
+msgstr "Protokoly PDF exportované v období"
+
+msgid "Samples in them"
+msgstr "Vzorků v nich"
+
+msgid "Median time"
+msgstr "Medián doby"
+
+msgid "Models of the stored samples"
+msgstr "Modely uložených vzorků"
+
+msgid "Samples created in the period"
+msgstr "Vzorky vytvořené v období"
+
+msgid "Samples per month since the start"
+msgstr "Vzorky po měsících od začátku"
+
+msgid "From the samples table - also before the activity log existed"
+msgstr "Z tabulky vzorků – i z doby před záznamem aktivity"
+
+msgid "Month"
+msgstr "Měsíc"
+
+msgid "Pages"
+msgstr "Stránky"
+
+msgid "Page views by people"
+msgstr "Zobrazení stránek lidmi"
+
+msgid "Guests and users"
+msgstr "Hosté a uživatelé"
+
+msgid "Guests"
+msgstr "Hosté"
+
+msgid "Coming from"
+msgstr "Odkud přicházejí"
+
+msgid "No visits from other websites in this period."
+msgstr "V tomto období nepřišla žádná návštěva z jiného webu."
+
+msgid "Languages"
+msgstr "Jazyky"
+
+msgid "Language of the pages shown"
+msgstr "Jazyk zobrazených stránek"
+
+msgid "Systems"
+msgstr "Systémy"
+
+msgid "Browsers"
+msgstr "Prohlížeče"
+
+msgid "Bots and crawlers"
+msgstr "Roboti a prohledávače"
+
+msgid "No bots in this period."
+msgstr "V tomto období žádní roboti."
+
+msgid "Requests of bots"
+msgstr "Požadavky robotů"
+
+msgid "of people"
+msgstr "lidí"
+
+msgid "Endpoint"
+msgstr "Endpoint"
+
+msgid "Requests"
+msgstr "Požadavky"
+
+#, python-format
+msgid "95 %%"
+msgstr "95 %%"
+
+msgid "Sum of all request times"
+msgstr "Součet doby všech požadavků"
+
+msgid "Total time"
+msgstr "Celková doba"
+
+msgid "Error responses"
+msgstr "Chybové odpovědi"
+
+msgid "By status code"
+msgstr "Podle stavového kódu"
+
+msgid "Responses"
+msgstr "Odpovědi"
+
+msgid "of them bots"
+msgstr "z toho roboti"
+
+msgid "No error responses in this period."
+msgstr "V tomto období žádné chybové odpovědi."
+
+msgid "Pages not found"
+msgstr "Nenalezené stránky"
+
+msgid "Broken links, old addresses and scans for weak spots"
+msgstr "Nefunkční odkazy, staré adresy a hledání slabých míst"
+
+msgid "No missing pages requested in this period."
+msgstr "V tomto období nikdo nepožadoval neexistující stránku."
+
+msgid "The latest responses with status 500 and higher"
+msgstr "Poslední odpovědi se stavem 500 a vyšším"
+
+msgid "Browser"
+msgstr "Prohlížeč"
+
+msgid "Guest"
+msgstr "Host"
+
+msgid "No server errors in this period."
+msgstr "V tomto období žádné chyby serveru."
+
+msgid "Failed logins"
+msgstr "Neúspěšná přihlášení"
+
+msgid "Low reCAPTCHA scores"
+msgstr "Nízké skóre reCAPTCHA"
+
+#, python-format
+msgid "of %(n)s checks, median %(median)s"
+msgstr "z %(n)s kontrol, medián %(median)s"
+
+msgid "Password resets"
+msgstr "Obnovy hesla"
+
+msgid "requested"
+msgstr "žádostí"
+
+msgid "Expired or invalid links"
+msgstr "Prošlé nebo neplatné odkazy"
+
+msgid "Rate limited"
+msgstr "Omezení četnosti"
+
+msgid "status 429"
+msgstr "stav 429"
+
+msgid "Access denied"
+msgstr "Přístup odepřen"
+
+msgid "status 403"
+msgstr "stav 403"
+
+msgid "By reason"
+msgstr "Podle důvodu"
+
+msgid "No failed logins in this period."
+msgstr "V tomto období žádná neúspěšná přihlášení."
+
+msgid "Networks with suspicious requests"
+msgstr "Sítě s podezřelými požadavky"
+
+msgid ""
+"Failed logins, reCAPTCHA failures, rate limits and missing pages by "
+"network (/24, /48)"
+msgstr ""
+"Neúspěšná přihlášení, selhání reCAPTCHA, omezení četnosti a nenalezené "
+"stránky podle sítě (/24, /48)"
+
+msgid "Network"
+msgstr "Síť"
+
+msgid "Last"
+msgstr "Naposledy"
+
+msgid "Nothing suspicious in this period."
+msgstr "V tomto období nic podezřelého."
+
+msgid "Account and rights changes"
+msgstr "Změny účtů a oprávnění"
+
+msgid ""
+"Registrations, confirmations, passwords, e-mails, admin rights and "
+"blocking"
+msgstr "Registrace, potvrzení, hesla, e-maily, práva správce a blokování"
+
+msgid "Event"
+msgstr "Událost"
+
+msgid "By"
+msgstr "Kdo"
+
+msgid "Details"
+msgstr "Podrobnosti"
+
+msgid "No account changes in this period."
+msgstr "V tomto období žádné změny účtů."
+
+#, python-format
+msgid "Activity log: %(rows)s rows since %(first)s, %(size)s MB."
+msgstr "Záznam aktivity: %(rows)s řádků od %(first)s, %(size)s MB."
+
+#, python-format
+msgid ""
+"Rows are deleted after %(days)s days. No IP addresses and no cookies are "
+"stored - only the network part of the address for the security "
+"statistics."
+msgstr ""
+"Řádky se mažou po %(days)s dnech. Neukládají se IP adresy ani cookies – "
+"jen síťová část adresy pro bezpečnostní statistiky."
+
+#, python-format
+msgid "Every request to the website, newest first. Times are in %(tz)s."
+msgstr "Všechny požadavky na web, nejnovější první. Časy jsou v pásmu %(tz)s."
+
+msgid "All companies"
+msgstr "Všechny organizace"
+
+msgid "Everybody"
+msgstr "Všichni"
+
+msgid "All"
+msgstr "Vše"
+
+msgid "2xx success"
+msgstr "2xx úspěch"
+
+msgid "3xx redirect"
+msgstr "3xx přesměrování"
+
+msgid "4xx client error"
+msgstr "4xx chyba klienta"
+
+msgid "5xx server error"
+msgstr "5xx chyba serveru"
+
+msgid "Address contains"
+msgstr "Adresa obsahuje"
+
+msgid "Include bots"
+msgstr "Včetně robotů"
+
+msgid "Filter"
+msgstr "Filtrovat"
+
+msgid "Who"
+msgstr "Kdo"
+
+msgid "Duration"
+msgstr "Doba"
+
+msgid "Device"
+msgstr "Zařízení"
+
+msgid "Visitor code of the day and network"
+msgstr "Denní kód návštěvníka a síť"
+
+msgid "from"
+msgstr "z"
+
+msgid "Bot"
+msgstr "Robot"
+
+msgid "No events match the filter."
+msgstr "Filtru neodpovídá žádná událost."
+
+msgid "events"
+msgstr "událostí"
+
+msgid "Show as table"
+msgstr "Zobrazit jako tabulku"
+
+msgid "Actions by weekday and hour"
+msgstr "Akce podle dne v týdnu a hodiny"
+
+msgid "Total"
+msgstr "Celkem"
+
+msgid "fewer"
+msgstr "méně"
+
+msgid "more"
+msgstr "více"
+
+msgid "busiest hour"
+msgstr "nejrušnější hodina"
+
+msgid "previous period"
+msgstr "předchozí období"
+
+msgid "vs previous period"
+msgstr "proti předchozímu období"
+
 #~ msgid "Enter your username"
 #~ msgstr "Zadejte své uživatelské jméno"
 

@@ -121,7 +121,8 @@ window.addEventListener("load", () => {
             photo.setAttribute("src", data)
 
             canvas.toBlob((blob) => {
-                const file = new File([blob], "photo.jpg", {
+                // the name tells the server the photo came from the camera (CAMERA_PHOTO_NAME in app.py)
+                const file = new File([blob], "aibal-camera.jpg", {
                     type: "image/jpeg",
                 })
 

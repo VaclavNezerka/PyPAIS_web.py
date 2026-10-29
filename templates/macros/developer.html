@@ -1,0 +1,46 @@
+{#- Small pieces shared by the developer pages (developer.html, developer_events.html). -#}
+{% from "macros/icons.html" import icon %}
+
+{#- who did it: the user's name (linked to their events), or a guest -#}
+{% macro person(row, days=30) -%}
+{%- if row.user_id -%}
+<a href="{{ url_for('developer_events', user=row.user_id, days=days) }}">{{ ((row.first_name or '') ~ ' ' ~ (row.last_name or '')) | trim or row.username or ('#' ~ row.user_id) }}</a>
+{%- if row.company_name %}<span class="muted"> · {{ row.company_name }}</span>{% endif -%}
+{%- else -%}
+<span class="muted">{{ _('Guest') }}</span>
+{%- endif -%}
+{%- endmacro %}
+
+{% macro event_name(event, labels) -%}
+<span class="event-name event-{{ event }}">{{ labels.get(event, event) }}</span>
+{%- endmacro %}
+
+{#- the details of an event as key: value chips -#}
+{% macro details_chips(d) -%}
+{%- if d %}<span class="chips">
+  {%- for k, v in d.items() if k != 'ids' %}
+  <span class="chip-kv"><b>{{ k }}</b>
+    {%- if v is sameas true %} ✓{% elif v is sameas false %} ✗
+    {%- elif v is iterable and v is not string and v is not mapping %} {{ v | join(', ') }}
+    {%- else %} {{ v }}{% endif %}</span>
+  {%- endfor %}
+</span>{% endif -%}
+{%- endmacro %}
+
+{#- change against the previous period of the same length -#}
+{% macro delta(t) -%}
+{%- if t.delta is none -%}
+<span class="muted">{{ _('previous period') }}: {{ t.previous | num }}</span>
+{%- else -%}
+{%- if t.delta | abs >= 0.5 %}{{ icon('arrow-up' if t.delta > 0 else 'arrow-down') }}{% endif -%}
+{{ t.delta | abs | num }} % <span class="muted">{{ _('vs previous period') }} ({{ t.previous | num }})</span>
+{%- endif -%}
+{%- endmacro %}
+
+{% macro stat(label, value, hint='', digits=0, unit='') -%}
+<div class="stat">
+  <span class="stat-label">{{ label }}</span>
+  <span class="stat-value">{{ value | num(digits) }}{% if unit and value is not none %}<small> {{ unit }}</small>{% endif %}</span>
+  {%- if hint %}<span class="stat-hint">{{ hint }}</span>{% endif %}
+</div>
+{%- endmacro %}

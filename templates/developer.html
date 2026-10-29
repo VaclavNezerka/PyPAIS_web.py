@@ -1,0 +1,464 @@
+{% extends "base.html" %}
+{% from "macros/icons.html" import icon %}
+{% from "macros/charts.html" import columns, table_view, hbars, heatmap %}
+{% from "macros/developer.html" import person, event_name, details_chips, delta, stat %}
+
+{% block title %}{{ _('Site activity') }}{% endblock %}
+{% block head %}<script src="{{ url_for('static', filename='developer.js') }}" defer></script>{% endblock %}
+
+{% block content %}
+{%- set r = report -%}
+{%- set s = r.samples -%}
+{%- set dev_arg = '1' if r.include_developers else None -%}
+{%- set unit_label = {'hour': _('per hour'), 'day': _('per day'), 'week': _('per week')}[r.timeline.unit] -%}
+{%- set device_names = {'desktop': _('Computer'), 'mobile': _('Phone'), 'tablet': _('Tablet')} -%}
+{%- set reason_names = {'wrong_password': _('Wrong password'), 'unknown_account': _('Unknown account'),
+                        'unconfirmed_email': _('E-mail not confirmed'), 'blocked': _('Blocked account'),
+                        'incomplete_form': _('Incomplete form')} -%}
+
+<div class="page-header">
+  <div>
+    <h1>{{ _('Site activity') }}</h1>
+    <p>{{ _('Everything that happened on the website in the last %(period)s, for the developers.', period=periods[r.days]) }}
+      {{ _('Times are in %(tz)s.', tz=tz) }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{{ url_for('developer_events', days=r.days) }}">{{ icon('list') }} {{ _('Event log') }}</a>
+    <a class="btn" href="{{ url_for('developer_events_csv', days=r.days) }}">{{ icon('download') }} {{ _('Download CSV') }}</a>
+  </div>
+</div>
+
+<div class="dev-filters">
+  <nav class="segmented" aria-label="{{ _('Period') }}">
+    {%- for d, label in periods.items() %}
+    <a href="{{ url_for('developer', days=d, devs=dev_arg) }}" class="{{ 'is-active' if d == r.days }}" {% if d == r.days %}aria-current="page"{% endif %}>{{ label }}</a>
+    {%- endfor %}
+  </nav>
+  <a class="toggle-link{{ ' is-on' if r.include_developers }}" role="switch" aria-checked="{{ 'true' if r.include_developers else 'false' }}"
+    href="{{ url_for('developer', days=r.days, devs=None if r.include_developers else '1') }}">
+    <span class="toggle-box">{{ icon('check') }}</span> {{ _("Include developers' own activity") }}</a>
+</div>
+
+<nav class="dev-nav" aria-label="{{ _('Sections') }}">
+  <a href="#overview">{{ _('Overview') }}</a>
+  <a href="#people">{{ _('Companies and users') }}</a>
+  <a href="#samples">{{ _('Samples and AI') }}</a>
+  <a href="#traffic">{{ _('Traffic') }}</a>
+  <a href="#operations">{{ _('Performance and errors') }}</a>
+  <a href="#security">{{ _('Security') }}</a>
+</nav>
+
+{% if not r.log.rows %}
+<div class="notice notice-info">{{ icon('info') }}
+  <span>{{ _('The activity log is still empty - it records from this version on. Samples, users and companies below come from their own tables and reach further back.') }}</span></div>
+{% elif r.log.first and r.log.first > r.since %}
+<div class="notice notice-info">{{ icon('info') }}
+  <span>{{ _('The activity log started on %(date)s - the period before has no activity data. Samples, users and companies come from their own tables.', date=r.log.first | local_time) }}</span></div>
+{% endif %}
+
+{# ---------------------------------------------------------------- overview #}
+<section id="overview" class="dev-section">
+  <h2 class="section-title">{{ _('Overview') }}</h2>
+  <div class="kpi-grid">
+    {%- for t in r.kpis.tiles %}
+    <div class="kpi">
+      <span class="kpi-label">{{ t.label }}</span>
+      <span class="kpi-value">{{ t.value | num }}{% if t.unit and t.value is not none %}<small> {{ t.unit }}</small>{% endif %}</span>
+      <span class="kpi-delta{{ ' tone-' ~ t.tone if t.tone }}">{{ delta(t) }}</span>
+    </div>
+    {%- endfor %}
+  </div>
+  <p class="section-note">{{ _('Visitors are told apart without cookies, by a code that changes every day: somebody who comes on three days counts three times. Bots and crawlers are left out of visitors and page views.') }}</p>
+
+  <div class="grid-2 dev-grid">
+    {%- for c in r.timeline.charts %}
+    <div class="card">
+      <div class="card-header"><div><h2>{{ c.label }}</h2><p>{{ unit_label }} · {{ _('total') }} {{ c.total | num }}</p></div></div>
+      <div class="card-body">
+        {{ columns(c.chart, c.label) }}
+        {{ table_view(c.table, [_('Time'), c.label]) }}
+      </div>
+    </div>
+    {%- endfor %}
+  </div>
+
+  <div class="grid-2 dev-grid">
+    <div class="card">
+      <div class="card-header"><div><h2>{{ _('When the site is used') }}</h2>
+        <p>{{ _('Actions of people (page views and what they did) by weekday and hour') }} · {{ r.heatmap.total | num }}</p></div></div>
+      <div class="card-body">{{ heatmap(r.heatmap) }}</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div><h2>{{ _('Latest actions') }}</h2><p>{{ _('Without page views and single requests') }}</p></div>
+        <a class="btn btn-sm btn-ghost" href="{{ url_for('developer_events', days=r.days) }}">{{ _('All events') }} {{ icon('arrow-right') }}</a></div>
+      <div class="card-body feed-body">
+        {% if r.latest %}
+        <ol class="feed">
+          {%- for e in r.latest %}
+          <li>
+            <time datetime="{{ e.time.isoformat() }}">{{ e.time | local_time('D. M. HH:mm') }}</time>
+            <div>
+              {{ event_name(e.event, event_labels) }}{% if e.status and e.status >= 400 %} <span class="badge badge-danger">{{ e.status }}</span>{% endif %}
+              {%- if e.experiment_id %} <span class="muted">· {{ _('sample') }} {{ e.experiment_id }}</span>{% endif %}
+              <div class="feed-meta">{{ person(e, r.days) }}</div>
+              {{ details_chips(e.details) }}
+            </div>
+          </li>
+          {%- endfor %}
+        </ol>
+        {% else %}<p class="empty-note">{{ _('Nothing recorded in this period.') }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ---------------------------------------------------------------- people #}
+<section id="people" class="dev-section">
+  <h2 class="section-title">{{ _('Companies') }}</h2>
+  <div class="table-wrap">
+    <table class="table table-compact">
+      <thead>
+        <tr>
+          <th>{{ _('Company') }}</th>
+          <th>{{ _('Status') }}</th>
+          <th class="num">{{ _('Users') }}</th>
+          <th class="num" title="{{ _('Evaluated / all samples (all time)') }}">{{ _('Samples') }}</th>
+          <th class="num">{{ _('New in period') }}</th>
+          <th>{{ _('Last sample') }}</th>
+          <th class="num">{{ _('Active users') }}</th>
+          <th class="num">{{ _('Page views') }}</th>
+          <th class="num">{{ _('Uploads') }}</th>
+          <th class="num">{{ _('Evaluated') }}</th>
+          <th class="num">{{ _('Reports') }}</th>
+          <th>{{ _('Last seen') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {%- for c in r.companies %}
+        <tr>
+          <td class="cell-strong"><a href="{{ url_for('developer_events', company=c.company_id, days=r.days) }}">{{ c.company_name }}</a>
+            <div class="cell-sub">{{ c.e_mail or '' }}{% if c.created_at %} · {{ _('registered') }} {{ c.created_at | local_time('D. M. YYYY') }}{% endif %}</div></td>
+          <td>{% if c.confirmed_by_admin %}<span class="badge badge-success">{{ _('Confirmed') }}</span>{% else %}<span class="badge badge-warning">{{ _('Waiting for confirmation') }}</span>{% endif %}</td>
+          <td class="num">{{ c.confirmed_users }} / {{ c.users }}<div class="cell-sub">{{ _('admins') }}: {{ c.admins }}</div></td>
+          <td class="num">{{ c.finished }} / {{ c.samples }}</td>
+          <td class="num">{{ c.period_samples | num }}</td>
+          <td class="nowrap">{{ c.last_sample | local_time('D. M. YYYY') }}</td>
+          <td class="num">{{ c.active_users | num }}</td>
+          <td class="num">{{ c.page_views | num }}</td>
+          <td class="num">{{ c.uploads | num }}</td>
+          <td class="num">{{ c.evaluations | num }}</td>
+          <td class="num">{{ c.reports | num }}</td>
+          <td class="nowrap">{{ c.last_seen | local_time }}</td>
+        </tr>
+        {%- else %}
+        <tr><td colspan="12" class="table-empty">{{ _('No records found') }}</td></tr>
+        {%- endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="section-note">{{ _('Users: with a confirmed e-mail / all. Samples: evaluated / all, without deleted ones, since the start. The other columns cover the selected period.') }}</p>
+
+  <h2 class="section-title">{{ _('Users') }}</h2>
+  <div class="table-wrap">
+    <table class="table table-compact">
+      <thead>
+        <tr>
+          <th>{{ _('User') }}</th>
+          <th>{{ _('Company') }}</th>
+          <th>{{ _('Last login') }}</th>
+          <th>{{ _('Last seen') }}</th>
+          <th class="num">{{ _('Logins') }}</th>
+          <th class="num">{{ _('Page views') }}</th>
+          <th class="num">{{ _('Uploads') }}</th>
+          <th class="num">{{ _('Evaluated') }}</th>
+          <th class="num">{{ _('Reports') }}</th>
+          <th class="num" title="{{ _('Evaluated / all samples (all time)') }}">{{ _('Samples') }}</th>
+          <th>{{ _('Devices') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {%- for u in r.users %}
+        <tr class="{{ 'is-dim' if u.is_blocked }}">
+          <td class="cell-strong">
+            <a href="{{ url_for('developer_events', user=u.id, days=r.days) }}">{{ ((u.first_name or '') ~ ' ' ~ (u.last_name or '')) | trim or u.username }}</a>
+            {%- if u.is_developer %} <span class="badge badge-brand">{{ _('Developer') }}</span>{% endif %}
+            {%- if u.is_admin %} <span class="badge">{{ _('Admin') }}</span>{% endif %}
+            {%- if u.is_blocked %} <span class="badge badge-danger">{{ _('Blocked') }}</span>{% endif %}
+            {%- if not u.e_mail_confirmed %} <span class="badge badge-warning">{{ _('E-mail not confirmed') }}</span>{% endif %}
+            <div class="cell-sub">{{ u.username }} · {{ u.e_mail }}{% if u.created_at %} · {{ _('registered') }} {{ u.created_at | local_time('D. M. YYYY') }}{% endif %}</div>
+          </td>
+          <td>{{ u.company_name or '—' }}</td>
+          <td class="nowrap">{{ u.last_login | local_time }}</td>
+          <td class="nowrap">{{ u.last_seen | local_time }}</td>
+          <td class="num">{{ u.logins | num }}</td>
+          <td class="num">{{ u.page_views | num }}</td>
+          <td class="num">{{ u.uploads | num }}</td>
+          <td class="num">{{ u.evaluations | num }}</td>
+          <td class="num">{{ u.reports | num }}</td>
+          <td class="num">{{ u.finished }} / {{ u.samples }}</td>
+          <td>{% if u.devices %}{% for d in u.devices.split(', ') %}{{ device_names.get(d, d) }}{{ ', ' if not loop.last }}{% endfor %}{% else %}—{% endif %}</td>
+        </tr>
+        {%- else %}
+        <tr><td colspan="11" class="table-empty">{{ _('No records found') }}</td></tr>
+        {%- endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{# ---------------------------------------------------------------- samples #}
+<section id="samples" class="dev-section">
+  <h2 class="section-title">{{ _('Samples and AI') }}</h2>
+  <div class="stat-row">
+    {{ stat(_('Samples created'), s.created, _('by signed-in users')) }}
+    {{ stat(_('Evaluated'), s.finished) }}
+    {{ stat(_('Unfinished'), s.unfinished) }}
+    {{ stat(_('Deleted'), s.deleted) }}
+    {{ stat(_('AI detections'), s.log.inferences, _('of them in the demo') ~ ': ' ~ (s.log.demo_inferences | num)) }}
+    {{ stat(_('No sample in photo'), s.log.no_sample, _('evaluation refused') ~ ': ' ~ (s.log.refused | num)) }}
+    {{ stat(_('Photos rejected'), s.log.rejected, _('not an image or too large')) }}
+    {{ stat(_('Samples opened again'), s.log.opened, _("of them a colleague's") ~ ': ' ~ (s.log.opened_colleague | num)) }}
+  </div>
+
+  <div class="grid-3 dev-grid">
+    <div class="card">
+      <div class="card-header"><div><h2>{{ _('AI and expert') }}</h2><p>{{ _('Evaluated samples of the period with an expert estimate') }}</p></div></div>
+      <div class="card-body">
+        {% if s.agreement %}
+        <div class="stat-grid">
+          {{ stat(_('Samples compared'), s.agreement.n) }}
+          {{ stat(_('Mean difference'), s.agreement.mae, _('percentage points'), 1) }}
+          {{ stat(_('AI minus expert'), s.agreement.bias, _('positive: AI sees more bitumen'), 1) }}
+          {{ stat(_('Within 5 points'), s.agreement.within_5, '', 0, '%') }}
+          {{ stat(_('Within 10 points'), s.agreement.within_10, '', 0, '%') }}
+        </div>
+        {% else %}<p class="empty-note">{{ _('No evaluated sample with an expert estimate in this period.') }}</p>{% endif %}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div><h2>{{ _('ČSN 73 6161 classes') }}</h2><p>{{ _('AI assessment of the evaluated samples') }}</p></div></div>
+      <div class="card-body">{{ hbars(s.classes, share=True) }}</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div><h2>{{ _('Detection') }}</h2><p>{{ _('How long the model took') }}</p></div></div>
+      <div class="card-body">
+        <div class="stat-grid">
+          {{ stat(_('Median'), s.log.ms_p50, '', 0, 'ms') }}
+          {{ stat(_('95 %% of runs within'), s.log.ms_p95, '', 0, 'ms') }}
+          {{ stat(_('Slowest'), s.log.ms_max, '', 0, 'ms') }}
+        </div>
+        <h3 class="sub-title">{{ _('Models run') }}</h3>
+        {{ hbars(s.inference_models, mono=True) }}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div><h2>{{ _('Photos') }}</h2><p>{{ _('Uploads of the period') }}</p></div></div>
+      <div class="card-body">
+        <div class="stat-grid">
+          {{ stat(_('Uploaded'), s.log.uploads) }}
+          {{ stat(_('From the camera'), s.log.camera_uploads) }}
+          {{ stat(_('Demo (guests)'), s.log.demo_uploads) }}
+          {{ stat(_('Median size'), s.log.megapixels, _('megapixels after downscaling'), 1, 'MP') }}
+          {{ stat(_('Median upload'), s.log.kb, '', 0, 'kB') }}
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div><h2>{{ _('Reports') }}</h2><p>{{ _('PDF reports exported in the period') }}</p></div></div>
+      <div class="card-body">
+        <div class="stat-grid">
+          {{ stat(_('Reports'), s.log.reports) }}
+          {{ stat(_('Samples in them'), s.log.reported_samples) }}
+          {{ stat(_('Median time'), s.log.report_ms, '', 0, 'ms') }}
+        </div>
+        {% if s.reporters %}
+        <table class="table table-compact table-plain">
+          <thead><tr><th>{{ _('User') }}</th><th class="num">{{ _('Reports') }}</th><th class="num">{{ _('Samples') }}</th></tr></thead>
+          <tbody>{% for p in s.reporters %}<tr><td>{{ ((p.first_name or '') ~ ' ' ~ (p.last_name or '')) | trim or p.username }}<div class="cell-sub">{{ p.company_name or '' }}</div></td><td class="num">{{ p.reports }}</td><td class="num">{{ p.samples }}</td></tr>{% endfor %}</tbody>
+        </table>
+        {% endif %}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div><h2>{{ _('Models of the stored samples') }}</h2><p>{{ _('Samples created in the period') }}</p></div></div>
+      <div class="card-body">{{ hbars(s.models, mono=True) }}</div>
+    </div>
+  </div>
+
+  {% if s.monthly %}
+  <div class="card dev-grid">
+    <div class="card-header"><div><h2>{{ _('Samples per month since the start') }}</h2><p>{{ _('From the samples table - also before the activity log existed') }}</p></div></div>
+    <div class="card-body">
+      {{ columns(s.monthly, _('Samples per month since the start'), [_('Evaluated'), _('Unfinished')]) }}
+      {{ table_view(s.monthly_table, [_('Month'), _('Evaluated'), _('Unfinished')]) }}
+    </div>
+  </div>
+  {% endif %}
+</section>
+
+{# ---------------------------------------------------------------- traffic #}
+<section id="traffic" class="dev-section">
+  <h2 class="section-title">{{ _('Traffic') }}</h2>
+  <div class="grid-3 dev-grid">
+    <div class="card card-span-2">
+      <div class="card-header"><div><h2>{{ _('Pages') }}</h2><p>{{ _('Page views by people') }}</p></div></div>
+      <div class="card-body">{{ hbars(r.traffic.pages, share=True, mono=True) }}</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div><h2>{{ _('Guests and users') }}</h2><p>{{ _('Page views') }}</p></div></div>
+      <div class="card-body">{{ hbars(r.traffic.guests, names={'guest': _('Guests'), 'user': _('Signed-in users')}, share=True) }}
+        <h3 class="sub-title">{{ _('Coming from') }}</h3>
+        {{ hbars(r.traffic.referrers, mono=True, empty=_('No visits from other websites in this period.')) }}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div><h2>{{ _('Languages') }}</h2><p>{{ _('Language of the pages shown') }}</p></div></div>
+      <div class="card-body">{{ hbars(r.traffic.languages, names=language_names, share=True) }}</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div><h2>{{ _('Devices') }}</h2><p>{{ _('Page views') }}</p></div></div>
+      <div class="card-body">{{ hbars(r.traffic.devices, names=device_names, share=True) }}
+        <h3 class="sub-title">{{ _('Systems') }}</h3>
+        {{ hbars(r.traffic.systems, share=True) }}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div><h2>{{ _('Browsers') }}</h2><p>{{ _('Page views') }}</p></div></div>
+      <div class="card-body">{{ hbars(r.traffic.browsers, share=True) }}
+        <h3 class="sub-title">{{ _('Bots and crawlers') }}</h3>
+        {{ hbars(r.traffic.bots, empty=_('No bots in this period.')) }}
+        <p class="section-note">{{ _('Requests of bots') }}: {{ r.kpis.current.bot_requests | num }} · {{ _('of people') }}: {{ r.kpis.current.requests | num }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ---------------------------------------------------------------- operations #}
+<section id="operations" class="dev-section">
+  <h2 class="section-title">{{ _('Performance and errors') }}</h2>
+  <div class="table-wrap">
+    <table class="table table-compact">
+      <thead>
+        <tr>
+          <th>{{ _('Endpoint') }}</th>
+          <th class="num">{{ _('Requests') }}</th>
+          <th class="num">{{ _('Median') }}</th>
+          <th class="num">{{ _('95 %%') }}</th>
+          <th class="num">{{ _('Slowest') }}</th>
+          <th class="num" title="{{ _('Sum of all request times') }}">{{ _('Total time') }}</th>
+          <th class="num">4xx</th>
+          <th class="num">5xx</th>
+        </tr>
+      </thead>
+      <tbody>
+        {%- for p in r.performance %}
+        <tr>
+          <td class="mono"><a href="{{ url_for('developer_events', days=r.days, path=p.endpoint) }}">{{ p.endpoint }}</a></td>
+          <td class="num">{{ p.n | num }}</td>
+          <td class="num">{{ p.p50 | num }} ms</td>
+          <td class="num">{{ p.p95 | num }} ms</td>
+          <td class="num">{{ p.max | num }} ms</td>
+          <td class="num">{{ ((p.total or 0) / 1000) | num(1) }} s</td>
+          <td class="num{{ ' text-warning' if p.client_errors }}">{{ p.client_errors | num }}</td>
+          <td class="num{{ ' text-danger' if p.server_errors }}">{{ p.server_errors | num }}</td>
+        </tr>
+        {%- else %}
+        <tr><td colspan="8" class="table-empty">{{ _('Nothing recorded in this period.') }}</td></tr>
+        {%- endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-3 dev-grid">
+    <div class="card">
+      <div class="card-header"><div><h2>{{ _('Error responses') }}</h2><p>{{ _('By status code') }}</p></div></div>
+      <div class="card-body">
+        {% if r.errors.by_status %}
+        <table class="table table-compact table-plain">
+          <thead><tr><th>{{ _('Status') }}</th><th class="num">{{ _('Responses') }}</th><th class="num">{{ _('of them bots') }}</th></tr></thead>
+          <tbody>{% for e in r.errors.by_status %}<tr><td><a href="{{ url_for('developer_events', days=r.days, status=(e.status // 100) | string, bots='1') }}">{{ e.status }}</a></td><td class="num">{{ e.n | num }}</td><td class="num">{{ e.bots | num }}</td></tr>{% endfor %}</tbody>
+        </table>
+        {% else %}<p class="empty-note">{{ _('No error responses in this period.') }}</p>{% endif %}
+      </div>
+    </div>
+    <div class="card card-span-2">
+      <div class="card-header"><div><h2>{{ _('Pages not found') }}</h2><p>{{ _('Broken links, old addresses and scans for weak spots') }}</p></div></div>
+      <div class="card-body">{{ hbars(r.errors.not_found, mono=True, empty=_('No missing pages requested in this period.')) }}</div>
+    </div>
+  </div>
+
+  <div class="card dev-grid">
+    <div class="card-header"><div><h2>{{ _('Server errors') }}</h2><p>{{ _('The latest responses with status 500 and higher') }}</p></div></div>
+    {% if r.errors.server %}
+    <div class="table-scroll">
+      <table class="table table-compact">
+        <thead><tr><th>{{ _('Time') }}</th><th>{{ _('Request') }}</th><th>{{ _('Status') }}</th><th>{{ _('Error') }}</th><th>{{ _('User') }}</th><th>{{ _('Browser') }}</th></tr></thead>
+        <tbody>
+          {%- for e in r.errors.server %}
+          <tr>
+            <td class="nowrap">{{ e.time | local_time('D. M. HH:mm:ss') }}</td>
+            <td class="mono">{{ e.method }} {{ e.path }}</td>
+            <td><span class="badge badge-danger">{{ e.status }}</span></td>
+            <td class="mono cell-wrap">{{ (e.details or {}).get('error', '—') }}</td>
+            <td>{{ e.username or _('Guest') }}</td>
+            <td>{{ e.browser or '—' }} · {{ device_names.get(e.device, e.device) }}</td>
+          </tr>
+          {%- endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}<div class="card-body"><p class="empty-note">{{ icon('check-circle') }} {{ _('No server errors in this period.') }}</p></div>{% endif %}
+  </div>
+</section>
+
+{# ---------------------------------------------------------------- security #}
+<section id="security" class="dev-section">
+  <h2 class="section-title">{{ _('Security') }}</h2>
+  {%- set sc = r.security.counts %}
+  <div class="stat-row">
+    {{ stat(_('Failed logins'), r.security.failed_logins.total) }}
+    {{ stat(_('reCAPTCHA failed'), sc.recaptcha_failed) }}
+    {{ stat(_('Low reCAPTCHA scores'), r.security.recaptcha.low, _('of %(n)s checks, median %(median)s', n=r.security.recaptcha.checks | num, median=r.security.recaptcha.median | num(2))) }}
+    {{ stat(_('Password resets'), sc.resets, _('requested') ~ ': ' ~ (sc.reset_requests | num)) }}
+    {{ stat(_('Expired or invalid links'), sc.bad_links) }}
+    {{ stat(_('Rate limited'), sc.rate_limited, _('status 429')) }}
+    {{ stat(_('Access denied'), sc.forbidden, _('status 403')) }}
+  </div>
+
+  <div class="grid-3 dev-grid">
+    <div class="card">
+      <div class="card-header"><div><h2>{{ _('Failed logins') }}</h2><p>{{ _('By reason') }}</p></div></div>
+      <div class="card-body">{{ hbars(r.security.failed_logins, names=reason_names, share=True, empty=_('No failed logins in this period.')) }}</div>
+    </div>
+    <div class="card card-span-2">
+      <div class="card-header"><div><h2>{{ _('Networks with suspicious requests') }}</h2><p>{{ _('Failed logins, reCAPTCHA failures, rate limits and missing pages by network (/24, /48)') }}</p></div></div>
+      {% if r.security.networks %}
+      <div class="table-scroll">
+        <table class="table table-compact">
+          <thead><tr><th>{{ _('Network') }}</th><th class="num">{{ _('Failed logins') }}</th><th class="num">reCAPTCHA</th><th class="num">429</th><th class="num">404</th><th>{{ _('Last') }}</th></tr></thead>
+          <tbody>{% for n in r.security.networks %}<tr><td class="mono">{{ n.ip_prefix or '—' }}</td><td class="num">{{ n.failed_logins | num }}</td><td class="num">{{ n.recaptcha_failed | num }}</td><td class="num">{{ n.rate_limited | num }}</td><td class="num">{{ n.not_found | num }}</td><td class="nowrap">{{ n.last | local_time }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+      {% else %}<div class="card-body"><p class="empty-note">{{ _('Nothing suspicious in this period.') }}</p></div>{% endif %}
+    </div>
+  </div>
+
+  <div class="card dev-grid">
+    <div class="card-header"><div><h2>{{ _('Account and rights changes') }}</h2><p>{{ _('Registrations, confirmations, passwords, e-mails, admin rights and blocking') }}</p></div></div>
+    {% if r.security.audit %}
+    <div class="table-scroll">
+      <table class="table table-compact">
+        <thead><tr><th>{{ _('Time') }}</th><th>{{ _('Event') }}</th><th>{{ _('By') }}</th><th>{{ _('Details') }}</th></tr></thead>
+        <tbody>{% for e in r.security.audit %}<tr><td class="nowrap">{{ e.time | local_time }}</td><td>{{ event_name(e.event, event_labels) }}</td><td>{{ person(e, r.days) }}</td><td>{{ details_chips(e.details) }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    {% else %}<div class="card-body"><p class="empty-note">{{ _('No account changes in this period.') }}</p></div>{% endif %}
+  </div>
+</section>
+
+<p class="dev-footnote">
+  {{ icon('clock') }}
+  {{ _('Activity log: %(rows)s rows since %(first)s, %(size)s MB.', rows=r.log.rows | num, first=r.log.first | local_time('D. M. YYYY'), size=((r.log.bytes or 0) / 1048576) | num(1)) }}
+  {{ _('Rows are deleted after %(days)s days. No IP addresses and no cookies are stored - only the network part of the address for the security statistics.', days=retention_days) }}
+</p>
+{% endblock %}

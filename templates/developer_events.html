@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% from "macros/icons.html" import icon %}
+{% from "macros/developer.html" import person, event_name, details_chips %}
+
+{% macro page_link(target, label, icon_name, disabled) -%}
+{% if disabled %}
+<span class="btn btn-sm is-disabled" aria-disabled="true">{{ icon(icon_name) }} {{ label }}</span>
+{% else %}
+<a class="btn btn-sm" href="{{ url_for('developer_events', **dict(filter_args, page=target)) }}">{{ icon(icon_name) }} {{ label }}</a>
+{% endif %}
+{%- endmacro %}
+
+{% block title %}{{ _('Event log') }}{% endblock %}
+{% block head %}<script src="{{ url_for('static', filename='developer.js') }}" defer></script>{% endblock %}
+
+{% block content %}
+{%- set device_names = {'desktop': _('Computer'), 'mobile': _('Phone'), 'tablet': _('Tablet')} -%}
+<div class="page-header">
+  <div>
+    <p class="breadcrumb"><a href="{{ url_for('developer', days=filters.days) }}">{{ icon('chevron-left') }} {{ _('Site activity') }}</a></p>
+    <h1>{{ _('Event log') }}</h1>
+    <p>{{ _('Every request to the website, newest first. Times are in %(tz)s.', tz=tz) }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{{ url_for('developer_events_csv', **filter_args) }}">{{ icon('download') }} {{ _('Download CSV') }}</a>
+  </div>
+</div>
+
+<form class="toolbar dev-event-filters" method="get" action="{{ url_for('developer_events') }}">
+  <div class="field">
+    <label for="fDays">{{ _('Period') }}</label>
+    <select class="input" id="fDays" name="days" data-autosubmit>
+      {% for d, label in periods.items() %}<option value="{{ d }}" {{ 'selected' if d == filters.days }}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="fEvent">{{ _('Event') }}</label>
+    <select class="input" id="fEvent" name="event" data-autosubmit>
+      <option value="">{{ _('All events') }}</option>
+      {% for key, label in choices.events %}<option value="{{ key }}" {{ 'selected' if key == filters.event }}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="fCompany">{{ _('Company') }}</label>
+    <select class="input" id="fCompany" name="company" data-autosubmit>
+      <option value="">{{ _('All companies') }}</option>
+      {% for c in choices.companies %}<option value="{{ c.company_id }}" {{ 'selected' if c.company_id == filters.company }}>{{ c.company_name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="fUser">{{ _('User') }}</label>
+    <select class="input" id="fUser" name="user" data-autosubmit>
+      <option value="">{{ _('Everybody') }}</option>
+      {% for u in choices.users %}<option value="{{ u.id }}" {{ 'selected' if u.id == filters.user }}>{{ ((u.first_name or '') ~ ' ' ~ (u.last_name or '')) | trim or u.username }}{{ ' · ' ~ u.company_name if u.company_name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="fStatus">{{ _('Status') }}</label>
+    <select class="input" id="fStatus" name="status" data-autosubmit>
+      <option value="">{{ _('All') }}</option>
+      {% for code, label in (('2', _('2xx success')), ('3', _('3xx redirect')), ('4', _('4xx client error')), ('5', _('5xx server error'))) %}
+      <option value="{{ code }}" {{ 'selected' if code == filters.status }}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field grow">
+    <label for="fPath">{{ _('Address contains') }}</label>
+    <div class="input-with-icon">
+      {{ icon('search') }}
+      <input class="input" type="search" id="fPath" name="path" value="{{ filters.path or '' }}" maxlength="100" placeholder="/export-report, process_image">
+    </div>
+  </div>
+  <div class="field field-narrow">
+    <label for="fSample">{{ _('Sample ID') }}</label>
+    <input class="input" type="number" id="fSample" name="experiment" min="1" value="{{ filters.experiment or '' }}">
+  </div>
+  <label class="check-inline"><input type="checkbox" name="bots" value="1" {{ 'checked' if filters.bots }} data-autosubmit> {{ _('Include bots') }}</label>
+  <button type="submit" class="btn">{{ icon('search') }} {{ _('Filter') }}</button>
+  {% if filter_args | length > 1 %}<a class="btn btn-ghost" href="{{ url_for('developer_events', days=filters.days) }}">{{ icon('x') }} {{ _('Clear') }}</a>{% endif %}
+</form>
+
+<div class="table-wrap">
+  <table class="table table-compact table-events">
+    <thead>
+      <tr>
+        <th>{{ _('Time') }}</th>
+        <th>{{ _('Event') }}</th>
+        <th>{{ _('Who') }}</th>
+        <th>{{ _('Request') }}</th>
+        <th class="num">{{ _('Status') }}</th>
+        <th class="num">{{ _('Duration') }} (ms)</th>
+        <th>{{ _('Device') }}</th>
+        <th>{{ _('Details') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {%- for e in rows %}
+      <tr class="{{ 'is-dim' if e.is_bot }}">
+        <td class="nowrap">{{ e.time | local_time('D. M. YYYY HH:mm:ss') }}</td>
+        <td>{{ event_name(e.event, event_labels) }}
+          {%- if e.experiment_id %}<div class="cell-sub"><a href="{{ url_for('developer_events', **dict(filter_args, experiment=e.experiment_id, page=1)) }}">{{ _('sample') }} {{ e.experiment_id }}</a></div>{% endif %}</td>
+        <td>{{ person(e, filters.days) }}
+          <div class="cell-sub mono" title="{{ _('Visitor code of the day and network') }}">{{ e.visitor or '' }}{{ ' · ' ~ e.ip_prefix if e.ip_prefix }}</div></td>
+        <td class="mono cell-wrap">{{ e.method }} {{ e.path }}
+          {%- if e.referrer %}<div class="cell-sub">{{ _('from') }} {{ e.referrer }}</div>{% endif %}</td>
+        <td class="num"><span class="status status-{{ (e.status or 0) // 100 }}">{{ e.status or '—' }}</span></td>
+        <td class="num">{{ e.duration_ms | num }}</td>
+        <td>{% if e.is_bot %}<span class="badge">{{ _('Bot') }}</span> {{ e.browser }}{% else %}{{ device_names.get(e.device, e.device) }}<div class="cell-sub">{{ e.browser }} · {{ e.os }}{{ ' · ' ~ e.lang if e.lang }}</div>{% endif %}</td>
+        <td>{{ details_chips(e.details) }}</td>
+      </tr>
+      {%- else %}
+      <tr><td colspan="8" class="table-empty">{{ _('No events match the filter.') }}</td></tr>
+      {%- endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="pagination">
+  <span>{{ _('Page') }} {{ page }} / {{ pages }} · {{ total | num }} {{ _('events') }}</span>
+  <div class="pagination-buttons">
+    {{ page_link(page - 1, _('Previous'), 'chevron-left', page <= 1) }}
+    {{ page_link(page + 1, _('Next'), 'chevron-right', page >= pages) }}
+  </div>
+</div>
+{% endblock %}

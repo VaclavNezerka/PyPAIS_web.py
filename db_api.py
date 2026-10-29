@@ -3,7 +3,7 @@ import os
 import threading
 import psycopg2 as psql
 from psycopg2 import pool as psql_pool
-from psycopg2.extras import RealDictCursor
+from psycopg2.extras import RealDictCursor, Json, execute_values
 from functools import wraps
 from flask import app, flash, has_request_context
 from dataclasses import dataclass
@@ -635,3 +635,33 @@ def execute_query(cur,conn,query,values):
     finally:
         conn.commit()
     return response
+
+@db_connection
+def fetch_dicts(cur, conn, query: str, values=()) -> list[dict]:
+    """Rows of a read-only query as dicts (None when the query failed)."""
+    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+        cursor.execute(query, values)
+        return [dict(row) for row in cursor.fetchall()]
+
+@db_connection
+def is_user_developer(cur, conn, user_id: int) -> bool:
+    cur.execute('SELECT is_developer FROM users WHERE id=%s', (user_id,))
+    row = cur.fetchone()
+    return bool(row and row[0])
+
+ACTIVITY_COLUMNS = ('time', 'event', 'user_id', 'visitor', 'method', 'endpoint', 'path', 'status', 'duration_ms', 'lang',
+                    'device', 'browser', 'os', 'is_bot', 'ip_prefix', 'referrer', 'experiment_id', 'details')
+
+@db_connection
+def insert_activity_rows(cur, conn, rows: list[dict]) -> bool:
+    """Writes a batch of activity_log rows (dicts with ACTIVITY_COLUMNS) in one statement."""
+    values = [tuple(Json(row[c]) if c == 'details' and row[c] is not None else row[c] for c in ACTIVITY_COLUMNS) for row in rows]
+    execute_values(cur, f"INSERT INTO activity_log ({', '.join(ACTIVITY_COLUMNS)}) VALUES %s", values)
+    conn.commit()
+    return True
+
+@db_connection
+def purge_activity_log(cur, conn, retention_days: int) -> int:
+    cur.execute("DELETE FROM activity_log WHERE time < now() - make_interval(days => %s)", (retention_days,))
+    conn.commit()
+    return cur.rowcount
